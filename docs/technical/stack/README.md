@@ -13,13 +13,13 @@
 | [framework.md](framework.md) | **Next.js 16** | React-фреймворк #1, SSR/ISR, API routes, лучшая интеграция с Vercel |
 | [language.md](language.md) | **TypeScript** | Типобезопасность = меньше багов на проекте с астрономическими расчётами |
 | [styling.md](styling.md) | **Tailwind CSS 4 + shadcn/ui** | Utility-CSS + копируемые компоненты = быстрая тёмная космическая тема |
-| [astro-engine.md](astro-engine.md) | **Swiss Ephemeris (WASM)** | Единственный стандарт точности для астрологических расчётов |
+| [astro-engine.md](astro-engine.md) | **Swiss Ephemeris (server, Node.js native)** | Единственный стандарт точности для астрологических расчётов |
 
 ### Данные и инфраструктура
 
 | Файл | Инструмент | Одно предложение |
 |------|-----------|-----------------|
-| [database.md](database.md) | **PostgreSQL + Prisma + Neon** | Serverless Postgres с бесплатным тиером и ветвлением для preview |
+| [database.md](database.md) | **PostgreSQL + Drizzle ORM + Neon** | Serverless Postgres, 7KB ORM bundle, быстрый cold start |
 | [cache.md](cache.md) | **Upstash Redis** | HTTP-based Redis для serverless, кэш API данных NASA |
 | [hosting.md](hosting.md) | **Vercel** | Лучший DX для Next.js, но следим за ценами |
 | [storage.md](storage.md) | **Vercel Blob** | Простое хранилище для медиа, текстур, аватаров |
@@ -35,11 +35,11 @@
 | [email.md](email.md) | **Resend** | Developer-first email, бесплатный тиер для MVP |
 | [payments.md](payments.md) | **Stripe** | Стандарт для подписок, отсутствовал в изначальном стеке |
 
-### Будущее (Фаза 2-3)
+### Будущее (Фаза 2+)
 
 | Файл | Инструмент | Одно предложение |
 |------|-----------|-----------------|
-| [3d-engine.md](3d-engine.md) | **Three.js + React Three Fiber** | Единственный зрелый 3D-движок для React |
+| [3d-engine.md](3d-engine.md) | **Three.js + React Three Fiber** | Единственный зрелый 3D-движок для React. Не в MVP |
 
 ---
 
@@ -77,7 +77,7 @@
 |---------|-------------|------|
 | Swiss Ephemeris лицензия | ✅ Решено: open source (AGPL-3.0) снимает проблему | [astro-engine.md](astro-engine.md) |
 | Open source стратегия | Код открыт (AGPL), контент (эссе) закрыт (proprietary) | [open-source.md](../open-source.md) |
-| Prisma vs Drizzle | Prisma тяжёлый для serverless, Drizzle в 200x легче | [database.md](database.md) |
+| Drizzle ORM | ✅ Решено: Drizzle (7KB bundle, быстрый cold start на Vercel Functions) | [database.md](database.md) |
 | Clerk ценообразование | $0.02/MAU после 10K = $800/мес при 50K юзерах | [auth.md](auth.md) |
 | Vercel скрытые расходы | Bandwidth overages, Functions billing | [hosting.md](hosting.md) |
 | Stripe не был в стеке | Нужен для подписок — добавлен | [payments.md](payments.md) |

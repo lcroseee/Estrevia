@@ -1,11 +1,11 @@
-# База данных: PostgreSQL + Prisma + Neon
+# База данных: PostgreSQL + Drizzle ORM + Neon
 
 ## Что это простыми словами
 
 Три инструмента, каждый делает своё:
 
 - **PostgreSQL** — сама база данных. Хранит пользователей, карты, позиции планет. Как Excel, но для миллионов строк, с гарантией надёжности.
-- **Prisma** — «переводчик» между TypeScript-кодом и базой. Вместо написания SQL-запросов вручную пишешь `prisma.user.findMany()` и получаешь типизированный результат.
+- **Drizzle ORM** — type-safe ORM с SQL-like API. 7KB bundle (vs Prisma 1.6MB) — критично для Vercel Functions cold start. Пишешь `db.select().from(users)` и получаешь типизированный результат.
 - **Neon** — «облако» для PostgreSQL. Вместо настройки сервера — нажимаешь кнопку, получаешь базу. Serverless: масштабируется автоматически, засыпает когда не нужна.
 
 ---
@@ -21,44 +21,27 @@
 
 ---
 
-## Prisma vs Drizzle: ключевой вопрос
+## Почему Drizzle ORM (а не Prisma)
 
-### ⚠️ Это самое спорное решение в стеке
+### Решение принято: Drizzle ORM
 
-| Аспект | Prisma | Drizzle |
-|--------|--------|---------|
-| **Bundle size** | **~1.6 MB** | **~7.4 KB** (в 200x меньше!) |
-| **Cold start** | 500-1500ms (serverless) | 50-100ms |
-| **DX** | `prisma.user.create({})` — интуитивно | SQL-like: `db.insert(users)` — ближе к SQL |
-| **Миграции** | `prisma migrate` — отличные | `drizzle-kit push` — хорошие |
-| **Типы** | Генерируются из schema | Inferются из schema (TS-first) |
-| **Edge Runtime** | ❌ (нужен Prisma Accelerate — платный) | ✅ (нативно) |
-| **npm downloads** | ~9.3M/нед | ~6.8M/нед |
-| **Зрелость** | 5+ лет, стабильный | 2+ года, быстро растёт |
+| Аспект | Drizzle (выбран) | Prisma (отвергнут) |
+|--------|-----------------|-------------------|
+| **Bundle size** | **~7 KB** | ~1.6 MB |
+| **Cold start** | **50-100ms** | 500-1500ms |
+| **DX** | SQL-like: `db.insert(users)` — ближе к SQL | `prisma.user.create({})` — интуитивно |
+| **Миграции** | `drizzle-kit push` / `drizzle-kit generate` | `prisma migrate` |
+| **Типы** | Inferются из schema (TS-first) | Генерируются из schema |
+| **Edge Runtime** | ✅ (нативно) | ❌ (нужен Prisma Accelerate — платный) |
+| **Зрелость** | 2+ года, быстро растёт | 5+ лет, стабильный |
 
-### Что пишут разработчики
+### Почему Drizzle для Estrevia
 
-**Про Prisma:**
-- «Лучший DX для людей, которые не любят SQL»
-- «Холодные старты на Vercel — кошмар. 1.5 секунды на первый запрос»
-- «Prisma v7.4 добавил кэширование query plans — стало лучше, но bundle size никуда не делся»
-- «Prisma Studio для визуального просмотра данных — бесценен при разработке»
-
-**Про Drizzle:**
-- «SQL-like API = не нужно учить новый язык запросов»
-- «7 KB вместо 1.6 MB — для serverless это game-changer»
-- «Документация хуже, чем у Prisma. Но быстро улучшается»
-- «Если знаешь SQL — Drizzle чувствуется естественнее»
-
-### Решение для Estrevia
-
-**Начинаем с Prisma** по причинам:
-1. Лучшая интеграция с Next.js и Clerk (официальные примеры)
-2. Prisma Studio для отладки на MVP
-3. Миграции зрелее
-4. Генерация типов из schema = быстрый старт
-
-**Но:** если cold starts станут проблемой (> 1s) — мигрировать на Drizzle. Миграция болезненная, но выполнимая (схема = SQL, данные остаются в Postgres).
+1. **7KB bundle size (vs Prisma 1.6MB)** — критично для Vercel Functions cold start. Каждая функция загружает ORM, и 1.6MB Prisma = 500-1500ms задержка на первый запрос
+2. **TS-first** — типы инферятся из schema, не генерируются. Один источник правды
+3. **SQL-like API** — если знаешь SQL, Drizzle чувствуется естественно: `db.select().from(users).where(eq(users.id, id))`
+4. **Edge-compatible** — работает на Edge Runtime без платного Prisma Accelerate
+5. **Drizzle Kit** — миграции через `drizzle-kit push` (dev) и `drizzle-kit generate` + `drizzle-kit migrate` (prod)
 
 ---
 
@@ -96,29 +79,25 @@
 
 ## Подводные камни
 
-### 1. Prisma cold start
-
-Первый запрос после деплоя = 1-2 секунды (Prisma client generation + connection pool). 
-
-**Митигация:** Prisma warm-up в middleware или API route.
-
-### 2. Neon cold start
+### 1. Neon cold start
 
 БД засыпает → первый запрос = ~1 секунда на пробуждение.
 
 **Митигация:** Vercel Cron каждые 4 минуты отправляет heartbeat запрос. Или использовать Neon's always-on compute (paid).
 
-### 3. Шифрование PII
+### 2. Шифрование PII
 
 Birth data = PII. PostgreSQL не шифрует поля автоматически.
 
-**Решение:** Prisma middleware для автоматического encrypt/decrypt. AES-256-GCM. Ключ в Vercel env vars.
+**Решение:** Application-level encryption — явные `encrypt()`/`decrypt()` вызовы в API routes. AES-256-GCM. Ключ в Vercel env vars.
 
-### 4. Двойной cold start
+### 3. Cold start (Neon)
 
-Prisma cold start + Neon cold start = до 3 секунд на первый запрос после паузы. 
+Neon cold start = ~1 секунда на первый запрос после паузы. Drizzle ORM добавляет минимум (50-100ms vs 500-1500ms у Prisma).
 
 **Важно:** это проблема только для первого запроса. Все последующие — быстрые (<100ms).
+
+**Решение:** Vercel Cron heartbeat каждые 4 минуты (`/api/health` → простой `SELECT 1`) держит Neon разогретым. Стоимость: ~0 (Vercel Pro включает Cron).
 
 ---
 
@@ -126,4 +105,4 @@ Prisma cold start + Neon cold start = до 3 секунд на первый за
 
 **PostgreSQL + Neon = правильный выбор.** Serverless, бесплатный старт, branching, Vercel-интеграция.
 
-**Prisma = осознанный компромисс.** Лучший DX, но тяжёлый для serverless. Следить за cold starts. Plan B: Drizzle.
+**Drizzle ORM = оптимальный выбор для serverless.** 7KB bundle, 50-100ms cold start, SQL-like API, Edge-compatible. Миграции через `drizzle-kit`.

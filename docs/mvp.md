@@ -1,27 +1,38 @@
 # MVP: Скоуп и Приоритизация
 
 > **MVP = то, что делает одну вещь лучше всех. Для нас это: лучшая сидерическая натальная карта с эзотерическим контекстом.**
+>
+> **English only. Customer conversion path — главный приоритет дизайна.**
 
 ---
 
 ## Что входит в MVP
 
-**Срок:** 8-12 недель
-**Команда:** 1-2 fullstack + 1 дизайнер (частичная занятость)
+**Срок:** 12-16 недель
+**Команда:** Solo-разработчик + Claude Code (AI-assisted development)
 
 ### Функции
 
 | # | Функция | Срок | Статус |
 |---|---------|------|--------|
-| 1 | Натальная карта (sidereal/tropical toggle) | 3-4 нед. | 🔲 |
+| 1 | Натальная карта (sidereal/tropical, Lahiri ayanamsa) | 3-4 нед. | 🔲 |
 | 2 | Real-time планетарные часы | 2-3 нед. | 🔲 |
 | 3 | Лунный календарь (фаза, знак, положение) | 1-2 нед. | 🔲 |
-| 4 | Эссе по позициям (120+ текстов) | 2-3 нед. | 🔲 |
+| 4 | Эссе по позициям (120 текстов = 10 планет × 12 знаков, EN) + мини-калькулятор + эфемериды | 2-3 нед. | 🔲 |
 | 5 | Страница «Почему сидерическая» | 1 нед. | 🔲 |
 | 6 | Регистрация + сохранение карты | 1-2 нед. | 🔲 |
-| 7 | Лента NASA/USGS данных | 1-2 нед. | 🔲 |
-| 8 | Landing page + waitlist | 1 нед. | 🔲 |
-| 9 | PWA manifest + offline базовый | 1 нед. | 🔲 |
+| 7 | «Космический паспорт» — viral share card + OG image | 1-2 нед. | 🔲 |
+| 8 | Stripe подписка (Star tier) | 1-2 нед. | 🔲 |
+| 9 | Landing page + waitlist | 1 нед. | 🔲 |
+| 10 | PWA manifest (installability only, без офлайн-кэширования) | 1 нед. | 🔲 |
+| 11 | MCP-сервер (обёртка над API) + публикация в Smithery | 1 день | 🔲 |
+
+**Убрано из MVP (перенесено в Фазу 2):**
+- ~~Лента NASA/USGS данных~~ — не core value, пользователи идут за натальной картой
+- ~~Fagan-Bradley / Krishnamurti ayanamsa~~ — Lahiri покрывает ~80% сидерических астрологов
+- ~~i18n (ES и другие языки)~~ — запуск на EN only, перевод после валидации PMF
+- ~~Эссе для North Node и Chiron~~ — 120 эссе достаточно для MVP, дополнительные 24 в Фазу 2
+- ~~House systems: Whole Sign, Equal~~ — MVP только Placidus, остальные в Фазу 2
 
 ### Инфраструктура MVP
 
@@ -59,17 +70,16 @@
 ### Технические
 
 - [ ] Натальная карта считается с точностью ±0.01° (сверка с Astro.com)
-- [ ] Поддержка 3 ayanamsa: Lahiri, Fagan-Bradley, Krishnamurti
+- [ ] Ayanamsa: Lahiri (Fagan-Bradley, Krishnamurti — Фаза 2)
 - [ ] 100+ автотестов для эталонных карт проходят в CI
-- [ ] Swiss Ephemeris WASM работает офлайн
+- [ ] Swiss Ephemeris серверный API (`/api/chart/calculate`) отвечает < 500ms
 - [ ] Lighthouse Performance score ≥ 90 на мобильных
-- [ ] Время расчёта карты < 500ms
+- [ ] Время расчёта карты < 500ms (сервер: ~50ms расчёт + сеть)
 - [ ] PWA installable на iOS, Android, Desktop
 
 ### Контентные
 
-- [ ] 120 эссе (EN) по планетарным позициям (10 планет × 12 знаков)
-- [ ] 120 эссе (ES) — переводы
+- [ ] 120 эссе (EN) по планетарным позициям (10 планет Sun–Pluto × 12 знаков; North Node и Chiron — Фаза 2)
 - [ ] Страница «Почему сидерическая» с визуализациями
 - [ ] Лунный календарь на 12 месяцев вперёд
 
@@ -83,13 +93,16 @@
 
 ### Метрики запуска (через 3 месяца)
 
-| Метрика | Цель | Kill criteria |
-|---------|------|--------------|
-| Регистрации | 5,000 | < 1,000 |
-| DAU | 500 | < 50 |
-| D30 Retention | 20% | < 10% |
-| Conversion → Paid | 5% | < 2% |
-| Карт рассчитано | 10,000 | < 2,000 |
+| Метрика | Stretch target | Цель | Kill criteria |
+|---------|---------------|------|--------------|
+| Регистрации | 5,000 | 1,000 | < 500 |
+| DAU | 500 | 100 | < 20 |
+| D30 Retention | 20% | 15% | < 10% |
+| Conversion → Paid | 5% | 3% | < 1% |
+| Карт рассчитано | 10,000 | 3,000 | < 500 |
+| Viral shares | 1,000 | 200 | 0 за первый месяц |
+
+> **Примечание:** kill criteria включают как органические, так и платные каналы (Meta Ads). Если retention высокий (> 15%), но регистрации низкие (500-1000) — это проблема каналов, не продукта. Скалировать рекламу, не убивать продукт.
 
 ---
 
@@ -98,16 +111,18 @@
 ```
 Неделя 1-2:   Инфраструктура
                ├── Next.js + TypeScript + Tailwind + shadcn/ui
-               ├── Vercel deploy + Neon PostgreSQL + Prisma
+               ├── Vercel deploy + Neon PostgreSQL + Drizzle ORM
                ├── Clerk auth
                └── CI/CD (GitHub Actions)
 
 Неделя 3-6:   Core — Астро-движок
-               ├── Swiss Ephemeris WASM интеграция
+               ├── Swiss Ephemeris серверный API (sweph, Node.js)
+               ├── API endpoint: /api/chart/calculate
                ├── Расчёт натальной карты (sidereal + tropical)
                ├── UI колеса натальной карты (SVG)
                ├── Тесты: 100+ эталонных карт
-               └── Планетарные часы (real-time)
+               ├── Планетарные часы (real-time)
+               └── MCP-сервер: обёртка над API → публикация в Smithery (1 день)
 
 Неделя 5-7:   Контент
                ├── LLM-генерация 120 эссе (Claude API)
@@ -115,21 +130,30 @@
                ├── Лунный календарь
                └── Страница «Почему сидерическая»
 
-Неделя 7-9:   Data Feed + Landing
-               ├── NASA DONKI + USGS Earthquake API
-               ├── Лента событий
-               ├── Landing page
+Неделя 7-8:   Viral Share + Landing
+               ├── «Космический паспорт» — share card
+               │   (Солнце/Луна/Асц + управитель + элемент + редкость)
+               ├── OG image API (@vercel/og): /api/og/passport/[id]
+               ├── Share page: /s/[id] (deep link + CTA)
+               ├── Web Share API + pre-filled text (EN)
+               ├── Fallbacks: copy link, Twitter intent, Telegram share URL
+               ├── Download PNG (для Instagram Stories)
+               ├── Landing page (hero = ввод даты → результат → share)
                └── Waitlist (email collection)
 
-Неделя 9-11:  PWA + Polish
-               ├── PWA manifest + Service Worker
-               ├── Offline: кэш карт + эссе
+Неделя 8-10:  Stripe
+               ├── Stripe Checkout + подписка (Star tier)
+               └── Webhook: subscription lifecycle
+
+Неделя 10-12: PWA + Polish
+               ├── PWA manifest (installability only)
                ├── Аналитика (PostHog events)
                ├── Legal docs (ToS, Privacy)
                └── Performance optimization
 
-Неделя 11-12: Beta + Launch
-               ├── Beta: 50 астрологов проверяют карты
+Неделя 12-14: Верификация + Launch
+               ├── LLM-верификация расчётов (сверка с Astro.com)
+               ├── Публикация в Reddit/Telegram для фидбэка
                ├── Исправление багов
                ├── Product Hunt подготовка
                └── Запуск 🚀
@@ -141,8 +165,8 @@
 
 | Риск | Вероятность | Митигация |
 |------|------------|-----------|
-| Swiss Ephemeris WASM не работает в браузере | Низкая | Fallback: серверный расчёт через API route |
-| Точность расчётов не проходит верификацию | Средняя | Начать с тестов рано, не откладывать |
-| Контент (эссе) недостаточно качественный | Средняя | Beta-тестирование с астрологами, итерации |
-| 12 недель не хватит | Высокая | Резать скоуп: минимум = карта + эссе + landing |
+| Swiss Ephemeris серверный API медленный | Низкая | sweph Node.js native — расчёт ~50ms. Vercel Fluid Compute переиспользует инстансы |
+| Точность расчётов не проходит верификацию | Средняя | Начать с тестов рано, автоматизировать сверку с Astro.com |
+| Контент (эссе) недостаточно качественный | Средняя | LLM-верификация + публикация в сидерических сообществах для фидбэка |
+| 14 недель не хватит | Средняя | Скоуп уже урезан. Минимум = карта + эссе + landing |
 | Нет органического интереса | Средняя | Waitlist до запуска, Reddit/Telegram посев |

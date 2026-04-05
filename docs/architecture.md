@@ -36,8 +36,8 @@
 
 | Домен | Ответственность | Сложность | Фаза |
 |-------|----------------|-----------|------|
-| **Astro Engine** | Расчёты карт, эфемериды, sidereal/tropical | Средняя | MVP |
-| **Data Feed** | NASA, USGS, NOAA API интеграция | Низкая-средняя | MVP |
+| **Astro Engine** | Расчёты карт на сервере (Swiss Ephemeris Node.js), sidereal/tropical | Средняя | MVP |
+| **Data Feed** | NASA, USGS, NOAA API интеграция | Низкая-средняя | Фаза 2 |
 | **Esoteric CMS** | 777, Equinox, Thoth, Tree of Life контент | Низкая (контент) | MVP |
 | **Cosmos 3D** | 3D-визуализация, планеты, созвездия | Высокая | Фаза 2 |
 | **Social** | Профили, лента, медиа, кастомизация | Очень высокая | Фаза 2 |
@@ -54,12 +54,12 @@
 ```
 src/
 ├── modules/
-│   ├── astro-engine/     # Расчёты карт, Swiss Ephemeris WASM
+│   ├── astro-engine/     # Расчёты карт, Swiss Ephemeris (серверный)
 │   │   ├── lib/          # Бизнес-логика расчётов
 │   │   ├── components/   # UI: колесо, карта, планетарные часы
 │   │   └── api/          # API routes для расчётов
 │   │
-│   ├── data-feed/        # NASA, USGS, NOAA интеграции
+│   ├── data-feed/        # NASA, USGS, NOAA интеграции (Фаза 2)
 │   │   ├── lib/          # Fetch + transform + cache
 │   │   ├── components/   # UI: лента событий
 │   │   └── api/          # API routes / cron jobs
@@ -86,7 +86,7 @@ src/
     │   ├── moon/         # Лунный календарь
     │   ├── hours/        # Планетарные часы
     │   ├── essays/       # Эзотерические эссе
-    │   └── feed/         # Лента данных NASA/USGS
+    │   └── feed/         # Лента данных NASA/USGS (Фаза 2)
     └── api/              # API routes
 ```
 
@@ -105,7 +105,7 @@ src/
 
 | Компонент | Решение | Почему |
 |-----------|---------|--------|
-| Астро-расчёты | Build (Swiss Ephemeris WASM) | Core value, должно быть идеальным |
+| Астро-расчёты | Build (Swiss Ephemeris, **серверный**) | Core value, должно быть идеальным. Node.js native bindings (`sweph`) — проверенный, стабильный подход. Расчёт через `POST /api/chart/calculate`, не на клиенте |
 | Эзотерический контент | Build (собственные тексты) | Core value, юрид. безопасность |
 | Аутентификация | Buy (Clerk) | Решённая проблема, OAuth за 1 день |
 | Real-time данные | Build (API integration) | Простые REST вызовы |
@@ -122,8 +122,9 @@ src/
 |-------|----------|--------|
 | Эталонное сравнение | Сверка с Astro.com, Solar Fire, Jagannatha Hora | ±0.01° |
 | Авто-тесты | 100+ эталонных карт в CI/CD | При каждом деплое |
-| Ayanamsa валидация | Lahiri, Fagan-Bradley, Krishnamurti — каждая отдельно | ±0.01° |
-| Beta-тестирование | 50+ практикующих астрологов | До публичного запуска |
+| Ayanamsa валидация | Lahiri (MVP). Fagan-Bradley, Krishnamurti — Фаза 2 | ±0.01° |
+| LLM-верификация | Claude сверяет расчёты с эталонными данными из Astro.com | Автоматически |
+| Community фидбэк | Публикация в Reddit/Telegram сидерических сообществах | До публичного запуска |
 | Прозрачность | UI показывает «Swiss Ephemeris v2.10 \| Ayanamsa: Lahiri» | — |
 
 ---

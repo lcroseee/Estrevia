@@ -4,7 +4,7 @@
 
 *El camino de las estrellas — Путь звёзд*
 
-> Первая платформа, которая объединяет профессиональную сидерическую астрологию, real-time астрономические данные, эзотерическую традицию и социальную сеть без алгоритмов и рекламы.
+> Астрологическая платформа, которая объединяет профессиональную сидерическую астрологию, эзотерическую традицию (Thelema, Каббала, Thoth) и виральный шеринг.
 
 ---
 
@@ -40,9 +40,9 @@
 | [stack.md](stack.md) | Технологический стек, внешние API, инфраструктура (обзор) |
 | [technical/stack/](technical/stack/README.md) | **Детальное обоснование каждого инструмента** — 16 файлов с альтернативами, плюсами/минусами |
 | [technical/open-source.md](technical/open-source.md) | Open source стратегия: AGPL-3.0 для кода, proprietary для контента |
-| [technical/architecture/](technical/architecture/README.md) | **Как всё работает** — схемы, потоки данных, API, расчёт карты, офлайн |
+| [technical/architecture/](technical/architecture/README.md) | **Как всё работает** — схемы, потоки данных, API, расчёт карты |
 | [data-model.md](data-model.md) | Схема базы данных, сущности, связи |
-| [pwa.md](pwa.md) | PWA стратегия, офлайн, Service Worker, кэширование |
+| [pwa.md](pwa.md) | PWA стратегия, installability |
 | [security.md](security.md) | Шифрование, аутентификация, GDPR, обработка данных |
 | [testing.md](testing.md) | Стратегия тестирования, верификация расчётов, CI/CD |
 | [i18n.md](i18n.md) | Интернационализация: языки, переводы, форматы |

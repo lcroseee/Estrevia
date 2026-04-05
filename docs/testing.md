@@ -34,7 +34,7 @@
 | Тест-кейс | Количество | Что проверяем |
 |-----------|-----------|---------------|
 | Эталонные натальные карты | 100+ | Позиции планет ±0.01° (сверка с Astro.com, Solar Fire) |
-| Ayanamsa переключение | 3× на карту | Lahiri, Fagan-Bradley, Krishnamurti — разные результаты |
+| Ayanamsa (Lahiri) | 1× на карту (MVP) | Lahiri only. Фаза 2: Fagan-Bradley, Krishnamurti |
 | Sidereal vs Tropical | 10+ | Разница = ayanamsa offset для каждой планеты |
 | Ретроградность | 20+ | Корректное определение ретроградных планет |
 | Дома (Placidus, Whole Sign) | 10+ | Правильные куспиды при известном времени |
@@ -83,13 +83,17 @@ describe('Natal Chart Calculation', () => {
 
 | Тест | Что проверяем |
 |------|---------------|
-| API: POST /api/chart/calculate | Полный flow: input → расчёт → response |
-| API: GET /api/feed/solar | NASA DONKI integration (mock API) |
-| API: GET /api/feed/earthquake | USGS integration (mock API) |
-| DB: create/read NatalChart | Prisma queries + encryption |
-| DB: create/read User | Clerk webhook → user creation |
+| API: POST /api/chart/calculate | Полный flow: input → Swiss Ephemeris → response (серверный расчёт) |
+| API: POST /api/chart/save | Auth → encrypt birth data → Drizzle transaction |
+| API: GET /api/og/passport/:id | OG image generation (@vercel/og) → PNG 1200×630 |
+| API: POST /api/stripe/checkout | Stripe session creation → redirect URL returned |
+| API: POST /api/webhooks/stripe | Signature verification → user premium status updated |
+| DB: create/read NatalChart | Drizzle queries + encryption round-trip |
+| DB: create/read CosmicPassport | Drizzle queries + view_count increment |
+| DB: create/read User | Drizzle queries + Clerk webhook → user creation |
 | Auth: protected routes | Clerk middleware blocks unauthenticated |
 | Rate limiting | Upstash rate limiter enforces limits |
+| Encryption | encrypt() → decrypt() round-trip for birth data fields |
 
 ---
 
@@ -97,14 +101,15 @@ describe('Natal Chart Calculation', () => {
 
 | Флоу | Шаги |
 |------|------|
-| Расчёт карты (гость) | Landing → ввод даты → карта показана → toggle sidereal/tropical |
+| Расчёт карты (гость) | Landing → ввод даты → POST /api/chart/calculate → карта показана → toggle sidereal/tropical |
+| Cosmic Passport share | Карта → «Поделиться» → карточка создана → /s/[id] открывается → CTA видно |
+| Viral loop | /s/[id] → ввод даты на share page → новый расчёт → новый share |
 | Регистрация | Карта → «Сохранить» → Clerk signup → карта сохранена |
-| Чтение эссе | Карта → клик на планету → эссе открывается → скроллинг |
+| Чтение эссе | Карта → клик на планету → эссе открывается → мини-калькулятор работает |
 | Лунный календарь | Навигация → календарь → текущая фаза видна |
-| Offline mode | Disconnect → расчёт карты → результат показан |
-| PWA install | Prompt shown → install → standalone window |
+| Stripe checkout | Premium CTA → Stripe Checkout → redirect back → is_premium=true |
+| PWA | Manifest loads, install prompt shown |
 | Mobile navigation | Bottom tabs → все разделы доступны |
-| i18n | Switch EN → ES → UI переведён |
 
 ---
 
@@ -169,13 +174,38 @@ jobs:
 
 ---
 
+## UX-тестирование
+
+### Автоматизированное (E2E / Playwright)
+
+| Тест | Что проверяем |
+|------|---------------|
+| Touch target size | Все интерактивные элементы >= 44×44px (проверка через `boundingBox()`) |
+| `prefers-reduced-motion` | При эмуляции `reduce` — нет CSS transitions > 0ms, нет Framer Motion анимаций |
+| Контраст тёмной темы | Primary text >= 4.5:1, secondary >= 3:1 (через axe-core) |
+| Form validation UX | Inline ошибки появляются на blur, фокус переходит на первое невалидное поле при submit |
+| Empty states | Все пустые состояния имеют CTA (нет сохранённых карт, город не найден, нет результатов) |
+| Keyboard navigation | Tab через все интерактивные элементы, Enter активирует, Escape закрывает модалки |
+
+### Ручное (перед релизом)
+
+| Тест | Что проверяем |
+|------|---------------|
+| Mobile 375px | Нет горизонтального скролла, контент не обрезан, bottom nav корректен |
+| VoiceOver / TalkBack | Screen reader корректно читает карту через таблицу-fallback |
+| Slow network (3G) | Skeleton screens появляются, UI не блокируется |
+| Reduced motion | Анимации отключены, UI функционален |
+
+---
+
 ## Верификация астрологических расчётов (Beta)
 
 | Метод | Описание | Кто |
 |-------|----------|-----|
-| Автотесты | 100+ эталонных карт | CI/CD |
+| Автотесты | 100+ эталонных карт (серверный API) | CI/CD |
+| LLM-верификация | Claude сверяет расчёты с эталонными данными Astro.com | Автоматически |
 | Ручная сверка | 10 карт с Astro.com | Разработчик |
-| Beta-тестирование | 50 астрологов проверяют свои карты | Сообщество |
+| Community фидбэк | Публикация в Reddit/Telegram сидерических сообществ | До запуска |
 | Форма обратной связи | «Результат отличается от ожидаемого?» | В UI |
 | Прозрачность | «Swiss Ephemeris v2.10 \| Lahiri» в UI | Автоматически |
 
@@ -190,6 +220,5 @@ jobs:
 | Largest Contentful Paint | < 2.5s | Web Vitals |
 | Time to Interactive | < 3.5s | Web Vitals |
 | Cumulative Layout Shift | < 0.1 | Web Vitals |
-| WASM load time | < 1s | Custom metric |
-| Chart calculation | < 500ms | Custom metric |
+| Chart API response | < 500ms (server calculation + network) | Custom metric |
 | Bundle size (initial) | < 200KB (gzip) | Bundle analyzer |

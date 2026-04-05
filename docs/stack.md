@@ -4,24 +4,25 @@
 
 | Слой | Технология | Версия | Почему |
 |------|-----------|--------|--------|
-| **Frontend** | Next.js (App Router) | 15+ | SSR, ISR, API routes, единый фреймворк |
+| **Frontend** | Next.js (App Router) | 16+ | SSR, ISR, API routes, единый фреймворк |
 | **Язык** | TypeScript | 5.x | Типобезопасность, один язык на всём стеке |
 | **Стили** | Tailwind CSS | 4.x | Utility-first, тёмная тема, быстрый UI |
 | **UI компоненты** | shadcn/ui | latest | Не библиотека — копируемые компоненты, полный контроль |
-| **3D Engine** | Three.js + React Three Fiber | — | Бесплатно, NASA текстуры, большое сообщество |
-| **Астро-движок** | Swiss Ephemeris (WASM) | 2.10+ | Золотой стандарт эфемерид, ±0.01° точность |
-| **БД** | PostgreSQL | 16+ | Надёжность, JSON-поля, геоданные, Prisma ORM |
-| **ORM** | Prisma | 6.x | Типобезопасные запросы, миграции, хорошая интеграция с Next.js |
+| **Астро-движок** | Swiss Ephemeris (`sweph`, Node.js native) | 2.10+ | Золотой стандарт эфемерид, ±0.01° точность, серверный расчёт |
+| **БД** | PostgreSQL | 16+ | Надёжность, JSON-поля, геоданные |
+| **ORM** | Drizzle ORM | latest | Type-safe, 7KB bundle (vs Prisma 1.6MB), быстрый cold start на serverless |
 | **Кэш** | Redis (Upstash) | — | Кэш эфемерид, rate limiting, сессии |
 | **Auth** | Clerk | — | OAuth, magic links, управление пользователями, Vercel Marketplace |
 | **AI (текст)** | Claude API | Sonnet/Haiku | Генерация контента, перевод, интерпретации |
 | **AI (изображения)** | Stability AI | — | Генерация аватаров, таро иллюстрации |
-| **Аналитика** | PostHog | — | Open-source, GDPR compliant, $0 до 1M events |
+| **Аналитика** | PostHog (**Cloud EU**) | — | Open-source, GDPR compliant (EU data residency), $0 до 1M events |
 | **Email** | Resend | — | Transactional emails, waitlist nurture |
 | **Хостинг frontend** | Vercel | — | Edge, ISR, preview deployments, zero-config |
 | **Хостинг backend** | Vercel Functions (Fluid Compute) | — | Один провайдер, серверные функции с полным Node.js |
 | **Хранилище файлов** | Vercel Blob | — | Фото, текстуры, медиа (public + private) |
 | **DNS/Домены** | Cloudflare | — | Быстрый DNS, DDoS protection, дешёвые домены |
+
+> **3D Engine (Phase 2):** Three.js + React Three Fiber — 3D-визуализация планет и созвездий. Не входит в MVP.
 
 ---
 
@@ -29,7 +30,7 @@
 
 | Данные | API Источник | Стоимость | Частота обновления |
 |--------|-------------|-----------|-------------------|
-| Эфемериды планет | Swiss Ephemeris (swisseph WASM) | Бесплатно (GPL) | Расчёт на клиенте |
+| Эфемериды планет | Swiss Ephemeris (`sweph` Node.js) | Бесплатно (AGPL) | Расчёт на сервере (API) |
 | Солнечные вспышки | NASA DONKI API | Бесплатно | Каждые 5 мин |
 | Землетрясения | USGS Earthquake API | Бесплатно | Real-time (GeoJSON) |
 | Погода планет | NASA Horizons | Бесплатно | Ежедневно |
@@ -84,9 +85,9 @@ Vercel Marketplace
 
 | Сервис | MVP (0-1K юзеров) | Scale (10K юзеров) | Комментарий |
 |--------|-------------------|-------------------|-------------|
-| Vercel Pro | $20/мес | $20/мес | Включает Functions, Blob |
+| Vercel Pro | $20/мес | $20/мес | Включает Functions, Blob, 1TB bandwidth. Расчёт на сервере (sweph native) — клиент получает только результат, первый load ~300KB — хватит до 100K+ пользователей |
 | Neon PostgreSQL | $0 (free tier) | $19/мес | 0.5GB → 10GB |
-| Upstash Redis | $0 (free tier) | $10/мес | 10K commands/day → 100K |
+| Upstash Redis | $0 (free tier) | $10/мес | 10K cmd/day (free) → 100K. **Важно:** при ~100+ DAU free tier кончится — перейти на Pay-as-you-go ($0.2/100K cmd) |
 | Clerk | $0 (free tier) | $25/мес | До 10K MAU бесплатно |
 | PostHog | $0 | $0 | До 1M events бесплатно |
 | Claude API | ~$3/мес | ~$20/мес | Haiku для daily, Sonnet для генерации |
@@ -113,11 +114,11 @@ lucide-react              # Иконки
 framer-motion             # Анимации
 
 # Астро-движок
-swisseph                  # Swiss Ephemeris (WASM binding)
+sweph                     # Swiss Ephemeris (Node.js native binding)
 
 # База данных
-prisma
-@prisma/client
+drizzle-orm
+drizzle-kit
 
 # Auth
 @clerk/nextjs
@@ -133,8 +134,16 @@ posthog-node
 # Email
 resend
 
+# MCP
+@modelcontextprotocol/sdk # MCP server SDK (обёртка над API для AI-ассистентов)
+
+# Платежи
+stripe                    # Stripe SDK (серверный)
+
 # Утилиты
 date-fns                  # Работа с датами
+date-fns-tz               # Timezone-aware операции с датами
+@vvo/tzdb                 # Полная IANA tz database (исторические DST/offset)
 zod                       # Валидация схем
 ```
 
@@ -146,6 +155,5 @@ zod                       # Валидация схем
 |---------|-------------------|-------------|
 | Монолит Next.js | При 50K+ DAU | Выделение Astro Engine в отдельный сервис |
 | Vercel Blob | При 100GB+ медиа | S3 + CloudFront |
-| Neon PostgreSQL | При сложных запросах real-time | Supabase, PlanetScale |
 | Clerk Auth | При кастомных auth flows | Auth.js, custom JWT |
 | PostHog Cloud | При 1M+ events/мес | Self-hosted PostHog |

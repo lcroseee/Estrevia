@@ -25,11 +25,13 @@
                                     {lat, lon, date} → "Europe/Moscow"
                                     Библиотека timezone-lookup (клиент)
                                  
-                                 3. Swiss Ephemeris WASM:
-                                    {julian_day, lat, lon, ayanamsa}
-                                    → позиции 12 тел (< 50ms)
-                                 
-                                 4. Рендеринг SVG колеса:
+                                 3. Серверный расчёт:         ──→ POST /api/chart/calculate
+                                    {date, time, lat, lon,          {julian_day, lat, lon,
+                                     ayanamsa}                       ayanamsa}
+                                                                    → sweph Node.js native
+                                                                    → позиции 12 тел (< 50ms)
+                                                              
+                                 4. Рендеринг SVG колеса:    ←── JSON: позиции всех планет
                                     позиции → знаки → дома → аспекты
                                     → SVG на Canvas
 
@@ -51,19 +53,17 @@
 
 | Данные | Источник | Размер | Кэш |
 |--------|---------|--------|-----|
-| Swiss Ephemeris WASM | CDN → Service Worker | ~2MB | При установке PWA |
-| Список городов (autocomplete) | Статичный JSON | ~500KB | Service Worker |
+| Список городов (autocomplete) | Server API (`GET /api/v1/cities`) | — | Серверный поиск |
 | Timezone данные | npm: timezone-lookup | ~100KB | Bundle |
 | Ayanamsa offsets | Hardcoded constants | ~1KB | Bundle |
 
-### Что НЕ уходит на сервер
+### Что уходит на сервер для расчёта
 
 - Дата рождения
-- Время рождения
-- Место рождения
-- Результат расчёта
+- Время рождения (если указано)
+- Координаты города (lat/lon)
 
-**Всё остаётся на устройстве** до момента, когда пользователь нажмёт «Сохранить».
+**Данные рождения отправляются на сервер для расчёта**, но **не сохраняются** до момента, когда пользователь нажмёт «Сохранить». При сохранении данные шифруются AES-256-GCM.
 
 ---
 
@@ -88,9 +88,9 @@
                                                                    data: {id, email, name}}
                                                               
                                                               4. Создание User в БД:
-                                                                  prisma.user.create({
-                                                                    clerk_id, email(encrypted),
-                                                                    display_name
+                                                                  db.insert(users).values({
+                                                                    clerkId, email: encrypt(email),
+                                                                    displayName
                                                                   })
 
                                  5. Отправка карты:          ──→ POST /api/chart/save
@@ -100,10 +100,10 @@
                                                               
                                                               6. Сохранение:
                                                                   encrypt(birth_data) →
-                                                                  prisma.natalChart.create()
-                                                                  prisma.chartPlanet.createMany()
-                                                                  prisma.chartAspect.createMany()
-                                                                  prisma.chartHouse.createMany()
+                                                                  db.insert(natalCharts)
+                                                                  db.insert(chartPlanets)
+                                                                  db.insert(chartAspects)
+                                                                  db.insert(chartHouses)
 
 Видит "Карта сохранена ✓"    ←── 7. Response: {chartId}
 
@@ -157,10 +157,10 @@
 ```
 ПОЛЬЗОВАТЕЛЬ                     БРАУЗЕР                         СЕРВЕР
 ─────────────                    ────────                        ──────
-Открывает /moon              ──→ 1. Swiss Ephemeris WASM:
-                                    Текущая дата → позиция Луны
-                                    → знак, градус, фаза
-                                    (расчёт на клиенте, < 10ms)
+Открывает /moon              ──→                             ──→ GET /api/moon
+                                                                  Текущая дата → позиция Луны
+                                                                  → знак, градус, фаза
+                                                                  (sweph на сервере, < 10ms)
 
                                  2. Генерация 30 дней:
                                     Для каждого дня месяца:
@@ -181,7 +181,7 @@
                                         (из кэшированного MDX)
 ```
 
-**Ключ:** весь лунный календарь рассчитывается на клиенте. Сервер не участвует. Работает офлайн.
+**Ключ:** лунный календарь рассчитывается на сервере (sweph). Результат кэшируется на клиенте для быстрого отображения.
 
 ---
 
@@ -196,7 +196,7 @@
                                     navigator.geolocation
                                     → {lat, lon} (или вручную)
 
-                                 2. Swiss Ephemeris WASM:
+                                 2. Серверный расчёт:         ──→ GET /api/hours?lat=X&lon=Y
                                     sunrise(today, lat, lon)
                                     sunset(today, lat, lon)
                                     → длительность дня/ночи
@@ -222,7 +222,7 @@
                                      только сдвиг стрелки)
 ```
 
-**Ключ:** никакого сервера. Всё на клиенте. Офлайн.
+**Ключ:** расчёт восхода/захода на сервере (sweph). Результат кэшируется на клиенте, стрелка обновляется локально каждую минуту.
 
 ---
 
@@ -309,10 +309,10 @@ Redirect обратно             ←── /settings?success=true
                                                                    subscription: 'sub_xxx'}
                                                               
                                                               4. Обновление User:
-                                                                  prisma.user.update({
-                                                                    is_premium: true,
-                                                                    premium_tier: 'star',
-                                                                    premium_expires_at: ...
+                                                                  db.update(users).set({
+                                                                    isPremium: true,
+                                                                    premiumTier: 'star',
+                                                                    premiumExpiresAt: ...
                                                                   })
 
 Видит: "Подписка активна ✓"  ←── 5. UI обновляется:
@@ -329,11 +329,9 @@ Redirect обратно             ←── /settings?success=true
 ```
 ПОЛЬЗОВАТЕЛЬ                     БРАУЗЕР                         СЕРВЕР
 ─────────────                    ────────                        ──────
-Нажимает "Поделиться"        ──→                              ──→ GET /api/og/chart?
-                                                                   sun=pisces&moon=cancer
-                                                                   &asc=libra&system=sidereal
+Нажимает "Поделиться"        ──→                              ──→ GET /api/og/passport/[id]
                                                               
-                                                              1. next/og (ImageResponse):
+                                                              1. @vercel/og (Satori):
                                                                   Генерация PNG 1200x630:
                                                                   ┌────────────────────┐
                                                                   │ ☀ Sun in Pisces    │
@@ -341,10 +339,10 @@ Redirect обратно             ←── /settings?success=true
                                                                   │ ↑ Asc: Libra       │
                                                                   │                    │
                                                                   │ ESTREVIA           │
-                                                                  │ Sidereal Chart     │
+                                                                  │ Cosmic Passport    │
                                                                   └────────────────────┘
 
-Видит превью:                ←── 2. <img src="/api/og/chart?...">
+Видит превью:                ←── 2. <img src="/api/og/passport/[id]">
   ├── Скопировать ссылку          
   ├── Скачать PNG                 3. Share API (если поддерж.):
   └── Поделиться в...                navigator.share({
@@ -360,22 +358,22 @@ Redirect обратно             ←── /settings?success=true
 ┌──────────────────────────────────────────────────────┐
 │                    КЛИЕНТ (браузер)                   │
 │                                                      │
-│  Расчёт карты ✓     Лунный календарь ✓               │
-│  План. часы ✓        Sidereal/Tropical toggle ✓      │
-│  Чтение эссе ✓       Офлайн режим ✓                  │
-│  Аналитика (PostHog JS) ✓                            │
+│  Рендеринг SVG карты ✓  Sidereal/Tropical toggle ✓   │
+│  Чтение эссе (кэш) ✓   Аналитика (PostHog JS) ✓     │
+│  PWA shell ✓                                         │
 │                                                      │
-│  = Всё что не требует авторизации или внешних данных │
+│  = UI рендеринг + кэшированный контент               │
 └──────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────┐
 │                    СЕРВЕР (Vercel)                    │
 │                                                      │
-│  Регистрация/логин    Сохранение карты               │
-│  NASA/USGS polling    Stripe подписки                │
-│  OG Image генерация   Waitlist emails                │
-│  Webhooks (Clerk, Stripe)                            │
+│  Расчёт карты (sweph)  Лунный календарь (sweph)      │
+│  Планетарные часы      Сохранение карты              │
+│  Регистрация/логин     NASA/USGS polling             │
+│  Stripe подписки       OG Image генерация            │
+│  Waitlist emails       Webhooks (Clerk, Stripe)      │
 │                                                      │
-│  = Всё что требует авторизации, БД, или секретов     │
+│  = Расчёты, авторизация, БД, секреты                 │
 └──────────────────────────────────────────────────────┘
 ```

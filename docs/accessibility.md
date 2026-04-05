@@ -57,17 +57,42 @@
 
 | Требование | Реализация |
 |-----------|-----------|
-| Labels | Каждый input имеет `<label>` |
+| Labels | Каждый input имеет `<label>` (visible, не placeholder-only) |
 | Errors | Ошибки связаны с полем через `aria-describedby` |
+| Focus management | При ошибке submit — auto-focus на первое невалидное поле |
 | Autocomplete | `autocomplete` атрибуты для даты, города, email |
 | Date input | Поддержка native date picker + ручной ввод |
+
+### Иерархия заголовков
+
+| Требование | Реализация |
+|-----------|-----------|
+| Последовательность | h1 → h2 → h3 → ... без пропусков уровней (например, нельзя h1 → h3) |
+| Один h1 | Каждая страница имеет ровно один `<h1>` с primary keyword |
+
+### ARIA Live Regions
+
+| Требование | Реализация |
+|-----------|-----------|
+| Результат расчёта | `aria-live="polite"` на контейнере с результатами карты |
+| Ошибки форм | `aria-live="assertive"` на блоке ошибок |
+| Toast-уведомления | `role="status"` + `aria-live="polite"` |
+| Создание паспорта | Screen reader announcement: «Cosmic Passport created» |
+
+### Escape Routes
+
+| Требование | Реализация |
+|-----------|-----------|
+| Модалки | Видимая кнопка закрытия (X) + `Escape` |
+| Sheets / drawers | Видимая кнопка закрытия + свайп вниз (mobile) |
+| Tooltips | `Escape` для закрытия, автоматическое закрытие при потере фокуса |
 
 ### Медиа
 
 | Требование | Реализация |
 |-----------|-----------|
 | NASA звуки (Фаза 2) | Кнопка play/pause, не autoplay |
-| Анимации | `prefers-reduced-motion` — отключение анимаций |
+| Анимации (`prefers-reduced-motion`) | При `reduce`: отключить все non-essential анимации (stagger, spring physics, parallax). Оставить только функциональные state changes (opacity toggle, instant position change). Без этого медиа-запроса анимации работают нормально. |
 | Dark/Light theme | Respect `prefers-color-scheme` (default dark, но light доступен) |
 
 ---
