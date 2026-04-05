@@ -50,6 +50,18 @@ src/
 
 Birth date, time, and location are encrypted with AES-256-GCM before storage. Encryption key lives in Vercel env vars, never in code. MVP: explicit `encrypt()`/`decrypt()` calls in API routes (no ORM middleware yet).
 
+### Git Security Rules
+
+Hard rules to prevent secrets and PII from leaking into git:
+
+- **NEVER commit `.env`** — it contains API keys and secrets. Only `.env.example` (without values) is committed
+- **NEVER hardcode** API keys, tokens, passwords, or encryption keys in source code. Use `process.env` only
+- **NEVER log** decrypted PII (birth date/time/location), API keys, or session tokens
+- **NEVER put PII** in URLs, query parameters, error messages, or client-accessible state
+- **NEVER commit** files matching: `*.pem`, `*.key`, `*.cert`, `credentials.json`, `serviceAccountKey.json`
+- **Before every `git add`**: review staged files — no `.env`, no secrets in code, no PII in test fixtures
+- **Test fixtures** with birth data must use fake/synthetic data, never real user data
+
 ## Tech Stack
 
 - **Next.js 16+** (App Router), **TypeScript** (strict mode), **Tailwind CSS 4**, **shadcn/ui**
@@ -121,7 +133,11 @@ WCAG 2.1 Level AA. Key requirement: natal chart SVG must have `aria-label` on ev
 
 Before starting MVP development, the following API keys must be configured in Vercel env vars:
 
-1. **Gemini API** (Google AI Studio) — image generation via Imagen 4 for site illustrations (essay art, zodiac signs, backgrounds, decorative elements) and ad creatives. Model: Imagen 4 Fast ($0.02/image) as default, Standard/Ultra for cases where quality is insufficient.
+1. **Gemini API** (Google AI Studio) — one API key (`GEMINI_API_KEY`) for image and video generation. Tiered model strategy:
+   - **Imagen 4 Fast** ($0.02/image) — default for bulk work: essay headers, decorative backgrounds, zodiac sign art, celestial textures
+   - **Imagen 4 Ultra** ($0.06/image) — hero images, OG passport cards, landing page visuals, ad creatives where quality is critical
+   - **Veo 3.1 Lite** ($0.05/sec 720p, $0.08/sec 1080p) — video ad creatives for Meta Ads (Reels/Stories). Escalation from proven static winners, not default
+   - **Nano Banana 2** (Gemini 3.1 Flash Image) — future option for style-consistent series (14 reference images, 4K, character consistency). Adopt when out of preview
 2. **Meta Marketing API** — programmatic ad campaign management (create/pause campaigns, set budgets, upload creatives, configure targeting, read analytics).
 
 **Post-MVP: Advertising Agent** — after MVP launch, build an autonomous agent that manages Meta Ads campaigns: monitors ROAS/CTR, pauses underperformers, scales winners, generates creatives via Gemini, and uploads them to Meta Ads. This agent operates on the same two APIs above.

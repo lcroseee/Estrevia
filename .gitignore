@@ -1,0 +1,43 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# env files (secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# keys & certificates
+*.pem
+*.key
+*.cert
+*.p12
+credentials.json
+serviceAccountKey.json
+
+# misc
+.DS_Store
+
+# debug
+npm-debug.log*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
+/coverage
+
+# sentry
+.sentryclirc
