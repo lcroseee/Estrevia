@@ -117,6 +117,15 @@ WCAG 2.1 Level AA. Key requirement: natal chart SVG must have `aria-label` on ev
 - **Programmatic SEO:** ~150 pages at launch (120 essays + 12 sign pages + 12 sidereal-vs-tropical + pillar pages). Scale only after >80% GSC indexation.
 - **Essay format:** AI-text = 30% of page. 70% = mini-calculator + ephemeris table + 777 correspondences + tropical vs sidereal comparison.
 
+## External API Keys — Setup Before Development
+
+Before starting MVP development, the following API keys must be configured in Vercel env vars:
+
+1. **Gemini API** (Google AI Studio) — image generation via Imagen 4 for site illustrations (essay art, zodiac signs, backgrounds, decorative elements) and ad creatives. Model: Imagen 4 Fast ($0.02/image) as default, Standard/Ultra for cases where quality is insufficient.
+2. **Meta Marketing API** — programmatic ad campaign management (create/pause campaigns, set budgets, upload creatives, configure targeting, read analytics).
+
+**Post-MVP: Advertising Agent** — after MVP launch, build an autonomous agent that manages Meta Ads campaigns: monitors ROAS/CTR, pauses underperformers, scales winners, generates creatives via Gemini, and uploads them to Meta Ads. This agent operates on the same two APIs above.
+
 ## MCP Security Policy
 
 Before installing or connecting any third-party MCP server:

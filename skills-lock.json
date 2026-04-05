@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "SEO Optimizer": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "40f156d4e5f94c560128a46a5118170ad3515d7f12edbe80cfc461d9af46c606"
+    },
+"ui-ux-pro-max": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "8cd1b83a60e8d0a95c332d2baeffad9053617b286beb96bbe13e818507343f47"
+    }
+  }
+}
