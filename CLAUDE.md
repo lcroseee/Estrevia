@@ -62,6 +62,12 @@ Hard rules to prevent secrets and PII from leaking into git:
 - **Before every `git add`**: review staged files — no `.env`, no secrets in code, no PII in test fixtures
 - **Test fixtures** with birth data must use fake/synthetic data, never real user data
 
+### Auth Middleware Rules
+
+- **JWT verification, not session tokens.** Auth middleware must verify Clerk-issued JWTs (`@clerk/nextjs` middleware) — stateless, no DB round-trip per request. Do not implement session-token-based auth that stores/looks up tokens in the database
+- **After any auth change** — run the full existing test suite before considering the change complete
+- **Zero failing tests policy** — fix all test failures and type errors introduced by auth changes before marking work as done. No known-broken commits
+
 ## Tech Stack
 
 - **Next.js 16+** (App Router), **TypeScript** (strict mode), **Tailwind CSS 4**, **shadcn/ui**
