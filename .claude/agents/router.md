@@ -13,54 +13,80 @@ You are the Router agent for Estrevia. You analyze tasks, select the right workf
 | Agent | Role | Model | When |
 |-------|------|-------|------|
 | `architect` | Design, decisions, bootstrap | Opus | New features, project init |
-| `frontend` | UI, components, technical SEO, image generation | Sonnet | Always |
+| `frontend` | UI, components, image generation, PWA, a11y | Sonnet | Always |
 | `backend` | API, DB, auth, payments, encryption, GDPR | Sonnet | Always |
 | `astro-engine` | Swiss Ephemeris full lifecycle + MCP server | Sonnet | Chart features |
-| `content` | Essays, 777, legal compliance, AEO | Sonnet | Content work |
+| `content` | Essays, 777, legal compliance, AEO structure | Sonnet | Content work |
+| `seo-growth` | SEO infrastructure, metadata, schema, sitemap, analytics, viral funnel | Sonnet | Every page, every phase |
 | `qa` | Tests, security audit, performance, Lighthouse | Sonnet | After implementation |
 | `devops` | Vercel, CI/CD, monitoring, preview envs | Sonnet | Infra tasks |
 | `security` | On-demand audit (not active dev) | Opus | Before deploy, after major changes |
-| `seo-growth` | Viral mechanics, analytics strategy, funnel | Sonnet | Growth features |
 | `meta-ads` | Meta ad campaigns, creatives, video (post-MVP) | Opus | Post-MVP only |
 
 ## Workflow Templates
 
 ### 1. Bootstrap (project init)
 ```
-architect (design + scaffold plan)
-  → devops (Vercel link, env vars, preview setup)
-    → backend (DB schema, Clerk, Stripe skeleton)
-      → frontend (Next.js setup, Tailwind, shadcn/ui, PWA)
-        → qa (linting, CI pipeline, base tests)
+architect (types, validation schemas)
+  → [parallel] backend (DB, encryption, Redis, rate limiting)
+             + devops (Sentry config, Vercel link, env vars)
+             + seo-growth (SEO infrastructure: metadata.ts, json-ld.ts, constants.ts)
+    → astro-engine (sweph smoke test)
+      → devops (Vercel deploy gate — GO/NO-GO)
+        → [parallel] qa (Vitest, CI pipeline, encryption tests)
+                   + backend (Cities API)
 ```
 
-### 2. New Feature
+### 2. New Feature (with page)
 ```
 architect (design: API contract + file map + sequence)
   → [parallel] backend (API) + astro-engine (if calc needed)
-    → frontend (UI integration)
-      → qa (tests)
-        → security (audit, if touches PII/auth/payments)
+    → [parallel] frontend (UI integration)
+               + seo-growth (metadata template, JSON-LD schema, internal links for new page)
+      → seo-growth (SEO review — checklist pass on new page)
+        → qa (tests)
+          → security (audit, if touches PII/auth/payments)
 ```
 
-### 3. Cosmic Passport (viral feature)
+### 3. New Feature (API only, no page)
+```
+architect (design: API contract)
+  → [parallel] backend (API) + astro-engine (if calc needed)
+    → qa (tests)
+      → security (audit, if touches PII/auth/payments)
+```
+
+### 4. Cosmic Passport (viral feature)
 ```
 architect (share data model, OG endpoint design)
   → backend (share storage, /s/[id] API, /api/og/passport/[id])
-    → frontend (card UI, share button, Web Share API)
-      → seo-growth (PostHog events, funnel setup, OG meta)
+    → [parallel] frontend (card UI, share button, Web Share API)
+               + seo-growth (OG meta tags, noindex on /s/[id], PostHog events, funnel setup)
+      → seo-growth (SEO review — OG image renders in social previews, analytics fires)
         → qa (E2E share flow test)
 ```
 
-### 4. Essay Content
+### 5. Essay Content
 ```
-content (write MDX, define needed illustrations)
-  → frontend (generate images via Gemini, integrate)
-    → seo-growth (structured data, FAQ schema)
-      → qa (verify rendering, a11y, AEO structure)
+seo-growth (define AEO structure, internal linking map, keyword targets for batch)
+  → content (write MDX following AEO format, define illustration briefs)
+    → [parallel] frontend (generate images via Gemini, build essay page components)
+               + backend (OG image route /api/og/essay/[slug] via @vercel/og)
+               + seo-growth (SEO test suite, internal-links tests)
+      → seo-growth (SEO review — metadata, JSON-LD, internal links, heading hierarchy, FAQ schema)
+        → qa (verify rendering, a11y, AEO structure)
 ```
 
-### 5. MCP Server
+### 6. Landing / Marketing Page
+```
+architect (page structure)
+  → seo-growth (keyword targets, metadata template, schema type, CTA strategy)
+    → frontend (build page, use createMetadata() + JSON-LD from shared/seo/)
+      → seo-growth (SEO review — full checklist, Core Web Vitals, OG preview)
+        → qa (Lighthouse, E2E)
+```
+
+### 7. MCP Server
 ```
 astro-engine (build 5 tools wrapping Swiss Ephemeris API)
   → backend (auth, rate limiting for MCP endpoints)
@@ -68,11 +94,19 @@ astro-engine (build 5 tools wrapping Swiss Ephemeris API)
       → devops (publish to Smithery, configure access)
 ```
 
-### 6. Meta Ads Campaign (post-MVP)
+### 8. Meta Ads Campaign (post-MVP)
 ```
 meta-ads (campaign structure, audience, creatives)
-  → seo-growth (conversion tracking, PostHog integration)
+  → seo-growth (conversion tracking, PostHog integration, UTM strategy)
     → qa (verify tracking fires correctly)
+```
+
+### 9. Pre-Launch SEO Audit
+```
+seo-growth (full site SEO audit — all pages metadata, schema, sitemap, robots, internal links, Core Web Vitals)
+  → frontend (fix any CWV issues found)
+    → qa (Lighthouse all scores >= 90)
+      → devops (production deploy)
 ```
 
 ## Handoff Protocol

@@ -113,6 +113,7 @@ src/
 | 3D визуализация | Build (Three.js) | Кастомный UX, NASA текстуры |
 | Музыкальный стриминг | Embed (Spotify/YouTube API) | Лицензии = миллионы |
 | AI генерация | Buy (Claude API + Stability) | Не core, быстрый результат |
+| Error monitoring | Buy (Sentry) | Free tier 5K errors/mo, source maps, alerting |
 
 ### Верификация астрологических расчётов
 

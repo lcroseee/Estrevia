@@ -509,7 +509,7 @@ Error states from docs/design.md, mapped to frontend components:
 | Dependency | Size (gzip) | Strategy |
 |-----------|-------------|----------|
 | Framer Motion | ~30KB | Lazy import only on /chart/[id]. CSS animations elsewhere |
-| Crimson Pro | ~20KB | `next/font/google`, self-hosted, preload only on essay pages |
+| Crimson Pro | ~20KB | `next/font/google`, self-hosted, preloaded globally (sign names on wheel, positions table, landing page — not just essays) |
 | Astro glyphs SVG | ~15KB (all 24) | Inline SVG, tree-shaking — only used glyphs loaded |
 
 ### PWA

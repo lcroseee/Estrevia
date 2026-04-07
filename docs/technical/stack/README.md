@@ -34,6 +34,7 @@
 | [analytics.md](analytics.md) | **PostHog** | Open-source аналитика, A/B тесты, фичефлаги — всё в одном |
 | [email.md](email.md) | **Resend** | Developer-first email, бесплатный тиер для MVP |
 | [payments.md](payments.md) | **Stripe** | Стандарт для подписок, отсутствовал в изначальном стеке |
+| — | **Sentry** (`@sentry/nextjs`) | Error monitoring, source maps, 5K errors/mo free |
 
 ### Будущее (Фаза 2+)
 

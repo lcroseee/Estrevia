@@ -32,7 +32,7 @@
 
 **Timezone:** библиотека `@vvo/tzdb` (полная IANA tz database) — по координатам определяет IANA timezone ID (например `Europe/Moscow`). Затем `date-fns-tz` конвертирует дату с учётом исторического UTC offset.
 
-> **Важно:** `timezone-lookup` не обрабатывает исторические смены UTC offset (Россия меняла offset в 2011, 2014; Индия, Самоа и др.). `@vvo/tzdb` + `date-fns-tz` корректно работают с IANA tz database, которая содержит все исторические переходы DST и UTC offset для каждого региона.
+> **Важно:** клиентские библиотеки типа `timezone-lookup` не обрабатывают исторические смены UTC offset (Россия меняла offset в 2011, 2014; Индия, Самоа и др.) — поэтому timezone resolution выполняется **только на сервере**. `@vvo/tzdb` + `date-fns-tz` корректно работают с IANA tz database, которая содержит все исторические переходы DST и UTC offset для каждого региона.
 
 **Julian Day:** астрономический формат даты — один непрерывный номер дня с 1 января 4713 BC. Swiss Ephemeris работает с Julian Day.
 

@@ -123,11 +123,31 @@ const securityHeaders = [
 
 ## Rate Limiting
 
-| Endpoint | Лимит | Инструмент |
-|----------|-------|-----------|
-| POST /api/chart/calculate | 10 req/мин (guest), 60 req/мин (auth) | Upstash Rate Limit |
-| POST /api/auth/* | 5 req/мин | Clerk built-in |
-| GET /api/essays/* | 60 req/мин | CDN cache |
+### Canonical Rate Limit Table
+
+| Endpoint | Guest | Authenticated | Storage | Notes |
+|----------|-------|---------------|---------|-------|
+| `POST /api/v1/chart/calculate` | 10/min | 30/min | Upstash Redis | Core endpoint, highest abuse risk |
+| `POST /api/v1/chart/save` | — (auth required) | 10/min | Upstash Redis | |
+| `GET /api/v1/cities/search` | 30/min | 60/min | Upstash Redis | Called on every keystroke (debounced) |
+| `POST /api/v1/passport` | 5/min | 20/min | Upstash Redis | Prevents CDN bloat from mass creation |
+| `POST /api/v1/waitlist` | 5/min | — | Upstash Redis | |
+| `GET /api/v1/moon/current` | 30/min | 60/min | Upstash Redis | |
+| `GET /api/v1/hours` | 30/min | 60/min | Upstash Redis | |
+| `POST /api/auth/*` | 5/min | — | Clerk built-in | |
+| `GET /api/essays/*` | 60/min | — | CDN cache | ISR pages, rate limit via CDN |
+
+### Identifier
+
+- **Guest:** IP address from `x-forwarded-for` header (Vercel sets this)
+- **Authenticated:** `userId` from Clerk JWT (more reliable than IP)
+
+### Implementation
+
+- **Package:** `@upstash/ratelimit` (sliding window algorithm)
+- **Storage:** Upstash Redis (HTTP-based, works in serverless)
+- **Response headers:** `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+- **Over limit:** 429 Too Many Requests with `Retry-After` header
 
 > **Upstash free tier = 10K commands/day.** При ~100+ DAU с rate limiting это кончится быстро. План: MVP на free tier, при росте → Upstash Pay-as-you-go ($0.2/100K commands). Альтернатива: перенести rate limiting в Vercel middleware с in-memory Map (без Redis).
 

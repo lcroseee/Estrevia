@@ -16,20 +16,18 @@
   время: 14:30 (опционально)     
   город: "Moscow"                
                                  
-Нажимает "Рассчитать"       ──→  1. Geocoding города:
-                                    "Moscow" → {lat: 55.75, lon: 37.62}
-                                    Используем browser API или
-                                    кэшированный список городов
+Нажимает "Рассчитать"       ──→  1. City → координаты (серверный API):
+                                    GET /api/v1/cities?q=Moscow
+                                    → {lat: 55.75, lon: 37.62,
+                                       timezone: "Europe/Moscow"}
+                                    (in-memory JSON dataset, ~50K cities)
                                  
-                                 2. Timezone resolution:
-                                    {lat, lon, date} → "Europe/Moscow"
-                                    Библиотека timezone-lookup (клиент)
-                                 
-                                 3. Серверный расчёт:         ──→ POST /api/chart/calculate
-                                    {date, time, lat, lon,          {julian_day, lat, lon,
-                                     ayanamsa}                       ayanamsa}
-                                                                    → sweph Node.js native
+                                 2. Серверный расчёт:         ──→ POST /api/v1/chart/calculate
+                                    {date, time, lat, lon,          Timezone resolution на сервере:
+                                     timezone}                       date-fns-tz (IANA database)
+                                                                    → Julian Day → sweph native
                                                                     → позиции 12 тел (< 50ms)
+                                                                    → chartId (temp record в DB)
                                                               
                                  4. Рендеринг SVG колеса:    ←── JSON: позиции всех планет
                                     позиции → знаки → дома → аспекты
@@ -53,8 +51,8 @@
 
 | Данные | Источник | Размер | Кэш |
 |--------|---------|--------|-----|
-| Список городов (autocomplete) | Server API (`GET /api/v1/cities`) | — | Серверный поиск |
-| Timezone данные | npm: timezone-lookup | ~100KB | Bundle |
+| Список городов (autocomplete) | Server API (`GET /api/v1/cities`) — in-memory JSON, ~50K cities | — | Серверный поиск, 300ms debounce на клиенте |
+| Timezone данные | Сервер: `date-fns-tz` (IANA database через Node.js ICU) | — | Не на клиенте |
 | Ayanamsa offsets | Hardcoded constants | ~1KB | Bundle |
 
 ### Что уходит на сервер для расчёта
@@ -63,7 +61,7 @@
 - Время рождения (если указано)
 - Координаты города (lat/lon)
 
-**Данные рождения отправляются на сервер для расчёта**, но **не сохраняются** до момента, когда пользователь нажмёт «Сохранить». При сохранении данные шифруются AES-256-GCM.
+**Данные рождения отправляются на сервер для расчёта.** Сервер создаёт temp-запись в БД (только рассчитанные позиции, без PII) и возвращает `chartId` для постоянного URL. PII (дата/время/место рождения) **не сохраняется** до момента, когда пользователь нажмёт «Сохранить». При сохранении данные шифруются AES-256-GCM и ассоциируются с `chartId`. Temp-записи без пользователя удаляются через 7 дней.
 
 ---
 

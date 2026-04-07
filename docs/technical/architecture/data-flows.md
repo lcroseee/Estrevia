@@ -70,66 +70,82 @@
               Требуется интернет-соединение.
 ```
 
-### Данные после расчёта (в памяти)
+### API Contract: POST /api/v1/chart/calculate
 
+**Request:**
 ```typescript
-type ChartResult = {
-  input: {
-    date: string          // "1990-03-15"
-    time: string | null   // "14:30" или null
-    lat: number           // 55.7558
-    lon: number           // 37.6173
-    timezone: string      // "Europe/Moscow"
-  }
-  settings: {
-    system: 'sidereal' | 'tropical'
-    ayanamsa: 'lahiri' | 'fagan_bradley' | 'krishnamurti'
-    houseSystem: 'placidus' | 'whole_sign' | 'equal'
-  }
+type CalculateRequest = {
+  date: string              // "1990-03-15"
+  time?: string             // "14:30" (optional)
+  lat: number               // 55.7558
+  lon: number               // 37.6173
+  timezone: string          // "Europe/Moscow" (IANA zone from cities API)
+  system: 'sidereal' | 'tropical'  // default: 'sidereal'
+  ayanamsa?: 'lahiri'       // MVP: only lahiri
+}
+```
+
+**Response:**
+```typescript
+type CalculateResponse = {
+  chartId: string           // UUID — permanent URL, temp record in DB
   planets: Array<{
-    id: PlanetId           // 'sun' | 'moon' | ...
-    longitude: number      // 354.25 (абсолютные градусы)
-    latitude: number       // -0.0001
-    speed: number          // 1.0194 (градусы/день)
-    sign: ZodiacSign       // 'pisces'
-    degree: number         // 24
-    minute: number         // 15
-    second: number         // 3.6
-    isRetrograde: boolean  // false
-    house: number | null   // 5 (или null если время неизвестно)
+    id: PlanetId            // 'sun' | 'moon' | ...
+    siderealLongitude: number  // 330.25 (sidereal absolute degrees)
+    tropicalLongitude: number  // 354.25 (tropical absolute degrees)
+    latitude: number        // -0.0001
+    speed: number           // 1.0194 (degrees/day)
+    sign: ZodiacSign        // 'pisces' (based on selected system)
+    degree: number          // 0
+    minute: number          // 15
+    second: number          // 3.6
+    isRetrograde: boolean   // false
+    house: number | null    // 5 (null if birth time unknown)
   }>
-  houses: Array<{          // null если время неизвестно
-    number: number         // 1-12
+  houses: Array<{           // null if birth time unknown
+    number: number          // 1-12
     sign: ZodiacSign
     degree: number
   }> | null
   aspects: Array<{
     planet1: PlanetId
     planet2: PlanetId
-    type: AspectType       // 'conjunction' | 'trine' | ...
-    orb: number            // 2.34 (градуса)
+    type: AspectType        // 'conjunction' | 'trine' | ...
+    orb: number             // 2.34 (degrees)
     isApplying: boolean
   }>
   meta: {
+    system: 'sidereal' | 'tropical'
+    ayanamsa: 'lahiri'
+    ayanamsaValue: number   // 24.18 (offset applied)
+    houseSystem: 'placidus' | 'whole_sign'
     ephemerisVersion: string  // "swisseph_2.10"
-    ayanamsaValue: number     // 24.18 (для sidereal)
-    calculatedAt: string      // ISO datetime
+    calculatedAt: string    // ISO datetime
   }
 }
 ```
 
+> **Two-step flow:** `POST /api/v1/chart/calculate` creates a **temp** record in DB (status='temp', no PII stored — only calculated positions) and returns a `chartId`. The client uses this `chartId` for a permanent URL. When the user clicks "Save", `POST /api/v1/chart/save` associates the `chartId` with the user, encrypts and stores PII (birth data), and sets status='saved'. Temp records without a user are cleaned by cron after 7 days.
+>
+> **Dual longitudes:** Both `siderealLongitude` and `tropicalLongitude` are returned for every planet. The client toggles between systems by switching which value to display — no server round-trip needed.
+```
+
 ---
 
-## Поток 2: Сохранение карты в БД
+## Поток 2: Сохранение карты в БД (two-step)
+
+> **Step 1 (calculate)** уже создал temp-запись с chartId и позициями (см. Поток 1).
+> **Step 2 (save)** ассоциирует запись с пользователем и шифрует PII.
 
 ```
 КЛИЕНТ                          СЕРВЕР                          БД
 ──────                          ──────                          ──
 
-ChartResult (в памяти)
+chartId (из calculate)
        │
-       │ POST /api/chart/save
-       │ {birth_data, positions, settings}
+       │ POST /api/v1/chart/save
+       │ {chartId, birthDate, birthTime,
+       │  birthLocation, lat, lon, label}
        │
        └──────────────────────→ 1. Auth: Clerk middleware
                                    → userId из JWT
@@ -137,36 +153,33 @@ ChartResult (в памяти)
                                 2. Валидация: Zod schema
                                    → проверка типов и ranges
                                 
-                                3. Шифрование birth data:
+                                3. Проверка: chart существует
+                                   и status='temp'
+                                
+                                4. Шифрование birth data:
                                    encrypt(birth_date) → AES blob
                                    encrypt(birth_time) → AES blob
                                    encrypt(birth_location) → AES blob
                                    encrypt(lat) → AES blob
                                    encrypt(lon) → AES blob
                                 
-                                4. Transaction: ──────────────→ BEGIN
+                                5. Transaction: ──────────────→ BEGIN
                                 
-                                   db.insert(natalCharts)        INSERT natal_chart
-                                     .values({
-                                       userId, encrypted_data,
-                                       system, ayanamsa
+                                   db.update(natalCharts)         UPDATE natal_chart
+                                     .set({                       SET user_id, status='saved',
+                                       userId, status: 'saved',   encrypted PII fields
+                                       encrypted_data, label
                                      })
-                                                                
-                                   db.insert(chartPlanets)        INSERT chart_planet
-                                     .values(planets[])           × 12 rows
-                                
-                                   db.insert(chartAspects)        INSERT chart_aspect
-                                     .values(aspects[])           × ~15 rows
-                                
-                                   db.insert(chartHouses)         INSERT chart_house
-                                     .values(houses[])            × 12 rows
+                                     .where(eq(id, chartId))
                                                                 
                                                                 COMMIT
                                 
-                                5. Response:
-                                   {id: "chart_xxx",
+                                6. Response:
+                                   {id: chartId,
                           ←──────  status: "saved"}
 ```
+
+> **Temp record cleanup:** Vercel Cron job (daily) deletes natal_chart records where status='temp' AND created_at < 7 days ago, cascading to chart_planets/aspects/houses.
 
 ---
 

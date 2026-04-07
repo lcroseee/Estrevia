@@ -61,8 +61,9 @@
 | Поле | Тип | Описание |
 |------|-----|----------|
 | id | UUID | PK |
-| user_id | UUID? | FK → User (null = гостевой расчёт) |
-| label | String | «Моя карта», «Мама», и т.д. |
+| user_id | UUID? | FK → User (null = гостевой или temp расчёт) |
+| status | Enum | 'temp' / 'saved' — temp создаётся при расчёте, saved при явном сохранении |
+| label | String | «Моя карта», «Мама», и т.д. (default: 'My Chart') |
 | birth_date | String (encrypted) | Дата рождения |
 | birth_time | String? (encrypted) | Время рождения (может быть неизвестно) |
 | birth_time_known | Boolean | Известно ли время |
@@ -165,6 +166,7 @@ verified_by: "astrologer_handle"
 | Поле | Тип | Описание |
 |------|-----|----------|
 | id | String (nanoid, 8 char) | PK, короткий ID для URL `/s/[id]` |
+| chart_id | UUID? | FK → NatalChart (для аналитики: какая карта породила паспорт) |
 | tropical_sign | Enum | Тропический знак Солнца |
 | sidereal_sign | Enum | Сидерический знак Солнца |
 | moon_sign | Enum? | Знак Луны (сидерический) |
@@ -202,6 +204,7 @@ import { relations } from 'drizzle-orm';
 export const systemEnum = pgEnum('system', ['sidereal', 'tropical']);
 export const ayanamsaEnum = pgEnum('ayanamsa', ['lahiri', 'fagan_bradley', 'krishnamurti']);
 export const houseSystemEnum = pgEnum('house_system', ['placidus', 'whole_sign', 'equal']);
+export const chartStatusEnum = pgEnum('chart_status', ['temp', 'saved']);
 export const elementEnum = pgEnum('element', ['fire', 'water', 'earth', 'air']);
 export const detailLevelEnum = pgEnum('detail_level', ['beginner', 'intermediate', 'expert']);
 export const premiumTierEnum = pgEnum('premium_tier', ['star', 'cosmos']);
@@ -228,10 +231,13 @@ export const users = pgTable('user', {
 });
 
 // NatalChart — birth data encrypted (AES-256-GCM)
+// status: 'temp' = created on calculate (no user, no PII stored), 'saved' = user clicked Save (PII encrypted)
+// Temp records with no user are cleaned up by cron after 7 days.
 export const natalCharts = pgTable('natal_chart', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').references(() => users.id),
-  label: text('label').notNull(),
+  status: chartStatusEnum('status').default('temp').notNull(),
+  label: text('label').notNull().default('My Chart'),
   birthDate: text('birth_date').notNull(),       // encrypted
   birthTime: text('birth_time'),                 // encrypted, nullable
   birthTimeKnown: boolean('birth_time_known').notNull(),
@@ -253,6 +259,7 @@ export const natalCharts = pgTable('natal_chart', {
 // CosmicPassport — виральная карточка, без PII
 export const cosmicPassports = pgTable('cosmic_passport', {
   id: text('id').primaryKey(),                   // nanoid, 8 char
+  chartId: uuid('chart_id').references(() => natalCharts.id), // FK for analytics: which chart spawned this passport
   tropicalSign: text('tropical_sign').notNull(),
   siderealSign: text('sidereal_sign').notNull(),
   moonSign: text('moon_sign'),

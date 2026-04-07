@@ -75,6 +75,7 @@ Hard rules to prevent secrets and PII from leaking into git:
 - **PostgreSQL** (Neon serverless) + **Drizzle** ORM
 - **Upstash Redis** for rate limiting (MVP) and NASA/USGS cache (Phase 2)
 - **Clerk** for auth, **Stripe** for subscriptions, **PostHog** for analytics, **Resend** for email
+- **Sentry** (`@sentry/nextjs`) for error monitoring (free tier 5K errors/mo, source maps, alerting)
 - **Vercel** for hosting (Fluid Compute functions, Cron, Blob storage)
 
 ## Design Constraints
@@ -131,9 +132,12 @@ WCAG 2.1 Level AA. Key requirement: natal chart SVG must have `aria-label` on ev
 
 ## SEO & AEO
 
+- **SEO-Growth agent** owns the full SEO lifecycle: infrastructure, implementation, review. Creates and maintains `src/shared/seo/` (metadata utilities, JSON-LD generators, internal linking config, sitemap, robots). Reviews every page for SEO compliance before it ships.
+- **Single source of truth:** all pages use `createMetadata()` from `src/shared/seo/metadata.ts` and JSON-LD generators from `src/shared/seo/json-ld.ts`. Frontend imports these — does NOT create SEO utilities independently.
 - **AEO (AI Engine Optimization):** every essay page is structured for AI citation — direct answer in first paragraph, FAQ schema markup, comparison tables, specific dates/numbers. Goal: be the source ChatGPT/Perplexity cites for sidereal astrology queries.
 - **Programmatic SEO:** ~150 pages at launch (120 essays + 12 sign pages + 12 sidereal-vs-tropical + pillar pages). Scale only after >80% GSC indexation.
 - **Essay format:** AI-text = 30% of page. 70% = mini-calculator + ephemeris table + 777 correspondences + tropical vs sidereal comparison.
+- **Ephemeris tables:** build-time script (`scripts/generate-ephemeris-tables.ts`) generates unique Swiss Ephemeris data for each essay. This is our featured snippet advantage — no other site has this data in structured format.
 
 ## External API Keys — Setup Before Development
 
