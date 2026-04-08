@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Crimson_Pro } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { PostHogProvider } from "@/shared/components/PostHogProvider";
+import { CookieConsent } from "@/shared/components/CookieConsent";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,10 +15,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Crimson Pro — esoteric headings, body text in essays
+const crimsonPro = Crimson_Pro({
+  variable: "--font-crimson-pro",
+  subsets: ["latin"],
+  weight: ["300", "400", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Estrevia — Sidereal Astrology",
   description:
     "Calculate your natal chart in sidereal astrology. Discover your true zodiac sign.",
+  other: {
+    // PWA manifest link is handled via Next.js metadata.manifest below,
+    // but we keep a manual link for legacy browser support.
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "Estrevia",
+    "theme-color": "#0A0A0F",
+  },
 };
 
 export default function RootLayout({
@@ -24,12 +45,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0A0A0F] text-white min-h-screen`}
-      >
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className="dark">
+        <head>
+          <link rel="manifest" href="/manifest.json" />
+          <link rel="apple-touch-icon" href="/icons/icon.svg" />
+        </head>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} antialiased bg-[#0A0A0F] text-white min-h-screen`}
+        >
+          <PostHogProvider>
+            {children}
+            <CookieConsent />
+          </PostHogProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

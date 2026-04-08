@@ -1,0 +1,79 @@
+import { Ratelimit } from '@upstash/ratelimit';
+import { redis } from './redis';
+
+// ---------------------------------------------------------------------------
+// Per-endpoint rate limiters (sliding window)
+// ---------------------------------------------------------------------------
+
+const limiters: Record<string, Ratelimit> = {
+  'chart/calculate': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1m'),
+    prefix: 'rl:chart/calculate',
+  }),
+  'chart/save': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1m'),
+    prefix: 'rl:chart/save',
+  }),
+  cities: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1m'),
+    prefix: 'rl:cities',
+  }),
+  'passport/create': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1m'),
+    prefix: 'rl:passport/create',
+  }),
+  'passport/view': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, '1m'),
+    prefix: 'rl:passport/view',
+  }),
+  moon: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1m'),
+    prefix: 'rl:moon',
+  }),
+  hours: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1m'),
+    prefix: 'rl:hours',
+  }),
+  health: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, '1m'),
+    prefix: 'rl:health',
+  }),
+  waitlist: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1m'),
+    prefix: 'rl:waitlist',
+  }),
+  'stripe/checkout': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1m'),
+    prefix: 'rl:stripe/checkout',
+  }),
+  'stripe/portal': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1m'),
+    prefix: 'rl:stripe/portal',
+  }),
+};
+
+// Fallback limiter for endpoints not explicitly configured (general API limit)
+const defaultLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(100, '1m'),
+  prefix: 'rl:default',
+});
+
+/**
+ * Returns the rate limiter for a given endpoint key.
+ * Falls back to the default (100 req/min) limiter if the key is unknown.
+ */
+export function getRateLimiter(endpoint: string): Ratelimit {
+  return limiters[endpoint] ?? defaultLimiter;
+}

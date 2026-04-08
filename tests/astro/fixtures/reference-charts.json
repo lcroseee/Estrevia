@@ -1,0 +1,4362 @@
+[
+  {
+    "name": "Aleister Crowley",
+    "input": {
+      "date": "1875-10-12",
+      "time": "23:42",
+      "latitude": 52.2852,
+      "longitude": -1.5242,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 199.235535,
+        "sign": "Virgo",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 352.804259,
+        "sign": "Pisces",
+        "signDegree": 0
+      },
+      "mercury": {
+        "tropicalDegree": 223.358827
+      },
+      "venus": {
+        "tropicalDegree": 204.408916
+      },
+      "mars": {
+        "tropicalDegree": 292.882189
+      },
+      "jupiter": {
+        "tropicalDegree": 217.128644
+      },
+      "saturn": {
+        "tropicalDegree": 319.517294
+      },
+      "ascendant": 127.986568,
+      "midheaven": 16.401119
+    }
+  },
+  {
+    "name": "Albert Einstein",
+    "input": {
+      "date": "1879-03-14",
+      "time": "11:30",
+      "latitude": 48.4011,
+      "longitude": 9.9876,
+      "timezone": "Europe/Berlin",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 353.498426,
+        "sign": "Pisces",
+        "signDegree": 1
+      },
+      "moon": {
+        "tropicalDegree": 254.395731,
+        "sign": "Scorpio",
+        "signDegree": 22
+      },
+      "mercury": {
+        "tropicalDegree": 3.12563
+      },
+      "venus": {
+        "tropicalDegree": 16.973496
+      },
+      "mars": {
+        "tropicalDegree": 296.907402
+      },
+      "jupiter": {
+        "tropicalDegree": 327.481894
+      },
+      "saturn": {
+        "tropicalDegree": 4.18866
+      },
+      "ascendant": 98.824114,
+      "midheaven": 339.208404
+    }
+  },
+  {
+    "name": "Nikola Tesla",
+    "input": {
+      "date": "1856-07-10",
+      "time": "00:00",
+      "latitude": 44.5372,
+      "longitude": 15.3214,
+      "timezone": "Europe/Belgrade",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 107.800512,
+        "sign": "Gemini",
+        "signDegree": 25
+      },
+      "moon": {
+        "tropicalDegree": 193.841956,
+        "sign": "Virgo",
+        "signDegree": 21
+      },
+      "mercury": {
+        "tropicalDegree": 88.109753
+      },
+      "venus": {
+        "tropicalDegree": 104.818288
+      },
+      "mars": {
+        "tropicalDegree": 198.940733
+      },
+      "jupiter": {
+        "tropicalDegree": 8.59028
+      },
+      "saturn": {
+        "tropicalDegree": 95.559086
+      },
+      "ascendant": 23.900053,
+      "midheaven": 281.835651
+    }
+  },
+  {
+    "name": "Steve Jobs",
+    "input": {
+      "date": "1955-02-24",
+      "time": "19:15",
+      "latitude": 37.7749,
+      "longitude": -122.4194,
+      "timezone": "America/Los_Angeles",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 335.74814,
+        "sign": "Aquarius",
+        "signDegree": 12
+      },
+      "moon": {
+        "tropicalDegree": 7.747175,
+        "sign": "Pisces",
+        "signDegree": 14
+      },
+      "mercury": {
+        "tropicalDegree": 314.361726
+      },
+      "venus": {
+        "tropicalDegree": 291.171882
+      },
+      "mars": {
+        "tropicalDegree": 29.090476
+      },
+      "jupiter": {
+        "tropicalDegree": 110.507889
+      },
+      "saturn": {
+        "tropicalDegree": 231.162694
+      },
+      "ascendant": 172.291253,
+      "midheaven": 81.315115
+    }
+  },
+  {
+    "name": "Princess Diana",
+    "input": {
+      "date": "1961-07-01",
+      "time": "19:45",
+      "latitude": 52.8275,
+      "longitude": 0.515,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 99.663069,
+        "sign": "Gemini",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 325.037772,
+        "sign": "Aquarius",
+        "signDegree": 1
+      },
+      "mercury": {
+        "tropicalDegree": 93.201415
+      },
+      "venus": {
+        "tropicalDegree": 54.399863
+      },
+      "mars": {
+        "tropicalDegree": 151.645723
+      },
+      "jupiter": {
+        "tropicalDegree": 305.097076
+      },
+      "saturn": {
+        "tropicalDegree": 297.814035
+      },
+      "ascendant": 258.427103,
+      "midheaven": 203.068051
+    }
+  },
+  {
+    "name": "Frida Kahlo",
+    "input": {
+      "date": "1907-07-06",
+      "time": "08:30",
+      "latitude": 19.35,
+      "longitude": -99.1617,
+      "timezone": "America/Mexico_City",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 103.375741,
+        "sign": "Gemini",
+        "signDegree": 20
+      },
+      "moon": {
+        "tropicalDegree": 59.711541,
+        "sign": "Taurus",
+        "signDegree": 7
+      },
+      "mercury": {
+        "tropicalDegree": 126.335131
+      },
+      "venus": {
+        "tropicalDegree": 84.339356
+      },
+      "mars": {
+        "tropicalDegree": 283.394688
+      },
+      "jupiter": {
+        "tropicalDegree": 110.435559
+      },
+      "saturn": {
+        "tropicalDegree": 357.446658
+      },
+      "ascendant": 143.511286,
+      "midheaven": 53.326484
+    }
+  },
+  {
+    "name": "Nelson Mandela",
+    "input": {
+      "date": "1918-07-18",
+      "time": "14:54",
+      "latitude": -31.7833,
+      "longitude": 28.75,
+      "timezone": "Africa/Johannesburg",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 115.070794,
+        "sign": "Cancer",
+        "signDegree": 2
+      },
+      "moon": {
+        "tropicalDegree": 230.256086,
+        "sign": "Libra",
+        "signDegree": 27
+      },
+      "mercury": {
+        "tropicalDegree": 136.13332
+      },
+      "venus": {
+        "tropicalDegree": 82.579379
+      },
+      "mars": {
+        "tropicalDegree": 192.578232
+      },
+      "jupiter": {
+        "tropicalDegree": 91.167534
+      },
+      "saturn": {
+        "tropicalDegree": 135.032478
+      },
+      "ascendant": 263.805035,
+      "midheaven": 155.989319
+    }
+  },
+  {
+    "name": "Marie Curie",
+    "input": {
+      "date": "1867-11-07",
+      "time": "12:00",
+      "latitude": 52.2297,
+      "longitude": 21.0122,
+      "timezone": "Europe/Warsaw",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 224.575861,
+        "sign": "Libra",
+        "signDegree": 22
+      },
+      "moon": {
+        "tropicalDegree": 346.479807,
+        "sign": "Aquarius",
+        "signDegree": 24
+      },
+      "mercury": {
+        "tropicalDegree": 246.634045
+      },
+      "venus": {
+        "tropicalDegree": 235.574296
+      },
+      "mars": {
+        "tropicalDegree": 239.616557
+      },
+      "jupiter": {
+        "tropicalDegree": 328.005021
+      },
+      "saturn": {
+        "tropicalDegree": 235.274951
+      },
+      "ascendant": 282.076708,
+      "midheaven": 228.633813
+    }
+  },
+  {
+    "name": "Mahatma Gandhi",
+    "input": {
+      "date": "1869-10-02",
+      "time": "07:33",
+      "latitude": 21.6417,
+      "longitude": 69.6293,
+      "timezone": "Asia/Kolkata",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 188.890791,
+        "sign": "Virgo",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 139.433192,
+        "sign": "Cancer",
+        "signDegree": 27
+      },
+      "mercury": {
+        "tropicalDegree": 213.746481
+      },
+      "venus": {
+        "tropicalDegree": 226.389058
+      },
+      "mars": {
+        "tropicalDegree": 228.373854
+      },
+      "jupiter": {
+        "tropicalDegree": 50.175503
+      },
+      "saturn": {
+        "tropicalDegree": 252.35934
+      },
+      "ascendant": 194.258148,
+      "midheaven": 104.146202
+    }
+  },
+  {
+    "name": "Moscow born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "timezone": "Europe/Moscow",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.104483,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 304.585891,
+        "sign": "Capricorn",
+        "signDegree": 10
+      },
+      "mercury": {
+        "tropicalDegree": 60.488943
+      },
+      "venus": {
+        "tropicalDegree": 45.058294
+      },
+      "mars": {
+        "tropicalDegree": 8.759175
+      },
+      "jupiter": {
+        "tropicalDegree": 105.206275
+      },
+      "saturn": {
+        "tropicalDegree": 294.212375
+      },
+      "ascendant": 158.75188,
+      "midheaven": 60.181998
+    }
+  },
+  {
+    "name": "Tokyo born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 35.6762,
+      "longitude": 139.6503,
+      "timezone": "Asia/Tokyo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 80.905415,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 301.991734,
+        "sign": "Capricorn",
+        "signDegree": 8
+      },
+      "mercury": {
+        "tropicalDegree": 60.163141
+      },
+      "venus": {
+        "tropicalDegree": 44.813931
+      },
+      "mars": {
+        "tropicalDegree": 8.608664
+      },
+      "jupiter": {
+        "tropicalDegree": 105.161537
+      },
+      "saturn": {
+        "tropicalDegree": 294.223864
+      },
+      "ascendant": 175.707695,
+      "midheaven": 85.259618
+    }
+  },
+  {
+    "name": "Sydney born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timezone": "Australia/Sydney",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 80.8656,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 301.473919,
+        "sign": "Capricorn",
+        "signDegree": 7
+      },
+      "mercury": {
+        "tropicalDegree": 60.098226
+      },
+      "venus": {
+        "tropicalDegree": 44.765064
+      },
+      "mars": {
+        "tropicalDegree": 8.578556
+      },
+      "jupiter": {
+        "tropicalDegree": 105.152593
+      },
+      "saturn": {
+        "tropicalDegree": 294.226156
+      },
+      "ascendant": 166.780953,
+      "midheaven": 82.057469
+    }
+  },
+  {
+    "name": "Buenos Aires born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": -34.6037,
+      "longitude": -58.3816,
+      "timezone": "America/Argentina/Buenos_Aires",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.383166,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 308.232547,
+        "sign": "Capricorn",
+        "signDegree": 14
+      },
+      "mercury": {
+        "tropicalDegree": 60.948495
+      },
+      "venus": {
+        "tropicalDegree": 45.400471
+      },
+      "mars": {
+        "tropicalDegree": 8.969817
+      },
+      "jupiter": {
+        "tropicalDegree": 105.268952
+      },
+      "saturn": {
+        "tropicalDegree": 294.19621
+      },
+      "ascendant": 145.98506,
+      "midheaven": 69.000566
+    }
+  },
+  {
+    "name": "Cairo born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 30.0444,
+      "longitude": 31.2357,
+      "timezone": "Africa/Cairo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.144296,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 305.105762,
+        "sign": "Capricorn",
+        "signDegree": 11
+      },
+      "mercury": {
+        "tropicalDegree": 60.554348
+      },
+      "venus": {
+        "tropicalDegree": 45.107172
+      },
+      "mars": {
+        "tropicalDegree": 8.789272
+      },
+      "jupiter": {
+        "tropicalDegree": 105.215225
+      },
+      "saturn": {
+        "tropicalDegree": 294.210071
+      },
+      "ascendant": 159.731397,
+      "midheaven": 68.409063
+    }
+  },
+  {
+    "name": "Mumbai born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 19.076,
+      "longitude": 72.8777,
+      "timezone": "Asia/Kolkata",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.044763,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 303.806742,
+        "sign": "Capricorn",
+        "signDegree": 10
+      },
+      "mercury": {
+        "tropicalDegree": 60.390988
+      },
+      "venus": {
+        "tropicalDegree": 44.984981
+      },
+      "mars": {
+        "tropicalDegree": 8.714026
+      },
+      "jupiter": {
+        "tropicalDegree": 105.192851
+      },
+      "saturn": {
+        "tropicalDegree": 294.215826
+      },
+      "ascendant": 161.775771,
+      "midheaven": 72.194338
+    }
+  },
+  {
+    "name": "Reykjavik born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 64.1355,
+      "longitude": -21.8954,
+      "timezone": "Atlantic/Reykjavik",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.263732,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 306.667515,
+        "sign": "Capricorn",
+        "signDegree": 12
+      },
+      "mercury": {
+        "tropicalDegree": 60.751054
+      },
+      "venus": {
+        "tropicalDegree": 45.253814
+      },
+      "mars": {
+        "tropicalDegree": 8.879553
+      },
+      "jupiter": {
+        "tropicalDegree": 105.242084
+      },
+      "saturn": {
+        "tropicalDegree": 294.203149
+      },
+      "ascendant": 162.035545,
+      "midheaven": 60.807059
+    }
+  },
+  {
+    "name": "Cape Town born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": -33.9249,
+      "longitude": 18.4241,
+      "timezone": "Africa/Johannesburg",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.184108,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 305.625988,
+        "sign": "Capricorn",
+        "signDegree": 11
+      },
+      "mercury": {
+        "tropicalDegree": 60.619836
+      },
+      "venus": {
+        "tropicalDegree": 45.156051
+      },
+      "mars": {
+        "tropicalDegree": 8.819367
+      },
+      "jupiter": {
+        "tropicalDegree": 105.224177
+      },
+      "saturn": {
+        "tropicalDegree": 294.207766
+      },
+      "ascendant": 148.534962,
+      "midheaven": 70.501911
+    }
+  },
+  {
+    "name": "Bangkok born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 13.7563,
+      "longitude": 100.5018,
+      "timezone": "Asia/Bangkok",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 80.985043,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 303.028371,
+        "sign": "Capricorn",
+        "signDegree": 9
+      },
+      "mercury": {
+        "tropicalDegree": 60.293217
+      },
+      "venus": {
+        "tropicalDegree": 44.911671
+      },
+      "mars": {
+        "tropicalDegree": 8.668874
+      },
+      "jupiter": {
+        "tropicalDegree": 105.179429
+      },
+      "saturn": {
+        "tropicalDegree": 294.219274
+      },
+      "ascendant": 166.009872,
+      "midheaven": 76.901381
+    }
+  },
+  {
+    "name": "Lima born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": -12.0464,
+      "longitude": -77.0428,
+      "timezone": "America/Lima",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.462788,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 309.27777,
+        "sign": "Capricorn",
+        "signDegree": 15
+      },
+      "mercury": {
+        "tropicalDegree": 61.080529
+      },
+      "venus": {
+        "tropicalDegree": 45.498251
+      },
+      "mars": {
+        "tropicalDegree": 9.029984
+      },
+      "jupiter": {
+        "tropicalDegree": 105.286869
+      },
+      "saturn": {
+        "tropicalDegree": 294.191574
+      },
+      "ascendant": 166.49825,
+      "midheaven": 79.627396
+    }
+  },
+  {
+    "name": "Auckland born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": -36.8509,
+      "longitude": 174.7645,
+      "timezone": "Pacific/Auckland",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 80.785971,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 300.43928,
+        "sign": "Capricorn",
+        "signDegree": 6
+      },
+      "mercury": {
+        "tropicalDegree": 59.968641
+      },
+      "venus": {
+        "tropicalDegree": 44.667333
+      },
+      "mars": {
+        "tropicalDegree": 8.518336
+      },
+      "jupiter": {
+        "tropicalDegree": 105.134707
+      },
+      "saturn": {
+        "tropicalDegree": 294.230734
+      },
+      "ascendant": 155.979315,
+      "midheaven": 76.027628
+    }
+  },
+  {
+    "name": "Dubai born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "timezone": "Asia/Dubai",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.104483,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 304.585891,
+        "sign": "Capricorn",
+        "signDegree": 10
+      },
+      "mercury": {
+        "tropicalDegree": 60.488943
+      },
+      "venus": {
+        "tropicalDegree": 45.058294
+      },
+      "mars": {
+        "tropicalDegree": 8.759175
+      },
+      "jupiter": {
+        "tropicalDegree": 105.206275
+      },
+      "saturn": {
+        "tropicalDegree": 294.212375
+      },
+      "ascendant": 167.039834,
+      "midheaven": 76.801523
+    }
+  },
+  {
+    "name": "Mexico City born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 19.4326,
+      "longitude": -99.1332,
+      "timezone": "America/Mexico_City",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.502598,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 309.800952,
+        "sign": "Capricorn",
+        "signDegree": 16
+      },
+      "mercury": {
+        "tropicalDegree": 61.146668
+      },
+      "venus": {
+        "tropicalDegree": 45.547143
+      },
+      "mars": {
+        "tropicalDegree": 9.060065
+      },
+      "jupiter": {
+        "tropicalDegree": 105.295829
+      },
+      "saturn": {
+        "tropicalDegree": 294.189253
+      },
+      "ascendant": 162.723005,
+      "midheaven": 73.091144
+    }
+  },
+  {
+    "name": "Lagos born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 6.5244,
+      "longitude": 3.3792,
+      "timezone": "Africa/Lagos",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.22392,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 306.146571,
+        "sign": "Capricorn",
+        "signDegree": 12
+      },
+      "mercury": {
+        "tropicalDegree": 60.685404
+      },
+      "venus": {
+        "tropicalDegree": 45.204931
+      },
+      "mars": {
+        "tropicalDegree": 8.849461
+      },
+      "jupiter": {
+        "tropicalDegree": 105.23313
+      },
+      "saturn": {
+        "tropicalDegree": 294.205458
+      },
+      "ascendant": 158.223203,
+      "midheaven": 70.498323
+    }
+  },
+  {
+    "name": "Toronto born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 43.6532,
+      "longitude": -79.3832,
+      "timezone": "America/Toronto",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.422977,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 308.754969,
+        "sign": "Capricorn",
+        "signDegree": 15
+      },
+      "mercury": {
+        "tropicalDegree": 61.014471
+      },
+      "venus": {
+        "tropicalDegree": 45.44936
+      },
+      "mars": {
+        "tropicalDegree": 8.999901
+      },
+      "jupiter": {
+        "tropicalDegree": 105.27791
+      },
+      "saturn": {
+        "tropicalDegree": 294.193893
+      },
+      "ascendant": 157.955153,
+      "midheaven": 63.363848
+    }
+  },
+  {
+    "name": "Seoul born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 37.5665,
+      "longitude": 126.978,
+      "timezone": "Asia/Seoul",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 80.905415,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 301.991734,
+        "sign": "Capricorn",
+        "signDegree": 8
+      },
+      "mercury": {
+        "tropicalDegree": 60.163141
+      },
+      "venus": {
+        "tropicalDegree": 44.813931
+      },
+      "mars": {
+        "tropicalDegree": 8.608664
+      },
+      "jupiter": {
+        "tropicalDegree": 105.161537
+      },
+      "saturn": {
+        "tropicalDegree": 294.223864
+      },
+      "ascendant": 165.44051,
+      "midheaven": 73.552475
+    }
+  },
+  {
+    "name": "Sao Paulo born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": -23.5505,
+      "longitude": -46.6333,
+      "timezone": "America/Sao_Paulo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.383166,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 308.232547,
+        "sign": "Capricorn",
+        "signDegree": 14
+      },
+      "mercury": {
+        "tropicalDegree": 60.948495
+      },
+      "venus": {
+        "tropicalDegree": 45.400471
+      },
+      "mars": {
+        "tropicalDegree": 8.969817
+      },
+      "jupiter": {
+        "tropicalDegree": 105.268952
+      },
+      "saturn": {
+        "tropicalDegree": 294.19621
+      },
+      "ascendant": 165.356874,
+      "midheaven": 79.929517
+    }
+  },
+  {
+    "name": "Helsinki born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 60.1699,
+      "longitude": 24.9384,
+      "timezone": "Europe/Helsinki",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.144296,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 305.105762,
+        "sign": "Capricorn",
+        "signDegree": 11
+      },
+      "mercury": {
+        "tropicalDegree": 60.554348
+      },
+      "venus": {
+        "tropicalDegree": 45.107172
+      },
+      "mars": {
+        "tropicalDegree": 8.789272
+      },
+      "jupiter": {
+        "tropicalDegree": 105.215225
+      },
+      "saturn": {
+        "tropicalDegree": 294.210071
+      },
+      "ascendant": 161.658278,
+      "midheaven": 62.443117
+    }
+  },
+  {
+    "name": "Singapore born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "timezone": "Asia/Singapore",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 80.945229,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 302.509884,
+        "sign": "Capricorn",
+        "signDegree": 8
+      },
+      "mercury": {
+        "tropicalDegree": 60.228138
+      },
+      "venus": {
+        "tropicalDegree": 44.8628
+      },
+      "mars": {
+        "tropicalDegree": 8.638769
+      },
+      "jupiter": {
+        "tropicalDegree": 105.170483
+      },
+      "saturn": {
+        "tropicalDegree": 294.22157
+      },
+      "ascendant": 152.320396,
+      "midheaven": 65.936069
+    }
+  },
+  {
+    "name": "Nairobi born 1990-06-12 noon",
+    "input": {
+      "date": "1990-06-12",
+      "time": "12:00",
+      "latitude": -1.2921,
+      "longitude": 36.8219,
+      "timezone": "Africa/Nairobi",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 81.144296,
+        "sign": "Taurus",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 305.105762,
+        "sign": "Capricorn",
+        "signDegree": 11
+      },
+      "mercury": {
+        "tropicalDegree": 60.554348
+      },
+      "venus": {
+        "tropicalDegree": 45.107172
+      },
+      "mars": {
+        "tropicalDegree": 8.789272
+      },
+      "jupiter": {
+        "tropicalDegree": 105.215225
+      },
+      "saturn": {
+        "tropicalDegree": 294.210071
+      },
+      "ascendant": 160.58511,
+      "midheaven": 73.636578
+    }
+  },
+  {
+    "name": "Midnight birth 2000-01-01 London",
+    "input": {
+      "date": "2000-01-01",
+      "time": "00:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 279.85922,
+        "sign": "Sagittarius",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 217.293416,
+        "sign": "Libra",
+        "signDegree": 13
+      },
+      "mercury": {
+        "tropicalDegree": 271.111811
+      },
+      "venus": {
+        "tropicalDegree": 240.961426
+      },
+      "mars": {
+        "tropicalDegree": 327.575483
+      },
+      "jupiter": {
+        "tropicalDegree": 25.233072
+      },
+      "saturn": {
+        "tropicalDegree": 40.405839
+      },
+      "ascendant": 186.937715,
+      "midheaven": 99.040228
+    }
+  },
+  {
+    "name": "Just before midnight 2000-01-01 London",
+    "input": {
+      "date": "2000-01-01",
+      "time": "23:59",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 280.877944,
+        "sign": "Sagittarius",
+        "signDegree": 17
+      },
+      "moon": {
+        "tropicalDegree": 229.308883,
+        "sign": "Libra",
+        "signDegree": 25
+      },
+      "mercury": {
+        "tropicalDegree": 272.66699
+      },
+      "venus": {
+        "tropicalDegree": 242.169626
+      },
+      "mars": {
+        "tropicalDegree": 328.350618
+      },
+      "jupiter": {
+        "tropicalDegree": 25.273804
+      },
+      "saturn": {
+        "tropicalDegree": 40.385909
+      },
+      "ascendant": 187.455713,
+      "midheaven": 99.717918
+    }
+  },
+  {
+    "name": "Noon birth 2000-01-01 London",
+    "input": {
+      "date": "2000-01-01",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 280.368924,
+        "sign": "Sagittarius",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 223.323825,
+        "sign": "Libra",
+        "signDegree": 19
+      },
+      "mercury": {
+        "tropicalDegree": 271.889281
+      },
+      "venus": {
+        "tropicalDegree": 241.565803
+      },
+      "mars": {
+        "tropicalDegree": 327.963317
+      },
+      "jupiter": {
+        "tropicalDegree": 25.25303
+      },
+      "saturn": {
+        "tropicalDegree": 40.395639
+      },
+      "ascendant": 24.017842,
+      "midheaven": 279.494593
+    }
+  },
+  {
+    "name": "No birth time 2000-01-01 London",
+    "input": {
+      "date": "2000-01-01",
+      "time": null,
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 280.368924,
+        "sign": "Sagittarius",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 223.323825,
+        "sign": "Libra",
+        "signDegree": 19
+      },
+      "mercury": {
+        "tropicalDegree": 271.889281
+      },
+      "venus": {
+        "tropicalDegree": 241.565803
+      },
+      "mars": {
+        "tropicalDegree": 327.963317
+      },
+      "jupiter": {
+        "tropicalDegree": 25.25303
+      },
+      "saturn": {
+        "tropicalDegree": 40.395639
+      },
+      "ascendant": null,
+      "midheaven": null
+    }
+  },
+  {
+    "name": "No birth time 1980-03-15 New York",
+    "input": {
+      "date": "1980-03-15",
+      "time": null,
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 355.267387,
+        "sign": "Pisces",
+        "signDegree": 1
+      },
+      "moon": {
+        "tropicalDegree": 339.915388,
+        "sign": "Aquarius",
+        "signDegree": 16
+      },
+      "mercury": {
+        "tropicalDegree": 338.179023
+      },
+      "venus": {
+        "tropicalDegree": 39.928633
+      },
+      "mars": {
+        "tropicalDegree": 148.862327
+      },
+      "jupiter": {
+        "tropicalDegree": 152.788124
+      },
+      "saturn": {
+        "tropicalDegree": 173.520698
+      },
+      "ascendant": null,
+      "midheaven": null
+    }
+  },
+  {
+    "name": "No birth time 1995-08-22 Tokyo",
+    "input": {
+      "date": "1995-08-22",
+      "time": null,
+      "latitude": 35.6762,
+      "longitude": 139.6503,
+      "timezone": "Asia/Tokyo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 148.571297,
+        "sign": "Leo",
+        "signDegree": 4
+      },
+      "moon": {
+        "tropicalDegree": 102.232662,
+        "sign": "Gemini",
+        "signDegree": 18
+      },
+      "mercury": {
+        "tropicalDegree": 170.08768
+      },
+      "venus": {
+        "tropicalDegree": 148.879705
+      },
+      "mars": {
+        "tropicalDegree": 199.499208
+      },
+      "jupiter": {
+        "tropicalDegree": 246.10107
+      },
+      "saturn": {
+        "tropicalDegree": 353.064298
+      },
+      "ascendant": null,
+      "midheaven": null
+    }
+  },
+  {
+    "name": "No birth time 2010-12-01 Sydney",
+    "input": {
+      "date": "2010-12-01",
+      "time": null,
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timezone": "Australia/Sydney",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 248.71561,
+        "sign": "Scorpio",
+        "signDegree": 14
+      },
+      "moon": {
+        "tropicalDegree": 187.583499,
+        "sign": "Virgo",
+        "signDegree": 13
+      },
+      "mercury": {
+        "tropicalDegree": 270.036468
+      },
+      "venus": {
+        "tropicalDegree": 210.424454
+      },
+      "mars": {
+        "tropicalDegree": 264.765482
+      },
+      "jupiter": {
+        "tropicalDegree": 353.755636
+      },
+      "saturn": {
+        "tropicalDegree": 194.567308
+      },
+      "ascendant": null,
+      "midheaven": null
+    }
+  },
+  {
+    "name": "No birth time 1965-07-04 Chicago",
+    "input": {
+      "date": "1965-07-04",
+      "time": null,
+      "latitude": 41.8781,
+      "longitude": -87.6298,
+      "timezone": "America/Chicago",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 102.483202,
+        "sign": "Gemini",
+        "signDegree": 19
+      },
+      "moon": {
+        "tropicalDegree": 178.437072,
+        "sign": "Virgo",
+        "signDegree": 5
+      },
+      "mercury": {
+        "tropicalDegree": 124.872179
+      },
+      "venus": {
+        "tropicalDegree": 124.619782
+      },
+      "mars": {
+        "tropicalDegree": 182.879203
+      },
+      "jupiter": {
+        "tropicalDegree": 76.770758
+      },
+      "saturn": {
+        "tropicalDegree": 347.185835
+      },
+      "ascendant": null,
+      "midheaven": null
+    }
+  },
+  {
+    "name": "DST spring forward USA 2023-03-12 New York",
+    "input": {
+      "date": "2023-03-12",
+      "time": "02:30",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 351.411052,
+        "sign": "Aquarius",
+        "signDegree": 27
+      },
+      "moon": {
+        "tropicalDegree": 226.351535,
+        "sign": "Libra",
+        "signDegree": 22
+      },
+      "mercury": {
+        "tropicalDegree": 346.641462
+      },
+      "venus": {
+        "tropicalDegree": 24.357047
+      },
+      "mars": {
+        "tropicalDegree": 83.86263
+      },
+      "jupiter": {
+        "tropicalDegree": 14.442051
+      },
+      "saturn": {
+        "tropicalDegree": 330.549159
+      },
+      "ascendant": 262.186257,
+      "midheaven": 194.280855
+    }
+  },
+  {
+    "name": "DST fall back USA 2023-11-05 New York",
+    "input": {
+      "date": "2023-11-05",
+      "time": "01:30",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 222.530725,
+        "sign": "Libra",
+        "signDegree": 18
+      },
+      "moon": {
+        "tropicalDegree": 131.109917,
+        "sign": "Cancer",
+        "signDegree": 16
+      },
+      "mercury": {
+        "tropicalDegree": 232.299122
+      },
+      "venus": {
+        "tropicalDegree": 176.577765
+      },
+      "mars": {
+        "tropicalDegree": 226.492426
+      },
+      "jupiter": {
+        "tropicalDegree": 40.234005
+      },
+      "saturn": {
+        "tropicalDegree": 330.514383
+      },
+      "ascendant": 150.515137,
+      "midheaven": 55.037977
+    }
+  },
+  {
+    "name": "DST spring forward UK 2023-03-26 London",
+    "input": {
+      "date": "2023-03-26",
+      "time": "01:30",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 5.091153,
+        "sign": "Pisces",
+        "signDegree": 10
+      },
+      "moon": {
+        "tropicalDegree": 59.897139,
+        "sign": "Taurus",
+        "signDegree": 5
+      },
+      "mercury": {
+        "tropicalDegree": 13.732592
+      },
+      "venus": {
+        "tropicalDegree": 40.897088
+      },
+      "mars": {
+        "tropicalDegree": 90.25716
+      },
+      "jupiter": {
+        "tropicalDegree": 17.68736
+      },
+      "saturn": {
+        "tropicalDegree": 332.092548
+      },
+      "ascendant": 251.348936,
+      "midheaven": 191.502735
+    }
+  },
+  {
+    "name": "DST fall back UK 2023-10-29 London",
+    "input": {
+      "date": "2023-10-29",
+      "time": "01:30",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 215.321738,
+        "sign": "Libra",
+        "signDegree": 11
+      },
+      "moon": {
+        "tropicalDegree": 37.577058,
+        "sign": "Aries",
+        "signDegree": 13
+      },
+      "mercury": {
+        "tropicalDegree": 220.977579
+      },
+      "venus": {
+        "tropicalDegree": 168.992242
+      },
+      "mars": {
+        "tropicalDegree": 221.501437
+      },
+      "jupiter": {
+        "tropicalDegree": 41.211525
+      },
+      "saturn": {
+        "tropicalDegree": 330.547418
+      },
+      "ascendant": 148.014685,
+      "midheaven": 46.927616
+    }
+  },
+  {
+    "name": "Midnight UTC boundary 2000-01-01 Reykjavik",
+    "input": {
+      "date": "2000-01-01",
+      "time": "00:00",
+      "latitude": 64.1355,
+      "longitude": -21.8954,
+      "timezone": "Atlantic/Reykjavik",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 279.85922,
+        "sign": "Sagittarius",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 217.293416,
+        "sign": "Libra",
+        "signDegree": 13
+      },
+      "mercury": {
+        "tropicalDegree": 271.111811
+      },
+      "venus": {
+        "tropicalDegree": 240.961426
+      },
+      "mars": {
+        "tropicalDegree": 327.575483
+      },
+      "jupiter": {
+        "tropicalDegree": 25.233072
+      },
+      "saturn": {
+        "tropicalDegree": 40.405839
+      },
+      "ascendant": 173.139543,
+      "midheaven": 79.029704
+    }
+  },
+  {
+    "name": "Midnight birth Tokyo 2000-01-01",
+    "input": {
+      "date": "2000-01-01",
+      "time": "00:00",
+      "latitude": 35.6762,
+      "longitude": 139.6503,
+      "timezone": "Asia/Tokyo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 279.476959,
+        "sign": "Sagittarius",
+        "signDegree": 15
+      },
+      "moon": {
+        "tropicalDegree": 212.741582,
+        "sign": "Libra",
+        "signDegree": 8
+      },
+      "mercury": {
+        "tropicalDegree": 270.529565
+      },
+      "venus": {
+        "tropicalDegree": 240.508333
+      },
+      "mars": {
+        "tropicalDegree": 327.284615
+      },
+      "jupiter": {
+        "tropicalDegree": 25.218659
+      },
+      "saturn": {
+        "tropicalDegree": 40.413789
+      },
+      "ascendant": 191.830646,
+      "midheaven": 103.11333
+    }
+  },
+  {
+    "name": "Near midnight Sydney 1999-12-31",
+    "input": {
+      "date": "1999-12-31",
+      "time": "23:59",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timezone": "Australia/Sydney",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 279.391307,
+        "sign": "Sagittarius",
+        "signDegree": 15
+      },
+      "moon": {
+        "tropicalDegree": 211.717819,
+        "sign": "Libra",
+        "signDegree": 7
+      },
+      "mercury": {
+        "tropicalDegree": 270.399198
+      },
+      "venus": {
+        "tropicalDegree": 240.40683
+      },
+      "mars": {
+        "tropicalDegree": 327.219439
+      },
+      "jupiter": {
+        "tropicalDegree": 25.215495
+      },
+      "saturn": {
+        "tropicalDegree": 40.415605
+      },
+      "ascendant": 173.051217,
+      "midheaven": 85.844773
+    }
+  },
+  {
+    "name": "Tromso Norway — polar latitude 69.6N",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": 69.65,
+      "longitude": 18.956,
+      "timezone": "Europe/Oslo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.326136,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 319.058445,
+        "sign": "Capricorn",
+        "signDegree": 25
+      },
+      "mercury": {
+        "tropicalDegree": 109.818615
+      },
+      "venus": {
+        "tropicalDegree": 93.058753
+      },
+      "mars": {
+        "tropicalDegree": 93.279559
+      },
+      "jupiter": {
+        "tropicalDegree": 58.099898
+      },
+      "saturn": {
+        "tropicalDegree": 55.587736
+      },
+      "ascendant": 174.407409,
+      "midheaven": 79.761465
+    }
+  },
+  {
+    "name": "Reykjavik 64.1N near polar boundary",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": 64.1355,
+      "longitude": -21.8954,
+      "timezone": "Atlantic/Reykjavik",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.40563,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 320.054048,
+        "sign": "Capricorn",
+        "signDegree": 26
+      },
+      "mercury": {
+        "tropicalDegree": 109.830669
+      },
+      "venus": {
+        "tropicalDegree": 93.161135
+      },
+      "mars": {
+        "tropicalDegree": 93.335253
+      },
+      "jupiter": {
+        "tropicalDegree": 58.118039
+      },
+      "saturn": {
+        "tropicalDegree": 55.597212
+      },
+      "ascendant": 167.418718,
+      "midheaven": 69.748523
+    }
+  },
+  {
+    "name": "Helsinki 60.2N summer solstice",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": 60.1699,
+      "longitude": 24.9384,
+      "timezone": "Europe/Helsinki",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.286388,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 318.560998,
+        "sign": "Capricorn",
+        "signDegree": 24
+      },
+      "mercury": {
+        "tropicalDegree": 109.81239
+      },
+      "venus": {
+        "tropicalDegree": 93.007562
+      },
+      "mars": {
+        "tropicalDegree": 93.25171
+      },
+      "jupiter": {
+        "tropicalDegree": 58.090824
+      },
+      "saturn": {
+        "tropicalDegree": 55.582996
+      },
+      "ascendant": 167.480734,
+      "midheaven": 71.350698
+    }
+  },
+  {
+    "name": "Ushuaia Argentina -54.8S extreme south",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": -54.8019,
+      "longitude": -68.303,
+      "timezone": "America/Argentina/Ushuaia",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.524872,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 321.549293,
+        "sign": "Capricorn",
+        "signDegree": 27
+      },
+      "mercury": {
+        "tropicalDegree": 109.847757
+      },
+      "venus": {
+        "tropicalDegree": 93.314709
+      },
+      "mars": {
+        "tropicalDegree": 93.418787
+      },
+      "jupiter": {
+        "tropicalDegree": 58.14524
+      },
+      "saturn": {
+        "tropicalDegree": 55.611417
+      },
+      "ascendant": 125.361966,
+      "midheaven": 68.542028
+    }
+  },
+  {
+    "name": "Quito Ecuador 0.22S near equator",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": -0.2295,
+      "longitude": -78.5243,
+      "timezone": "America/Guayaquil",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.604365,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 322.547406,
+        "sign": "Capricorn",
+        "signDegree": 28
+      },
+      "mercury": {
+        "tropicalDegree": 109.858487
+      },
+      "venus": {
+        "tropicalDegree": 93.417091
+      },
+      "mars": {
+        "tropicalDegree": 93.474471
+      },
+      "jupiter": {
+        "tropicalDegree": 58.163367
+      },
+      "saturn": {
+        "tropicalDegree": 55.62088
+      },
+      "ascendant": 176.365013,
+      "midheaven": 86.944222
+    }
+  },
+  {
+    "name": "Svalbard 78N extreme polar",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": 78.2232,
+      "longitude": 15.6469,
+      "timezone": "Arctic/Longyearbyen",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.326136,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 319.058445,
+        "sign": "Capricorn",
+        "signDegree": 25
+      },
+      "mercury": {
+        "tropicalDegree": 109.818615
+      },
+      "venus": {
+        "tropicalDegree": 93.058753
+      },
+      "mars": {
+        "tropicalDegree": 93.279559
+      },
+      "jupiter": {
+        "tropicalDegree": 58.099898
+      },
+      "saturn": {
+        "tropicalDegree": 55.587736
+      },
+      "ascendant": 174.901836,
+      "midheaven": 76.701538
+    }
+  },
+  {
+    "name": "Anchorage Alaska 61.2N subarctic",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": 61.2181,
+      "longitude": -149.9003,
+      "timezone": "America/Anchorage",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.723604,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 324.046596,
+        "sign": "Aquarius",
+        "signDegree": 0
+      },
+      "mercury": {
+        "tropicalDegree": 109.873588
+      },
+      "venus": {
+        "tropicalDegree": 93.570666
+      },
+      "mars": {
+        "tropicalDegree": 93.55799
+      },
+      "jupiter": {
+        "tropicalDegree": 58.190544
+      },
+      "saturn": {
+        "tropicalDegree": 55.635066
+      },
+      "ascendant": 162.028269,
+      "midheaven": 62.487564
+    }
+  },
+  {
+    "name": "McMurdo Station Antarctica -77.8S extreme south",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": -77.8419,
+      "longitude": 166.6863,
+      "timezone": "Antarctica/McMurdo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 89.928654,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 314.093737,
+        "sign": "Capricorn",
+        "signDegree": 20
+      },
+      "mercury": {
+        "tropicalDegree": 109.750412
+      },
+      "venus": {
+        "tropicalDegree": 92.546849
+      },
+      "mars": {
+        "tropicalDegree": 93.001026
+      },
+      "jupiter": {
+        "tropicalDegree": 58.009096
+      },
+      "saturn": {
+        "tropicalDegree": 55.540281
+      },
+      "ascendant": 194.03675,
+      "midheaven": 77.283868
+    }
+  },
+  {
+    "name": "Fairbanks Alaska 64.8N high latitude",
+    "input": {
+      "date": "2000-12-21",
+      "time": "12:00",
+      "latitude": 64.8378,
+      "longitude": -147.7164,
+      "timezone": "America/Anchorage",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 270.313094,
+        "sign": "Sagittarius",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 226.967507,
+        "sign": "Libra",
+        "signDegree": 23
+      },
+      "mercury": {
+        "tropicalDegree": 268.087797
+      },
+      "venus": {
+        "tropicalDegree": 315.598881
+      },
+      "mars": {
+        "tropicalDegree": 208.972399
+      },
+      "jupiter": {
+        "tropicalDegree": 63.145167
+      },
+      "saturn": {
+        "tropicalDegree": 55.107711
+      },
+      "ascendant": 283.734229,
+      "midheaven": 258.978445
+    }
+  },
+  {
+    "name": "Punta Arenas Chile -53.1S",
+    "input": {
+      "date": "2000-06-21",
+      "time": "12:00",
+      "latitude": -53.1548,
+      "longitude": -70.911,
+      "timezone": "America/Punta_Arenas",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.564618,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 322.048218,
+        "sign": "Capricorn",
+        "signDegree": 28
+      },
+      "mercury": {
+        "tropicalDegree": 109.853188
+      },
+      "venus": {
+        "tropicalDegree": 93.3659
+      },
+      "mars": {
+        "tropicalDegree": 93.44663
+      },
+      "jupiter": {
+        "tropicalDegree": 58.154304
+      },
+      "saturn": {
+        "tropicalDegree": 55.616149
+      },
+      "ascendant": 153.264183,
+      "midheaven": 80.111571
+    }
+  },
+  {
+    "name": "Historical 1800-01-01 London",
+    "input": {
+      "date": "1800-01-01",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 280.940039,
+        "sign": "Sagittarius",
+        "signDegree": 19
+      },
+      "moon": {
+        "tropicalDegree": 354.710655,
+        "sign": "Pisces",
+        "signDegree": 3
+      },
+      "mercury": {
+        "tropicalDegree": 267.940752
+      },
+      "venus": {
+        "tropicalDegree": 234.151413
+      },
+      "mars": {
+        "tropicalDegree": 244.683625
+      },
+      "jupiter": {
+        "tropicalDegree": 84.464149
+      },
+      "saturn": {
+        "tropicalDegree": 128.765668
+      },
+      "ascendant": 25.687941,
+      "midheaven": 280.180777
+    }
+  },
+  {
+    "name": "Historical 1850-06-15 Paris",
+    "input": {
+      "date": "1850-06-15",
+      "time": "12:00",
+      "latitude": 48.8566,
+      "longitude": 2.3522,
+      "timezone": "Europe/Paris",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 83.95238,
+        "sign": "Gemini",
+        "signDegree": 2
+      },
+      "moon": {
+        "tropicalDegree": 155.349017,
+        "sign": "Leo",
+        "signDegree": 13
+      },
+      "mercury": {
+        "tropicalDegree": 76.274728
+      },
+      "venus": {
+        "tropicalDegree": 110.642389
+      },
+      "mars": {
+        "tropicalDegree": 137.765798
+      },
+      "jupiter": {
+        "tropicalDegree": 165.004315
+      },
+      "saturn": {
+        "tropicalDegree": 19.081853
+      },
+      "ascendant": 175.209569,
+      "midheaven": 83.961493
+    }
+  },
+  {
+    "name": "Historical 1900-03-21 Berlin",
+    "input": {
+      "date": "1900-03-21",
+      "time": "12:00",
+      "latitude": 52.52,
+      "longitude": 13.405,
+      "timezone": "Europe/Berlin",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 0.386545,
+        "sign": "Pisces",
+        "signDegree": 7
+      },
+      "moon": {
+        "tropicalDegree": 237.361051,
+        "sign": "Scorpio",
+        "signDegree": 4
+      },
+      "mercury": {
+        "tropicalDegree": 6.966315
+      },
+      "venus": {
+        "tropicalDegree": 42.384976
+      },
+      "mars": {
+        "tropicalDegree": 346.160353
+      },
+      "jupiter": {
+        "tropicalDegree": 250.804132
+      },
+      "saturn": {
+        "tropicalDegree": 274.572432
+      },
+      "ascendant": 115.18647,
+      "midheaven": 356.633455
+    }
+  },
+  {
+    "name": "Historical 1950-09-10 New York",
+    "input": {
+      "date": "1950-09-10",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 167.366778,
+        "sign": "Leo",
+        "signDegree": 24
+      },
+      "moon": {
+        "tropicalDegree": 148.346405,
+        "sign": "Leo",
+        "signDegree": 5
+      },
+      "mercury": {
+        "tropicalDegree": 180.096135
+      },
+      "venus": {
+        "tropicalDegree": 150.739845
+      },
+      "mars": {
+        "tropicalDegree": 229.679798
+      },
+      "jupiter": {
+        "tropicalDegree": 330.518418
+      },
+      "saturn": {
+        "tropicalDegree": 172.000787
+      },
+      "ascendant": 231.230783,
+      "midheaven": 153.172815
+    }
+  },
+  {
+    "name": "Recent 2024-01-01 London",
+    "input": {
+      "date": "2024-01-01",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 280.548486,
+        "sign": "Sagittarius",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 161.906748,
+        "sign": "Leo",
+        "signDegree": 17
+      },
+      "mercury": {
+        "tropicalDegree": 262.21201
+      },
+      "venus": {
+        "tropicalDegree": 243.220439
+      },
+      "mars": {
+        "tropicalDegree": 267.679168
+      },
+      "jupiter": {
+        "tropicalDegree": 35.584376
+      },
+      "saturn": {
+        "tropicalDegree": 333.287954
+      },
+      "ascendant": 24.425615,
+      "midheaven": 279.665959
+    }
+  },
+  {
+    "name": "Recent 2024-06-21 New York",
+    "input": {
+      "date": "2024-06-21",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.761144,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 265.981979,
+        "sign": "Sagittarius",
+        "signDegree": 1
+      },
+      "mercury": {
+        "tropicalDegree": 99.171448
+      },
+      "venus": {
+        "tropicalDegree": 95.408592
+      },
+      "mars": {
+        "tropicalDegree": 39.192859
+      },
+      "jupiter": {
+        "tropicalDegree": 66.159676
+      },
+      "saturn": {
+        "tropicalDegree": 349.372863
+      },
+      "ascendant": 169.160163,
+      "midheaven": 77.424882
+    }
+  },
+  {
+    "name": "Recent 2025-03-15 Tokyo",
+    "input": {
+      "date": "2025-03-15",
+      "time": "12:00",
+      "latitude": 35.6762,
+      "longitude": 139.6503,
+      "timezone": "Asia/Tokyo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 354.776298,
+        "sign": "Pisces",
+        "signDegree": 0
+      },
+      "moon": {
+        "tropicalDegree": 184.007221,
+        "sign": "Virgo",
+        "signDegree": 9
+      },
+      "mercury": {
+        "tropicalDegree": 9.587176
+      },
+      "venus": {
+        "tropicalDegree": 7.331826
+      },
+      "mars": {
+        "tropicalDegree": 109.066928
+      },
+      "jupiter": {
+        "tropicalDegree": 73.668986
+      },
+      "saturn": {
+        "tropicalDegree": 352.428268
+      },
+      "ascendant": 103.917014,
+      "midheaven": 357.413255
+    }
+  },
+  {
+    "name": "Future 2030-12-25 London",
+    "input": {
+      "date": "2030-12-25",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 273.729662,
+        "sign": "Sagittarius",
+        "signDegree": 9
+      },
+      "moon": {
+        "tropicalDegree": 284.655729,
+        "sign": "Sagittarius",
+        "signDegree": 20
+      },
+      "mercury": {
+        "tropicalDegree": 255.569261
+      },
+      "venus": {
+        "tropicalDegree": 289.913267
+      },
+      "mars": {
+        "tropicalDegree": 199.076451
+      },
+      "jupiter": {
+        "tropicalDegree": 253.968761
+      },
+      "saturn": {
+        "tropicalDegree": 63.324332
+      },
+      "ascendant": 9.351194,
+      "midheaven": 273.598641
+    }
+  },
+  {
+    "name": "Future 2050-06-21 New York",
+    "input": {
+      "date": "2050-06-21",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.495207,
+        "sign": "Gemini",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 117.404373,
+        "sign": "Cancer",
+        "signDegree": 2
+      },
+      "mercury": {
+        "tropicalDegree": 92.449461
+      },
+      "venus": {
+        "tropicalDegree": 130.991548
+      },
+      "mars": {
+        "tropicalDegree": 323.345775
+      },
+      "jupiter": {
+        "tropicalDegree": 125.420198
+      },
+      "saturn": {
+        "tropicalDegree": 308.022724
+      },
+      "ascendant": 168.930517,
+      "midheaven": 77.156307
+    }
+  },
+  {
+    "name": "Historical 1920-11-11 Paris",
+    "input": {
+      "date": "1920-11-11",
+      "time": "11:11",
+      "latitude": 48.8566,
+      "longitude": 2.3522,
+      "timezone": "Europe/Paris",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 228.775239,
+        "sign": "Libra",
+        "signDegree": 26
+      },
+      "moon": {
+        "tropicalDegree": 237.822952,
+        "sign": "Scorpio",
+        "signDegree": 5
+      },
+      "mercury": {
+        "tropicalDegree": 239.421377
+      },
+      "venus": {
+        "tropicalDegree": 262.354077
+      },
+      "mars": {
+        "tropicalDegree": 287.734785
+      },
+      "jupiter": {
+        "tropicalDegree": 164.727891
+      },
+      "saturn": {
+        "tropicalDegree": 172.29215
+      },
+      "ascendant": 280.350759,
+      "midheaven": 222.845723
+    }
+  },
+  {
+    "name": "Consecutive Sun movement Day 1 — 2000-01-01 London noon",
+    "input": {
+      "date": "2000-01-01",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 280.368924,
+        "sign": "Sagittarius",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 223.323825,
+        "sign": "Libra",
+        "signDegree": 19
+      },
+      "mercury": {
+        "tropicalDegree": 271.889281
+      },
+      "venus": {
+        "tropicalDegree": 241.565803
+      },
+      "mars": {
+        "tropicalDegree": 327.963317
+      },
+      "jupiter": {
+        "tropicalDegree": 25.25303
+      },
+      "saturn": {
+        "tropicalDegree": 40.395639
+      },
+      "ascendant": 24.017842,
+      "midheaven": 279.494593
+    }
+  },
+  {
+    "name": "Consecutive Sun movement Day 2 — 2000-01-02 London noon",
+    "input": {
+      "date": "2000-01-02",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 281.388403,
+        "sign": "Sagittarius",
+        "signDegree": 17
+      },
+      "moon": {
+        "tropicalDegree": 235.280887,
+        "sign": "Scorpio",
+        "signDegree": 1
+      },
+      "mercury": {
+        "tropicalDegree": 273.448204
+      },
+      "venus": {
+        "tropicalDegree": 242.775407
+      },
+      "mars": {
+        "tropicalDegree": 328.739003
+      },
+      "jupiter": {
+        "tropicalDegree": 25.29548
+      },
+      "saturn": {
+        "tropicalDegree": 40.376611
+      },
+      "ascendant": 26.160457,
+      "midheaven": 280.403998
+    }
+  },
+  {
+    "name": "Consecutive Sun movement Day 3 — 2000-01-03 London noon",
+    "input": {
+      "date": "2000-01-03",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 282.40796,
+        "sign": "Sagittarius",
+        "signDegree": 18
+      },
+      "moon": {
+        "tropicalDegree": 247.146334,
+        "sign": "Scorpio",
+        "signDegree": 13
+      },
+      "mercury": {
+        "tropicalDegree": 275.012575
+      },
+      "venus": {
+        "tropicalDegree": 243.986104
+      },
+      "mars": {
+        "tropicalDegree": 329.514702
+      },
+      "jupiter": {
+        "tropicalDegree": 25.341292
+      },
+      "saturn": {
+        "tropicalDegree": 40.359423
+      },
+      "ascendant": 28.267049,
+      "midheaven": 281.314369
+    }
+  },
+  {
+    "name": "Consecutive Sun movement Day 4 — 2000-01-04 London noon",
+    "input": {
+      "date": "2000-01-04",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 283.427572,
+        "sign": "Sagittarius",
+        "signDegree": 19
+      },
+      "moon": {
+        "tropicalDegree": 258.969064,
+        "sign": "Scorpio",
+        "signDegree": 25
+      },
+      "mercury": {
+        "tropicalDegree": 276.582575
+      },
+      "venus": {
+        "tropicalDegree": 245.197846
+      },
+      "mars": {
+        "tropicalDegree": 330.290395
+      },
+      "jupiter": {
+        "tropicalDegree": 25.39045
+      },
+      "saturn": {
+        "tropicalDegree": 40.344085
+      },
+      "ascendant": 30.336215,
+      "midheaven": 282.225785
+    }
+  },
+  {
+    "name": "Consecutive Sun movement Day 5 — 2000-01-05 London noon",
+    "input": {
+      "date": "2000-01-05",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 284.447213,
+        "sign": "Sagittarius",
+        "signDegree": 20
+      },
+      "moon": {
+        "tropicalDegree": 270.790404,
+        "sign": "Sagittarius",
+        "signDegree": 6
+      },
+      "mercury": {
+        "tropicalDegree": 278.158404
+      },
+      "venus": {
+        "tropicalDegree": 246.410585
+      },
+      "mars": {
+        "tropicalDegree": 331.066061
+      },
+      "jupiter": {
+        "tropicalDegree": 25.442931
+      },
+      "saturn": {
+        "tropicalDegree": 40.330602
+      },
+      "ascendant": 32.366854,
+      "midheaven": 283.138324
+    }
+  },
+  {
+    "name": "Consecutive Moon check Day 1 — 2010-05-01 London noon",
+    "input": {
+      "date": "2010-05-01",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 40.970815,
+        "sign": "Aries",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 257.789,
+        "sign": "Scorpio",
+        "signDegree": 23
+      },
+      "mercury": {
+        "tropicalDegree": 36.479357
+      },
+      "venus": {
+        "tropicalDegree": 67.589716
+      },
+      "mars": {
+        "tropicalDegree": 132.689475
+      },
+      "jupiter": {
+        "tropicalDegree": 353.875293
+      },
+      "saturn": {
+        "tropicalDegree": 178.545273
+      },
+      "ascendant": 133.812544,
+      "midheaven": 26.037343
+    }
+  },
+  {
+    "name": "Consecutive Moon check Day 2 — 2010-05-02 London noon",
+    "input": {
+      "date": "2010-05-02",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 41.941071,
+        "sign": "Aries",
+        "signDegree": 17
+      },
+      "moon": {
+        "tropicalDegree": 270.526243,
+        "sign": "Sagittarius",
+        "signDegree": 6
+      },
+      "mercury": {
+        "tropicalDegree": 35.856479
+      },
+      "venus": {
+        "tropicalDegree": 68.802121
+      },
+      "mars": {
+        "tropicalDegree": 133.098678
+      },
+      "jupiter": {
+        "tropicalDegree": 354.075223
+      },
+      "saturn": {
+        "tropicalDegree": 178.498818
+      },
+      "ascendant": 134.50391,
+      "midheaven": 27.077676
+    }
+  },
+  {
+    "name": "Consecutive Moon check Day 3 — 2010-05-03 London noon",
+    "input": {
+      "date": "2010-05-03",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 42.910898,
+        "sign": "Aries",
+        "signDegree": 18
+      },
+      "moon": {
+        "tropicalDegree": 282.933066,
+        "sign": "Sagittarius",
+        "signDegree": 18
+      },
+      "mercury": {
+        "tropicalDegree": 35.267824
+      },
+      "venus": {
+        "tropicalDegree": 70.013793
+      },
+      "mars": {
+        "tropicalDegree": 133.512059
+      },
+      "jupiter": {
+        "tropicalDegree": 354.27379
+      },
+      "saturn": {
+        "tropicalDegree": 178.453779
+      },
+      "ascendant": 135.194808,
+      "midheaven": 28.115508
+    }
+  },
+  {
+    "name": "Consecutive Moon check Day 4 — 2010-05-04 London noon",
+    "input": {
+      "date": "2010-05-04",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 43.880302,
+        "sign": "Aries",
+        "signDegree": 19
+      },
+      "moon": {
+        "tropicalDegree": 295.072934,
+        "sign": "Capricorn",
+        "signDegree": 1
+      },
+      "mercury": {
+        "tropicalDegree": 34.722724
+      },
+      "venus": {
+        "tropicalDegree": 71.224728
+      },
+      "mars": {
+        "tropicalDegree": 133.92954
+      },
+      "jupiter": {
+        "tropicalDegree": 354.470963
+      },
+      "saturn": {
+        "tropicalDegree": 178.410172
+      },
+      "ascendant": 135.885278,
+      "midheaven": 29.150777
+    }
+  },
+  {
+    "name": "Consecutive Moon check Day 5 — 2010-05-05 London noon",
+    "input": {
+      "date": "2010-05-05",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 44.849292,
+        "sign": "Aries",
+        "signDegree": 20
+      },
+      "moon": {
+        "tropicalDegree": 307.024421,
+        "sign": "Capricorn",
+        "signDegree": 13
+      },
+      "mercury": {
+        "tropicalDegree": 34.229397
+      },
+      "venus": {
+        "tropicalDegree": 72.434924
+      },
+      "mars": {
+        "tropicalDegree": 134.351048
+      },
+      "jupiter": {
+        "tropicalDegree": 354.666716
+      },
+      "saturn": {
+        "tropicalDegree": 178.368014
+      },
+      "ascendant": 136.575358,
+      "midheaven": 30.183427
+    }
+  },
+  {
+    "name": "Seasonal spring equinox 2020-03-20 London",
+    "input": {
+      "date": "2020-03-20",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 0.338423,
+        "sign": "Pisces",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 317.677924,
+        "sign": "Capricorn",
+        "signDegree": 23
+      },
+      "mercury": {
+        "tropicalDegree": 332.877299
+      },
+      "venus": {
+        "tropicalDegree": 46.291863
+      },
+      "mars": {
+        "tropicalDegree": 292.827427
+      },
+      "jupiter": {
+        "tropicalDegree": 292.817883
+      },
+      "saturn": {
+        "tropicalDegree": 299.873541
+      },
+      "ascendant": 115.356229,
+      "midheaven": 358.199457
+    }
+  },
+  {
+    "name": "Seasonal summer solstice 2020-06-21 London",
+    "input": {
+      "date": "2020-06-21",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.527884,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 92.681651,
+        "sign": "Gemini",
+        "signDegree": 8
+      },
+      "mercury": {
+        "tropicalDegree": 104.3744
+      },
+      "venus": {
+        "tropicalDegree": 65.622031
+      },
+      "mars": {
+        "tropicalDegree": 355.925898
+      },
+      "jupiter": {
+        "tropicalDegree": 295.101826
+      },
+      "saturn": {
+        "tropicalDegree": 300.664389
+      },
+      "ascendant": 169.40566,
+      "midheaven": 76.162076
+    }
+  },
+  {
+    "name": "Seasonal autumn equinox 2020-09-22 London",
+    "input": {
+      "date": "2020-09-22",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 179.897619,
+        "sign": "Virgo",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 249.163428,
+        "sign": "Scorpio",
+        "signDegree": 15
+      },
+      "mercury": {
+        "tropicalDegree": 204.121907
+      },
+      "venus": {
+        "tropicalDegree": 138.002395
+      },
+      "mars": {
+        "tropicalDegree": 26.995077
+      },
+      "jupiter": {
+        "tropicalDegree": 287.549879
+      },
+      "saturn": {
+        "tropicalDegree": 295.374542
+      },
+      "ascendant": 233.794742,
+      "midheaven": 165.484305
+    }
+  },
+  {
+    "name": "Seasonal winter solstice 2020-12-21 London",
+    "input": {
+      "date": "2020-12-21",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 270.083222,
+        "sign": "Sagittarius",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 354.661959,
+        "sign": "Pisces",
+        "signDegree": 0
+      },
+      "mercury": {
+        "tropicalDegree": 270.85049
+      },
+      "venus": {
+        "tropicalDegree": 247.271922
+      },
+      "mars": {
+        "tropicalDegree": 23.113131
+      },
+      "jupiter": {
+        "tropicalDegree": 300.427955
+      },
+      "saturn": {
+        "tropicalDegree": 300.457536
+      },
+      "ascendant": 0.926431,
+      "midheaven": 270.354755
+    }
+  },
+  {
+    "name": "Seasonal mid-spring 2020-04-15 New York",
+    "input": {
+      "date": "2020-04-15",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 26.139448,
+        "sign": "Aries",
+        "signDegree": 1
+      },
+      "moon": {
+        "tropicalDegree": 304.359222,
+        "sign": "Capricorn",
+        "signDegree": 10
+      },
+      "mercury": {
+        "tropicalDegree": 7.331891
+      },
+      "venus": {
+        "tropicalDegree": 69.918374
+      },
+      "mars": {
+        "tropicalDegree": 311.01278
+      },
+      "jupiter": {
+        "tropicalDegree": 295.952918
+      },
+      "saturn": {
+        "tropicalDegree": 301.432098
+      },
+      "ascendant": 117.199008,
+      "midheaven": 11.160912
+    }
+  },
+  {
+    "name": "Seasonal mid-summer 2020-07-15 New York",
+    "input": {
+      "date": "2020-07-15",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 113.61125,
+        "sign": "Gemini",
+        "signDegree": 29
+      },
+      "moon": {
+        "tropicalDegree": 53.221955,
+        "sign": "Aries",
+        "signDegree": 29
+      },
+      "mercury": {
+        "tropicalDegree": 95.978681
+      },
+      "venus": {
+        "tropicalDegree": 72.120991
+      },
+      "mars": {
+        "tropicalDegree": 10.133439
+      },
+      "jupiter": {
+        "tropicalDegree": 292.166201
+      },
+      "saturn": {
+        "tropicalDegree": 299.02987
+      },
+      "ascendant": 187.89917,
+      "midheaven": 99.14802
+    }
+  },
+  {
+    "name": "Seasonal mid-autumn 2020-10-15 New York",
+    "input": {
+      "date": "2020-10-15",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 202.753612,
+        "sign": "Virgo",
+        "signDegree": 28
+      },
+      "moon": {
+        "tropicalDegree": 186.374696,
+        "sign": "Virgo",
+        "signDegree": 12
+      },
+      "mercury": {
+        "tropicalDegree": 221.50051
+      },
+      "venus": {
+        "tropicalDegree": 165.094832
+      },
+      "mars": {
+        "tropicalDegree": 20.542348
+      },
+      "jupiter": {
+        "tropicalDegree": 289.075118
+      },
+      "saturn": {
+        "tropicalDegree": 295.56116
+      },
+      "ascendant": 260.019329,
+      "midheaven": 191.565419
+    }
+  },
+  {
+    "name": "Seasonal mid-winter 2020-01-15 New York",
+    "input": {
+      "date": "2020-01-15",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 294.99682,
+        "sign": "Capricorn",
+        "signDegree": 0
+      },
+      "moon": {
+        "tropicalDegree": 180.768183,
+        "sign": "Virgo",
+        "signDegree": 6
+      },
+      "mercury": {
+        "tropicalDegree": 298.216913
+      },
+      "venus": {
+        "tropicalDegree": 332.342362
+      },
+      "mars": {
+        "tropicalDegree": 248.311336
+      },
+      "jupiter": {
+        "tropicalDegree": 280.039966
+      },
+      "saturn": {
+        "tropicalDegree": 293.131487
+      },
+      "ascendant": 41.69918,
+      "midheaven": 293.737754
+    }
+  },
+  {
+    "name": "Southern hemisphere winter 2020-06-21 Sydney",
+    "input": {
+      "date": "2020-06-21",
+      "time": "12:00",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timezone": "Australia/Sydney",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 90.169913,
+        "sign": "Gemini",
+        "signDegree": 6
+      },
+      "moon": {
+        "tropicalDegree": 87.834705,
+        "sign": "Gemini",
+        "signDegree": 3
+      },
+      "mercury": {
+        "tropicalDegree": 104.458069
+      },
+      "venus": {
+        "tropicalDegree": 65.681179
+      },
+      "mars": {
+        "tropicalDegree": 355.691327
+      },
+      "jupiter": {
+        "tropicalDegree": 295.141212
+      },
+      "saturn": {
+        "tropicalDegree": 300.686189
+      },
+      "ascendant": 181.443918,
+      "midheaven": 90.861917
+    }
+  },
+  {
+    "name": "Southern hemisphere summer 2020-12-21 Sydney",
+    "input": {
+      "date": "2020-12-21",
+      "time": "12:00",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timezone": "Australia/Sydney",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 269.616432,
+        "sign": "Sagittarius",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 349.038971,
+        "sign": "Aquarius",
+        "signDegree": 24
+      },
+      "mercury": {
+        "tropicalDegree": 270.123954
+      },
+      "venus": {
+        "tropicalDegree": 246.698848
+      },
+      "mars": {
+        "tropicalDegree": 22.942477
+      },
+      "jupiter": {
+        "tropicalDegree": 300.327228
+      },
+      "saturn": {
+        "tropicalDegree": 300.408058
+      },
+      "ascendant": 348.420911,
+      "midheaven": 257.366685
+    }
+  },
+  {
+    "name": "Mercury retrograde 2024-04-01 London (Mercury Rx Apr 2024)",
+    "input": {
+      "date": "2024-04-01",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 12.204686,
+        "sign": "Pisces",
+        "signDegree": 18
+      },
+      "moon": {
+        "tropicalDegree": 273.807788,
+        "sign": "Sagittarius",
+        "signDegree": 9
+      },
+      "mercury": {
+        "tropicalDegree": 27.205588
+      },
+      "venus": {
+        "tropicalDegree": 355.416549
+      },
+      "mars": {
+        "tropicalDegree": 337.367494
+      },
+      "jupiter": {
+        "tropicalDegree": 47.451679
+      },
+      "saturn": {
+        "tropicalDegree": 343.650771
+      },
+      "ascendant": 112.998514,
+      "midheaven": 354.737559
+    }
+  },
+  {
+    "name": "Mercury retrograde 2024-08-10 New York (Mercury Rx Aug 2024)",
+    "input": {
+      "date": "2024-08-10",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 138.509976,
+        "sign": "Cancer",
+        "signDegree": 24
+      },
+      "moon": {
+        "tropicalDegree": 206.759453,
+        "sign": "Libra",
+        "signDegree": 2
+      },
+      "mercury": {
+        "tropicalDegree": 152.786975
+      },
+      "venus": {
+        "tropicalDegree": 156.836561
+      },
+      "mars": {
+        "tropicalDegree": 74.073324
+      },
+      "jupiter": {
+        "tropicalDegree": 76.047438
+      },
+      "saturn": {
+        "tropicalDegree": 348.061085
+      },
+      "ascendant": 208.15585,
+      "midheaven": 123.316206
+    }
+  },
+  {
+    "name": "Mercury retrograde 2023-12-15 London (Mercury Rx Dec 2023)",
+    "input": {
+      "date": "2023-12-15",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 263.236973,
+        "sign": "Scorpio",
+        "signDegree": 29
+      },
+      "moon": {
+        "tropicalDegree": 296.441216,
+        "sign": "Capricorn",
+        "signDegree": 2
+      },
+      "mercury": {
+        "tropicalDegree": 278.043842
+      },
+      "venus": {
+        "tropicalDegree": 222.707396
+      },
+      "mars": {
+        "tropicalDegree": 255.17819
+      },
+      "jupiter": {
+        "tropicalDegree": 36.001583
+      },
+      "saturn": {
+        "tropicalDegree": 331.950449
+      },
+      "ascendant": 345.21717,
+      "midheaven": 264.271604
+    }
+  },
+  {
+    "name": "Venus retrograde 2023-08-01 New York (Venus Rx Jul-Sep 2023)",
+    "input": {
+      "date": "2023-08-01",
+      "time": "12:00",
+      "latitude": 40.7128,
+      "longitude": -74.006,
+      "timezone": "America/New_York",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 129.162716,
+        "sign": "Cancer",
+        "signDegree": 14
+      },
+      "moon": {
+        "tropicalDegree": 307.652795,
+        "sign": "Capricorn",
+        "signDegree": 13
+      },
+      "mercury": {
+        "tropicalDegree": 155.094893
+      },
+      "venus": {
+        "tropicalDegree": 146.781735
+      },
+      "mars": {
+        "tropicalDegree": 163.649622
+      },
+      "jupiter": {
+        "tropicalDegree": 43.752237
+      },
+      "saturn": {
+        "tropicalDegree": 335.670963
+      },
+      "ascendant": 200.588043,
+      "midheaven": 114.106255
+    }
+  },
+  {
+    "name": "Mars retrograde 2022-12-01 London (Mars Rx Oct 2022-Jan 2023)",
+    "input": {
+      "date": "2022-12-01",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 249.26318,
+        "sign": "Scorpio",
+        "signDegree": 15
+      },
+      "moon": {
+        "tropicalDegree": 350.61169,
+        "sign": "Aquarius",
+        "signDegree": 26
+      },
+      "mercury": {
+        "tropicalDegree": 261.813553
+      },
+      "venus": {
+        "tropicalDegree": 259.131153
+      },
+      "mars": {
+        "tropicalDegree": 78.686488
+      },
+      "jupiter": {
+        "tropicalDegree": 358.897424
+      },
+      "saturn": {
+        "tropicalDegree": 319.883021
+      },
+      "ascendant": 316.98204,
+      "midheaven": 251.71904
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Sydney 1985-03-10 08:00",
+    "input": {
+      "date": "1985-03-10",
+      "time": "08:00",
+      "latitude": -33.8688,
+      "longitude": 151.2093,
+      "timezone": "Australia/Sydney",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 349.279876,
+        "sign": "Aquarius",
+        "signDegree": 25
+      },
+      "moon": {
+        "tropicalDegree": 208.898427,
+        "sign": "Libra",
+        "signDegree": 5
+      },
+      "mercury": {
+        "tropicalDegree": 5.032024
+      },
+      "venus": {
+        "tropicalDegree": 22.004029
+      },
+      "mars": {
+        "tropicalDegree": 26.139635
+      },
+      "jupiter": {
+        "tropicalDegree": 306.811197
+      },
+      "saturn": {
+        "tropicalDegree": 238.121253
+      },
+      "ascendant": 15.792284,
+      "midheaven": 287.287543
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Melbourne 1990-07-22 15:30",
+    "input": {
+      "date": "1990-07-22",
+      "time": "15:30",
+      "latitude": -37.8136,
+      "longitude": 144.9631,
+      "timezone": "Australia/Melbourne",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 119.169811,
+        "sign": "Cancer",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 120.607761,
+        "sign": "Cancer",
+        "signDegree": 6
+      },
+      "mercury": {
+        "tropicalDegree": 138.711445
+      },
+      "venus": {
+        "tropicalDegree": 92.498311
+      },
+      "mars": {
+        "tropicalDegree": 36.396791
+      },
+      "jupiter": {
+        "tropicalDegree": 114.058397
+      },
+      "saturn": {
+        "tropicalDegree": 291.467782
+      },
+      "ascendant": 276.152589,
+      "midheaven": 166.066519
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Buenos Aires 1975-11-15 20:00",
+    "input": {
+      "date": "1975-11-15",
+      "time": "20:00",
+      "latitude": -34.6037,
+      "longitude": -58.3816,
+      "timezone": "America/Argentina/Buenos_Aires",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 232.959492,
+        "sign": "Libra",
+        "signDegree": 29
+      },
+      "moon": {
+        "tropicalDegree": 19.673932,
+        "sign": "Pisces",
+        "signDegree": 26
+      },
+      "mercury": {
+        "tropicalDegree": 225.456048
+      },
+      "venus": {
+        "tropicalDegree": 186.644492
+      },
+      "mars": {
+        "tropicalDegree": 92.018553
+      },
+      "jupiter": {
+        "tropicalDegree": 15.77571
+      },
+      "saturn": {
+        "tropicalDegree": 122.974751
+      },
+      "ascendant": 58.795245,
+      "midheaven": 339.453508
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Cape Town 2000-01-15 09:00",
+    "input": {
+      "date": "2000-01-15",
+      "time": "09:00",
+      "latitude": -33.9249,
+      "longitude": 18.4241,
+      "timezone": "Africa/Johannesburg",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 294.427308,
+        "sign": "Capricorn",
+        "signDegree": 0
+      },
+      "moon": {
+        "tropicalDegree": 33.671197,
+        "sign": "Aries",
+        "signDegree": 9
+      },
+      "mercury": {
+        "tropicalDegree": 293.943604
+      },
+      "venus": {
+        "tropicalDegree": 258.32948
+      },
+      "mars": {
+        "tropicalDegree": 338.654885
+      },
+      "jupiter": {
+        "tropicalDegree": 26.127033
+      },
+      "saturn": {
+        "tropicalDegree": 40.297407
+      },
+      "ascendant": 332.687902,
+      "midheaven": 239.670723
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Lima Peru 2005-05-20 07:00",
+    "input": {
+      "date": "2005-05-20",
+      "time": "07:00",
+      "latitude": -12.0464,
+      "longitude": -77.0428,
+      "timezone": "America/Lima",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 59.567561,
+        "sign": "Taurus",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 196.834712,
+        "sign": "Virgo",
+        "signDegree": 22
+      },
+      "mercury": {
+        "tropicalDegree": 44.081801
+      },
+      "venus": {
+        "tropicalDegree": 72.683513
+      },
+      "mars": {
+        "tropicalDegree": 343.98719
+      },
+      "jupiter": {
+        "tropicalDegree": 189.305171
+      },
+      "saturn": {
+        "tropicalDegree": 113.392614
+      },
+      "ascendant": 68.096135,
+      "midheaven": 339.638754
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Auckland 1995-09-01 17:00",
+    "input": {
+      "date": "1995-09-01",
+      "time": "17:00",
+      "latitude": -36.8509,
+      "longitude": 174.7645,
+      "timezone": "Pacific/Auckland",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 158.3066,
+        "sign": "Leo",
+        "signDegree": 14
+      },
+      "moon": {
+        "tropicalDegree": 233.048079,
+        "sign": "Libra",
+        "signDegree": 29
+      },
+      "mercury": {
+        "tropicalDegree": 184.028403
+      },
+      "venus": {
+        "tropicalDegree": 161.376208
+      },
+      "mars": {
+        "tropicalDegree": 206.006673
+      },
+      "jupiter": {
+        "tropicalDegree": 246.828977
+      },
+      "saturn": {
+        "tropicalDegree": 352.357021
+      },
+      "ascendant": 327.016546,
+      "midheaven": 232.073996
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Johannesburg 2010-02-14 10:00",
+    "input": {
+      "date": "2010-02-14",
+      "time": "10:00",
+      "latitude": -26.2041,
+      "longitude": 28.0473,
+      "timezone": "Africa/Johannesburg",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 325.514531,
+        "sign": "Aquarius",
+        "signDegree": 1
+      },
+      "moon": {
+        "tropicalDegree": 327.836283,
+        "sign": "Aquarius",
+        "signDegree": 3
+      },
+      "mercury": {
+        "tropicalDegree": 305.702603
+      },
+      "venus": {
+        "tropicalDegree": 333.540823
+      },
+      "mars": {
+        "tropicalDegree": 124.102199
+      },
+      "jupiter": {
+        "tropicalDegree": 336.333621
+      },
+      "saturn": {
+        "tropicalDegree": 183.779859
+      },
+      "ascendant": 19.951555,
+      "midheaven": 290.608316
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Santiago Chile 1988-08-08 08:08",
+    "input": {
+      "date": "1988-08-08",
+      "time": "08:08",
+      "latitude": -33.4489,
+      "longitude": -70.6693,
+      "timezone": "America/Santiago",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 136.150359,
+        "sign": "Cancer",
+        "signDegree": 22
+      },
+      "moon": {
+        "tropicalDegree": 91.180942,
+        "sign": "Gemini",
+        "signDegree": 7
+      },
+      "mercury": {
+        "tropicalDegree": 141.883485
+      },
+      "venus": {
+        "tropicalDegree": 91.254646
+      },
+      "mars": {
+        "tropicalDegree": 9.252253
+      },
+      "jupiter": {
+        "tropicalDegree": 62.7067
+      },
+      "saturn": {
+        "tropicalDegree": 266.309346
+      },
+      "ascendant": 148.254395,
+      "midheaven": 70.175895
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Perth Australia 2003-04-04 04:04",
+    "input": {
+      "date": "2003-04-04",
+      "time": "04:04",
+      "latitude": -31.9505,
+      "longitude": 115.8605,
+      "timezone": "Australia/Perth",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 13.652684,
+        "sign": "Pisces",
+        "signDegree": 19
+      },
+      "moon": {
+        "tropicalDegree": 35.773903,
+        "sign": "Aries",
+        "signDegree": 11
+      },
+      "mercury": {
+        "tropicalDegree": 26.695497
+      },
+      "venus": {
+        "tropicalDegree": 338.495464
+      },
+      "mars": {
+        "tropicalDegree": 288.883713
+      },
+      "jupiter": {
+        "tropicalDegree": 128.060896
+      },
+      "saturn": {
+        "tropicalDegree": 83.621813
+      },
+      "ascendant": 341.681623,
+      "midheaven": 250.220095
+    }
+  },
+  {
+    "name": "Southern hemisphere houses Montevideo Uruguay 1999-06-30 18:30",
+    "input": {
+      "date": "1999-06-30",
+      "time": "18:30",
+      "latitude": -34.9011,
+      "longitude": -56.1645,
+      "timezone": "America/Montevideo",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 98.648405,
+        "sign": "Gemini",
+        "signDegree": 14
+      },
+      "moon": {
+        "tropicalDegree": 301.121883,
+        "sign": "Capricorn",
+        "signDegree": 7
+      },
+      "mercury": {
+        "tropicalDegree": 124.09247
+      },
+      "venus": {
+        "tropicalDegree": 142.315007
+      },
+      "mars": {
+        "tropicalDegree": 208.661097
+      },
+      "jupiter": {
+        "tropicalDegree": 30.39137
+      },
+      "saturn": {
+        "tropicalDegree": 44.210758
+      },
+      "ascendant": 289.604702,
+      "midheaven": 185.273602
+    }
+  },
+  {
+    "name": "New Year 2024 midnight Moscow",
+    "input": {
+      "date": "2024-01-01",
+      "time": "00:00",
+      "latitude": 55.7558,
+      "longitude": 37.6173,
+      "timezone": "Europe/Moscow",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 279.911613,
+        "sign": "Sagittarius",
+        "signDegree": 15
+      },
+      "moon": {
+        "tropicalDegree": 154.510178,
+        "sign": "Leo",
+        "signDegree": 10
+      },
+      "mercury": {
+        "tropicalDegree": 262.305512
+      },
+      "venus": {
+        "tropicalDegree": 242.460325
+      },
+      "mars": {
+        "tropicalDegree": 267.215693
+      },
+      "jupiter": {
+        "tropicalDegree": 35.58205
+      },
+      "saturn": {
+        "tropicalDegree": 333.232529
+      },
+      "ascendant": 181.761639,
+      "midheaven": 92.427667
+    }
+  },
+  {
+    "name": "Solar eclipse 2024-04-08 Dallas TX",
+    "input": {
+      "date": "2024-04-08",
+      "time": "13:30",
+      "latitude": 32.7767,
+      "longitude": -96.797,
+      "timezone": "America/Chicago",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 19.406688,
+        "sign": "Pisces",
+        "signDegree": 25
+      },
+      "moon": {
+        "tropicalDegree": 19.495085,
+        "sign": "Pisces",
+        "signDegree": 25
+      },
+      "mercury": {
+        "tropicalDegree": 24.793795
+      },
+      "venus": {
+        "tropicalDegree": 4.452953
+      },
+      "mars": {
+        "tropicalDegree": 343.05637
+      },
+      "jupiter": {
+        "tropicalDegree": 49.047209
+      },
+      "saturn": {
+        "tropicalDegree": 344.455963
+      },
+      "ascendant": 119.744067,
+      "midheaven": 19.723743
+    }
+  },
+  {
+    "name": "Chinese New Year 2024-02-10 Beijing",
+    "input": {
+      "date": "2024-02-10",
+      "time": "00:00",
+      "latitude": 39.9042,
+      "longitude": 116.4074,
+      "timezone": "Asia/Shanghai",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 320.387516,
+        "sign": "Capricorn",
+        "signDegree": 26
+      },
+      "moon": {
+        "tropicalDegree": 316.271892,
+        "sign": "Capricorn",
+        "signDegree": 22
+      },
+      "mercury": {
+        "tropicalDegree": 306.961033
+      },
+      "venus": {
+        "tropicalDegree": 291.340171
+      },
+      "mars": {
+        "tropicalDegree": 297.24776
+      },
+      "jupiter": {
+        "tropicalDegree": 38.274182
+      },
+      "saturn": {
+        "tropicalDegree": 337.452117
+      },
+      "ascendant": 216.290601,
+      "midheaven": 133.190992
+    }
+  },
+  {
+    "name": "Vernal equinox 2024-03-20 UTC",
+    "input": {
+      "date": "2024-03-20",
+      "time": "03:06",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 359.999722,
+        "sign": "Pisces",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 123.815448,
+        "sign": "Cancer",
+        "signDegree": 9
+      },
+      "mercury": {
+        "tropicalDegree": 17.440926
+      },
+      "venus": {
+        "tropicalDegree": 340.171297
+      },
+      "mars": {
+        "tropicalDegree": 327.773415
+      },
+      "jupiter": {
+        "tropicalDegree": 44.885683
+      },
+      "saturn": {
+        "tropicalDegree": 342.22548
+      },
+      "ascendant": 281.346491,
+      "midheaven": 226.983077
+    }
+  },
+  {
+    "name": "Summer solstice 2024-06-20 London",
+    "input": {
+      "date": "2024-06-20",
+      "time": "20:51",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 89.960251,
+        "sign": "Gemini",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 254.795434,
+        "sign": "Scorpio",
+        "signDegree": 20
+      },
+      "mercury": {
+        "tropicalDegree": 97.407504
+      },
+      "venus": {
+        "tropicalDegree": 94.377184
+      },
+      "mars": {
+        "tropicalDegree": 38.579287
+      },
+      "jupiter": {
+        "tropicalDegree": 65.97148
+      },
+      "saturn": {
+        "tropicalDegree": 349.360899
+      },
+      "ascendant": 264.752894,
+      "midheaven": 209.187522
+    }
+  },
+  {
+    "name": "Autumnal equinox 2024-09-22 London",
+    "input": {
+      "date": "2024-09-22",
+      "time": "12:43",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 179.9588,
+        "sign": "Virgo",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 60.774976,
+        "sign": "Taurus",
+        "signDegree": 6
+      },
+      "mercury": {
+        "tropicalDegree": 172.889896
+      },
+      "venus": {
+        "tropicalDegree": 209.244185
+      },
+      "mars": {
+        "tropicalDegree": 100.254139
+      },
+      "jupiter": {
+        "tropicalDegree": 80.871391
+      },
+      "saturn": {
+        "tropicalDegree": 344.951615
+      },
+      "ascendant": 241.564066,
+      "midheaven": 177.223861
+    }
+  },
+  {
+    "name": "Winter solstice 2024-12-21 London",
+    "input": {
+      "date": "2024-12-21",
+      "time": "09:20",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 269.9996,
+        "sign": "Sagittarius",
+        "signDegree": 5
+      },
+      "moon": {
+        "tropicalDegree": 163.143363,
+        "sign": "Leo",
+        "signDegree": 18
+      },
+      "mercury": {
+        "tropicalDegree": 248.573175
+      },
+      "venus": {
+        "tropicalDegree": 316.07776
+      },
+      "mars": {
+        "tropicalDegree": 124.746893
+      },
+      "jupiter": {
+        "tropicalDegree": 74.460106
+      },
+      "saturn": {
+        "tropicalDegree": 343.801262
+      },
+      "ascendant": 287.868048,
+      "midheaven": 232.716322
+    }
+  },
+  {
+    "name": "New Moon 2024-01-11 London noon",
+    "input": {
+      "date": "2024-01-11",
+      "time": "11:57",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 290.739941,
+        "sign": "Sagittarius",
+        "signDegree": 26
+      },
+      "moon": {
+        "tropicalDegree": 290.735997,
+        "sign": "Sagittarius",
+        "signDegree": 26
+      },
+      "mercury": {
+        "tropicalDegree": 267.333514
+      },
+      "venus": {
+        "tropicalDegree": 255.426769
+      },
+      "mars": {
+        "tropicalDegree": 275.133242
+      },
+      "jupiter": {
+        "tropicalDegree": 35.804929
+      },
+      "saturn": {
+        "tropicalDegree": 334.231854
+      },
+      "ascendant": 42.690511,
+      "midheaven": 288.112167
+    }
+  },
+  {
+    "name": "Full Moon 2024-01-25 London noon",
+    "input": {
+      "date": "2024-01-25",
+      "time": "17:54",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 305.245492,
+        "sign": "Capricorn",
+        "signDegree": 11
+      },
+      "moon": {
+        "tropicalDegree": 125.245213,
+        "sign": "Cancer",
+        "signDegree": 11
+      },
+      "mercury": {
+        "tropicalDegree": 284.658216
+      },
+      "venus": {
+        "tropicalDegree": 272.926766
+      },
+      "mars": {
+        "tropicalDegree": 285.871442
+      },
+      "jupiter": {
+        "tropicalDegree": 36.693985
+      },
+      "saturn": {
+        "tropicalDegree": 335.734926
+      },
+      "ascendant": 139.951823,
+      "midheaven": 35.203323
+    }
+  },
+  {
+    "name": "Leap day 2000-02-29 London noon",
+    "input": {
+      "date": "2000-02-29",
+      "time": "12:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "houseSystem": "Placidus"
+    },
+    "expected": {
+      "sun": {
+        "tropicalDegree": 340.205833,
+        "sign": "Aquarius",
+        "signDegree": 16
+      },
+      "moon": {
+        "tropicalDegree": 275.536175,
+        "sign": "Sagittarius",
+        "signDegree": 11
+      },
+      "mercury": {
+        "tropicalDegree": 342.506497
+      },
+      "venus": {
+        "tropicalDegree": 313.956571
+      },
+      "mars": {
+        "tropicalDegree": 13.221575
+      },
+      "jupiter": {
+        "tropicalDegree": 32.577054
+      },
+      "saturn": {
+        "tropicalDegree": 42.365782
+      },
+      "ascendant": 99.97843,
+      "midheaven": 336.747245
+    }
+  }
+]

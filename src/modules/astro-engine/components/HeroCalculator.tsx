@@ -1,0 +1,333 @@
+'use client';
+
+import { useState, useCallback } from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CityAutocomplete } from './CityAutocomplete';
+import type { CitySearchResult } from '@/shared/types';
+
+// ── Sign glyphs & colors ──────────────────────────────────────────────────────
+const SIGN_GLYPHS: Record<string, string> = {
+  Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋',
+  Leo: '♌', Virgo: '♍', Libra: '♎', Scorpio: '♏',
+  Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓',
+};
+
+const SIGN_ELEMENTS: Record<string, { element: string; color: string }> = {
+  Aries:       { element: 'Fire',  color: '#FF6B35' },
+  Leo:         { element: 'Fire',  color: '#FF6B35' },
+  Sagittarius: { element: 'Fire',  color: '#FF6B35' },
+  Taurus:      { element: 'Earth', color: '#8FBC8F' },
+  Virgo:       { element: 'Earth', color: '#8FBC8F' },
+  Capricorn:   { element: 'Earth', color: '#8FBC8F' },
+  Gemini:      { element: 'Air',   color: '#87CEEB' },
+  Libra:       { element: 'Air',   color: '#87CEEB' },
+  Aquarius:    { element: 'Air',   color: '#87CEEB' },
+  Cancer:      { element: 'Water', color: '#6495ED' },
+  Scorpio:     { element: 'Water', color: '#6495ED' },
+  Pisces:      { element: 'Water', color: '#6495ED' },
+};
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface HeroResult {
+  sunSign: string;
+  sunDegree: number;
+  chartId: string;
+}
+
+interface FormState {
+  date: string;
+  cityLabel: string;
+  latitude: number | null;
+  longitude: number | null;
+  timezone: string | null;
+}
+
+interface FormErrors {
+  date?: string;
+  city?: string;
+  general?: string;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function todayStr(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+export function HeroCalculator() {
+  const [form, setForm] = useState<FormState>({
+    date: '',
+    cityLabel: '',
+    latitude: null,
+    longitude: null,
+    timezone: null,
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<HeroResult | null>(null);
+
+  const handleCitySelect = useCallback((city: CitySearchResult) => {
+    setForm((prev) => ({
+      ...prev,
+      cityLabel: city.name,
+      latitude: city.latitude,
+      longitude: city.longitude,
+      timezone: city.timezone,
+    }));
+    setErrors((prev) => ({ ...prev, city: undefined }));
+  }, []);
+
+  const handleCityChange = useCallback((value: string) => {
+    setForm((prev) => ({ ...prev, cityLabel: value }));
+  }, []);
+
+  const validate = useCallback((): FormErrors => {
+    const errs: FormErrors = {};
+    if (!form.date) {
+      errs.date = 'Birth date is required';
+    } else {
+      const d = new Date(form.date);
+      if (isNaN(d.getTime())) errs.date = 'Invalid date';
+      else if (d > new Date()) errs.date = 'Date cannot be in the future';
+    }
+    if (form.latitude === null || form.longitude === null) {
+      errs.city = 'Please select a city from the list';
+    }
+    return errs;
+  }, [form]);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      const errs = validate();
+      if (Object.keys(errs).length > 0) {
+        setErrors(errs);
+        return;
+      }
+      setErrors({});
+      setIsLoading(true);
+
+      try {
+        const res = await fetch('/api/v1/chart/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date: form.date,
+            // Use noon when time is unknown — midday Sun position for quick preview
+            time: '12:00',
+            knowsBirthTime: false,
+            latitude: form.latitude,
+            longitude: form.longitude,
+            timezone: form.timezone,
+            houseSystem: 'Placidus',
+            ayanamsa: 'lahiri',
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setErrors({ general: (data as { error?: string }).error ?? 'Calculation failed. Please try again.' });
+          return;
+        }
+
+        const data = await res.json() as { chartId: string; chart: { planets: Array<{ planet: string; sign: string; signDegree: number }> } };
+        const sunPlanet = data.chart.planets.find((p) => p.planet === 'Sun');
+
+        if (!sunPlanet) {
+          setErrors({ general: 'Could not determine Sun sign. Please try again.' });
+          return;
+        }
+
+        setResult({
+          sunSign: sunPlanet.sign,
+          sunDegree: sunPlanet.signDegree,
+          chartId: data.chartId,
+        });
+      } catch {
+        setErrors({ general: 'Network error. Please check your connection.' });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [form, validate]
+  );
+
+  // ── Result card ──────────────────────────────────────────────────────────
+  if (result) {
+    const signInfo = SIGN_ELEMENTS[result.sunSign];
+    const glyph = SIGN_GLYPHS[result.sunSign] ?? '';
+
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="result"
+          initial={{ opacity: 0, y: 12, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full"
+          role="region"
+          aria-label="Your sidereal Sun sign result"
+          aria-live="polite"
+        >
+          {/* Result display */}
+          <div
+            className="relative rounded-2xl border border-white/8 overflow-hidden p-6 sm:p-8 text-center"
+            style={{ background: 'rgba(255,255,255,0.03)' }}
+          >
+            {/* Subtle element-colored glow */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: `radial-gradient(ellipse 60% 40% at 50% 0%, ${signInfo?.color ?? '#FFD700'}18 0%, transparent 70%)`,
+              }}
+              aria-hidden="true"
+            />
+
+            <div className="relative">
+              <p className="text-xs tracking-[0.2em] uppercase text-white/40 mb-3">
+                Your Sidereal Sun Sign
+              </p>
+
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="text-6xl mb-2"
+                aria-hidden="true"
+              >
+                {glyph}
+              </motion.div>
+
+              <motion.h3
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.4 }}
+                className="text-3xl sm:text-4xl font-light text-white mb-1"
+                style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
+              >
+                {result.sunSign}
+              </motion.h3>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.35, duration: 0.4 }}
+                className="text-sm text-white/40 mb-1"
+                style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
+              >
+                {result.sunDegree}° — {signInfo?.element ?? ''} sign
+              </motion.p>
+            </div>
+          </div>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45, duration: 0.4 }}
+            className="mt-4 flex flex-col sm:flex-row items-center gap-3"
+          >
+            <Link
+              href={`/chart?chartId=${result.chartId}`}
+              className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] transition-colors"
+            >
+              See your full natal chart
+              <span aria-hidden="true">→</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setResult(null)}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/12 text-sm text-white/50 hover:text-white/80 hover:border-white/25 transition-colors"
+            >
+              Try another date
+            </button>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  // ── Form ─────────────────────────────────────────────────────────────────
+  return (
+    <motion.form
+      onSubmit={handleSubmit}
+      noValidate
+      className="w-full space-y-3"
+      aria-label="Quick sidereal chart calculator"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
+      {/* Date input */}
+      <div>
+        <label htmlFor="hero-date" className="sr-only">
+          Birth date
+        </label>
+        <input
+          id="hero-date"
+          type="date"
+          value={form.date}
+          max={todayStr()}
+          onChange={(e) => {
+            setForm((prev) => ({ ...prev, date: e.target.value }));
+            setErrors((prev) => ({ ...prev, date: undefined }));
+          }}
+          aria-describedby={errors.date ? 'hero-date-error' : undefined}
+          aria-invalid={!!errors.date}
+          className="w-full rounded-xl px-4 py-3 text-sm bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-[#FFD700]/50 focus:ring-1 focus:ring-[#FFD700]/30 transition-colors aria-[invalid=true]:border-red-400/50"
+        />
+        {errors.date && (
+          <p id="hero-date-error" className="mt-1.5 text-xs text-red-400" role="alert">
+            {errors.date}
+          </p>
+        )}
+      </div>
+
+      {/* City input */}
+      <div>
+        <CityAutocomplete
+          value={form.cityLabel}
+          onCitySelect={handleCitySelect}
+          onChange={handleCityChange}
+          placeholder="Birth city"
+          error={errors.city}
+        />
+      </div>
+
+      {/* General error */}
+      {errors.general && (
+        <p className="text-xs text-red-400 text-center" role="alert">
+          {errors.general}
+        </p>
+      )}
+
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-busy={isLoading}
+      >
+        {isLoading ? (
+          <>
+            <span
+              className="inline-block w-4 h-4 border-2 border-[#0A0A0F]/30 border-t-[#0A0A0F] rounded-full animate-spin"
+              aria-hidden="true"
+            />
+            Calculating…
+          </>
+        ) : (
+          <>
+            <span aria-hidden="true">☉</span>
+            Discover My Sun Sign
+          </>
+        )}
+      </button>
+
+      <p className="text-center text-[11px] text-white/25 leading-relaxed">
+        Sidereal system · Lahiri ayanamsa · Swiss Ephemeris
+      </p>
+    </motion.form>
+  );
+}

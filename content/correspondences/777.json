@@ -1,0 +1,658 @@
+{
+  "sephiroth": [
+    {
+      "path": 1,
+      "name": "Kether",
+      "meaning": "Crown",
+      "planet": null,
+      "element": null,
+      "zodiacOrPlanet": "Primum Mobile",
+      "color": {
+        "king": "Brilliance",
+        "queen": "White brilliance",
+        "prince": "White brilliance",
+        "princess": "White flecked gold"
+      },
+      "stone": "Diamond",
+      "perfume": "Ambergris",
+      "plant": "Almond in flower",
+      "animal": "God",
+      "astrologicalAttribution": "Primum Mobile"
+    },
+    {
+      "path": 2,
+      "name": "Chokmah",
+      "meaning": "Wisdom",
+      "planet": null,
+      "element": null,
+      "zodiacOrPlanet": "Zodiac",
+      "color": {
+        "king": "Pure soft blue",
+        "queen": "Grey",
+        "prince": "Pearl grey iridescent",
+        "princess": "White flecked red, blue and yellow"
+      },
+      "stone": "Star Ruby, Turquoise",
+      "perfume": "Musk",
+      "plant": "Amaranth",
+      "animal": "Man",
+      "astrologicalAttribution": "Fixed Stars / Zodiac"
+    },
+    {
+      "path": 3,
+      "name": "Binah",
+      "meaning": "Understanding",
+      "planet": "Saturn",
+      "element": null,
+      "zodiacOrPlanet": "Saturn",
+      "color": {
+        "king": "Crimson",
+        "queen": "Black",
+        "prince": "Dark brown",
+        "princess": "Grey flecked pink"
+      },
+      "stone": "Star Sapphire, Pearl",
+      "perfume": "Myrrh, Civet",
+      "plant": "Cypress, Opium Poppy",
+      "animal": "Woman",
+      "astrologicalAttribution": "Saturn"
+    },
+    {
+      "path": 4,
+      "name": "Chesed",
+      "meaning": "Mercy",
+      "planet": "Jupiter",
+      "element": null,
+      "zodiacOrPlanet": "Jupiter",
+      "color": {
+        "king": "Deep violet",
+        "queen": "Blue",
+        "prince": "Deep purple",
+        "princess": "Deep azure flecked yellow"
+      },
+      "stone": "Amethyst, Sapphire",
+      "perfume": "Cedar",
+      "plant": "Olive, Shamrock",
+      "animal": "Unicorn",
+      "astrologicalAttribution": "Jupiter"
+    },
+    {
+      "path": 5,
+      "name": "Geburah",
+      "meaning": "Strength",
+      "planet": "Mars",
+      "element": null,
+      "zodiacOrPlanet": "Mars",
+      "color": {
+        "king": "Orange",
+        "queen": "Scarlet",
+        "prince": "Bright scarlet",
+        "princess": "Red flecked black"
+      },
+      "stone": "Ruby",
+      "perfume": "Tobacco",
+      "plant": "Oak, Hickory, Nettles",
+      "animal": "Basilisk",
+      "astrologicalAttribution": "Mars"
+    },
+    {
+      "path": 6,
+      "name": "Tiphareth",
+      "meaning": "Beauty",
+      "planet": "Sun",
+      "element": null,
+      "zodiacOrPlanet": "Sun",
+      "color": {
+        "king": "Clear pink rose",
+        "queen": "Yellow (gold)",
+        "prince": "Rich salmon",
+        "princess": "Gold amber"
+      },
+      "stone": "Topaz, Yellow Diamond",
+      "perfume": "Olibanum",
+      "plant": "Acacia, Bay, Laurel, Vine",
+      "animal": "Lion, Child",
+      "astrologicalAttribution": "Sun"
+    },
+    {
+      "path": 7,
+      "name": "Netzach",
+      "meaning": "Victory",
+      "planet": "Venus",
+      "element": null,
+      "zodiacOrPlanet": "Venus",
+      "color": {
+        "king": "Amber",
+        "queen": "Emerald",
+        "prince": "Bright yellowish green",
+        "princess": "Olive flecked gold"
+      },
+      "stone": "Emerald",
+      "perfume": "Benzoin, Rose, Red Sandal",
+      "plant": "Rose",
+      "animal": "Lynx",
+      "astrologicalAttribution": "Venus"
+    },
+    {
+      "path": 8,
+      "name": "Hod",
+      "meaning": "Splendour",
+      "planet": "Mercury",
+      "element": null,
+      "zodiacOrPlanet": "Mercury",
+      "color": {
+        "king": "Violet purple",
+        "queen": "Orange",
+        "prince": "Russet red",
+        "princess": "Yellowish brown flecked white"
+      },
+      "stone": "Opal, Fire Opal",
+      "perfume": "Storax",
+      "plant": "Moly, Anhalonium Lewinii",
+      "animal": "Hermaphrodite",
+      "astrologicalAttribution": "Mercury"
+    },
+    {
+      "path": 9,
+      "name": "Yesod",
+      "meaning": "Foundation",
+      "planet": "Moon",
+      "element": null,
+      "zodiacOrPlanet": "Moon",
+      "color": {
+        "king": "Indigo",
+        "queen": "Violet",
+        "prince": "Very dark purple",
+        "princess": "Citrine flecked azure"
+      },
+      "stone": "Quartz",
+      "perfume": "Jasmine, Ginseng, Unicorn Horn",
+      "plant": "Mandrake, Damiana",
+      "animal": "Elephant",
+      "astrologicalAttribution": "Moon"
+    },
+    {
+      "path": 10,
+      "name": "Malkuth",
+      "meaning": "Kingdom",
+      "planet": null,
+      "element": "Earth",
+      "zodiacOrPlanet": "Earth",
+      "color": {
+        "king": "Yellow",
+        "queen": "Citrine, olive, russet and black",
+        "prince": "Citrine, olive, russet and black, rayed yellow",
+        "princess": "Black rayed yellow"
+      },
+      "stone": "Rock Crystal",
+      "perfume": "Dittany of Crete",
+      "plant": "Willow, Lily, Ivy",
+      "animal": "Sphinx",
+      "astrologicalAttribution": "Earth"
+    }
+  ],
+  "paths": [
+    {
+      "path": 11,
+      "hebrewLetter": "Aleph",
+      "hebrewSymbol": "א",
+      "meaning": "Ox",
+      "tarotTrump": "The Fool",
+      "tarotNumber": 0,
+      "element": "Air",
+      "zodiacOrPlanet": null,
+      "color": {
+        "king": "Bright pale yellow",
+        "queen": "Sky blue",
+        "prince": "Blue emerald green",
+        "princess": "Emerald flecked gold"
+      },
+      "stone": "Topaz",
+      "perfume": "Galbanum",
+      "plant": "Aspen",
+      "animal": "Eagle",
+      "astrologicalAttribution": "Air"
+    },
+    {
+      "path": 12,
+      "hebrewLetter": "Beth",
+      "hebrewSymbol": "ב",
+      "meaning": "House",
+      "tarotTrump": "The Magician",
+      "tarotNumber": 1,
+      "element": null,
+      "zodiacOrPlanet": "Mercury",
+      "color": {
+        "king": "Yellow",
+        "queen": "Purple",
+        "prince": "Grey",
+        "princess": "Indigo rayed violet"
+      },
+      "stone": "Opal, Agate",
+      "perfume": "Mastic, White Sandal, Nutmeg, Mace",
+      "plant": "Vervain, Herb Mercury, Marjoram",
+      "animal": "Swallow, Ibis, Ape",
+      "astrologicalAttribution": "Mercury"
+    },
+    {
+      "path": 13,
+      "hebrewLetter": "Gimel",
+      "hebrewSymbol": "ג",
+      "meaning": "Camel",
+      "tarotTrump": "The High Priestess",
+      "tarotNumber": 2,
+      "element": null,
+      "zodiacOrPlanet": "Moon",
+      "color": {
+        "king": "Blue",
+        "queen": "Silver",
+        "prince": "Cold pale blue",
+        "princess": "Silver rayed sky blue"
+      },
+      "stone": "Moonstone, Pearl",
+      "perfume": "Camphor, Aloes",
+      "plant": "Almond",
+      "animal": "Dog, Woman",
+      "astrologicalAttribution": "Moon"
+    },
+    {
+      "path": 14,
+      "hebrewLetter": "Daleth",
+      "hebrewSymbol": "ד",
+      "meaning": "Door",
+      "tarotTrump": "The Empress",
+      "tarotNumber": 3,
+      "element": null,
+      "zodiacOrPlanet": "Venus",
+      "color": {
+        "king": "Emerald green",
+        "queen": "Sky blue",
+        "prince": "Early spring green",
+        "princess": "Bright rose or cerise rayed pale green"
+      },
+      "stone": "Emerald",
+      "perfume": "Sandalwood, Myrtle, Rose, Red Sandal",
+      "plant": "Myrtle, Rose",
+      "animal": "Sparrow, Dove, Swan",
+      "astrologicalAttribution": "Venus"
+    },
+    {
+      "path": 15,
+      "hebrewLetter": "Heh",
+      "hebrewSymbol": "ה",
+      "meaning": "Window",
+      "tarotTrump": "The Emperor",
+      "tarotNumber": 4,
+      "element": null,
+      "zodiacOrPlanet": "Aries",
+      "color": {
+        "king": "Scarlet",
+        "queen": "Red",
+        "prince": "Brilliant flame",
+        "princess": "Glowing red"
+      },
+      "stone": "Ruby",
+      "perfume": "Dragon's Blood",
+      "plant": "Tiger Lily, Geranium",
+      "animal": "Ram, Owl",
+      "astrologicalAttribution": "Aries"
+    },
+    {
+      "path": 16,
+      "hebrewLetter": "Vav",
+      "hebrewSymbol": "ו",
+      "meaning": "Nail",
+      "tarotTrump": "The Hierophant",
+      "tarotNumber": 5,
+      "element": null,
+      "zodiacOrPlanet": "Taurus",
+      "color": {
+        "king": "Red orange",
+        "queen": "Deep indigo",
+        "prince": "Deep warm olive",
+        "princess": "Rich brown"
+      },
+      "stone": "Topaz",
+      "perfume": "Storax",
+      "plant": "Mallow",
+      "animal": "Bull",
+      "astrologicalAttribution": "Taurus"
+    },
+    {
+      "path": 17,
+      "hebrewLetter": "Zayin",
+      "hebrewSymbol": "ז",
+      "meaning": "Sword",
+      "tarotTrump": "The Lovers",
+      "tarotNumber": 6,
+      "element": null,
+      "zodiacOrPlanet": "Gemini",
+      "color": {
+        "king": "Orange",
+        "queen": "Pale mauve",
+        "prince": "New yellow leather",
+        "princess": "Reddish grey inclined to mauve"
+      },
+      "stone": "Alexandrite, Tourmaline",
+      "perfume": "Wormwood",
+      "plant": "Orchid, Hybrids",
+      "animal": "Magpie, Hybrids",
+      "astrologicalAttribution": "Gemini"
+    },
+    {
+      "path": 18,
+      "hebrewLetter": "Cheth",
+      "hebrewSymbol": "ח",
+      "meaning": "Fence",
+      "tarotTrump": "The Chariot",
+      "tarotNumber": 7,
+      "element": null,
+      "zodiacOrPlanet": "Cancer",
+      "color": {
+        "king": "Amber",
+        "queen": "Maroon",
+        "prince": "Rich bright russet",
+        "princess": "Dark greenish brown"
+      },
+      "stone": "Amber",
+      "perfume": "Onycha",
+      "plant": "Lotus",
+      "animal": "Crab, Turtle",
+      "astrologicalAttribution": "Cancer"
+    },
+    {
+      "path": 19,
+      "hebrewLetter": "Teth",
+      "hebrewSymbol": "ט",
+      "meaning": "Serpent",
+      "tarotTrump": "Lust",
+      "tarotNumber": 8,
+      "element": null,
+      "zodiacOrPlanet": "Leo",
+      "color": {
+        "king": "Yellow greenish",
+        "queen": "Deep purple",
+        "prince": "Grey",
+        "princess": "Reddish amber"
+      },
+      "stone": "Cat's Eye",
+      "perfume": "Olibanum",
+      "plant": "Sunflower",
+      "animal": "Lion",
+      "astrologicalAttribution": "Leo"
+    },
+    {
+      "path": 20,
+      "hebrewLetter": "Yod",
+      "hebrewSymbol": "י",
+      "meaning": "Hand",
+      "tarotTrump": "The Hermit",
+      "tarotNumber": 9,
+      "element": null,
+      "zodiacOrPlanet": "Virgo",
+      "color": {
+        "king": "Yellowish green",
+        "queen": "Slate grey",
+        "prince": "Green grey",
+        "princess": "Plum colour"
+      },
+      "stone": "Peridot",
+      "perfume": "Narcissus",
+      "plant": "Snowdrop, Lily",
+      "animal": "Virgin, Anchorite",
+      "astrologicalAttribution": "Virgo"
+    },
+    {
+      "path": 21,
+      "hebrewLetter": "Kaph",
+      "hebrewSymbol": "כ",
+      "meaning": "Palm of Hand",
+      "tarotTrump": "Fortune",
+      "tarotNumber": 10,
+      "element": null,
+      "zodiacOrPlanet": "Jupiter",
+      "color": {
+        "king": "Violet",
+        "queen": "Blue",
+        "prince": "Rich purple",
+        "princess": "Bright blue rayed yellow"
+      },
+      "stone": "Lapis Lazuli",
+      "perfume": "Saffron",
+      "plant": "Hyssop, Oak, Poplar",
+      "animal": "Eagle, Sphynx",
+      "astrologicalAttribution": "Jupiter"
+    },
+    {
+      "path": 22,
+      "hebrewLetter": "Lamed",
+      "hebrewSymbol": "ל",
+      "meaning": "Ox Goad",
+      "tarotTrump": "Adjustment",
+      "tarotNumber": 11,
+      "element": null,
+      "zodiacOrPlanet": "Libra",
+      "color": {
+        "king": "Emerald",
+        "queen": "Blue",
+        "prince": "Deep blue-green",
+        "princess": "Pale green"
+      },
+      "stone": "Emerald",
+      "perfume": "Galbanum",
+      "plant": "Aloe",
+      "animal": "Elephant",
+      "astrologicalAttribution": "Libra"
+    },
+    {
+      "path": 23,
+      "hebrewLetter": "Mem",
+      "hebrewSymbol": "מ",
+      "meaning": "Water",
+      "tarotTrump": "The Hanged Man",
+      "tarotNumber": 12,
+      "element": "Water",
+      "zodiacOrPlanet": null,
+      "color": {
+        "king": "Deep blue",
+        "queen": "Sea green",
+        "prince": "Deep olive-green",
+        "princess": "White flecked purple"
+      },
+      "stone": "Beryl, Aquamarine",
+      "perfume": "Onycha, Myrrh",
+      "plant": "Lotus",
+      "animal": "Eagle, Snake, Scorpion",
+      "astrologicalAttribution": "Water"
+    },
+    {
+      "path": 24,
+      "hebrewLetter": "Nun",
+      "hebrewSymbol": "נ",
+      "meaning": "Fish",
+      "tarotTrump": "Death",
+      "tarotNumber": 13,
+      "element": null,
+      "zodiacOrPlanet": "Scorpio",
+      "color": {
+        "king": "Greenish blue",
+        "queen": "Dull brown",
+        "prince": "Very dark brown",
+        "princess": "Livid indigo brown"
+      },
+      "stone": "Snakestone",
+      "perfume": "Siamese Benzoin, Opoponax",
+      "plant": "Cactus",
+      "animal": "Scorpion, Beetle",
+      "astrologicalAttribution": "Scorpio"
+    },
+    {
+      "path": 25,
+      "hebrewLetter": "Samekh",
+      "hebrewSymbol": "ס",
+      "meaning": "Prop",
+      "tarotTrump": "Art",
+      "tarotNumber": 14,
+      "element": null,
+      "zodiacOrPlanet": "Sagittarius",
+      "color": {
+        "king": "Blue",
+        "queen": "Yellow",
+        "prince": "Green",
+        "princess": "Dark vivid blue"
+      },
+      "stone": "Jacinth",
+      "perfume": "Lign Aloes",
+      "plant": "Rush",
+      "animal": "Centaur, Horse",
+      "astrologicalAttribution": "Sagittarius"
+    },
+    {
+      "path": 26,
+      "hebrewLetter": "Ayin",
+      "hebrewSymbol": "ע",
+      "meaning": "Eye",
+      "tarotTrump": "The Devil",
+      "tarotNumber": 15,
+      "element": null,
+      "zodiacOrPlanet": "Capricorn",
+      "color": {
+        "king": "Indigo",
+        "queen": "Black",
+        "prince": "Blue black",
+        "princess": "Cold dark grey"
+      },
+      "stone": "Black Diamond",
+      "perfume": "Musk",
+      "plant": "Thistle",
+      "animal": "Goat",
+      "astrologicalAttribution": "Capricorn"
+    },
+    {
+      "path": 27,
+      "hebrewLetter": "Peh",
+      "hebrewSymbol": "פ",
+      "meaning": "Mouth",
+      "tarotTrump": "The Tower",
+      "tarotNumber": 16,
+      "element": null,
+      "zodiacOrPlanet": "Mars",
+      "color": {
+        "king": "Scarlet",
+        "queen": "Red",
+        "prince": "Venice red",
+        "princess": "Bright red rayed azure"
+      },
+      "stone": "Ruby",
+      "perfume": "Pepper, Dragon's Blood",
+      "plant": "Absinthe, Rue",
+      "animal": "Bear, Wolf",
+      "astrologicalAttribution": "Mars"
+    },
+    {
+      "path": 28,
+      "hebrewLetter": "Tzaddi",
+      "hebrewSymbol": "צ",
+      "meaning": "Fish Hook",
+      "tarotTrump": "The Star",
+      "tarotNumber": 17,
+      "element": null,
+      "zodiacOrPlanet": "Aquarius",
+      "color": {
+        "king": "Violet",
+        "queen": "Sky blue",
+        "prince": "Bluish mauve",
+        "princess": "White tinged purple"
+      },
+      "stone": "Artificial Glass",
+      "perfume": "Galbanum",
+      "plant": "Olive, Cocoanut",
+      "animal": "Eagle",
+      "astrologicalAttribution": "Aquarius"
+    },
+    {
+      "path": 29,
+      "hebrewLetter": "Qoph",
+      "hebrewSymbol": "ק",
+      "meaning": "Back of Head",
+      "tarotTrump": "The Moon",
+      "tarotNumber": 18,
+      "element": null,
+      "zodiacOrPlanet": "Pisces",
+      "color": {
+        "king": "Crimson (ultra violet)",
+        "queen": "Buff flecked silver-white",
+        "prince": "Light translucent pinkish brown",
+        "princess": "Stone colour"
+      },
+      "stone": "Pearl",
+      "perfume": "Ambergris",
+      "plant": "Opium Poppy, Mandrake",
+      "animal": "Beetle",
+      "astrologicalAttribution": "Pisces"
+    },
+    {
+      "path": 30,
+      "hebrewLetter": "Resh",
+      "hebrewSymbol": "ר",
+      "meaning": "Head",
+      "tarotTrump": "The Sun",
+      "tarotNumber": 19,
+      "element": null,
+      "zodiacOrPlanet": "Sun",
+      "color": {
+        "king": "Orange",
+        "queen": "Gold yellow",
+        "prince": "Rich amber",
+        "princess": "Amber rayed red"
+      },
+      "stone": "Crysoleth",
+      "perfume": "Olibanum",
+      "plant": "Sunflower",
+      "animal": "Lion, Sparrowhawk",
+      "astrologicalAttribution": "Sun"
+    },
+    {
+      "path": 31,
+      "hebrewLetter": "Shin",
+      "hebrewSymbol": "ש",
+      "meaning": "Tooth",
+      "tarotTrump": "The Aeon",
+      "tarotNumber": 20,
+      "element": "Fire",
+      "zodiacOrPlanet": null,
+      "color": {
+        "king": "Glowing orange scarlet",
+        "queen": "Vermilion",
+        "prince": "Scarlet flecked gold",
+        "princess": "Vermilion flecked crimson and emerald"
+      },
+      "stone": "Fire Opal",
+      "perfume": "Olibanum",
+      "plant": "Red Poppy, Hibiscus",
+      "animal": "Lion",
+      "astrologicalAttribution": "Fire"
+    },
+    {
+      "path": 32,
+      "hebrewLetter": "Tav",
+      "hebrewSymbol": "ת",
+      "meaning": "Cross",
+      "tarotTrump": "The Universe",
+      "tarotNumber": 21,
+      "element": null,
+      "zodiacOrPlanet": "Saturn",
+      "color": {
+        "king": "Indigo",
+        "queen": "Black",
+        "prince": "Blue black",
+        "princess": "Black rayed blue"
+      },
+      "stone": "Onyx",
+      "perfume": "Assafoetida, Scammony",
+      "plant": "Ash",
+      "animal": "Crocodile",
+      "astrologicalAttribution": "Saturn"
+    }
+  ]
+}

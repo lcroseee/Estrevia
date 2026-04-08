@@ -1,0 +1,1607 @@
+{
+  "generated": "2026-04-07T02:10:46.096Z",
+  "range": {
+    "start": "2024-01-01",
+    "end": "2028-12-31"
+  },
+  "planets": {
+    "Sun": {
+      "ingresses": [
+        {
+          "sign": "Capricorn",
+          "date": "2024-01-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2024-02-14",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2024-03-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2024-04-14",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2024-05-15",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2024-06-15",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2024-07-17",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2024-08-17",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2024-09-17",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2024-10-18",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2024-11-17",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2024-12-16",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2025-01-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2025-02-13",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2025-03-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2025-04-14",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2025-05-15",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2025-06-16",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2025-07-17",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2025-08-17",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2025-09-17",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2025-10-18",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2025-11-17",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2025-12-16",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2026-01-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2026-02-13",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2026-03-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2026-04-15",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2026-05-16",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2026-06-16",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2026-07-17",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2026-08-18",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2026-09-18",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2026-10-18",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2026-11-17",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2026-12-17",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2027-01-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2027-02-14",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2027-03-16",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2027-04-15",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2027-05-16",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2027-06-16",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2027-07-18",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2027-08-18",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2027-09-18",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2027-10-18",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2027-11-17",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2027-12-17",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2028-01-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2028-02-14",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2028-03-15",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2028-04-14",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2028-05-15",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2028-06-15",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2028-07-17",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2028-08-17",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2028-09-17",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2028-10-18",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2028-11-17",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2028-12-16",
+          "degree": 0
+        }
+      ]
+    },
+    "Moon": {
+      "ingresses": [
+        {
+          "sign": "Virgo",
+          "date": "2024-01-03",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2024-02-02",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2024-03-03",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2024-04-01",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2024-05-01",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2024-06-01",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2024-07-01",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2024-08-01",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2024-09-02",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2024-10-02",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2024-11-01",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2024-12-01",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2025-01-02",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2025-02-02",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2025-03-02",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2025-04-02",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2025-05-01",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2025-06-02",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2025-07-02",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2025-08-01",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2025-09-02",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2025-10-02",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2025-11-01",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2025-12-02",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2026-01-01",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2026-02-01",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2026-03-03",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2026-04-01",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2026-05-01",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2026-06-02",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2026-07-02",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2026-08-01",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2026-09-01",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2026-10-01",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2026-11-01",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2026-12-01",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2027-01-01",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2027-02-03",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2027-03-02",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2027-04-01",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2027-05-01",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2027-06-02",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2027-07-01",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2027-08-02",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2027-09-02",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2027-10-02",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2027-11-03",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2027-12-03",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2028-01-01",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2028-02-03",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2028-03-01",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2028-04-02",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2028-05-01",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2028-06-02",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2028-07-01",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2028-08-02",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2028-09-01",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2028-10-03",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2028-11-02",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2028-12-01",
+          "degree": 0
+        }
+      ]
+    },
+    "Mercury": {
+      "ingresses": [
+        {
+          "sign": "Sagittarius",
+          "date": "2024-01-08",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2024-02-02",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2024-02-21",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2024-03-08",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2024-03-26",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2024-04-10",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2024-05-11",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2024-06-01",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2024-06-15",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2024-06-30",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2024-07-20",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2024-08-23",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2024-09-05",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2024-09-24",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2024-10-11",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2024-10-30",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2025-01-05",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2025-01-25",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2025-02-12",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2025-02-28",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2025-05-07",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2025-05-24",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2025-06-07",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2025-06-23",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2025-08-31",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2025-09-16",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2025-10-03",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2025-10-25",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2025-11-24",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2025-12-07",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2025-12-30",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2026-01-18",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2026-02-04",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2026-04-11",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2026-05-01",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2026-05-15",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2026-05-30",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2026-06-23",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2026-07-08",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2026-08-06",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2026-08-23",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2026-09-08",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2026-09-27",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2026-12-03",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2026-12-23",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2027-01-10",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2027-01-28",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2027-02-24",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2027-03-12",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2027-04-06",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2027-04-23",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2027-05-07",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2027-05-24",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2027-07-31",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2027-08-15",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2027-08-31",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2027-09-22",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2027-10-22",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2027-11-06",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2027-11-26",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2027-12-15",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2028-01-03",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2028-03-10",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2028-03-29",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2028-04-13",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2028-04-28",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2028-07-06",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2028-07-22",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2028-08-06",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2028-08-24",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2028-10-31",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2028-11-18",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2028-12-07",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2028-12-27",
+          "degree": 0
+        }
+      ]
+    },
+    "Venus": {
+      "ingresses": [
+        {
+          "sign": "Sagittarius",
+          "date": "2024-01-19",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2024-02-12",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2024-03-08",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2024-04-01",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2024-04-25",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2024-05-20",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2024-06-13",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2024-07-07",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2024-08-01",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2024-08-25",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2024-09-19",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2024-10-14",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2024-11-07",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2024-12-03",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2024-12-29",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2025-01-29",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2025-06-01",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2025-06-30",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2025-07-27",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2025-08-21",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2025-09-15",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2025-10-10",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2025-11-03",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2025-11-27",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2025-12-21",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2026-01-13",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2026-02-06",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2026-03-02",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2026-03-26",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2026-04-20",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2026-05-15",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2026-06-09",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2026-07-05",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2026-08-02",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2026-09-03",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2026-11-06",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2026-11-23",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2027-01-02",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2027-01-30",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2027-02-25",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2027-03-22",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2027-04-16",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2027-05-11",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2027-06-04",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2027-06-29",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2027-07-23",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2027-08-17",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2027-09-10",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2027-10-04",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2027-10-28",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2027-11-21",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2027-12-16",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2028-01-09",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2028-02-03",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2028-02-29",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2028-03-29",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2028-08-02",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2028-09-01",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2028-09-28",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2028-10-23",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2028-11-17",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2028-12-11",
+          "degree": 0
+        }
+      ]
+    },
+    "Mars": {
+      "ingresses": [
+        {
+          "sign": "Capricorn",
+          "date": "2024-02-06",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2024-03-16",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2024-04-24",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2024-06-02",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2024-07-13",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2024-08-27",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2024-10-21",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2025-01-22",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2025-04-03",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2025-06-07",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2025-07-29",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2025-09-14",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2025-10-28",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2025-12-08",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2026-01-16",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2026-02-24",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2026-04-03",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2026-05-12",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2026-06-21",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2026-08-03",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2026-09-19",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2026-11-13",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2027-03-10",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2027-04-27",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2027-07-05",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2027-08-25",
+          "degree": 0
+        },
+        {
+          "sign": "Scorpio",
+          "date": "2027-10-08",
+          "degree": 0
+        },
+        {
+          "sign": "Sagittarius",
+          "date": "2027-11-19",
+          "degree": 0
+        },
+        {
+          "sign": "Capricorn",
+          "date": "2027-12-28",
+          "degree": 0
+        },
+        {
+          "sign": "Aquarius",
+          "date": "2028-02-04",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2028-03-13",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2028-04-21",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2028-05-31",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2028-07-13",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2028-08-27",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2028-10-15",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2028-12-09",
+          "degree": 0
+        }
+      ]
+    },
+    "Jupiter": {
+      "ingresses": [
+        {
+          "sign": "Taurus",
+          "date": "2024-05-02",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2025-05-15",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2025-10-19",
+          "degree": 0
+        },
+        {
+          "sign": "Gemini",
+          "date": "2025-12-06",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2026-06-02",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2026-11-01",
+          "degree": 0
+        },
+        {
+          "sign": "Cancer",
+          "date": "2027-01-25",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2027-06-26",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2027-11-27",
+          "degree": 0
+        },
+        {
+          "sign": "Leo",
+          "date": "2028-02-29",
+          "degree": 0
+        },
+        {
+          "sign": "Virgo",
+          "date": "2028-07-25",
+          "degree": 0
+        },
+        {
+          "sign": "Libra",
+          "date": "2028-12-27",
+          "degree": 0
+        }
+      ]
+    },
+    "Saturn": {
+      "ingresses": [
+        {
+          "sign": "Pisces",
+          "date": "2025-03-30",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2027-06-03",
+          "degree": 0
+        },
+        {
+          "sign": "Pisces",
+          "date": "2027-10-21",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2028-02-24",
+          "degree": 0
+        }
+      ]
+    },
+    "Uranus": {
+      "ingresses": [
+        {
+          "sign": "Taurus",
+          "date": "2024-06-02",
+          "degree": 0
+        },
+        {
+          "sign": "Aries",
+          "date": "2024-12-14",
+          "degree": 0
+        },
+        {
+          "sign": "Taurus",
+          "date": "2025-03-20",
+          "degree": 0
+        }
+      ]
+    },
+    "Neptune": {
+      "ingresses": []
+    },
+    "Pluto": {
+      "ingresses": []
+    }
+  }
+}
