@@ -28,6 +28,10 @@ export const metadata: Metadata = {
   title: "Estrevia — Sidereal Astrology",
   description:
     "Calculate your natal chart in sidereal astrology. Discover your true zodiac sign.",
+  openGraph: {
+    siteName: "Estrevia",
+    images: [{ url: "/og-default.png", width: 1200, height: 630 }],
+  },
   other: {
     // PWA manifest link is handled via Next.js metadata.manifest below,
     // but we keep a manual link for legacy browser support.
@@ -50,6 +54,11 @@ export default function RootLayout({
         <head>
           <link rel="manifest" href="/manifest.json" />
           <link rel="apple-touch-icon" href="/icons/icon.svg" />
+          {/* Preconnect to third-party origins to reduce LCP */}
+          <link rel="preconnect" href="https://cdn.clerk.com" />
+          <link rel="preconnect" href="https://us.i.posthog.com" />
+          <link rel="dns-prefetch" href="https://cdn.clerk.com" />
+          <link rel="dns-prefetch" href="https://us.i.posthog.com" />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} antialiased bg-[#0A0A0F] text-white min-h-screen`}

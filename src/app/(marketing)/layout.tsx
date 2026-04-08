@@ -24,7 +24,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
             {/* Logo */}
             <Link
               href="/"
-              className="text-sm font-semibold tracking-[0.18em] uppercase text-white/90 hover:text-white transition-colors"
+              className="text-sm font-semibold tracking-[0.18em] uppercase text-white/85 hover:text-white transition-all duration-200 hover:tracking-[0.22em]"
               style={{ fontFamily: 'var(--font-geist-sans)' }}
               aria-label="Estrevia — home"
             >
@@ -67,16 +67,30 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
         <main className="flex-1">{children}</main>
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <footer className="border-t border-white/6 mt-24">
+        <footer className="border-t border-white/6 mt-24 relative">
+          {/* Footer top highlight */}
+          <div
+            className="absolute top-0 inset-x-0 h-px pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.08), transparent)' }}
+            aria-hidden="true"
+          />
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex flex-col items-center sm:items-start gap-1">
-              <span
-                className="text-xs font-semibold tracking-[0.18em] uppercase text-white/40"
-                style={{ fontFamily: 'var(--font-geist-sans)' }}
-              >
-                Estrevia
-              </span>
-              <span className="text-xs text-white/25">
+            <div className="flex flex-col items-center sm:items-start gap-1.5">
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-xs font-semibold tracking-[0.2em] uppercase"
+                  style={{ color: 'rgba(255,215,0,0.5)', fontFamily: 'var(--font-geist-sans)' }}
+                >
+                  ☉
+                </span>
+                <span
+                  className="text-xs font-semibold tracking-[0.18em] uppercase text-white/40"
+                  style={{ fontFamily: 'var(--font-geist-sans)' }}
+                >
+                  Estrevia
+                </span>
+              </div>
+              <span className="text-xs text-white/22">
                 Sidereal astrology — Swiss Ephemeris precision
               </span>
             </div>

@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return createMetadata({
     title: 'Sidereal Astrology — True Natal Chart Calculator',
     description:
-      'Calculate your natal chart in sidereal astrology. Discover your true zodiac sign with Swiss Ephemeris precision, planetary hours, and 777 esoteric correspondences.',
+      'Calculate your sidereal natal chart. Discover your true zodiac sign with Swiss Ephemeris precision, planetary hours, and esoteric correspondences.',
     path: '/',
     keywords: [
       'sidereal astrology',
@@ -277,11 +277,15 @@ export default function LandingPage() {
                 <li
                   key={title}
                   data-animate={`fade-up-${i}`}
-                  className="flex flex-col gap-4 rounded-2xl border border-white/6 p-6 group hover:border-white/12 transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.02)' }}
+                  className="flex flex-col gap-4 rounded-2xl border border-white/6 p-6 group transition-all duration-300 hover:border-white/15 hover:shadow-lg"
+                  style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    // CSS custom property for planetary color glow on hover
+                    '--planet-color': color,
+                  } as React.CSSProperties}
                 >
                   <span
-                    className="text-2xl transition-transform group-hover:scale-110 origin-left"
+                    className="text-2xl transition-transform duration-200 group-hover:scale-110 origin-left"
                     style={{ color }}
                     aria-hidden="true"
                   >
@@ -457,7 +461,11 @@ export default function LandingPage() {
         >
           <Link
             href="/chart"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-[#0A0A0F] text-sm font-semibold tracking-wide transition-all duration-200 hover:shadow-xl active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, #FFD700 0%, #FF8C00 100%)',
+              boxShadow: '0 4px 24px rgba(255,215,0,0.28)',
+            }}
           >
             <span aria-hidden="true">☉</span>
             Calculate My Sidereal Chart

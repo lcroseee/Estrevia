@@ -14,9 +14,9 @@ import { SITE_URL } from '@/shared/seo/constants';
 // ---------------------------------------------------------------------------
 
 export const metadata: Metadata = createMetadata({
-  title: 'Why Sidereal Astrology — How It Differs from Tropical',
+  title: 'Why Sidereal Astrology Differs from Tropical',
   description:
-    'Sidereal astrology measures zodiac signs against actual star constellations using the Lahiri ayanamsa (~24°07′). Tropical measures from the spring equinox. The difference shifts most sun signs by ~24 days.',
+    'Sidereal astrology tracks real constellations using the Lahiri ayanamsa. Most sun signs shift one sign earlier vs tropical. Calculate your true chart.',
   path: '/why-sidereal',
   type: 'article',
   keywords: [
@@ -126,13 +126,25 @@ export default function WhySiderealPage() {
         </nav>
 
         {/* ── Hero / H1 ──────────────────────────────────────────────── */}
-        <header className="mb-10">
-          <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight mb-5 font-[var(--font-geist-sans)]">
-            Why Sidereal Astrology Differs from Tropical
+        <header className="mb-12">
+          {/* Decorative eyebrow */}
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border mb-6 text-[11px] tracking-[0.2em] uppercase"
+            style={{ borderColor: 'rgba(255,215,0,0.2)', color: 'rgba(255,215,0,0.55)' }}
+          >
+            <span aria-hidden="true" style={{ fontFamily: 'serif' }}>★</span>
+            Sidereal · Lahiri Ayanamsa · ~24°07′
+          </div>
+
+          <h1
+            className="text-3xl md:text-5xl font-light leading-[1.1] mb-5"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
+          >
+            Why Sidereal Astrology<br className="hidden sm:block" /> Differs from Tropical
           </h1>
 
           {/* AEO: direct-answer first paragraph — this is the AI extraction target */}
-          <p className="text-lg text-white/75 leading-relaxed font-[var(--font-geist-sans)]">
+          <p className="text-lg text-white/72 leading-relaxed" style={{ fontFamily: 'var(--font-geist-sans)' }}>
             Sidereal astrology measures zodiac positions against the actual constellations in
             the sky, correcting for the precession of the equinoxes using the Lahiri ayanamsa
             (currently ~24°07′). Tropical astrology — used by most Western horoscopes — anchors
@@ -146,7 +158,8 @@ export default function WhySiderealPage() {
         <section aria-labelledby="precession-heading" className="mb-12">
           <h2
             id="precession-heading"
-            className="text-2xl font-semibold text-white mb-4 font-[var(--font-geist-sans)]"
+            className="text-2xl font-light mb-4"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
             The Precession of the Equinoxes
           </h2>
@@ -179,7 +192,8 @@ export default function WhySiderealPage() {
         <section aria-labelledby="how-differ-heading" className="mb-12">
           <h2
             id="how-differ-heading"
-            className="text-2xl font-semibold text-white mb-4 font-[var(--font-geist-sans)]"
+            className="text-2xl font-light mb-4"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
             How Sidereal and Tropical Differ in Practice
           </h2>
@@ -252,7 +266,8 @@ export default function WhySiderealPage() {
         <section aria-labelledby="dates-heading" className="mb-12">
           <h2
             id="dates-heading"
-            className="text-2xl font-semibold text-white mb-4 font-[var(--font-geist-sans)]"
+            className="text-2xl font-light mb-4"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
             Sidereal vs Tropical Dates for All 12 Signs
           </h2>
@@ -321,7 +336,8 @@ export default function WhySiderealPage() {
         <section aria-labelledby="lahiri-heading" className="mb-12">
           <h2
             id="lahiri-heading"
-            className="text-2xl font-semibold text-white mb-4 font-[var(--font-geist-sans)]"
+            className="text-2xl font-light mb-4"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
             The Lahiri Ayanamsa: Estrevia&apos;s Calculation Standard
           </h2>
@@ -364,19 +380,26 @@ export default function WhySiderealPage() {
         >
           <h2
             id="calc-cta-heading"
-            className="text-xl font-semibold text-white mb-3 font-[var(--font-geist-sans)]"
+            className="text-xl font-light mb-3"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
           >
             Calculate your sidereal natal chart
           </h2>
-          <p className="text-white/60 text-sm mb-5">
+          <p className="text-white/58 text-sm mb-5 leading-relaxed">
             Enter your birth date, time, and location. Estrevia calculates your Sun, Moon,
             Ascendant, and all 10 planetary positions using the Lahiri ayanamsa and Swiss
             Ephemeris (±0.01° accuracy).
           </p>
           <Link
             href="/chart"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, #FFD700 0%, #FF8C00 100%)',
+              color: '#0A0A0F',
+              boxShadow: '0 4px 16px rgba(255,215,0,0.2)',
+            }}
           >
+            <span aria-hidden="true">☉</span>
             Open chart calculator
           </Link>
         </section>
@@ -385,7 +408,8 @@ export default function WhySiderealPage() {
         <section aria-labelledby="faq-heading" className="mb-12">
           <h2
             id="faq-heading"
-            className="text-2xl font-semibold text-white mb-6 font-[var(--font-geist-sans)]"
+            className="text-2xl font-light mb-6"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
             Frequently Asked Questions
           </h2>

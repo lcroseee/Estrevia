@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { createMetadata, JsonLdScript, softwareAppSchema } from '@/shared/seo';
+import { createMetadata, JsonLdScript, softwareAppSchema, breadcrumbSchema } from '@/shared/seo';
+import { SITE_URL } from '@/shared/seo/constants';
 import { ChartDisplay } from '@/modules/astro-engine/components/ChartDisplay';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -41,12 +42,18 @@ function ChartSkeleton() {
   );
 }
 
+const chartBreadcrumb = breadcrumbSchema([
+  { name: 'Estrevia', url: SITE_URL },
+  { name: 'Natal Chart Calculator', url: `${SITE_URL}/chart` },
+]);
+
 export default function ChartPage() {
   const schema = softwareAppSchema();
 
   return (
     <>
       <JsonLdScript schema={schema} />
+      <JsonLdScript schema={chartBreadcrumb} />
       <Suspense fallback={<ChartSkeleton />}>
         <ChartDisplay />
       </Suspense>

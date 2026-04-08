@@ -171,19 +171,28 @@ export default async function SignPage({
 
         {/* ── Hero ───────────────────────────────────────────────────── */}
         <header className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-5 mb-4">
             <span
-              className="text-5xl"
+              className="text-5xl leading-none"
               role="img"
               aria-label={`${data.sign} glyph`}
+              style={{
+                filter: 'drop-shadow(0 0 12px rgba(255,215,0,0.15))',
+              }}
             >
               {data.symbol}
             </span>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white font-[var(--font-geist-sans)]">
+              <h1
+                className="text-3xl md:text-4xl font-light leading-tight"
+                style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
+              >
                 Sidereal {data.sign}
               </h1>
-              <p className="text-white/50 text-sm mt-1 font-[var(--font-geist-mono)]">
+              <p
+                className="text-white/45 text-xs mt-1.5 tracking-widest"
+                style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
+              >
                 {data.siderealDates}
               </p>
             </div>
@@ -227,7 +236,8 @@ export default async function SignPage({
         <section aria-labelledby="overview-heading" className="mb-10">
           <h2
             id="overview-heading"
-            className="text-xl font-semibold text-white mb-4 font-[var(--font-geist-sans)]"
+            className="text-xl font-light mb-4"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
             Overview
           </h2>
@@ -246,7 +256,8 @@ export default async function SignPage({
           >
             <h2
               id="correspondences-heading"
-              className="text-lg font-semibold text-white mb-4 font-[var(--font-geist-sans)]"
+              className="text-lg font-light mb-4"
+              style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
             >
               Kabbalistic Correspondences (777)
             </h2>
@@ -271,7 +282,8 @@ export default async function SignPage({
         <section aria-labelledby="essays-heading" className="mb-10">
           <h2
             id="essays-heading"
-            className="text-xl font-semibold text-white mb-4 font-[var(--font-geist-sans)]"
+            className="text-xl font-light mb-4"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
             All Planets in Sidereal {data.sign}
           </h2>
@@ -306,22 +318,40 @@ export default async function SignPage({
         {/* ── Chart CTA ──────────────────────────────────────────────── */}
         <section
           aria-labelledby="cta-heading"
-          className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 text-center"
+          className="rounded-2xl p-7 text-center relative overflow-hidden"
+          style={{
+            border: '1px solid rgba(255,215,0,0.18)',
+            background: 'linear-gradient(135deg, rgba(255,215,0,0.04) 0%, rgba(255,140,0,0.02) 100%)',
+            boxShadow: 'inset 0 1px 0 rgba(255,215,0,0.08)',
+          }}
         >
+          {/* Top highlight line */}
+          <div
+            className="absolute top-0 inset-x-0 h-px pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent)' }}
+            aria-hidden="true"
+          />
           <h2
             id="cta-heading"
-            className="text-lg font-semibold text-white mb-2 font-[var(--font-geist-sans)]"
+            className="text-xl font-light mb-2"
+            style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
           >
             Do you have placements in sidereal {data.sign}?
           </h2>
-          <p className="text-white/60 text-sm mb-4">
+          <p className="text-white/55 text-sm mb-5 leading-relaxed">
             Calculate your sidereal natal chart to discover your Sun, Moon, Ascendant,
             and all 10 planetary positions using the Lahiri ayanamsa.
           </p>
           <Link
             href="/chart"
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, #FFD700 0%, #FF8C00 100%)',
+              color: '#0A0A0F',
+              boxShadow: '0 4px 16px rgba(255,215,0,0.2)',
+            }}
           >
+            <span aria-hidden="true">☉</span>
             Calculate your sidereal natal chart
           </Link>
         </section>

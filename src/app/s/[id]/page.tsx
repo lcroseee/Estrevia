@@ -93,11 +93,21 @@ export default async function SharePage({ params }: Props) {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative"
       style={{ background: '#0A0A0F' }}
     >
+      {/* Radial glow — matches PassportCard ruling planet color */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(255,215,0,0.04) 0%, transparent 70%)',
+        }}
+        aria-hidden="true"
+      />
+
       {/* Minimal branding header — no navigation, this is a landing page */}
-      <header className="w-full max-w-sm mb-8 flex items-center justify-between">
+      <header className="w-full max-w-sm mb-8 flex items-center justify-between relative z-10">
         <Link
           href="/"
           className="text-xs tracking-[0.2em] uppercase text-white/30 hover:text-white/60 transition-colors"
@@ -115,7 +125,7 @@ export default async function SharePage({ params }: Props) {
       </header>
 
       {/* Main content */}
-      <main className="w-full max-w-sm flex flex-col items-center gap-6">
+      <main className="w-full max-w-sm flex flex-col items-center gap-6 relative z-10">
 
         {/* Heading */}
         <div className="text-center space-y-1.5">
@@ -179,16 +189,16 @@ export default async function SharePage({ params }: Props) {
         {/* Primary CTA — the viral loop entry point */}
         <Link
           href="/chart"
-          className="flex items-center justify-center gap-2 w-full px-6 py-3.5 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-[0.98]"
+          className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-xl active:scale-[0.98]"
           style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            color: 'rgba(255,255,255,0.8)',
+            background: 'linear-gradient(135deg, #FFD700 0%, #FF8C00 100%)',
+            color: '#0A0A0F',
             textDecoration: 'none',
+            boxShadow: '0 4px 20px rgba(255,215,0,0.25)',
           }}
           aria-label="Calculate your own Cosmic Passport"
         >
-          <span aria-hidden="true" style={{ fontFamily: 'serif', fontSize: '1rem' }}>✦</span>
+          <span aria-hidden="true" style={{ fontFamily: 'serif', fontSize: '1rem' }}>☉</span>
           Calculate Your Cosmic Passport
         </Link>
 

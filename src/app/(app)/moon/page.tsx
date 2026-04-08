@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { createMetadata } from '@/shared/seo/metadata';
 import { JsonLdScript, breadcrumbSchema, faqSchema } from '@/shared/seo/json-ld';
+import { SITE_URL } from '@/shared/seo/constants';
 import { MoonCalendar } from '@/modules/astro-engine/components/MoonCalendar';
 
 export function generateMetadata(): Metadata {
@@ -26,8 +27,8 @@ export function generateMetadata(): Metadata {
 // ---------------------------------------------------------------------------
 
 const breadcrumb = breadcrumbSchema([
-  { name: 'Estrevia', url: 'https://estrevia.app' },
-  { name: 'Moon Phase', url: 'https://estrevia.app/moon' },
+  { name: 'Estrevia', url: SITE_URL },
+  { name: 'Moon Phase', url: `${SITE_URL}/moon` },
 ]);
 
 const faq = faqSchema([
@@ -68,18 +69,34 @@ export default function MoonPage() {
       <JsonLdScript schema={breadcrumb} />
       <JsonLdScript schema={faq} />
 
-      <main className="min-h-screen bg-[#0A0A0F] px-4 py-8 max-w-2xl mx-auto">
+      <main className="min-h-screen px-4 py-10 max-w-2xl mx-auto">
+        {/* Subtle moon glow — top radial */}
+        <div
+          className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(192,192,192,0.06) 0%, transparent 70%)',
+          }}
+          aria-hidden="true"
+        />
+
         {/* Page header */}
-        <header className="mb-8">
+        <header className="mb-10 relative">
+          {/* Eyebrow */}
+          <p
+            className="text-[10px] tracking-[0.22em] uppercase mb-3"
+            style={{ color: 'rgba(192,192,192,0.45)', fontFamily: 'var(--font-geist-mono, monospace)' }}
+          >
+            ☽ &nbsp;Lunar Calendar
+          </p>
           <h1
-            className="text-2xl font-semibold tracking-tight"
-            style={{ color: '#E8E0D0', fontFamily: 'var(--font-geist-sans)' }}
+            className="text-3xl sm:text-4xl font-light leading-tight mb-3"
+            style={{ color: '#E8E0D0', fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
           >
             Moon Phase Today
           </h1>
           <p
-            className="mt-2 text-sm leading-relaxed max-w-md"
-            style={{ color: 'rgba(255,255,255,0.45)' }}
+            className="text-sm leading-relaxed max-w-md"
+            style={{ color: 'rgba(255,255,255,0.42)' }}
           >
             Live lunar phase with illumination and monthly calendar. New and full
             moon dates calculated with Swiss Ephemeris to ±1 minute accuracy.
@@ -90,10 +107,10 @@ export default function MoonPage() {
         <MoonCalendar />
 
         {/* FAQ — visible content, feeds JSON-LD */}
-        <section aria-label="About moon phases" className="mt-14 space-y-4">
+        <section aria-label="About moon phases" className="mt-16 space-y-3">
           <h2
-            className="text-base font-medium"
-            style={{ color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-geist-sans)' }}
+            className="text-xs font-medium uppercase tracking-[0.18em] mb-5"
+            style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-sans)' }}
           >
             About Moon Phases
           </h2>
@@ -114,11 +131,11 @@ export default function MoonPage() {
           ].map(({ q, a }) => (
             <details
               key={q}
-              className="group border rounded-lg overflow-hidden"
-              style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+              className="group rounded-xl overflow-hidden transition-all"
+              style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}
             >
               <summary
-                className="px-4 py-3 text-sm cursor-pointer select-none flex items-center justify-between list-none transition-colors"
+                className="px-5 py-3.5 text-sm cursor-pointer select-none flex items-center justify-between list-none transition-colors hover:bg-white/[0.025]"
                 style={{
                   color: 'rgba(255,255,255,0.55)',
                   fontFamily: 'var(--font-geist-sans)',
@@ -126,16 +143,16 @@ export default function MoonPage() {
               >
                 {q}
                 <span
-                  className="text-xs ml-3 flex-shrink-0 group-open:rotate-180 transition-transform"
-                  style={{ color: 'rgba(255,255,255,0.25)' }}
+                  className="text-[10px] ml-3 flex-shrink-0 group-open:rotate-180 transition-transform duration-200"
+                  style={{ color: 'rgba(255,255,255,0.22)' }}
                   aria-hidden="true"
                 >
                   ▾
                 </span>
               </summary>
               <p
-                className="px-4 pb-4 text-sm leading-relaxed"
-                style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-crimson-pro, serif)' }}
+                className="px-5 pb-5 pt-1 text-sm leading-relaxed"
+                style={{ color: 'rgba(255,255,255,0.42)', fontFamily: 'var(--font-crimson-pro, Georgia, serif)', fontSize: '0.9375rem' }}
               >
                 {a}
               </p>

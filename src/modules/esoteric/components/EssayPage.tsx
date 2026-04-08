@@ -181,10 +181,14 @@ export function EssayPage({ meta, content }: EssayPageProps) {
         </p>
 
         {/* Title */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-white/95 leading-tight tracking-tight mb-4 font-[var(--font-geist-sans)]">
+        <h1
+          className="text-3xl sm:text-4xl font-light leading-[1.12] mb-4"
+          style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
+        >
           {glyph && (
             <span
-              className="mr-3 text-white/30 font-normal"
+              className="mr-3 font-normal"
+              style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'serif' }}
               aria-hidden="true"
             >
               {glyph}
@@ -194,7 +198,7 @@ export function EssayPage({ meta, content }: EssayPageProps) {
         </h1>
 
         {/* Description */}
-        <p className="text-base text-white/55 leading-relaxed mb-5 font-[var(--font-crimson-pro),_'Crimson_Pro',_Georgia,_serif]">
+        <p className="text-base text-white/55 leading-relaxed mb-5" style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', fontSize: '1.0625rem' }}>
           {meta.description}
         </p>
 

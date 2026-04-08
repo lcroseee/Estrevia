@@ -7,7 +7,8 @@
  */
 
 import type { Metadata } from 'next';
-import { createMetadata, JsonLdScript, faqSchema } from '@/shared/seo';
+import { createMetadata, JsonLdScript, faqSchema, breadcrumbSchema } from '@/shared/seo';
+import { SITE_URL } from '@/shared/seo/constants';
 import { PricingUpgradeButton } from './PricingUpgradeButton';
 
 export function generateMetadata(): Metadata {
@@ -19,6 +20,11 @@ export function generateMetadata(): Metadata {
     keywords: ['estrevia pricing', 'sidereal astrology premium', 'natal chart unlimited'],
   });
 }
+
+const breadcrumbLd = breadcrumbSchema([
+  { name: 'Estrevia', url: SITE_URL },
+  { name: 'Pricing', url: `${SITE_URL}/pricing` },
+]);
 
 const faqJsonLd = faqSchema([
   {
@@ -65,6 +71,7 @@ const PREMIUM_FEATURES = [
 export default function PricingPage() {
   return (
     <>
+      <JsonLdScript schema={breadcrumbLd} />
       <JsonLdScript schema={faqJsonLd} />
 
       <div className="min-h-screen bg-[#0A0A0F]">

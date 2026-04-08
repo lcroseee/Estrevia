@@ -119,11 +119,55 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
+  }
   html {
     @apply font-sans;
-    }
+    background-color: #0A0A0F;
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-color: #0A0A0F;
+    /* Subtle star-field noise texture — applies globally, prevents any flat-bg flash */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.028'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0F;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Selection ──────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffffff;
+}
+
+/* ── Focus ring — cold blue-tinted white, not generic ─────────────── */
+:focus-visible {
+  outline: 2px solid rgba(192, 200, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* ── Smooth scroll ────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Crimson Pro for esoteric/essay headings ──────────────────────── */
+.font-esoteric {
+  font-family: var(--font-crimson-pro, 'Crimson Pro', Georgia, serif);
 }

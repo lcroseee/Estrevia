@@ -59,13 +59,19 @@ export function CookieConsent() {
       aria-live="polite"
       aria-label="Cookie consent"
       className={[
-        'fixed bottom-0 left-0 right-0 z-50',
+        // z-50 keeps cookie banner above bottom nav (z-40)
+        // On mobile: push up by bottom nav height (pb-safe + 56px approx)
+        'fixed left-0 right-0 z-50',
+        // Bottom: 0 on desktop (no bottom nav); on mobile sits above bottom nav
+        'bottom-0 md:bottom-0',
         'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between',
-        'px-4 py-4 sm:px-6',
-        'bg-[#0F0F18] border-t border-white/10',
-        'shadow-[0_-4px_32px_rgba(0,0,0,0.6)]',
+        'px-4 pt-4 pb-[calc(1rem+60px)] sm:pb-4 md:pb-4 sm:px-6',
+        'bg-[#0F0F18]/97 border-t border-white/10',
+        'shadow-[0_-4px_40px_rgba(0,0,0,0.7)]',
         'animate-in slide-in-from-bottom-4 duration-500',
+        '[backdrop-filter:blur(12px)]',
       ].join(' ')}
+      style={{ WebkitBackdropFilter: 'blur(12px)' }}
     >
       {/* Text */}
       <p className="text-sm text-white/70 leading-relaxed max-w-prose">
@@ -80,16 +86,17 @@ export function CookieConsent() {
       </p>
 
       {/* Actions */}
-      <div className="flex gap-2 shrink-0">
+      <div className="flex gap-2.5 shrink-0">
         <button
           type="button"
           onClick={() => handleConsent('declined')}
           className={[
-            'px-4 py-2 rounded-md text-sm font-medium',
-            'text-white/50 hover:text-white/80',
-            'border border-white/10 hover:border-white/20',
-            'transition-colors duration-200',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
+            'px-4 py-2 rounded-lg text-sm font-medium',
+            'text-white/45 hover:text-white/75',
+            'border border-white/8 hover:border-white/18',
+            'transition-all duration-200',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
+            'active:scale-[0.97]',
           ].join(' ')}
         >
           Decline
@@ -99,12 +106,15 @@ export function CookieConsent() {
           type="button"
           onClick={() => handleConsent('accepted')}
           className={[
-            'px-4 py-2 rounded-md text-sm font-medium',
-            'bg-[#C8A84B] text-[#0A0A0F]',
-            'hover:bg-[#E0C06A]',
-            'transition-colors duration-200',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A84B]/60',
+            'px-5 py-2 rounded-lg text-sm font-semibold',
+            'transition-all duration-200',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700]/50',
+            'active:scale-[0.97]',
           ].join(' ')}
+          style={{
+            background: 'linear-gradient(135deg, #C8A84B 0%, #E0C06A 100%)',
+            color: '#0A0A0F',
+          }}
         >
           Accept
         </button>
