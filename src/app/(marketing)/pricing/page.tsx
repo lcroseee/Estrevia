@@ -9,7 +9,7 @@
 import type { Metadata } from 'next';
 import { createMetadata, JsonLdScript, faqSchema, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
-import { PricingUpgradeButton } from './PricingUpgradeButton';
+import { PricingToggle } from './PricingToggle';
 
 export function generateMetadata(): Metadata {
   return createMetadata({
@@ -43,27 +43,6 @@ const faqJsonLd = faqSchema([
       'All major credit and debit cards via Stripe. Apple Pay and Google Pay are available on supported devices.',
   },
 ]);
-
-// ---------------------------------------------------------------------------
-// Tier data
-// ---------------------------------------------------------------------------
-const FREE_FEATURES = [
-  'Natal chart calculation (Swiss Ephemeris)',
-  'Moon phases and lunar calendar',
-  'Planetary hours for your location',
-  '777 esoteric correspondences',
-  'Up to 3 saved charts',
-  'Cosmic Passport sharing',
-];
-
-const PREMIUM_FEATURES = [
-  'Everything in Free',
-  'Unlimited saved charts',
-  'Detailed aspect analysis (orbs, applying/separating)',
-  'Future transits (Phase 2)',
-  'Priority support',
-  'Early access to new features',
-];
 
 // ---------------------------------------------------------------------------
 // Page
@@ -106,114 +85,8 @@ export default function PricingPage() {
             </p>
           </div>
 
-          {/* Pricing cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {/* Free tier */}
-            <div
-              className="flex flex-col rounded-2xl border border-white/8 p-8"
-              style={{ background: 'rgba(255,255,255,0.02)' }}
-            >
-              <div className="mb-6">
-                <div className="text-xs tracking-[0.2em] uppercase text-white/40 mb-3">
-                  Free
-                </div>
-                <div className="flex items-end gap-1 mb-4">
-                  <span
-                    className="text-5xl font-light text-white"
-                    style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
-                  >
-                    $0
-                  </span>
-                  <span className="text-sm text-white/35 mb-2">/ forever</span>
-                </div>
-                <p className="text-sm text-white/45 leading-relaxed">
-                  Full chart calculation and core tools. No account required for
-                  calculation.
-                </p>
-              </div>
-
-              <ul className="space-y-3 flex-1 mb-8" role="list" aria-label="Free plan features">
-                {FREE_FEATURES.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <span className="text-white/30 mt-0.5 flex-shrink-0" aria-hidden="true">
-                      ✓
-                    </span>
-                    <span className="text-sm text-white/60">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div
-                className="w-full py-3 px-6 rounded-xl border border-white/10 text-sm text-white/40 text-center"
-                aria-label="Current plan — Free"
-              >
-                Current plan
-              </div>
-            </div>
-
-            {/* Premium tier */}
-            <div
-              className="flex flex-col rounded-2xl border border-[#FFD700]/25 p-8 relative overflow-hidden"
-              style={{ background: 'rgba(255,215,0,0.03)' }}
-            >
-              {/* Glow */}
-              <div
-                className="absolute top-0 inset-x-0 h-px"
-                style={{
-                  background:
-                    'linear-gradient(to right, transparent, rgba(255,215,0,0.4), transparent)',
-                }}
-                aria-hidden="true"
-              />
-
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="text-xs tracking-[0.2em] uppercase text-[#FFD700]/70">
-                    Premium
-                  </div>
-                  <span
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD700]/10 text-[#FFD700]/70 border border-[#FFD700]/20 tracking-wide uppercase"
-                  >
-                    Popular
-                  </span>
-                </div>
-                <div className="flex items-end gap-1 mb-4">
-                  <span
-                    className="text-5xl font-light text-[#FFD700]"
-                    style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
-                  >
-                    $9
-                  </span>
-                  <span className="text-sm text-white/35 mb-2">/ month</span>
-                </div>
-                <p className="text-sm text-white/45 leading-relaxed">
-                  For serious practitioners. Unlimited saves, deep analysis,
-                  and early access to every new feature.
-                </p>
-              </div>
-
-              <ul
-                className="space-y-3 flex-1 mb-8"
-                role="list"
-                aria-label="Premium plan features"
-              >
-                {PREMIUM_FEATURES.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <span
-                      className="flex-shrink-0 mt-0.5"
-                      style={{ color: 'rgba(255,215,0,0.6)' }}
-                      aria-hidden="true"
-                    >
-                      ✓
-                    </span>
-                    <span className="text-sm text-white/70">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <PricingUpgradeButton />
-            </div>
-          </div>
+          {/* Pricing cards with monthly/annual toggle */}
+          <PricingToggle />
 
           {/* Trust signals */}
           <div className="mt-12 text-center">

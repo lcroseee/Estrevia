@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useCallback, useTransition } from 'react';
 import { Planet } from '@/shared/types';
-import type { PlanetaryHour, PlanetaryHoursResponse, ApiResponse } from '@/shared/types';
+import type { PlanetaryHour, PlanetaryHoursResponse, ApiResponse, CitySearchResult } from '@/shared/types';
 import { PLANET_COLORS } from './PlanetGlyph';
+import { CityAutocomplete } from './CityAutocomplete';
+
+const LOCATION_STORAGE_KEY = 'estrevia_last_location';
 
 // Unicode glyphs for the seven Chaldean planets
 const PLANET_GLYPHS: Partial<Record<Planet, string>> = {
@@ -106,8 +109,24 @@ export function PlanetaryHoursGrid() {
     [],
   );
 
-  // Request geolocation once on mount
+  // Try to load saved location from localStorage, then fall back to geolocation
   useEffect(() => {
+    // Check localStorage for a previously saved city
+    try {
+      const saved = localStorage.getItem(LOCATION_STORAGE_KEY);
+      if (saved) {
+        const loc = JSON.parse(saved) as { latitude: number; longitude: number; timezone: string };
+        if (loc.latitude && loc.longitude && loc.timezone) {
+          const state = { status: 'ready' as const, ...loc };
+          setGeoState(state);
+          fetchHours(loc.latitude, loc.longitude, loc.timezone, selectedDate);
+          return;
+        }
+      }
+    } catch {
+      // Invalid stored data — continue to geolocation
+    }
+
     if (!navigator.geolocation) {
       setGeoState({ status: 'denied' });
       return;
@@ -153,19 +172,71 @@ export function PlanetaryHoursGrid() {
     });
   };
 
-  // ── Geolocation denied ────────────────────────────────────────────────────
+  // Handle city selection from CityAutocomplete fallback
+  const [cityQuery, setCityQuery] = useState('');
+
+  const handleCitySelect = useCallback(
+    (city: CitySearchResult) => {
+      const timezone = city.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const loc = { latitude: city.latitude, longitude: city.longitude, timezone };
+
+      // Save to localStorage for next visit
+      try {
+        localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(loc));
+      } catch {
+        // Storage full or unavailable — non-critical
+      }
+
+      const state = { status: 'ready' as const, ...loc };
+      setGeoState(state);
+      fetchHours(loc.latitude, loc.longitude, loc.timezone, selectedDate);
+    },
+    [fetchHours, selectedDate],
+  );
+
+  // ── Geolocation denied — show city search fallback ────────────────────────
   if (geoState.status === 'denied') {
     return (
       <section
-        aria-label="Planetary hours — location required"
-        className="flex flex-col items-center justify-center py-16 text-center gap-4"
+        aria-label="Planetary hours — select location"
+        className="flex flex-col items-center justify-center py-12 text-center gap-4 max-w-sm mx-auto"
       >
         <span className="text-4xl" aria-hidden="true">🔒</span>
-        <h2 className="text-lg font-medium text-white/80">Location access required</h2>
-        <p className="text-sm text-white/50 max-w-xs leading-relaxed">
-          Planetary hours are calculated for your exact location. Enable location access
-          in your browser settings and refresh the page.
+        <h2 className="text-lg font-medium text-white/80">Location required</h2>
+        <p className="text-sm text-white/50 max-w-xs leading-relaxed mb-2">
+          Planetary hours are calculated for your location. Search for your city below.
         </p>
+        <div className="w-full">
+          <CityAutocomplete
+            value={cityQuery}
+            onChange={setCityQuery}
+            onCitySelect={handleCitySelect}
+            placeholder="Search city for planetary hours..."
+          />
+        </div>
+      </section>
+    );
+  }
+
+  // ── Geo error — also show city search fallback ────────────────────────────
+  if (geoState.status === 'error') {
+    return (
+      <section
+        aria-label="Location error — select city"
+        className="flex flex-col items-center justify-center py-12 text-center gap-4 max-w-sm mx-auto"
+      >
+        <span className="text-4xl" aria-hidden="true">⚠</span>
+        <p className="text-sm text-white/50 max-w-xs mb-2">
+          Could not determine your location. Search for your city instead.
+        </p>
+        <div className="w-full">
+          <CityAutocomplete
+            value={cityQuery}
+            onChange={setCityQuery}
+            onCitySelect={handleCitySelect}
+            placeholder="Search city..."
+          />
+        </div>
       </section>
     );
   }
@@ -183,21 +254,6 @@ export function PlanetaryHoursGrid() {
           aria-hidden="true"
         />
         <p className="text-sm text-white/40">Detecting location…</p>
-      </section>
-    );
-  }
-
-  // ── Geo error ────────────────────────────────────────────────────────────
-  if (geoState.status === 'error') {
-    return (
-      <section
-        aria-label="Location error"
-        className="flex flex-col items-center justify-center py-16 text-center gap-4"
-      >
-        <span className="text-4xl" aria-hidden="true">⚠</span>
-        <p className="text-sm text-white/50 max-w-xs">
-          Could not determine your location. {geoState.message}
-        </p>
       </section>
     );
   }
@@ -310,12 +366,31 @@ function HourRow({
   const name = PLANET_NAMES[planet] ?? planet;
   const duration = formatDuration(hour.startTime, hour.endTime);
 
+  // Progress for current hour
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!isCurrent) return;
+
+    function updateProgress() {
+      const start = new Date(hour.startTime).getTime();
+      const end = new Date(hour.endTime).getTime();
+      const now = Date.now();
+      const elapsed = Math.max(0, Math.min(1, (now - start) / (end - start)));
+      setProgress(elapsed);
+    }
+
+    updateProgress();
+    const interval = setInterval(updateProgress, 1000);
+    return () => clearInterval(interval);
+  }, [isCurrent, hour.startTime, hour.endTime]);
+
   return (
     <div
       role="listitem"
       aria-current={isCurrent ? 'true' : undefined}
       className={[
-        'relative flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300',
+        'relative flex flex-col rounded-lg transition-all duration-300 overflow-hidden',
         hour.isDay
           ? 'bg-amber-950/20 border border-amber-900/15'
           : 'bg-indigo-950/20 border border-indigo-900/15',
@@ -333,57 +408,80 @@ function HourRow({
       }
       aria-label={`${name} hour — ${formatTime(hour.startTime)} to ${formatTime(hour.endTime)}, ${duration}${isCurrent ? ', current hour' : ''}`}
     >
-      {/* Current hour glow strip */}
-      {isCurrent && (
+      <div className="flex items-center gap-3 px-4 py-3">
+        {/* Current hour glow strip */}
+        {isCurrent && (
+          <span
+            className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full"
+            style={{ background: color }}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Planet glyph */}
         <span
-          className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full"
-          style={{ background: color }}
+          className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-serif text-lg leading-none"
+          style={{
+            color,
+            background: `${color}18`,
+            border: `1px solid ${color}33`,
+            boxShadow: isCurrent ? `0 0 8px ${color}44` : 'none',
+          }}
           aria-hidden="true"
-        />
+        >
+          {glyph}
+        </span>
+
+        {/* Name */}
+        <span
+          className="w-20 text-sm font-medium font-[var(--font-geist-sans)] truncate"
+          style={{ color: isCurrent ? color : `${color}CC` }}
+        >
+          {name}
+        </span>
+
+        {/* Time range */}
+        <span className="flex-1 text-xs text-white/50 font-[var(--font-geist-mono)] tabular-nums">
+          {formatTime(hour.startTime)}
+          <span className="mx-1 text-white/25">–</span>
+          {formatTime(hour.endTime)}
+        </span>
+
+        {/* Duration */}
+        <span className="text-xs text-white/30 font-[var(--font-geist-mono)] tabular-nums w-12 text-right">
+          {duration}
+        </span>
+
+        {/* Day/night badge */}
+        <span
+          className="text-[11px] w-4 text-center text-white/25"
+          aria-hidden="true"
+          title={hour.isDay ? 'Day hour' : 'Night hour'}
+        >
+          {hour.isDay ? '☀' : '☾'}
+        </span>
+      </div>
+
+      {/* Progress bar for current hour */}
+      {isCurrent && (
+        <div
+          className="w-full h-[3px]"
+          style={{ background: `${color}15` }}
+          role="progressbar"
+          aria-valuenow={Math.round(progress * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${Math.round(progress * 100)}% of current hour elapsed`}
+        >
+          <div
+            className="h-full transition-[width] duration-1000 ease-linear"
+            style={{
+              width: `${progress * 100}%`,
+              background: `linear-gradient(90deg, ${color}, ${color}AA)`,
+            }}
+          />
+        </div>
       )}
-
-      {/* Planet glyph */}
-      <span
-        className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-serif text-lg leading-none"
-        style={{
-          color,
-          background: `${color}18`,
-          border: `1px solid ${color}33`,
-          boxShadow: isCurrent ? `0 0 8px ${color}44` : 'none',
-        }}
-        aria-hidden="true"
-      >
-        {glyph}
-      </span>
-
-      {/* Name */}
-      <span
-        className="w-20 text-sm font-medium font-[var(--font-geist-sans)] truncate"
-        style={{ color: isCurrent ? color : `${color}CC` }}
-      >
-        {name}
-      </span>
-
-      {/* Time range */}
-      <span className="flex-1 text-xs text-white/50 font-[var(--font-geist-mono)] tabular-nums">
-        {formatTime(hour.startTime)}
-        <span className="mx-1 text-white/25">–</span>
-        {formatTime(hour.endTime)}
-      </span>
-
-      {/* Duration */}
-      <span className="text-xs text-white/30 font-[var(--font-geist-mono)] tabular-nums w-12 text-right">
-        {duration}
-      </span>
-
-      {/* Day/night badge */}
-      <span
-        className="text-[11px] w-4 text-center text-white/25"
-        aria-hidden="true"
-        title={hour.isDay ? 'Day hour' : 'Night hour'}
-      >
-        {hour.isDay ? '☀' : '☾'}
-      </span>
     </div>
   );
 }

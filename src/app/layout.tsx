@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Crimson_Pro } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { esES } from "@clerk/localizations";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { PostHogProvider } from "@/shared/components/PostHogProvider";
 import { CookieConsent } from "@/shared/components/CookieConsent";
 import "./globals.css";
@@ -43,14 +46,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <ClerkProvider>
-      <html lang="en" className="dark">
+    <ClerkProvider {...(locale === 'es' ? { localization: esES } : {})}>
+      <html lang={locale} className="dark">
         <head>
           <link rel="manifest" href="/manifest.json" />
           <link rel="apple-touch-icon" href="/icons/icon.svg" />
@@ -63,10 +69,12 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} antialiased bg-[#0A0A0F] text-white min-h-screen`}
         >
-          <PostHogProvider>
-            {children}
-            <CookieConsent />
-          </PostHogProvider>
+          <NextIntlClientProvider messages={messages}>
+            <PostHogProvider>
+              {children}
+              <CookieConsent />
+            </PostHogProvider>
+          </NextIntlClientProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -1,0 +1,1380 @@
+{
+  "cards": [
+    {
+      "id": "the-fool",
+      "number": 0,
+      "name": { "en": "The Fool", "es": "El Loco" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["innocence", "freedom", "originality"], "es": ["inocencia", "libertad", "originalidad"] },
+        "reversed": { "en": ["recklessness", "folly", "carelessness"], "es": ["imprudencia", "locura", "descuido"] }
+      },
+      "astrology": "Air",
+      "hebrewLetter": "Aleph",
+      "treeOfLifePath": 11,
+      "treeOfLifeConnects": [1, 2],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Fool represents the infinite potential before the first step. It is the pure spirit leaping into the void with absolute trust, carrying nothing and possessing everything.",
+        "es": "El Loco representa el potencial infinito antes del primer paso. Es el espíritu puro lanzándose al vacío con confianza absoluta, sin llevar nada y poseyéndolo todo."
+      },
+      "image": "/tarot/the-fool.svg"
+    },
+    {
+      "id": "the-magus",
+      "number": 1,
+      "name": { "en": "The Magus", "es": "El Mago" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["skill", "communication", "will"], "es": ["habilidad", "comunicación", "voluntad"] },
+        "reversed": { "en": ["manipulation", "trickery", "cunning"], "es": ["manipulación", "engaño", "astucia"] }
+      },
+      "astrology": "Mercury",
+      "hebrewLetter": "Beth",
+      "treeOfLifePath": 12,
+      "treeOfLifeConnects": [1, 3],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Magus is the concentrated power of directed will and intelligence. He wields all the tools of creation, channeling the Word that transforms thought into reality.",
+        "es": "El Mago es el poder concentrado de la voluntad y la inteligencia dirigidas. Maneja todas las herramientas de la creación, canalizando la Palabra que transforma el pensamiento en realidad."
+      },
+      "image": "/tarot/the-magus.svg"
+    },
+    {
+      "id": "the-priestess",
+      "number": 2,
+      "name": { "en": "The Priestess", "es": "La Sacerdotisa" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["intuition", "mystery", "inner knowledge"], "es": ["intuición", "misterio", "conocimiento interior"] },
+        "reversed": { "en": ["secrets", "withdrawal", "silence"], "es": ["secretos", "retraimiento", "silencio"] }
+      },
+      "astrology": "Moon",
+      "hebrewLetter": "Gimel",
+      "treeOfLifePath": 13,
+      "treeOfLifeConnects": [1, 6],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Priestess guards the veil between the seen and unseen. She is the lunar mirror reflecting the hidden light, the keeper of secret wisdom that flows like an underground river.",
+        "es": "La Sacerdotisa guarda el velo entre lo visible y lo invisible. Es el espejo lunar que refleja la luz oculta, la guardiana de la sabiduría secreta que fluye como un río subterráneo."
+      },
+      "image": "/tarot/the-priestess.svg"
+    },
+    {
+      "id": "the-empress",
+      "number": 3,
+      "name": { "en": "The Empress", "es": "La Emperatriz" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["fertility", "abundance", "love"], "es": ["fertilidad", "abundancia", "amor"] },
+        "reversed": { "en": ["stagnation", "dependence", "smothering"], "es": ["estancamiento", "dependencia", "sobreprotección"] }
+      },
+      "astrology": "Venus",
+      "hebrewLetter": "Daleth",
+      "treeOfLifePath": 14,
+      "treeOfLifeConnects": [2, 3],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Empress is the gateway of life, the great mother through whom creative force takes living form. She embodies the generative power of nature, love, and sensory delight.",
+        "es": "La Emperatriz es la puerta de la vida, la gran madre a través de quien la fuerza creativa toma forma viviente. Encarna el poder generativo de la naturaleza, el amor y el deleite sensorial."
+      },
+      "image": "/tarot/the-empress.svg"
+    },
+    {
+      "id": "the-emperor",
+      "number": 4,
+      "name": { "en": "The Emperor", "es": "El Emperador" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["authority", "structure", "leadership"], "es": ["autoridad", "estructura", "liderazgo"] },
+        "reversed": { "en": ["tyranny", "rigidity", "domination"], "es": ["tiranía", "rigidez", "dominación"] }
+      },
+      "astrology": "Aries",
+      "hebrewLetter": "Heh",
+      "treeOfLifePath": 15,
+      "treeOfLifeConnects": [2, 6],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Emperor is the ordering principle that gives structure to raw energy. He establishes law and boundary, channeling the fire of Aries into stable governance and visible power.",
+        "es": "El Emperador es el principio ordenador que da estructura a la energía bruta. Establece ley y límite, canalizando el fuego de Aries en gobernanza estable y poder visible."
+      },
+      "image": "/tarot/the-emperor.svg"
+    },
+    {
+      "id": "the-hierophant",
+      "number": 5,
+      "name": { "en": "The Hierophant", "es": "El Hierofante" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["tradition", "teaching", "wisdom"], "es": ["tradición", "enseñanza", "sabiduría"] },
+        "reversed": { "en": ["dogma", "restriction", "conformity"], "es": ["dogma", "restricción", "conformismo"] }
+      },
+      "astrology": "Taurus",
+      "hebrewLetter": "Vav",
+      "treeOfLifePath": 16,
+      "treeOfLifeConnects": [2, 4],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Hierophant is the revealer of sacred mysteries, the inner teacher who transmits eternal wisdom through established forms. He bridges heaven and earth through ritual and doctrine.",
+        "es": "El Hierofante es el revelador de misterios sagrados, el maestro interior que transmite la sabiduría eterna a través de formas establecidas. Conecta cielo y tierra a través del ritual y la doctrina."
+      },
+      "image": "/tarot/the-hierophant.svg"
+    },
+    {
+      "id": "the-lovers",
+      "number": 6,
+      "name": { "en": "The Lovers", "es": "Los Amantes" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["union", "choice", "duality"], "es": ["unión", "elección", "dualidad"] },
+        "reversed": { "en": ["disharmony", "imbalance", "misalignment"], "es": ["desarmonía", "desequilibrio", "desalineación"] }
+      },
+      "astrology": "Gemini",
+      "hebrewLetter": "Zayin",
+      "treeOfLifePath": 17,
+      "treeOfLifeConnects": [3, 6],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Lovers represent the alchemical marriage of opposites, the crucial choice that defines one's path. It is the recognition that all apparent duality resolves into a deeper unity.",
+        "es": "Los Amantes representan el matrimonio alquímico de opuestos, la elección crucial que define el camino de uno. Es el reconocimiento de que toda dualidad aparente se resuelve en una unidad más profunda."
+      },
+      "image": "/tarot/the-lovers.svg"
+    },
+    {
+      "id": "the-chariot",
+      "number": 7,
+      "name": { "en": "The Chariot", "es": "El Carro" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["triumph", "willpower", "determination"], "es": ["triunfo", "fuerza de voluntad", "determinación"] },
+        "reversed": { "en": ["lack of direction", "aggression", "defeat"], "es": ["falta de dirección", "agresión", "derrota"] }
+      },
+      "astrology": "Cancer",
+      "hebrewLetter": "Cheth",
+      "treeOfLifePath": 18,
+      "treeOfLifeConnects": [3, 5],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Chariot is the vehicle of the unified will, carrying the soul through the waters of experience. The charioteer masters opposing forces not by fighting them but by holding them in dynamic tension.",
+        "es": "El Carro es el vehículo de la voluntad unificada, llevando al alma a través de las aguas de la experiencia. El auriga domina fuerzas opuestas no luchando contra ellas sino manteniéndolas en tensión dinámica."
+      },
+      "image": "/tarot/the-chariot.svg"
+    },
+    {
+      "id": "adjustment",
+      "number": 8,
+      "name": { "en": "Adjustment", "es": "El Ajuste" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["balance", "justice", "equilibrium"], "es": ["equilibrio", "justicia", "ecuanimidad"] },
+        "reversed": { "en": ["bias", "unfairness", "imbalance"], "es": ["parcialidad", "injusticia", "desequilibrio"] }
+      },
+      "astrology": "Libra",
+      "hebrewLetter": "Lamed",
+      "treeOfLifePath": 22,
+      "treeOfLifeConnects": [5, 6],
+      "liber777Column": "VI",
+      "description": {
+        "en": "Adjustment is the perpetual act of cosmic equilibrium, where every action finds its precise counterweight. The sword of discrimination cuts through illusion to reveal the true measure of all things.",
+        "es": "El Ajuste es el acto perpetuo de equilibrio cósmico, donde cada acción encuentra su contrapeso preciso. La espada de la discriminación corta la ilusión para revelar la verdadera medida de todas las cosas."
+      },
+      "image": "/tarot/adjustment.svg"
+    },
+    {
+      "id": "the-hermit",
+      "number": 9,
+      "name": { "en": "The Hermit", "es": "El Ermitaño" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["solitude", "introspection", "guidance"], "es": ["soledad", "introspección", "guía"] },
+        "reversed": { "en": ["isolation", "loneliness", "withdrawal"], "es": ["aislamiento", "soledad", "retraimiento"] }
+      },
+      "astrology": "Virgo",
+      "hebrewLetter": "Yod",
+      "treeOfLifePath": 20,
+      "treeOfLifeConnects": [4, 6],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Hermit carries the seed of divine light into the darkness, illuminating the path for those who follow. He represents the solitary quest for truth that requires turning inward away from the noise of the world.",
+        "es": "El Ermitaño lleva la semilla de la luz divina hacia la oscuridad, iluminando el camino para quienes siguen. Representa la búsqueda solitaria de la verdad que requiere volverse hacia dentro, lejos del ruido del mundo."
+      },
+      "image": "/tarot/the-hermit.svg"
+    },
+    {
+      "id": "fortune",
+      "number": 10,
+      "name": { "en": "Fortune", "es": "La Fortuna" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["cycles", "destiny", "turning point"], "es": ["ciclos", "destino", "punto de inflexión"] },
+        "reversed": { "en": ["resistance to change", "bad luck", "stagnation"], "es": ["resistencia al cambio", "mala suerte", "estancamiento"] }
+      },
+      "astrology": "Jupiter",
+      "hebrewLetter": "Kaph",
+      "treeOfLifePath": 21,
+      "treeOfLifeConnects": [4, 7],
+      "liber777Column": "VI",
+      "description": {
+        "en": "Fortune is the ever-turning wheel of destiny, reminding us that all conditions are temporary. The three figures on the wheel represent the ascending, reigning, and descending phases of every cycle.",
+        "es": "La Fortuna es la rueda del destino en constante giro, recordándonos que todas las condiciones son temporales. Las tres figuras de la rueda representan las fases ascendente, reinante y descendente de cada ciclo."
+      },
+      "image": "/tarot/fortune.svg"
+    },
+    {
+      "id": "lust",
+      "number": 11,
+      "name": { "en": "Lust", "es": "La Lujuria" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["passion", "courage", "vital force"], "es": ["pasión", "coraje", "fuerza vital"] },
+        "reversed": { "en": ["weakness", "self-doubt", "raw aggression"], "es": ["debilidad", "inseguridad", "agresión descontrolada"] }
+      },
+      "astrology": "Leo",
+      "hebrewLetter": "Teth",
+      "treeOfLifePath": 19,
+      "treeOfLifeConnects": [4, 5],
+      "liber777Column": "VI",
+      "description": {
+        "en": "Lust is the ecstatic embrace of life force in its fullness. The figure riding the great beast represents consciousness joyfully directing primal energy, not through repression but through rapturous union.",
+        "es": "La Lujuria es el abrazo extático de la fuerza vital en su plenitud. La figura cabalgando la gran bestia representa la conciencia dirigiendo alegremente la energía primordial, no a través de la represión sino de la unión extática."
+      },
+      "image": "/tarot/lust.svg"
+    },
+    {
+      "id": "the-hanged-man",
+      "number": 12,
+      "name": { "en": "The Hanged Man", "es": "El Colgado" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["surrender", "new perspective", "sacrifice"], "es": ["entrega", "nueva perspectiva", "sacrificio"] },
+        "reversed": { "en": ["resistance", "stalling", "martyrdom"], "es": ["resistencia", "estancamiento", "martirio"] }
+      },
+      "astrology": "Water",
+      "hebrewLetter": "Mem",
+      "treeOfLifePath": 23,
+      "treeOfLifeConnects": [5, 8],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Hanged Man is suspended between worlds, having chosen to reverse his perspective. In the element of Water, the ego dissolves so that deeper truth may surface from beneath.",
+        "es": "El Colgado está suspendido entre mundos, habiendo elegido invertir su perspectiva. En el elemento Agua, el ego se disuelve para que una verdad más profunda pueda emerger desde lo profundo."
+      },
+      "image": "/tarot/the-hanged-man.svg"
+    },
+    {
+      "id": "death",
+      "number": 13,
+      "name": { "en": "Death", "es": "La Muerte" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["transformation", "ending", "renewal"], "es": ["transformación", "final", "renovación"] },
+        "reversed": { "en": ["resistance to change", "stagnation", "fear"], "es": ["resistencia al cambio", "estancamiento", "miedo"] }
+      },
+      "astrology": "Scorpio",
+      "hebrewLetter": "Nun",
+      "treeOfLifePath": 24,
+      "treeOfLifeConnects": [6, 7],
+      "liber777Column": "VI",
+      "description": {
+        "en": "Death is the great transformer, the scorpion power that dissolves what no longer serves so that new life can emerge. Every ending is a gateway; nothing is truly destroyed, only changed in form.",
+        "es": "La Muerte es la gran transformadora, el poder escorpiano que disuelve lo que ya no sirve para que pueda emerger nueva vida. Cada final es una puerta; nada se destruye verdaderamente, solo cambia de forma."
+      },
+      "image": "/tarot/death.svg"
+    },
+    {
+      "id": "art",
+      "number": 14,
+      "name": { "en": "Art", "es": "El Arte" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["synthesis", "alchemy", "integration"], "es": ["síntesis", "alquimia", "integración"] },
+        "reversed": { "en": ["imbalance", "excess", "poor combination"], "es": ["desequilibrio", "exceso", "mala combinación"] }
+      },
+      "astrology": "Sagittarius",
+      "hebrewLetter": "Samekh",
+      "treeOfLifePath": 25,
+      "treeOfLifeConnects": [6, 9],
+      "liber777Column": "VI",
+      "description": {
+        "en": "Art is the great alchemical operation, the conscious blending of fire and water, masculine and feminine, into a unified gold. The arrow of Sagittarius aims upward, carrying the refined result toward its highest expression.",
+        "es": "El Arte es la gran operación alquímica, la mezcla consciente de fuego y agua, masculino y femenino, en un oro unificado. La flecha de Sagitario apunta hacia arriba, llevando el resultado refinado hacia su expresión más elevada."
+      },
+      "image": "/tarot/art.svg"
+    },
+    {
+      "id": "the-devil",
+      "number": 15,
+      "name": { "en": "The Devil", "es": "El Diablo" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["materialism", "creative force", "mirth"], "es": ["materialismo", "fuerza creativa", "regocijo"] },
+        "reversed": { "en": ["bondage", "addiction", "illusion"], "es": ["atadura", "adicción", "ilusión"] }
+      },
+      "astrology": "Capricorn",
+      "hebrewLetter": "Ayin",
+      "treeOfLifePath": 26,
+      "treeOfLifeConnects": [6, 8],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Devil represents the creative intelligence of matter itself, the generative power that works through earthly forms. Far from mere evil, it is the recognition that spirit expresses through the material with exuberance and humor.",
+        "es": "El Diablo representa la inteligencia creativa de la materia misma, el poder generativo que opera a través de las formas terrenales. Lejos de ser mero mal, es el reconocimiento de que el espíritu se expresa a través de lo material con exuberancia y humor."
+      },
+      "image": "/tarot/the-devil.svg"
+    },
+    {
+      "id": "the-tower",
+      "number": 16,
+      "name": { "en": "The Tower", "es": "La Torre" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["upheaval", "revelation", "liberation"], "es": ["conmoción", "revelación", "liberación"] },
+        "reversed": { "en": ["avoidance", "fear of change", "delayed disaster"], "es": ["evasión", "miedo al cambio", "desastre aplazado"] }
+      },
+      "astrology": "Mars",
+      "hebrewLetter": "Peh",
+      "treeOfLifePath": 27,
+      "treeOfLifeConnects": [7, 8],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Tower is the lightning flash of Mars that shatters structures built on false foundations. The destruction is not punishment but liberation, clearing the way for authentic reconstruction.",
+        "es": "La Torre es el rayo de Marte que destruye las estructuras construidas sobre cimientos falsos. La destrucción no es castigo sino liberación, despejando el camino para una reconstrucción auténtica."
+      },
+      "image": "/tarot/the-tower.svg"
+    },
+    {
+      "id": "the-star",
+      "number": 17,
+      "name": { "en": "The Star", "es": "La Estrella" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["hope", "inspiration", "meditation"], "es": ["esperanza", "inspiración", "meditación"] },
+        "reversed": { "en": ["disconnection", "despair", "doubt"], "es": ["desconexión", "desesperanza", "duda"] }
+      },
+      "astrology": "Aquarius",
+      "hebrewLetter": "Tzaddi",
+      "treeOfLifePath": 28,
+      "treeOfLifeConnects": [7, 9],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Star pours the waters of celestial consciousness into the pools of the subconscious and the earth. She represents the meditation that connects individual awareness to the cosmic pattern, bringing hope after destruction.",
+        "es": "La Estrella vierte las aguas de la conciencia celestial en las pozas del subconsciente y la tierra. Representa la meditación que conecta la conciencia individual con el patrón cósmico, trayendo esperanza después de la destrucción."
+      },
+      "image": "/tarot/the-star.svg"
+    },
+    {
+      "id": "the-moon",
+      "number": 18,
+      "name": { "en": "The Moon", "es": "La Luna" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["illusion", "intuition", "the unconscious"], "es": ["ilusión", "intuición", "el inconsciente"] },
+        "reversed": { "en": ["confusion", "deception", "anxiety"], "es": ["confusión", "engaño", "ansiedad"] }
+      },
+      "astrology": "Pisces",
+      "hebrewLetter": "Qoph",
+      "treeOfLifePath": 29,
+      "treeOfLifeConnects": [7, 10],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Moon illuminates the dark threshold between the inner world and outer reality. It is the realm of dreams, instinct, and illusion, where the path forward must be navigated by feeling rather than sight.",
+        "es": "La Luna ilumina el umbral oscuro entre el mundo interior y la realidad exterior. Es el reino de los sueños, el instinto y la ilusión, donde el camino debe navegarse por el sentir más que por la vista."
+      },
+      "image": "/tarot/the-moon.svg"
+    },
+    {
+      "id": "the-sun",
+      "number": 19,
+      "name": { "en": "The Sun", "es": "El Sol" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["joy", "vitality", "clarity"], "es": ["alegría", "vitalidad", "claridad"] },
+        "reversed": { "en": ["ego", "burnout", "false optimism"], "es": ["ego", "agotamiento", "falso optimismo"] }
+      },
+      "astrology": "Sun",
+      "hebrewLetter": "Resh",
+      "treeOfLifePath": 30,
+      "treeOfLifeConnects": [8, 9],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Sun is the radiant heart of the visible cosmos, bringing warmth, clarity, and abundant life. It represents the full flowering of consciousness, where all shadows are dispelled and the self shines forth in its true nature.",
+        "es": "El Sol es el corazón radiante del cosmos visible, trayendo calidez, claridad y vida abundante. Representa el pleno florecimiento de la conciencia, donde todas las sombras se disipan y el yo brilla en su verdadera naturaleza."
+      },
+      "image": "/tarot/the-sun.svg"
+    },
+    {
+      "id": "the-aeon",
+      "number": 20,
+      "name": { "en": "The Aeon", "es": "El Eón" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["rebirth", "judgment", "evolution"], "es": ["renacimiento", "juicio", "evolución"] },
+        "reversed": { "en": ["stagnation", "self-doubt", "refusal to evolve"], "es": ["estancamiento", "inseguridad", "rechazo a evolucionar"] }
+      },
+      "astrology": "Fire / Pluto",
+      "hebrewLetter": "Shin",
+      "treeOfLifePath": 31,
+      "treeOfLifeConnects": [8, 10],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Aeon announces the transition between ages, the fire that burns away the old world to reveal the new. It is the call to step into a higher form of consciousness, leaving behind outworn beliefs and identities.",
+        "es": "El Eón anuncia la transición entre eras, el fuego que consume el viejo mundo para revelar el nuevo. Es el llamado a acceder a una forma superior de conciencia, dejando atrás creencias e identidades obsoletas."
+      },
+      "image": "/tarot/the-aeon.svg"
+    },
+    {
+      "id": "the-universe",
+      "number": 21,
+      "name": { "en": "The Universe", "es": "El Universo" },
+      "suit": "major",
+      "keywords": {
+        "upright": { "en": ["completion", "integration", "wholeness"], "es": ["culminación", "integración", "totalidad"] },
+        "reversed": { "en": ["incompletion", "stagnation", "lack of closure"], "es": ["incompletitud", "estancamiento", "falta de cierre"] }
+      },
+      "astrology": "Saturn / Earth",
+      "hebrewLetter": "Tau",
+      "treeOfLifePath": 32,
+      "treeOfLifeConnects": [9, 10],
+      "liber777Column": "VI",
+      "description": {
+        "en": "The Universe is the final card and the completion of the great journey. The dancer within the cosmic oval represents the fully realized self, moving freely within the structure of manifest reality, matter and spirit united.",
+        "es": "El Universo es la carta final y la culminación del gran viaje. La danzarina dentro del óvalo cósmico representa el yo plenamente realizado, moviéndose libremente dentro de la estructura de la realidad manifiesta, materia y espíritu unidos."
+      },
+      "image": "/tarot/the-universe.svg"
+    },
+
+    {
+      "id": "ace-of-wands",
+      "number": 1,
+      "name": { "en": "Ace of Wands", "es": "As de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["inspiration", "new beginning", "creative spark"], "es": ["inspiración", "nuevo comienzo", "chispa creativa"] },
+        "reversed": { "en": ["delays", "lack of motivation", "blocked energy"], "es": ["retrasos", "falta de motivación", "energía bloqueada"] }
+      },
+      "astrology": "Root of Fire",
+      "description": {
+        "en": "The root of the powers of fire. A burst of pure creative will, the initial spark that ignites all action.",
+        "es": "La raíz de los poderes del fuego. Un estallido de voluntad creativa pura, la chispa inicial que enciende toda acción."
+      },
+      "image": "/tarot/ace-of-wands.svg"
+    },
+    {
+      "id": "two-of-wands",
+      "number": 2,
+      "name": { "en": "Two of Wands", "es": "Dos de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["dominion", "planning", "boldness"], "es": ["dominio", "planificación", "audacia"] },
+        "reversed": { "en": ["indecision", "fear", "poor planning"], "es": ["indecisión", "miedo", "mala planificación"] }
+      },
+      "astrology": "Mars in Aries",
+      "decan": "0°–10° Aries",
+      "description": {
+        "en": "Mars in Aries brings pure martial energy to its home sign. Dominion achieved through decisive will and the courage to claim one's territory.",
+        "es": "Marte en Aries trae energía marcial pura a su signo natal. Dominio logrado a través de la voluntad decisiva y el coraje de reclamar el propio territorio."
+      },
+      "image": "/tarot/two-of-wands.svg"
+    },
+    {
+      "id": "three-of-wands",
+      "number": 3,
+      "name": { "en": "Three of Wands", "es": "Tres de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["virtue", "integrity", "established strength"], "es": ["virtud", "integridad", "fuerza establecida"] },
+        "reversed": { "en": ["arrogance", "delays", "disappointment"], "es": ["arrogancia", "retrasos", "decepción"] }
+      },
+      "astrology": "Sun in Aries",
+      "decan": "10°–20° Aries",
+      "description": {
+        "en": "The Sun in Aries radiates confident leadership. Virtue born from the alignment of will and purpose, where inner strength meets outward expression.",
+        "es": "El Sol en Aries irradia liderazgo confiado. Virtud nacida de la alineación de voluntad y propósito, donde la fuerza interior se encuentra con la expresión externa."
+      },
+      "image": "/tarot/three-of-wands.svg"
+    },
+    {
+      "id": "four-of-wands",
+      "number": 4,
+      "name": { "en": "Four of Wands", "es": "Cuatro de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["completion", "celebration", "settlement"], "es": ["consumación", "celebración", "establecimiento"] },
+        "reversed": { "en": ["instability", "unfinished work", "conflict"], "es": ["inestabilidad", "trabajo sin terminar", "conflicto"] }
+      },
+      "astrology": "Venus in Aries",
+      "decan": "20°–30° Aries",
+      "description": {
+        "en": "Venus in Aries brings harmony to fiery initiative. A moment of completion and celebration where effort crystallizes into a stable, joyful achievement.",
+        "es": "Venus en Aries trae armonía a la iniciativa ardiente. Un momento de consumación y celebración donde el esfuerzo cristaliza en un logro estable y alegre."
+      },
+      "image": "/tarot/four-of-wands.svg"
+    },
+    {
+      "id": "five-of-wands",
+      "number": 5,
+      "name": { "en": "Five of Wands", "es": "Cinco de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["strife", "competition", "conflict"], "es": ["conflicto", "competencia", "lucha"] },
+        "reversed": { "en": ["avoidance", "suppressed anger", "inner conflict"], "es": ["evasión", "ira reprimida", "conflicto interior"] }
+      },
+      "astrology": "Saturn in Leo",
+      "decan": "0°–10° Leo",
+      "description": {
+        "en": "Saturn in Leo constrains creative fire, producing friction and competition. Strife arises when multiple wills clash without unified direction.",
+        "es": "Saturno en Leo restringe el fuego creativo, produciendo fricción y competencia. El conflicto surge cuando múltiples voluntades chocan sin dirección unificada."
+      },
+      "image": "/tarot/five-of-wands.svg"
+    },
+    {
+      "id": "six-of-wands",
+      "number": 6,
+      "name": { "en": "Six of Wands", "es": "Seis de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["victory", "recognition", "triumph"], "es": ["victoria", "reconocimiento", "triunfo"] },
+        "reversed": { "en": ["hollow victory", "ego", "delayed success"], "es": ["victoria vacía", "ego", "éxito retrasado"] }
+      },
+      "astrology": "Jupiter in Leo",
+      "decan": "10°–20° Leo",
+      "description": {
+        "en": "Jupiter in Leo expands the fire of self-expression into recognized victory. Success and public acknowledgment after sustained effort and leadership.",
+        "es": "Júpiter en Leo expande el fuego de la autoexpresión en victoria reconocida. Éxito y reconocimiento público tras esfuerzo sostenido y liderazgo."
+      },
+      "image": "/tarot/six-of-wands.svg"
+    },
+    {
+      "id": "seven-of-wands",
+      "number": 7,
+      "name": { "en": "Seven of Wands", "es": "Siete de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["valour", "courage", "defense"], "es": ["valor", "coraje", "defensa"] },
+        "reversed": { "en": ["giving up", "overwhelm", "exhaustion"], "es": ["rendición", "agobio", "agotamiento"] }
+      },
+      "astrology": "Mars in Leo",
+      "decan": "20°–30° Leo",
+      "description": {
+        "en": "Mars in Leo brings fierce courage to defend what has been won. Valor in holding one's ground against opposition through strength of character.",
+        "es": "Marte en Leo trae coraje feroz para defender lo que se ha ganado. Valor al mantener la posición ante la oposición a través de la fuerza de carácter."
+      },
+      "image": "/tarot/seven-of-wands.svg"
+    },
+    {
+      "id": "eight-of-wands",
+      "number": 8,
+      "name": { "en": "Eight of Wands", "es": "Ocho de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["swiftness", "speed", "progress"], "es": ["rapidez", "velocidad", "progreso"] },
+        "reversed": { "en": ["delays", "haste", "miscommunication"], "es": ["retrasos", "precipitación", "malentendido"] }
+      },
+      "astrology": "Mercury in Sagittarius",
+      "decan": "0°–10° Sagittarius",
+      "description": {
+        "en": "Mercury in Sagittarius launches thoughts and messages like arrows across vast distances. Swiftness of action when all obstacles have been cleared.",
+        "es": "Mercurio en Sagitario lanza pensamientos y mensajes como flechas a través de grandes distancias. Rapidez de acción cuando todos los obstáculos han sido despejados."
+      },
+      "image": "/tarot/eight-of-wands.svg"
+    },
+    {
+      "id": "nine-of-wands",
+      "number": 9,
+      "name": { "en": "Nine of Wands", "es": "Nueve de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["strength", "resilience", "persistence"], "es": ["fuerza", "resiliencia", "persistencia"] },
+        "reversed": { "en": ["exhaustion", "stubbornness", "paranoia"], "es": ["agotamiento", "terquedad", "paranoia"] }
+      },
+      "astrology": "Moon in Sagittarius",
+      "decan": "10°–20° Sagittarius",
+      "description": {
+        "en": "The Moon in Sagittarius illuminates the instinctive strength needed for the final stretch. Great strength held in reserve, the resilience that endures through accumulated experience.",
+        "es": "La Luna en Sagitario ilumina la fuerza instintiva necesaria para el tramo final. Gran fuerza mantenida en reserva, la resiliencia que persevera a través de la experiencia acumulada."
+      },
+      "image": "/tarot/nine-of-wands.svg"
+    },
+    {
+      "id": "ten-of-wands",
+      "number": 10,
+      "name": { "en": "Ten of Wands", "es": "Diez de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["oppression", "burden", "responsibility"], "es": ["opresión", "carga", "responsabilidad"] },
+        "reversed": { "en": ["release", "delegation", "breakdown"], "es": ["liberación", "delegación", "colapso"] }
+      },
+      "astrology": "Saturn in Sagittarius",
+      "decan": "20°–30° Sagittarius",
+      "description": {
+        "en": "Saturn in Sagittarius weighs down the fire of aspiration with excessive responsibility. Oppression that comes from carrying more than one can sustain alone.",
+        "es": "Saturno en Sagitario abruma el fuego de la aspiración con responsabilidad excesiva. Opresión que proviene de llevar más de lo que uno puede sostener solo."
+      },
+      "image": "/tarot/ten-of-wands.svg"
+    },
+    {
+      "id": "knight-of-wands",
+      "number": 11,
+      "name": { "en": "Knight of Wands", "es": "Caballero de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["energy", "passion", "adventure"], "es": ["energía", "pasión", "aventura"] },
+        "reversed": { "en": ["impulsiveness", "restlessness", "anger"], "es": ["impulsividad", "inquietud", "ira"] }
+      },
+      "astrology": "Fire of Fire",
+      "description": {
+        "en": "The fiery aspect of fire, the rushing force of pure initiative. Swift, passionate, and bold, the Knight charges forward with unwavering enthusiasm.",
+        "es": "El aspecto ardiente del fuego, la fuerza impetuosa de la iniciativa pura. Rápido, apasionado y audaz, el Caballero avanza con entusiasmo inquebrantable."
+      },
+      "image": "/tarot/knight-of-wands.svg"
+    },
+    {
+      "id": "queen-of-wands",
+      "number": 12,
+      "name": { "en": "Queen of Wands", "es": "Reina de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["confidence", "magnetism", "warmth"], "es": ["confianza", "magnetismo", "calidez"] },
+        "reversed": { "en": ["jealousy", "selfishness", "insecurity"], "es": ["celos", "egoísmo", "inseguridad"] }
+      },
+      "astrology": "Water of Fire",
+      "description": {
+        "en": "The watery aspect of fire, where emotional depth meets creative passion. She commands through warmth and magnetic presence, inspiring loyalty through genuine care.",
+        "es": "El aspecto acuático del fuego, donde la profundidad emocional se encuentra con la pasión creativa. Ella comanda a través de la calidez y la presencia magnética, inspirando lealtad a través del cuidado genuino."
+      },
+      "image": "/tarot/queen-of-wands.svg"
+    },
+    {
+      "id": "prince-of-wands",
+      "number": 13,
+      "name": { "en": "Prince of Wands", "es": "Príncipe de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["boldness", "charisma", "swift action"], "es": ["audacia", "carisma", "acción rápida"] },
+        "reversed": { "en": ["arrogance", "recklessness", "cruelty"], "es": ["arrogancia", "temeridad", "crueldad"] }
+      },
+      "astrology": "Air of Fire",
+      "description": {
+        "en": "The airy aspect of fire, where intellect fans the flame of will. Charismatic and swift, the Prince rides his chariot of fire with brilliant intensity and bold vision.",
+        "es": "El aspecto aéreo del fuego, donde el intelecto aviva la llama de la voluntad. Carismático y veloz, el Príncipe conduce su carro de fuego con intensidad brillante y visión audaz."
+      },
+      "image": "/tarot/prince-of-wands.svg"
+    },
+    {
+      "id": "princess-of-wands",
+      "number": 14,
+      "name": { "en": "Princess of Wands", "es": "Princesa de Bastos" },
+      "suit": "wands",
+      "keywords": {
+        "upright": { "en": ["enthusiasm", "discovery", "free spirit"], "es": ["entusiasmo", "descubrimiento", "espíritu libre"] },
+        "reversed": { "en": ["superficiality", "restlessness", "instability"], "es": ["superficialidad", "inquietud", "inestabilidad"] }
+      },
+      "astrology": "Earth of Fire",
+      "description": {
+        "en": "The earthy aspect of fire, where creative spark meets material expression. The Princess is the fuel that sustains the flame, bringing fresh enthusiasm and daring to every new venture.",
+        "es": "El aspecto terrestre del fuego, donde la chispa creativa se encuentra con la expresión material. La Princesa es el combustible que sostiene la llama, aportando entusiasmo fresco y audacia a cada nueva empresa."
+      },
+      "image": "/tarot/princess-of-wands.svg"
+    },
+
+    {
+      "id": "ace-of-cups",
+      "number": 1,
+      "name": { "en": "Ace of Cups", "es": "As de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["love", "emotional beginning", "compassion"], "es": ["amor", "comienzo emocional", "compasión"] },
+        "reversed": { "en": ["emotional loss", "blocked feelings", "emptiness"], "es": ["pérdida emocional", "sentimientos bloqueados", "vacío"] }
+      },
+      "astrology": "Root of Water",
+      "description": {
+        "en": "The root of the powers of water. The overflowing cup of divine love, the wellspring of all emotional and intuitive experience.",
+        "es": "La raíz de los poderes del agua. La copa desbordante del amor divino, la fuente de toda experiencia emocional e intuitiva."
+      },
+      "image": "/tarot/ace-of-cups.svg"
+    },
+    {
+      "id": "two-of-cups",
+      "number": 2,
+      "name": { "en": "Two of Cups", "es": "Dos de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["love", "partnership", "harmony"], "es": ["amor", "asociación", "armonía"] },
+        "reversed": { "en": ["disharmony", "imbalance", "broken trust"], "es": ["desarmonía", "desequilibrio", "confianza rota"] }
+      },
+      "astrology": "Venus in Cancer",
+      "decan": "0°–10° Cancer",
+      "description": {
+        "en": "Venus in Cancer unites love with emotional depth and protection. A meeting of hearts in mutual nourishment and tender connection.",
+        "es": "Venus en Cáncer une el amor con la profundidad emocional y la protección. Un encuentro de corazones en nutrición mutua y conexión tierna."
+      },
+      "image": "/tarot/two-of-cups.svg"
+    },
+    {
+      "id": "three-of-cups",
+      "number": 3,
+      "name": { "en": "Three of Cups", "es": "Tres de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["abundance", "celebration", "friendship"], "es": ["abundancia", "celebración", "amistad"] },
+        "reversed": { "en": ["overindulgence", "gossip", "isolation"], "es": ["exceso", "chisme", "aislamiento"] }
+      },
+      "astrology": "Mercury in Cancer",
+      "decan": "10°–20° Cancer",
+      "description": {
+        "en": "Mercury in Cancer channels communication through emotional currents. Abundance of feeling shared among kindred spirits in joyful communion.",
+        "es": "Mercurio en Cáncer canaliza la comunicación a través de corrientes emocionales. Abundancia de sentimientos compartidos entre espíritus afines en comunión alegre."
+      },
+      "image": "/tarot/three-of-cups.svg"
+    },
+    {
+      "id": "four-of-cups",
+      "number": 4,
+      "name": { "en": "Four of Cups", "es": "Cuatro de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["luxury", "dissatisfaction", "contemplation"], "es": ["lujo", "insatisfacción", "contemplación"] },
+        "reversed": { "en": ["motivation", "acceptance", "awareness"], "es": ["motivación", "aceptación", "conciencia"] }
+      },
+      "astrology": "Moon in Cancer",
+      "decan": "20°–30° Cancer",
+      "description": {
+        "en": "The Moon in Cancer creates a pool of deep emotional comfort that can become stagnant. Luxury that borders on apathy when one has received too much without movement.",
+        "es": "La Luna en Cáncer crea un pozo de profundo confort emocional que puede estancarse. Lujo que roza la apatía cuando se ha recibido demasiado sin movimiento."
+      },
+      "image": "/tarot/four-of-cups.svg"
+    },
+    {
+      "id": "five-of-cups",
+      "number": 5,
+      "name": { "en": "Five of Cups", "es": "Cinco de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["disappointment", "loss", "grief"], "es": ["decepción", "pérdida", "duelo"] },
+        "reversed": { "en": ["acceptance", "moving on", "recovery"], "es": ["aceptación", "seguir adelante", "recuperación"] }
+      },
+      "astrology": "Mars in Scorpio",
+      "decan": "0°–10° Scorpio",
+      "description": {
+        "en": "Mars in Scorpio stirs the depths of emotional waters with turbulent force. Disappointment and loss that demand confrontation with what lies beneath the surface.",
+        "es": "Marte en Escorpio agita las profundidades de las aguas emocionales con fuerza turbulenta. Decepción y pérdida que exigen confrontar lo que yace bajo la superficie."
+      },
+      "image": "/tarot/five-of-cups.svg"
+    },
+    {
+      "id": "six-of-cups",
+      "number": 6,
+      "name": { "en": "Six of Cups", "es": "Seis de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["pleasure", "nostalgia", "harmony"], "es": ["placer", "nostalgia", "armonía"] },
+        "reversed": { "en": ["living in the past", "unrealistic", "clinging"], "es": ["vivir en el pasado", "poco realista", "aferramiento"] }
+      },
+      "astrology": "Sun in Scorpio",
+      "decan": "10°–20° Scorpio",
+      "description": {
+        "en": "The Sun in Scorpio illuminates emotional depths with transformative warmth. Pleasure found in honest emotional exchange and the sweetness of remembered connections.",
+        "es": "El Sol en Escorpio ilumina profundidades emocionales con calidez transformadora. Placer encontrado en el intercambio emocional honesto y la dulzura de conexiones recordadas."
+      },
+      "image": "/tarot/six-of-cups.svg"
+    },
+    {
+      "id": "seven-of-cups",
+      "number": 7,
+      "name": { "en": "Seven of Cups", "es": "Siete de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["illusion", "fantasy", "debauch"], "es": ["ilusión", "fantasía", "exceso"] },
+        "reversed": { "en": ["clarity", "determination", "choices"], "es": ["claridad", "determinación", "decisiones"] }
+      },
+      "astrology": "Venus in Scorpio",
+      "decan": "20°–30° Scorpio",
+      "description": {
+        "en": "Venus in Scorpio creates intoxicating fantasies that blur the line between desire and reality. Multiple visions compete for attention, each promising fulfillment.",
+        "es": "Venus en Escorpio crea fantasías intoxicantes que difuminan la línea entre deseo y realidad. Múltiples visiones compiten por la atención, cada una prometiendo satisfacción."
+      },
+      "image": "/tarot/seven-of-cups.svg"
+    },
+    {
+      "id": "eight-of-cups",
+      "number": 8,
+      "name": { "en": "Eight of Cups", "es": "Ocho de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["indolence", "abandonment", "decline"], "es": ["indolencia", "abandono", "declive"] },
+        "reversed": { "en": ["effort", "determination", "clinging"], "es": ["esfuerzo", "determinación", "aferramiento"] }
+      },
+      "astrology": "Saturn in Pisces",
+      "decan": "0°–10° Pisces",
+      "description": {
+        "en": "Saturn in Pisces imposes structure on the boundless ocean of feeling, creating stagnation. The abandonment of what once gave pleasure, recognizing its decline.",
+        "es": "Saturno en Piscis impone estructura al océano ilimitado del sentimiento, creando estancamiento. El abandono de lo que alguna vez dio placer, reconociendo su declive."
+      },
+      "image": "/tarot/eight-of-cups.svg"
+    },
+    {
+      "id": "nine-of-cups",
+      "number": 9,
+      "name": { "en": "Nine of Cups", "es": "Nueve de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["happiness", "satisfaction", "wish fulfilled"], "es": ["felicidad", "satisfacción", "deseo cumplido"] },
+        "reversed": { "en": ["greed", "complacency", "dissatisfaction"], "es": ["avaricia", "complacencia", "insatisfacción"] }
+      },
+      "astrology": "Jupiter in Pisces",
+      "decan": "10°–20° Pisces",
+      "description": {
+        "en": "Jupiter in Pisces expands emotional joy to its fullest measure. Material and emotional happiness where all nine cups overflow with the fulfillment of wishes.",
+        "es": "Júpiter en Piscis expande la alegría emocional a su máxima medida. Felicidad material y emocional donde las nueve copas desbordan con el cumplimiento de deseos."
+      },
+      "image": "/tarot/nine-of-cups.svg"
+    },
+    {
+      "id": "ten-of-cups",
+      "number": 10,
+      "name": { "en": "Ten of Cups", "es": "Diez de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["satiety", "emotional fulfillment", "lasting joy"], "es": ["saciedad", "plenitud emocional", "alegría duradera"] },
+        "reversed": { "en": ["emotional excess", "anticlimax", "disruption"], "es": ["exceso emocional", "anticlímax", "perturbación"] }
+      },
+      "astrology": "Mars in Pisces",
+      "decan": "20°–30° Pisces",
+      "description": {
+        "en": "Mars in Pisces brings active force to the final degree of water. Satiety and the completion of the emotional cycle, where fullness can tip into excess.",
+        "es": "Marte en Piscis trae fuerza activa al grado final del agua. Saciedad y la culminación del ciclo emocional, donde la plenitud puede derivar en exceso."
+      },
+      "image": "/tarot/ten-of-cups.svg"
+    },
+    {
+      "id": "knight-of-cups",
+      "number": 11,
+      "name": { "en": "Knight of Cups", "es": "Caballero de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["grace", "romantic", "imaginative"], "es": ["gracia", "romántico", "imaginativo"] },
+        "reversed": { "en": ["moodiness", "unreliability", "escapism"], "es": ["volubilidad", "falta de fiabilidad", "escapismo"] }
+      },
+      "astrology": "Fire of Water",
+      "description": {
+        "en": "The fiery aspect of water, the active pursuit of emotional and creative visions. Graceful and poetic, the Knight rides forth on the waves of inspiration.",
+        "es": "El aspecto ardiente del agua, la búsqueda activa de visiones emocionales y creativas. Gracioso y poético, el Caballero cabalga sobre las olas de la inspiración."
+      },
+      "image": "/tarot/knight-of-cups.svg"
+    },
+    {
+      "id": "queen-of-cups",
+      "number": 12,
+      "name": { "en": "Queen of Cups", "es": "Reina de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["receptivity", "compassion", "intuition"], "es": ["receptividad", "compasión", "intuición"] },
+        "reversed": { "en": ["emotional manipulation", "codependence", "martyrdom"], "es": ["manipulación emocional", "codependencia", "martirio"] }
+      },
+      "astrology": "Water of Water",
+      "description": {
+        "en": "The watery aspect of water, the purest expression of emotional and psychic power. The Queen reflects the depths with perfect stillness, seeing all that flows beneath the surface.",
+        "es": "El aspecto acuático del agua, la expresión más pura del poder emocional y psíquico. La Reina refleja las profundidades con perfecta quietud, viendo todo lo que fluye bajo la superficie."
+      },
+      "image": "/tarot/queen-of-cups.svg"
+    },
+    {
+      "id": "prince-of-cups",
+      "number": 13,
+      "name": { "en": "Prince of Cups", "es": "Príncipe de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["subtlety", "artistry", "emotional intelligence"], "es": ["sutileza", "arte", "inteligencia emocional"] },
+        "reversed": { "en": ["emotional detachment", "manipulation", "volatility"], "es": ["desapego emocional", "manipulación", "volatilidad"] }
+      },
+      "astrology": "Air of Water",
+      "description": {
+        "en": "The airy aspect of water, where thought gives direction to feeling. The Prince navigates emotional depths with intellectual clarity, channeling currents with subtle precision.",
+        "es": "El aspecto aéreo del agua, donde el pensamiento da dirección al sentimiento. El Príncipe navega las profundidades emocionales con claridad intelectual, canalizando corrientes con precisión sutil."
+      },
+      "image": "/tarot/prince-of-cups.svg"
+    },
+    {
+      "id": "princess-of-cups",
+      "number": 14,
+      "name": { "en": "Princess of Cups", "es": "Princesa de Copas" },
+      "suit": "cups",
+      "keywords": {
+        "upright": { "en": ["sweetness", "gentleness", "dreaming"], "es": ["dulzura", "gentileza", "soñar"] },
+        "reversed": { "en": ["emotional immaturity", "seduction", "vanity"], "es": ["inmadurez emocional", "seducción", "vanidad"] }
+      },
+      "astrology": "Earth of Water",
+      "description": {
+        "en": "The earthy aspect of water, where dreams crystallize into tangible form. The Princess embodies the gentle power of nascent emotion, the first tender stirring of feeling.",
+        "es": "El aspecto terrestre del agua, donde los sueños cristalizan en forma tangible. La Princesa encarna el poder gentil de la emoción naciente, el primer tierno despertar del sentimiento."
+      },
+      "image": "/tarot/princess-of-cups.svg"
+    },
+
+    {
+      "id": "ace-of-swords",
+      "number": 1,
+      "name": { "en": "Ace of Swords", "es": "As de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["clarity", "breakthrough", "truth"], "es": ["claridad", "avance", "verdad"] },
+        "reversed": { "en": ["confusion", "brutality", "chaos"], "es": ["confusión", "brutalidad", "caos"] }
+      },
+      "astrology": "Root of Air",
+      "description": {
+        "en": "The root of the powers of air. The invoked force of the mind at its sharpest, cutting through all illusion to reveal pure truth.",
+        "es": "La raíz de los poderes del aire. La fuerza invocada de la mente en su máxima agudeza, cortando toda ilusión para revelar la verdad pura."
+      },
+      "image": "/tarot/ace-of-swords.svg"
+    },
+    {
+      "id": "two-of-swords",
+      "number": 2,
+      "name": { "en": "Two of Swords", "es": "Dos de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["peace", "balance", "restored harmony"], "es": ["paz", "equilibrio", "armonía restaurada"] },
+        "reversed": { "en": ["indecision", "stalemate", "avoidance"], "es": ["indecisión", "punto muerto", "evasión"] }
+      },
+      "astrology": "Moon in Libra",
+      "decan": "0°–10° Libra",
+      "description": {
+        "en": "The Moon in Libra brings intuitive balance to the realm of the mind. Peace restored after conflict, the delicate equilibrium of opposing forces held in suspension.",
+        "es": "La Luna en Libra trae equilibrio intuitivo al reino de la mente. Paz restaurada después del conflicto, el delicado equilibrio de fuerzas opuestas mantenidas en suspensión."
+      },
+      "image": "/tarot/two-of-swords.svg"
+    },
+    {
+      "id": "three-of-swords",
+      "number": 3,
+      "name": { "en": "Three of Swords", "es": "Tres de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["sorrow", "heartbreak", "painful truth"], "es": ["pena", "corazón roto", "verdad dolorosa"] },
+        "reversed": { "en": ["recovery", "forgiveness", "release"], "es": ["recuperación", "perdón", "liberación"] }
+      },
+      "astrology": "Saturn in Libra",
+      "decan": "10°–20° Libra",
+      "description": {
+        "en": "Saturn in Libra brings the heavy blade of reality to matters of relationship and harmony. Sorrow that arises when the mind confronts truths the heart would rather not acknowledge.",
+        "es": "Saturno en Libra trae la pesada hoja de la realidad a asuntos de relación y armonía. Pena que surge cuando la mente confronta verdades que el corazón preferiría no reconocer."
+      },
+      "image": "/tarot/three-of-swords.svg"
+    },
+    {
+      "id": "four-of-swords",
+      "number": 4,
+      "name": { "en": "Four of Swords", "es": "Cuatro de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["truce", "rest", "recovery"], "es": ["tregua", "descanso", "recuperación"] },
+        "reversed": { "en": ["restlessness", "burnout", "anxiety"], "es": ["inquietud", "agotamiento", "ansiedad"] }
+      },
+      "astrology": "Jupiter in Libra",
+      "decan": "20°–30° Libra",
+      "description": {
+        "en": "Jupiter in Libra grants a generous pause in the battle of the mind. Truce and mental rest, a necessary withdrawal from conflict to restore inner equilibrium.",
+        "es": "Júpiter en Libra otorga una pausa generosa en la batalla de la mente. Tregua y descanso mental, una retirada necesaria del conflicto para restaurar el equilibrio interior."
+      },
+      "image": "/tarot/four-of-swords.svg"
+    },
+    {
+      "id": "five-of-swords",
+      "number": 5,
+      "name": { "en": "Five of Swords", "es": "Cinco de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["defeat", "conflict", "dishonor"], "es": ["derrota", "conflicto", "deshonra"] },
+        "reversed": { "en": ["reconciliation", "letting go", "moving on"], "es": ["reconciliación", "soltar", "seguir adelante"] }
+      },
+      "astrology": "Venus in Aquarius",
+      "decan": "0°–10° Aquarius",
+      "description": {
+        "en": "Venus in Aquarius brings coldness to the social realm of ideas. Defeat through intellectual dishonesty or unfair contest, where winning comes at too great a cost.",
+        "es": "Venus en Acuario trae frialdad al reino social de las ideas. Derrota a través de la deshonestidad intelectual o la contienda injusta, donde ganar tiene un costo demasiado alto."
+      },
+      "image": "/tarot/five-of-swords.svg"
+    },
+    {
+      "id": "six-of-swords",
+      "number": 6,
+      "name": { "en": "Six of Swords", "es": "Seis de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["science", "progress", "earned success"], "es": ["ciencia", "progreso", "éxito ganado"] },
+        "reversed": { "en": ["stagnation", "stuck thinking", "failure to adapt"], "es": ["estancamiento", "pensamiento atascado", "falta de adaptación"] }
+      },
+      "astrology": "Mercury in Aquarius",
+      "decan": "10°–20° Aquarius",
+      "description": {
+        "en": "Mercury in Aquarius brings brilliant intellectual clarity to humanitarian concerns. Success through scientific thinking and the balanced application of reason.",
+        "es": "Mercurio en Acuario trae brillante claridad intelectual a las preocupaciones humanitarias. Éxito a través del pensamiento científico y la aplicación equilibrada de la razón."
+      },
+      "image": "/tarot/six-of-swords.svg"
+    },
+    {
+      "id": "seven-of-swords",
+      "number": 7,
+      "name": { "en": "Seven of Swords", "es": "Siete de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["futility", "deception", "strategy"], "es": ["futilidad", "engaño", "estrategia"] },
+        "reversed": { "en": ["confession", "coming clean", "rethinking"], "es": ["confesión", "sincerarse", "replanteamiento"] }
+      },
+      "astrology": "Moon in Aquarius",
+      "decan": "20°–30° Aquarius",
+      "description": {
+        "en": "The Moon in Aquarius combines unstable emotion with detached intellect. Futility in plans that rely on cleverness alone, where strategy without heart achieves nothing lasting.",
+        "es": "La Luna en Acuario combina emoción inestable con intelecto distante. Futilidad en planes que dependen solo de la astucia, donde la estrategia sin corazón no logra nada duradero."
+      },
+      "image": "/tarot/seven-of-swords.svg"
+    },
+    {
+      "id": "eight-of-swords",
+      "number": 8,
+      "name": { "en": "Eight of Swords", "es": "Ocho de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["interference", "restriction", "overthinking"], "es": ["interferencia", "restricción", "pensar demasiado"] },
+        "reversed": { "en": ["freedom", "release", "new perspective"], "es": ["libertad", "liberación", "nueva perspectiva"] }
+      },
+      "astrology": "Jupiter in Gemini",
+      "decan": "0°–10° Gemini",
+      "description": {
+        "en": "Jupiter in Gemini scatters mental energy across too many directions. Interference and mental paralysis from excessive analysis, where thoughts become their own prison.",
+        "es": "Júpiter en Géminis dispersa la energía mental en demasiadas direcciones. Interferencia y parálisis mental por análisis excesivo, donde los pensamientos se convierten en su propia prisión."
+      },
+      "image": "/tarot/eight-of-swords.svg"
+    },
+    {
+      "id": "nine-of-swords",
+      "number": 9,
+      "name": { "en": "Nine of Swords", "es": "Nueve de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["cruelty", "nightmare", "despair"], "es": ["crueldad", "pesadilla", "desesperación"] },
+        "reversed": { "en": ["hope", "reaching out", "recovery"], "es": ["esperanza", "buscar ayuda", "recuperación"] }
+      },
+      "astrology": "Mars in Gemini",
+      "decan": "10°–20° Gemini",
+      "description": {
+        "en": "Mars in Gemini turns the sharp edge of intellect against itself. Cruelty of thought and the suffering born from the mind's own relentless self-attack.",
+        "es": "Marte en Géminis vuelve el filo agudo del intelecto contra sí mismo. Crueldad del pensamiento y el sufrimiento nacido del implacable autoataque de la propia mente."
+      },
+      "image": "/tarot/nine-of-swords.svg"
+    },
+    {
+      "id": "ten-of-swords",
+      "number": 10,
+      "name": { "en": "Ten of Swords", "es": "Diez de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["ruin", "catastrophe", "rock bottom"], "es": ["ruina", "catástrofe", "fondo"] },
+        "reversed": { "en": ["recovery", "resilience", "survival"], "es": ["recuperación", "resiliencia", "supervivencia"] }
+      },
+      "astrology": "Sun in Gemini",
+      "decan": "20°–30° Gemini",
+      "description": {
+        "en": "The Sun in Gemini illuminates the final dissolution of mental constructs. Ruin that is also a release, for when the mind has exhausted its pain, only clarity remains.",
+        "es": "El Sol en Géminis ilumina la disolución final de los constructos mentales. Ruina que es también una liberación, porque cuando la mente ha agotado su dolor, solo queda la claridad."
+      },
+      "image": "/tarot/ten-of-swords.svg"
+    },
+    {
+      "id": "knight-of-swords",
+      "number": 11,
+      "name": { "en": "Knight of Swords", "es": "Caballero de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["intellect", "logic", "fierce clarity"], "es": ["intelecto", "lógica", "claridad feroz"] },
+        "reversed": { "en": ["cruelty", "cold logic", "scattered energy"], "es": ["crueldad", "lógica fría", "energía dispersa"] }
+      },
+      "astrology": "Fire of Air",
+      "description": {
+        "en": "The fiery aspect of air, the cutting edge of active intellect. The Knight charges through the storm of ideas with fierce determination and razor-sharp logic.",
+        "es": "El aspecto ardiente del aire, el filo del intelecto activo. El Caballero carga a través de la tormenta de ideas con determinación feroz y lógica afilada."
+      },
+      "image": "/tarot/knight-of-swords.svg"
+    },
+    {
+      "id": "queen-of-swords",
+      "number": 12,
+      "name": { "en": "Queen of Swords", "es": "Reina de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["perception", "clarity", "independence"], "es": ["percepción", "claridad", "independencia"] },
+        "reversed": { "en": ["cold-heartedness", "bitterness", "isolation"], "es": ["frialdad", "amargura", "aislamiento"] }
+      },
+      "astrology": "Water of Air",
+      "description": {
+        "en": "The watery aspect of air, where emotional depth sharpens intellectual perception. The Queen perceives truth with compassionate clarity, her sword cutting through deception with graceful precision.",
+        "es": "El aspecto acuático del aire, donde la profundidad emocional agudiza la percepción intelectual. La Reina percibe la verdad con claridad compasiva, su espada cortando el engaño con precisión elegante."
+      },
+      "image": "/tarot/queen-of-swords.svg"
+    },
+    {
+      "id": "prince-of-swords",
+      "number": 13,
+      "name": { "en": "Prince of Swords", "es": "Príncipe de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["ideas", "analysis", "mental force"], "es": ["ideas", "análisis", "fuerza mental"] },
+        "reversed": { "en": ["overthinking", "harsh judgment", "mental instability"], "es": ["pensar demasiado", "juicio severo", "inestabilidad mental"] }
+      },
+      "astrology": "Air of Air",
+      "description": {
+        "en": "The airy aspect of air, pure intellect in its most concentrated form. The Prince generates and destroys ideas with equal facility, a whirlwind of mental activity and analytical power.",
+        "es": "El aspecto aéreo del aire, intelecto puro en su forma más concentrada. El Príncipe genera y destruye ideas con igual facilidad, un torbellino de actividad mental y poder analítico."
+      },
+      "image": "/tarot/prince-of-swords.svg"
+    },
+    {
+      "id": "princess-of-swords",
+      "number": 14,
+      "name": { "en": "Princess of Swords", "es": "Princesa de Espadas" },
+      "suit": "swords",
+      "keywords": {
+        "upright": { "en": ["vigilance", "agility", "directness"], "es": ["vigilancia", "agilidad", "franqueza"] },
+        "reversed": { "en": ["gossip", "cruelty", "frivolity"], "es": ["chisme", "crueldad", "frivolidad"] }
+      },
+      "astrology": "Earth of Air",
+      "description": {
+        "en": "The earthy aspect of air, where thought crystallizes into practical expression. The Princess wields her sword with vigilant precision, grounding abstract ideas into direct, practical action.",
+        "es": "El aspecto terrestre del aire, donde el pensamiento cristaliza en expresión práctica. La Princesa empuña su espada con precisión vigilante, aterrizando ideas abstractas en acción directa y práctica."
+      },
+      "image": "/tarot/princess-of-swords.svg"
+    },
+
+    {
+      "id": "ace-of-disks",
+      "number": 1,
+      "name": { "en": "Ace of Disks", "es": "As de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["material gain", "prosperity", "manifestation"], "es": ["ganancia material", "prosperidad", "manifestación"] },
+        "reversed": { "en": ["greed", "missed opportunity", "waste"], "es": ["avaricia", "oportunidad perdida", "desperdicio"] }
+      },
+      "astrology": "Root of Earth",
+      "description": {
+        "en": "The root of the powers of earth. The seed of material manifestation, carrying within it the full potential of prosperity, health, and worldly achievement.",
+        "es": "La raíz de los poderes de la tierra. La semilla de la manifestación material, llevando dentro de sí todo el potencial de prosperidad, salud y logro mundano."
+      },
+      "image": "/tarot/ace-of-disks.svg"
+    },
+    {
+      "id": "two-of-disks",
+      "number": 2,
+      "name": { "en": "Two of Disks", "es": "Dos de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["change", "adaptability", "balance"], "es": ["cambio", "adaptabilidad", "equilibrio"] },
+        "reversed": { "en": ["disorder", "overwhelm", "mismanagement"], "es": ["desorden", "agobio", "mala gestión"] }
+      },
+      "astrology": "Jupiter in Capricorn",
+      "decan": "0°–10° Capricorn",
+      "description": {
+        "en": "Jupiter in Capricorn brings expansive energy to practical matters. Harmonious change through flexible management of material resources, the dance of dual forces in balance.",
+        "es": "Júpiter en Capricornio trae energía expansiva a los asuntos prácticos. Cambio armonioso a través de la gestión flexible de recursos materiales, la danza de fuerzas duales en equilibrio."
+      },
+      "image": "/tarot/two-of-disks.svg"
+    },
+    {
+      "id": "three-of-disks",
+      "number": 3,
+      "name": { "en": "Three of Disks", "es": "Tres de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["works", "craftsmanship", "collaboration"], "es": ["obras", "artesanía", "colaboración"] },
+        "reversed": { "en": ["mediocrity", "poor quality", "disorganization"], "es": ["mediocridad", "mala calidad", "desorganización"] }
+      },
+      "astrology": "Mars in Capricorn",
+      "decan": "10°–20° Capricorn",
+      "description": {
+        "en": "Mars in Capricorn channels martial discipline into material achievement. The work of skilled hands building something enduring through focused effort and mastery of craft.",
+        "es": "Marte en Capricornio canaliza la disciplina marcial en logro material. El trabajo de manos hábiles construyendo algo duradero a través del esfuerzo enfocado y el dominio del oficio."
+      },
+      "image": "/tarot/three-of-disks.svg"
+    },
+    {
+      "id": "four-of-disks",
+      "number": 4,
+      "name": { "en": "Four of Disks", "es": "Cuatro de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["power", "security", "stability"], "es": ["poder", "seguridad", "estabilidad"] },
+        "reversed": { "en": ["hoarding", "greed", "stagnation"], "es": ["acumulación", "avaricia", "estancamiento"] }
+      },
+      "astrology": "Sun in Capricorn",
+      "decan": "20°–30° Capricorn",
+      "description": {
+        "en": "The Sun in Capricorn solidifies material power into lasting structure. Earthly authority and the secure foundation of accumulated resources guarded with firm resolve.",
+        "es": "El Sol en Capricornio solidifica el poder material en estructura duradera. Autoridad terrenal y el cimiento seguro de recursos acumulados resguardados con firme resolución."
+      },
+      "image": "/tarot/four-of-disks.svg"
+    },
+    {
+      "id": "five-of-disks",
+      "number": 5,
+      "name": { "en": "Five of Disks", "es": "Cinco de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["worry", "hardship", "material loss"], "es": ["preocupación", "dificultad", "pérdida material"] },
+        "reversed": { "en": ["recovery", "improvement", "new resources"], "es": ["recuperación", "mejora", "nuevos recursos"] }
+      },
+      "astrology": "Mercury in Taurus",
+      "decan": "0°–10° Taurus",
+      "description": {
+        "en": "Mercury in Taurus agitates the normally placid earth with anxious thought. Worry over material concerns and the strain of physical existence when resources feel insufficient.",
+        "es": "Mercurio en Tauro agita la tierra normalmente plácida con pensamiento ansioso. Preocupación por asuntos materiales y la tensión de la existencia física cuando los recursos se sienten insuficientes."
+      },
+      "image": "/tarot/five-of-disks.svg"
+    },
+    {
+      "id": "six-of-disks",
+      "number": 6,
+      "name": { "en": "Six of Disks", "es": "Seis de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["success", "generosity", "prosperity"], "es": ["éxito", "generosidad", "prosperidad"] },
+        "reversed": { "en": ["selfishness", "debt", "strings attached"], "es": ["egoísmo", "deuda", "condiciones ocultas"] }
+      },
+      "astrology": "Moon in Taurus",
+      "decan": "10°–20° Taurus",
+      "description": {
+        "en": "The Moon in Taurus brings emotional contentment to material abundance. Success that flows naturally when resources are shared with appropriate generosity.",
+        "es": "La Luna en Tauro trae contentamiento emocional a la abundancia material. Éxito que fluye naturalmente cuando los recursos se comparten con generosidad apropiada."
+      },
+      "image": "/tarot/six-of-disks.svg"
+    },
+    {
+      "id": "seven-of-disks",
+      "number": 7,
+      "name": { "en": "Seven of Disks", "es": "Siete de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["failure", "assessment", "patience"], "es": ["fracaso", "evaluación", "paciencia"] },
+        "reversed": { "en": ["impatience", "bad investment", "giving up"], "es": ["impaciencia", "mala inversión", "rendirse"] }
+      },
+      "astrology": "Saturn in Taurus",
+      "decan": "20°–30° Taurus",
+      "description": {
+        "en": "Saturn in Taurus brings the hard lesson of material limitation. Apparent failure that invites honest assessment of what has been planted and what yet may grow with patience.",
+        "es": "Saturno en Tauro trae la dura lección de la limitación material. Fracaso aparente que invita a la evaluación honesta de lo que se ha sembrado y lo que aún puede crecer con paciencia."
+      },
+      "image": "/tarot/seven-of-disks.svg"
+    },
+    {
+      "id": "eight-of-disks",
+      "number": 8,
+      "name": { "en": "Eight of Disks", "es": "Ocho de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["prudence", "diligence", "skill"], "es": ["prudencia", "diligencia", "habilidad"] },
+        "reversed": { "en": ["perfectionism", "wasted effort", "shortcuts"], "es": ["perfeccionismo", "esfuerzo desperdiciado", "atajos"] }
+      },
+      "astrology": "Sun in Virgo",
+      "decan": "0°–10° Virgo",
+      "description": {
+        "en": "The Sun in Virgo illuminates the path of careful craftsmanship. Prudence and diligence applied to material work, where every detail receives thoughtful attention.",
+        "es": "El Sol en Virgo ilumina el camino de la artesanía cuidadosa. Prudencia y diligencia aplicadas al trabajo material, donde cada detalle recibe atención reflexiva."
+      },
+      "image": "/tarot/eight-of-disks.svg"
+    },
+    {
+      "id": "nine-of-disks",
+      "number": 9,
+      "name": { "en": "Nine of Disks", "es": "Nueve de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["gain", "inheritance", "material comfort"], "es": ["ganancia", "herencia", "confort material"] },
+        "reversed": { "en": ["loss", "dependency", "bad luck"], "es": ["pérdida", "dependencia", "mala suerte"] }
+      },
+      "astrology": "Venus in Virgo",
+      "decan": "10°–20° Virgo",
+      "description": {
+        "en": "Venus in Virgo brings refined appreciation to material attainment. Gain and comfort achieved through meticulous effort, the quiet luxury of a well-ordered life.",
+        "es": "Venus en Virgo trae apreciación refinada al logro material. Ganancia y confort logrados a través del esfuerzo meticuloso, el lujo tranquilo de una vida bien ordenada."
+      },
+      "image": "/tarot/nine-of-disks.svg"
+    },
+    {
+      "id": "ten-of-disks",
+      "number": 10,
+      "name": { "en": "Ten of Disks", "es": "Diez de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["wealth", "legacy", "completion"], "es": ["riqueza", "legado", "culminación"] },
+        "reversed": { "en": ["financial failure", "loss of legacy", "instability"], "es": ["fracaso financiero", "pérdida de legado", "inestabilidad"] }
+      },
+      "astrology": "Mercury in Virgo",
+      "decan": "20°–30° Virgo",
+      "description": {
+        "en": "Mercury in Virgo brings analytical precision to the culmination of material effort. Wealth and legacy fully realized, the Tree of Life expressed in the arrangement of worldly prosperity.",
+        "es": "Mercurio en Virgo trae precisión analítica a la culminación del esfuerzo material. Riqueza y legado plenamente realizados, el Árbol de la Vida expresado en la disposición de la prosperidad mundana."
+      },
+      "image": "/tarot/ten-of-disks.svg"
+    },
+    {
+      "id": "knight-of-disks",
+      "number": 11,
+      "name": { "en": "Knight of Disks", "es": "Caballero de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["endurance", "responsibility", "reliability"], "es": ["resistencia", "responsabilidad", "fiabilidad"] },
+        "reversed": { "en": ["stubbornness", "laziness", "stagnation"], "es": ["terquedad", "pereza", "estancamiento"] }
+      },
+      "astrology": "Fire of Earth",
+      "description": {
+        "en": "The fiery aspect of earth, the active force that cultivates and harvests. The Knight moves with patient determination, bringing endurance and steady labor to material pursuits.",
+        "es": "El aspecto ardiente de la tierra, la fuerza activa que cultiva y cosecha. El Caballero avanza con determinación paciente, aportando resistencia y labor constante a los empeños materiales."
+      },
+      "image": "/tarot/knight-of-disks.svg"
+    },
+    {
+      "id": "queen-of-disks",
+      "number": 12,
+      "name": { "en": "Queen of Disks", "es": "Reina de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["abundance", "nurturing", "practicality"], "es": ["abundancia", "nutrición", "practicidad"] },
+        "reversed": { "en": ["possessiveness", "smothering", "materialism"], "es": ["posesividad", "sobreprotección", "materialismo"] }
+      },
+      "astrology": "Water of Earth",
+      "description": {
+        "en": "The watery aspect of earth, where emotional nurturing feeds material growth. The Queen creates abundance through care and cultivation, her throne surrounded by flourishing life.",
+        "es": "El aspecto acuático de la tierra, donde la nutrición emocional alimenta el crecimiento material. La Reina crea abundancia a través del cuidado y el cultivo, su trono rodeado de vida floreciente."
+      },
+      "image": "/tarot/queen-of-disks.svg"
+    },
+    {
+      "id": "prince-of-disks",
+      "number": 13,
+      "name": { "en": "Prince of Disks", "es": "Príncipe de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["methodical", "reliable", "industrious"], "es": ["metódico", "confiable", "industrioso"] },
+        "reversed": { "en": ["dull", "stuck", "overly cautious"], "es": ["aburrido", "estancado", "excesivamente cauteloso"] }
+      },
+      "astrology": "Air of Earth",
+      "description": {
+        "en": "The airy aspect of earth, where thought organizes material effort. The Prince brings methodical intelligence to physical labor, engineering lasting structures from raw resources.",
+        "es": "El aspecto aéreo de la tierra, donde el pensamiento organiza el esfuerzo material. El Príncipe aporta inteligencia metódica al trabajo físico, construyendo estructuras duraderas a partir de recursos brutos."
+      },
+      "image": "/tarot/prince-of-disks.svg"
+    },
+    {
+      "id": "princess-of-disks",
+      "number": 14,
+      "name": { "en": "Princess of Disks", "es": "Princesa de Discos" },
+      "suit": "disks",
+      "keywords": {
+        "upright": { "en": ["generosity", "kindness", "new growth"], "es": ["generosidad", "bondad", "nuevo crecimiento"] },
+        "reversed": { "en": ["wastefulness", "impracticality", "irresponsibility"], "es": ["despilfarro", "falta de practicidad", "irresponsabilidad"] }
+      },
+      "astrology": "Earth of Earth",
+      "description": {
+        "en": "The earthy aspect of earth, the concentrated power of material manifestation. The Princess stands pregnant with possibility, the final crystallization of spirit into matter, bearing the seed of new cycles.",
+        "es": "El aspecto terrestre de la tierra, el poder concentrado de la manifestación material. La Princesa se yergue preñada de posibilidad, la cristalización final del espíritu en materia, portando la semilla de nuevos ciclos."
+      },
+      "image": "/tarot/princess-of-disks.svg"
+    }
+  ]
+}

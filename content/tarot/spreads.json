@@ -1,0 +1,146 @@
+{
+  "spreads": [
+    {
+      "id": "daily",
+      "name": { "en": "Daily Card", "es": "Carta del Día" },
+      "description": {
+        "en": "Draw a single card for guidance today",
+        "es": "Saca una carta para la guía del día"
+      },
+      "positions": [
+        {
+          "id": 1,
+          "name": { "en": "Today's Energy", "es": "La Energía de Hoy" },
+          "meaning": {
+            "en": "The theme or energy for your day",
+            "es": "El tema o energía de tu día"
+          }
+        }
+      ]
+    },
+    {
+      "id": "three_card",
+      "name": { "en": "Three Card Spread", "es": "Tirada de Tres Cartas" },
+      "description": {
+        "en": "A simple past-present-future reading",
+        "es": "Una lectura sencilla de pasado-presente-futuro"
+      },
+      "positions": [
+        {
+          "id": 1,
+          "name": { "en": "Past", "es": "Pasado" },
+          "meaning": {
+            "en": "Influences from the past",
+            "es": "Influencias del pasado"
+          }
+        },
+        {
+          "id": 2,
+          "name": { "en": "Present", "es": "Presente" },
+          "meaning": {
+            "en": "Current situation",
+            "es": "Situación actual"
+          }
+        },
+        {
+          "id": 3,
+          "name": { "en": "Future", "es": "Futuro" },
+          "meaning": {
+            "en": "What is coming",
+            "es": "Lo que viene"
+          }
+        }
+      ]
+    },
+    {
+      "id": "celtic_cross",
+      "name": { "en": "Celtic Cross", "es": "Cruz Celta" },
+      "description": {
+        "en": "The classic ten-card spread for deep insight into a situation",
+        "es": "La tirada clásica de diez cartas para una visión profunda de una situación"
+      },
+      "positions": [
+        {
+          "id": 1,
+          "name": { "en": "Present", "es": "Presente" },
+          "meaning": {
+            "en": "Current situation",
+            "es": "Situación actual"
+          }
+        },
+        {
+          "id": 2,
+          "name": { "en": "Challenge", "es": "Desafío" },
+          "meaning": {
+            "en": "What crosses you",
+            "es": "Lo que te cruza"
+          }
+        },
+        {
+          "id": 3,
+          "name": { "en": "Foundation", "es": "Base" },
+          "meaning": {
+            "en": "Root of the matter",
+            "es": "Raíz del asunto"
+          }
+        },
+        {
+          "id": 4,
+          "name": { "en": "Recent Past", "es": "Pasado Reciente" },
+          "meaning": {
+            "en": "What is passing",
+            "es": "Lo que está pasando"
+          }
+        },
+        {
+          "id": 5,
+          "name": { "en": "Crown", "es": "Corona" },
+          "meaning": {
+            "en": "Best outcome",
+            "es": "Mejor resultado"
+          }
+        },
+        {
+          "id": 6,
+          "name": { "en": "Near Future", "es": "Futuro Cercano" },
+          "meaning": {
+            "en": "What is approaching",
+            "es": "Lo que se acerca"
+          }
+        },
+        {
+          "id": 7,
+          "name": { "en": "Self", "es": "Tú Mismo" },
+          "meaning": {
+            "en": "Your attitude",
+            "es": "Tu actitud"
+          }
+        },
+        {
+          "id": 8,
+          "name": { "en": "Environment", "es": "Entorno" },
+          "meaning": {
+            "en": "External influences",
+            "es": "Influencias externas"
+          }
+        },
+        {
+          "id": 9,
+          "name": { "en": "Hopes/Fears", "es": "Esperanzas/Temores" },
+          "meaning": {
+            "en": "Your inner feelings",
+            "es": "Tus sentimientos internos"
+          }
+        },
+        {
+          "id": 10,
+          "name": { "en": "Outcome", "es": "Resultado" },
+          "meaning": {
+            "en": "Final outcome",
+            "es": "Resultado final"
+          }
+        }
+      ]
+    }
+  ]
+}

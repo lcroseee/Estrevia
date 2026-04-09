@@ -19,6 +19,7 @@ import {
 import { SITE_URL } from '@/shared/seo/constants';
 import { getEssayBySlug } from '@/modules/esoteric/lib/essays';
 import { EssayPage } from '@/modules/esoteric/components/EssayPage';
+import { EssayPageClient } from '@/modules/esoteric/components/EssayPageClient';
 
 // ---------------------------------------------------------------------------
 // Static params — all 120 essays pre-rendered at build time
@@ -105,8 +106,10 @@ export default async function EssaySlugPage(props: {
       {faqLd && <JsonLdScript schema={faqLd} />}
       <JsonLdScript schema={breadcrumbLd} />
 
-      {/* Essay content */}
-      <EssayPage meta={meta} content={content} />
+      {/* Essay content — wrapped with paywall for free users */}
+      <EssayPageClient>
+        <EssayPage meta={meta} content={content} />
+      </EssayPageClient>
     </>
   );
 }

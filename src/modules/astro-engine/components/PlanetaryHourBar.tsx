@@ -107,6 +107,9 @@ export function PlanetaryHourBar() {
     );
   }, [fetchHours]);
 
+  // Progress through current hour (0-1)
+  const [progress, setProgress] = useState(0);
+
   // Re-fetch when current hour expires; update countdown every minute
   useEffect(() => {
     if (!currentHour) return;
@@ -132,6 +135,23 @@ export function PlanetaryHourBar() {
       clearInterval(minuteTick);
     };
   }, [currentHour, geoState, fetchHours]);
+
+  // Progress bar tick — updates every second
+  useEffect(() => {
+    if (!currentHour) return;
+
+    function updateProgress() {
+      const start = new Date(currentHour!.startTime).getTime();
+      const end = new Date(currentHour!.endTime).getTime();
+      const now = Date.now();
+      const elapsed = Math.max(0, Math.min(1, (now - start) / (end - start)));
+      setProgress(elapsed);
+    }
+
+    updateProgress();
+    const interval = setInterval(updateProgress, 1000);
+    return () => clearInterval(interval);
+  }, [currentHour]);
 
   const handleClick = () => {
     router.push('/hours');
@@ -191,45 +211,66 @@ export function PlanetaryHourBar() {
     <button
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className="group flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+      className="group flex flex-col gap-0 rounded-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 overflow-hidden"
       style={{
         background: `${color}1A`, // 10% opacity background
         border: `1px solid ${color}33`,
       }}
       aria-label={`${planet} hour — ${timeLeft}. Tap to view full schedule.`}
     >
-      {/* Planet glyph with subtle pulse on active hour */}
-      <span
-        className="font-serif text-base leading-none tabular-nums"
-        style={{ color }}
-        aria-hidden="true"
-      >
-        {glyph}
-      </span>
-
-      {/* Planet name + time remaining */}
-      <span className="flex items-baseline gap-1.5">
+      <div className="flex items-center gap-2 px-3 py-1.5">
+        {/* Planet glyph with subtle pulse on active hour */}
         <span
-          className="text-xs font-medium font-[var(--font-geist-sans)] tracking-wide"
+          className="font-serif text-base leading-none tabular-nums"
           style={{ color }}
+          aria-hidden="true"
         >
-          {planet}
+          {glyph}
         </span>
-        <span className="text-xs text-white/50 font-[var(--font-geist-mono)]">
-          {startFmt}–{endFmt}
-        </span>
-        <span className="text-xs text-white/35 font-[var(--font-geist-mono)] hidden sm:inline">
-          · {timeLeft}
-        </span>
-      </span>
 
-      {/* Day/night indicator */}
-      <span
-        className="text-[10px] text-white/30 hidden md:inline"
-        aria-hidden="true"
+        {/* Planet name + time remaining */}
+        <span className="flex items-baseline gap-1.5">
+          <span
+            className="text-xs font-medium font-[var(--font-geist-sans)] tracking-wide"
+            style={{ color }}
+          >
+            {planet}
+          </span>
+          <span className="text-xs text-white/50 font-[var(--font-geist-mono)]">
+            {startFmt}–{endFmt}
+          </span>
+          <span className="text-xs text-white/35 font-[var(--font-geist-mono)] hidden sm:inline">
+            · {timeLeft}
+          </span>
+        </span>
+
+        {/* Day/night indicator */}
+        <span
+          className="text-[10px] text-white/30 hidden md:inline"
+          aria-hidden="true"
+        >
+          {currentHour.isDay ? '☀' : '☾'}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div
+        className="w-full h-[2px]"
+        style={{ background: `${color}15` }}
+        role="progressbar"
+        aria-valuenow={Math.round(progress * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${Math.round(progress * 100)}% elapsed`}
       >
-        {currentHour.isDay ? '☀' : '☾'}
-      </span>
+        <div
+          className="h-full transition-[width] duration-1000 ease-linear"
+          style={{
+            width: `${progress * 100}%`,
+            background: color,
+          }}
+        />
+      </div>
     </button>
   );
 }

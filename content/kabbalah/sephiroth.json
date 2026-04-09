@@ -1,0 +1,144 @@
+{
+  "sephiroth": [
+    {
+      "number": 1,
+      "name": { "hebrew": "כתר", "en": "Kether", "es": "Kether" },
+      "meaning": { "en": "Crown", "es": "Corona" },
+      "planet": "Primum Mobile",
+      "colorQueenScale": "#FFFFFF",
+      "divineName": "AHIH (Eheieh)",
+      "archangel": "Metatron",
+      "description": {
+        "en": "The first emanation, the point of pure being before manifestation. Kether is the source from which all other sephiroth flow, representing the initial impulse of creation.",
+        "es": "La primera emanación, el punto del ser puro antes de la manifestación. Kether es la fuente de la cual fluyen todas las demás sefirot, representando el impulso inicial de la creación."
+      },
+      "position": { "x": 50, "y": 5 }
+    },
+    {
+      "number": 2,
+      "name": { "hebrew": "חכמה", "en": "Chokmah", "es": "Chokmah" },
+      "meaning": { "en": "Wisdom", "es": "Sabiduría" },
+      "planet": "Zodiac",
+      "colorQueenScale": "#808080",
+      "divineName": "IHVH (Yah)",
+      "archangel": "Raziel",
+      "description": {
+        "en": "The great father, the first active principle. Chokmah is the dynamic force of wisdom that surges forth as pure creative energy, undifferentiated and boundless.",
+        "es": "El gran padre, el primer principio activo. Chokmah es la fuerza dinámica de la sabiduría que surge como energía creativa pura, indiferenciada e ilimitada."
+      },
+      "position": { "x": 80, "y": 15 }
+    },
+    {
+      "number": 3,
+      "name": { "hebrew": "בינה", "en": "Binah", "es": "Binah" },
+      "meaning": { "en": "Understanding", "es": "Entendimiento" },
+      "planet": "Saturn",
+      "colorQueenScale": "#000000",
+      "divineName": "IHVH ALHIM (Yahweh Elohim)",
+      "archangel": "Tzaphkiel",
+      "description": {
+        "en": "The great mother, the first receptive principle. Binah gives form to the raw force of Chokmah, creating the structure and limitation necessary for manifestation.",
+        "es": "La gran madre, el primer principio receptivo. Binah da forma a la fuerza bruta de Chokmah, creando la estructura y limitación necesarias para la manifestación."
+      },
+      "position": { "x": 20, "y": 15 }
+    },
+    {
+      "number": 4,
+      "name": { "hebrew": "חסד", "en": "Chesed", "es": "Chesed" },
+      "meaning": { "en": "Mercy", "es": "Misericordia" },
+      "planet": "Jupiter",
+      "colorQueenScale": "#0000FF",
+      "divineName": "AL (El)",
+      "archangel": "Tzadkiel",
+      "description": {
+        "en": "The sphere of benevolent authority and expansive love. Chesed represents the organizing principle that builds and sustains, the first concrete expression of archetypal force below the Abyss.",
+        "es": "La esfera de la autoridad benevolente y el amor expansivo. Chesed representa el principio organizador que construye y sostiene, la primera expresión concreta de la fuerza arquetípica debajo del Abismo."
+      },
+      "position": { "x": 80, "y": 38 }
+    },
+    {
+      "number": 5,
+      "name": { "hebrew": "גבורה", "en": "Geburah", "es": "Geburah" },
+      "meaning": { "en": "Severity", "es": "Severidad" },
+      "planet": "Mars",
+      "colorQueenScale": "#FF0000",
+      "divineName": "ALHIM GBVR (Elohim Gibor)",
+      "archangel": "Khamael",
+      "description": {
+        "en": "The sphere of strength, discipline, and necessary destruction. Geburah is the martial force that prunes excess and enforces boundaries, balancing the expansiveness of Chesed.",
+        "es": "La esfera de la fuerza, la disciplina y la destrucción necesaria. Geburah es la fuerza marcial que poda el exceso e impone límites, equilibrando la expansividad de Chesed."
+      },
+      "position": { "x": 20, "y": 38 }
+    },
+    {
+      "number": 6,
+      "name": { "hebrew": "תפארת", "en": "Tiphareth", "es": "Tiphareth" },
+      "meaning": { "en": "Beauty", "es": "Belleza" },
+      "planet": "Sun",
+      "colorQueenScale": "#FFD700",
+      "divineName": "IHVH ALVH VDOTh (Yahweh Eloah ve-Daath)",
+      "archangel": "Raphael",
+      "description": {
+        "en": "The heart of the Tree, where all paths converge in harmony. Tiphareth is the sphere of the higher self, balancing mercy and severity, and serving as the mediator between the divine and the manifest.",
+        "es": "El corazón del Árbol, donde todos los senderos convergen en armonía. Tiphareth es la esfera del yo superior, equilibrando misericordia y severidad, y sirviendo como mediador entre lo divino y lo manifiesto."
+      },
+      "position": { "x": 50, "y": 50 }
+    },
+    {
+      "number": 7,
+      "name": { "hebrew": "נצח", "en": "Netzach", "es": "Netzach" },
+      "meaning": { "en": "Victory", "es": "Victoria" },
+      "planet": "Venus",
+      "colorQueenScale": "#00FF00",
+      "divineName": "IHVH TzBAVTh (Yahweh Tzabaoth)",
+      "archangel": "Haniel",
+      "description": {
+        "en": "The sphere of desire, emotion, and creative instinct. Netzach is the driving force of nature and passion, the wellspring of artistic inspiration and the pursuit of beauty.",
+        "es": "La esfera del deseo, la emoción y el instinto creativo. Netzach es la fuerza motriz de la naturaleza y la pasión, la fuente de la inspiración artística y la búsqueda de la belleza."
+      },
+      "position": { "x": 80, "y": 65 }
+    },
+    {
+      "number": 8,
+      "name": { "hebrew": "הוד", "en": "Hod", "es": "Hod" },
+      "meaning": { "en": "Splendor", "es": "Esplendor" },
+      "planet": "Mercury",
+      "colorQueenScale": "#FFA500",
+      "divineName": "ALHIM TzBAVTh (Elohim Tzabaoth)",
+      "archangel": "Michael",
+      "description": {
+        "en": "The sphere of intellect, communication, and structured thought. Hod gives language and logic to the raw feelings of Netzach, enabling analysis, magic, and the transmission of knowledge.",
+        "es": "La esfera del intelecto, la comunicación y el pensamiento estructurado. Hod da lenguaje y lógica a los sentimientos brutos de Netzach, permitiendo el análisis, la magia y la transmisión del conocimiento."
+      },
+      "position": { "x": 20, "y": 65 }
+    },
+    {
+      "number": 9,
+      "name": { "hebrew": "יסוד", "en": "Yesod", "es": "Yesod" },
+      "meaning": { "en": "Foundation", "es": "Fundamento" },
+      "planet": "Moon",
+      "colorQueenScale": "#800080",
+      "divineName": "ShDI AL ChI (Shaddai El Chai)",
+      "archangel": "Gabriel",
+      "description": {
+        "en": "The sphere of the astral plane and the subconscious mind. Yesod collects and transmits all the influences from above into the final sphere of manifestation, governing dreams, cycles, and hidden currents.",
+        "es": "La esfera del plano astral y la mente subconsciente. Yesod recoge y transmite todas las influencias de arriba hacia la esfera final de manifestación, gobernando sueños, ciclos y corrientes ocultas."
+      },
+      "position": { "x": 50, "y": 80 }
+    },
+    {
+      "number": 10,
+      "name": { "hebrew": "מלכות", "en": "Malkuth", "es": "Malkuth" },
+      "meaning": { "en": "Kingdom", "es": "Reino" },
+      "planet": "Earth",
+      "colorQueenScale": "#808000",
+      "divineName": "ADNI HARTz (Adonai ha-Aretz)",
+      "archangel": "Sandalphon",
+      "description": {
+        "en": "The sphere of the physical world and manifest reality. Malkuth is the final recipient of all divine forces, where the spiritual becomes tangible. It is both the end of the lightning flash and the beginning of the return journey.",
+        "es": "La esfera del mundo físico y la realidad manifiesta. Malkuth es el receptor final de todas las fuerzas divinas, donde lo espiritual se vuelve tangible. Es tanto el fin del rayo relampagueante como el inicio del viaje de retorno."
+      },
+      "position": { "x": 50, "y": 95 }
+    }
+  ]
+}

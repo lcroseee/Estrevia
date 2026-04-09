@@ -18,6 +18,50 @@ export interface MoonPhaseResponse {
   emoji: string;
   nextNewMoon: string;
   nextFullMoon: string;
+  /** Sidereal Moon sign */
+  moonSign: string | null;
+  /** Sidereal Moon degree (0-360) */
+  moonDegree: number | null;
+  /** UTC ISO time when Moon entered current sign */
+  signEntryTime: string | null;
+  /** UTC ISO time when Moon exits current sign */
+  signExitTime: string | null;
+  /** UTC ISO time of moonrise (only if lat/lon provided) */
+  moonrise: string | null;
+  /** UTC ISO time of moonset (only if lat/lon provided) */
+  moonset: string | null;
+}
+
+export interface MoonCalendarDay {
+  date: string;
+  phase: string;
+  illumination: number;
+  emoji: string;
+  moonSign: string;
+  moonDegree: number;
+  isVoidOfCourse: boolean;
+  vocStart: string | null;
+  vocEnd: string | null;
+}
+
+export interface MoonCalendarResponse {
+  year: number;
+  month: number;
+  days: MoonCalendarDay[];
+}
+
+export interface VocPeriod {
+  start: string;
+  end: string;
+  lastAspect: { planet: string; aspect: string } | null;
+  fromSign: string;
+  toSign: string;
+}
+
+export interface VocMonthResponse {
+  year: number;
+  month: number;
+  periods: VocPeriod[];
 }
 
 export interface PlanetaryHoursResponse {

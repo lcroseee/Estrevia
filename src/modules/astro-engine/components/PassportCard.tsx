@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import type { PassportResponse } from '@/shared/types/api';
 
 // Planetary colors matching the design system
@@ -115,6 +116,7 @@ function SignRow({ glyph, label, signName, color }: SignRowProps) {
 
 interface PassportCardProps {
   passport: PassportResponse;
+  passportId?: string;
 }
 
 /**
@@ -122,7 +124,20 @@ interface PassportCardProps {
  * Aspect ratio ~3:2 (physical ID card feel).
  * No PII — only sign results, element, rarity.
  */
-export function PassportCard({ passport }: PassportCardProps) {
+export function PassportCard({ passport, passportId }: PassportCardProps) {
+  const [qrSvg, setQrSvg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!passportId) return;
+    import('qrcode').then((QR) => {
+      QR.toString(`https://estrevia.app/s/${passportId}`, {
+        type: 'svg',
+        margin: 1,
+        width: 56,
+        color: { dark: '#FFFFFF', light: '#00000000' },
+      }).then(setQrSvg).catch(() => {});
+    });
+  }, [passportId]);
   const {
     sunSign,
     moonSign,
@@ -306,6 +321,17 @@ export function PassportCard({ passport }: PassportCardProps) {
         }}
         aria-hidden="true"
       />
+
+      {/* QR code — bottom-right corner.
+          SVG is generated locally by the qrcode library, not from user input. */}
+      {qrSvg && (
+        <div
+          className="absolute bottom-3 right-3 opacity-40"
+          style={{ width: 28, height: 28 }}
+          aria-label="QR code link to this passport"
+          dangerouslySetInnerHTML={{ __html: qrSvg }}
+        />
+      )}
     </article>
   );
 }

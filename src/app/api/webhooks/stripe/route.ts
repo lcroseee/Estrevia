@@ -61,6 +61,18 @@ function periodEndToDate(periodEnd: number | null | undefined): Date | null {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: derive plan from subscription price ID
+// ---------------------------------------------------------------------------
+function derivePlan(sub: Stripe.Subscription): 'free' | 'pro_monthly' | 'pro_annual' {
+  const priceId = sub.items?.data?.[0]?.price?.id;
+  if (priceId === process.env.STRIPE_PRICE_ID_PRO_MONTHLY) return 'pro_monthly';
+  if (priceId === process.env.STRIPE_PRICE_ID_PRO_ANNUAL) return 'pro_annual';
+  // Fallback: check old STRIPE_PRICE_ID for backward compat
+  if (priceId === process.env.STRIPE_PRICE_ID) return 'pro_monthly';
+  return 'free';
+}
+
+// ---------------------------------------------------------------------------
 // Helper: get current_period_end from a Subscription object.
 // Stripe SDK v22 moved current_period_end from Subscription to SubscriptionItem.
 // ---------------------------------------------------------------------------
@@ -136,26 +148,40 @@ export async function POST(request: Request): Promise<Response> {
             ? session.customer
             : (session.customer?.id ?? null);
 
-        // Fetch subscription to get current_period_end
+        // Fetch subscription to get current_period_end and plan details
         let expiresAt: Date | null = null;
+        let plan: 'free' | 'pro_monthly' | 'pro_annual' = 'free';
+        let subscriptionStatus: string = 'active';
+        let trialEnd: Date | null = null;
+        let stripeSubscriptionId: string | null = null;
+
         if (session.subscription) {
           const stripe = getStripe();
-          const subscriptionId =
+          const subId =
             typeof session.subscription === 'string'
               ? session.subscription
               : session.subscription.id;
-          const sub = await stripe.subscriptions.retrieve(subscriptionId, {
+          const sub = await stripe.subscriptions.retrieve(subId, {
             expand: ['items'],
           });
           expiresAt = periodEndToDate(getSubscriptionPeriodEnd(sub));
+          plan = derivePlan(sub);
+          subscriptionStatus = sub.status;
+          trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : null;
+          stripeSubscriptionId = sub.id;
         }
 
         await db
           .update(users)
           .set({
             stripeCustomerId,
+            stripeSubscriptionId,
             subscriptionTier: 'premium',
             subscriptionExpiresAt: expiresAt,
+            plan,
+            subscriptionStatus: subscriptionStatus as 'trialing' | 'active' | 'canceled' | 'past_due',
+            trialEnd,
+            currentPeriodEnd: expiresAt,
             updatedAt: new Date(),
           })
           .where(eq(users.id, clerkUserId));
@@ -163,6 +189,8 @@ export async function POST(request: Request): Promise<Response> {
         console.info('[stripe-webhook] checkout.session.completed → premium activated', {
           clerkUserId,
           stripeCustomerId,
+          plan,
+          subscriptionStatus,
           expiresAt,
         });
         break;
@@ -234,6 +262,11 @@ export async function POST(request: Request): Promise<Response> {
           .set({
             subscriptionTier: 'free',
             subscriptionExpiresAt: null,
+            stripeSubscriptionId: null,
+            plan: 'free',
+            subscriptionStatus: 'canceled',
+            trialEnd: null,
+            currentPeriodEnd: null,
             updatedAt: new Date(),
           })
           .where(eq(users.id, userId));
@@ -260,6 +293,69 @@ export async function POST(request: Request): Promise<Response> {
 
         // Optionally send a transactional email (Phase 2 — Resend integration).
         // For MVP: Stripe Dashboard handles dunning emails automatically.
+        break;
+      }
+
+      // -----------------------------------------------------------------------
+      // customer.subscription.trial_will_end
+      // Trial ending in ~3 days → send reminder email
+      // -----------------------------------------------------------------------
+      case 'customer.subscription.trial_will_end': {
+        const sub = event.data.object as Stripe.Subscription;
+        const customerId =
+          typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
+
+        const rows = await db
+          .select({ email: users.email })
+          .from(users)
+          .where(eq(users.stripeCustomerId, customerId))
+          .limit(1);
+
+        if (rows[0]?.email) {
+          const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : new Date();
+          const { sendTrialEndingEmail } = await import('@/shared/lib/email');
+          await sendTrialEndingEmail(rows[0].email, trialEnd);
+        }
+
+        console.info('[stripe-webhook] trial_will_end → email sent', { customerId });
+        break;
+      }
+
+      // -----------------------------------------------------------------------
+      // invoice.payment_succeeded
+      // Successful payment → update period end dates
+      // -----------------------------------------------------------------------
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId =
+          typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+        if (!customerId) break;
+
+        // Stripe SDK v22+: subscription is under parent.subscription_details
+        const subRef = invoice.parent?.subscription_details?.subscription;
+        const subscriptionId =
+          typeof subRef === 'string' ? subRef : subRef?.id;
+        if (!subscriptionId) break;
+
+        const stripe = getStripe();
+        const sub = await stripe.subscriptions.retrieve(subscriptionId, {
+          expand: ['items'],
+        });
+        const expiresAt = periodEndToDate(getSubscriptionPeriodEnd(sub));
+
+        await db
+          .update(users)
+          .set({
+            currentPeriodEnd: expiresAt,
+            subscriptionExpiresAt: expiresAt,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.stripeCustomerId, customerId));
+
+        console.info('[stripe-webhook] invoice.payment_succeeded → period updated', {
+          customerId,
+          expiresAt,
+        });
         break;
       }
 
@@ -299,12 +395,19 @@ async function handleSubscriptionUpdate(
 
   // Keep premium during grace period (past_due) so users aren't locked out mid-retry
   const tier = isActive || isPastDue ? 'premium' : 'free';
+  const plan = tier === 'free' ? 'free' : derivePlan(sub);
+  const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : null;
 
   await db
     .update(users)
     .set({
       subscriptionTier: tier,
       subscriptionExpiresAt: tier === 'free' ? null : expiresAt,
+      stripeSubscriptionId: sub.id,
+      plan,
+      subscriptionStatus: sub.status as 'trialing' | 'active' | 'canceled' | 'past_due',
+      trialEnd,
+      currentPeriodEnd: expiresAt,
       updatedAt: new Date(),
     })
     .where(eq(users.id, userId));
@@ -313,6 +416,7 @@ async function handleSubscriptionUpdate(
     userId,
     status: sub.status,
     tier,
+    plan,
     expiresAt,
   });
 }

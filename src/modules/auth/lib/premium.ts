@@ -51,3 +51,40 @@ export async function requirePremium(): Promise<void> {
     );
   }
 }
+
+/**
+ * Returns detailed subscription information for a user.
+ * Used by subscription API and server-side components that need
+ * more than just a boolean premium check.
+ */
+export async function getSubscriptionDetails(userId: string) {
+  const db = getDb();
+  const rows = await db
+    .select({
+      subscriptionTier: users.subscriptionTier,
+      subscriptionExpiresAt: users.subscriptionExpiresAt,
+      plan: users.plan,
+      subscriptionStatus: users.subscriptionStatus,
+      trialEnd: users.trialEnd,
+      currentPeriodEnd: users.currentPeriodEnd,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (rows.length === 0) {
+    return { isPremium: false, plan: 'free' as const, status: null, trialEnd: null, currentPeriodEnd: null };
+  }
+
+  const row = rows[0];
+  const premium = row.subscriptionTier === 'premium' &&
+    (row.subscriptionExpiresAt === null || row.subscriptionExpiresAt > new Date());
+
+  return {
+    isPremium: premium,
+    plan: row.plan,
+    status: row.subscriptionStatus,
+    trialEnd: row.trialEnd,
+    currentPeriodEnd: row.currentPeriodEnd,
+  };
+}

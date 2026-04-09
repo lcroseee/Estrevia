@@ -1,0 +1,290 @@
+{
+  "paths": [
+    {
+      "number": 11,
+      "connects": [1, 2],
+      "hebrewLetter": "Aleph",
+      "hebrewSymbol": "א",
+      "tarotCard": "the-fool",
+      "astrology": "Air",
+      "color": "#FFFF00",
+      "description": {
+        "en": "The path of Aleph connects Kether to Chokmah, carrying the breath of pure spirit across the highest reaches of the Tree. It represents the leap into existence before thought or form arise.",
+        "es": "El sendero de Aleph conecta Kether con Chokmah, llevando el aliento del espíritu puro a través de las alturas más elevadas del Árbol. Representa el salto a la existencia antes de que surjan el pensamiento o la forma."
+      }
+    },
+    {
+      "number": 12,
+      "connects": [1, 3],
+      "hebrewLetter": "Beth",
+      "hebrewSymbol": "ב",
+      "tarotCard": "the-magus",
+      "astrology": "Mercury",
+      "color": "#FFFF00",
+      "description": {
+        "en": "The path of Beth connects Kether to Binah, channeling the primal will through the power of directed attention. It is the first act of communication between unity and form.",
+        "es": "El sendero de Beth conecta Kether con Binah, canalizando la voluntad primordial a través del poder de la atención dirigida. Es el primer acto de comunicación entre la unidad y la forma."
+      }
+    },
+    {
+      "number": 13,
+      "connects": [1, 6],
+      "hebrewLetter": "Gimel",
+      "hebrewSymbol": "ג",
+      "tarotCard": "the-priestess",
+      "astrology": "Moon",
+      "color": "#C0C0C0",
+      "description": {
+        "en": "The path of Gimel is the longest path on the Tree, spanning from Kether to Tiphareth across the Abyss. It carries the light of the crown directly to the heart, representing intuitive knowledge that bypasses rational understanding.",
+        "es": "El sendero de Gimel es el sendero más largo del Árbol, abarcando desde Kether hasta Tiphareth a través del Abismo. Lleva la luz de la corona directamente al corazón, representando el conocimiento intuitivo que elude la comprensión racional."
+      }
+    },
+    {
+      "number": 14,
+      "connects": [2, 3],
+      "hebrewLetter": "Daleth",
+      "hebrewSymbol": "ד",
+      "tarotCard": "the-empress",
+      "astrology": "Venus",
+      "color": "#00FF00",
+      "description": {
+        "en": "The path of Daleth connects Chokmah to Binah, uniting the archetypal father and mother across the Supernal Triad. It is the doorway through which creative force meets receptive form, generating all that follows.",
+        "es": "El sendero de Daleth conecta Chokmah con Binah, uniendo al padre y la madre arquetípicos a través de la Tríada Superna. Es la puerta a través de la cual la fuerza creativa se encuentra con la forma receptiva, generando todo lo que sigue."
+      }
+    },
+    {
+      "number": 15,
+      "connects": [2, 6],
+      "hebrewLetter": "Heh",
+      "hebrewSymbol": "ה",
+      "tarotCard": "the-emperor",
+      "astrology": "Aries",
+      "color": "#FF0000",
+      "description": {
+        "en": "The path of Heh connects Chokmah to Tiphareth, bringing the vision of the father down to the sphere of the self. It represents the ordering force of consciousness that structures raw wisdom into visible authority.",
+        "es": "El sendero de Heh conecta Chokmah con Tiphareth, trayendo la visión del padre hacia la esfera del yo. Representa la fuerza ordenadora de la conciencia que estructura la sabiduría bruta en autoridad visible."
+      }
+    },
+    {
+      "number": 16,
+      "connects": [2, 4],
+      "hebrewLetter": "Vav",
+      "hebrewSymbol": "ו",
+      "tarotCard": "the-hierophant",
+      "astrology": "Taurus",
+      "color": "#FF4500",
+      "description": {
+        "en": "The path of Vav connects Chokmah to Chesed, transmitting archetypal wisdom into the first sphere of concrete organization. It represents tradition, teaching, and the inner voice that reveals sacred law.",
+        "es": "El sendero de Vav conecta Chokmah con Chesed, transmitiendo la sabiduría arquetípica a la primera esfera de organización concreta. Representa la tradición, la enseñanza y la voz interior que revela la ley sagrada."
+      }
+    },
+    {
+      "number": 17,
+      "connects": [3, 6],
+      "hebrewLetter": "Zayin",
+      "hebrewSymbol": "ז",
+      "tarotCard": "the-lovers",
+      "astrology": "Gemini",
+      "color": "#FFA500",
+      "description": {
+        "en": "The path of Zayin connects Binah to Tiphareth, bridging understanding and beauty through the principle of complementary opposites. It represents the choice that unites divided aspects of the self.",
+        "es": "El sendero de Zayin conecta Binah con Tiphareth, uniendo entendimiento y belleza a través del principio de opuestos complementarios. Representa la elección que une aspectos divididos del yo."
+      }
+    },
+    {
+      "number": 18,
+      "connects": [3, 5],
+      "hebrewLetter": "Cheth",
+      "hebrewSymbol": "ח",
+      "tarotCard": "the-chariot",
+      "astrology": "Cancer",
+      "color": "#FFD700",
+      "description": {
+        "en": "The path of Cheth connects Binah to Geburah, carrying the receptive power of the mother into the sphere of martial strength. It represents the protective enclosure of will that moves through adversity with focused determination.",
+        "es": "El sendero de Cheth conecta Binah con Geburah, llevando el poder receptivo de la madre a la esfera de la fuerza marcial. Representa el recinto protector de la voluntad que avanza a través de la adversidad con determinación enfocada."
+      }
+    },
+    {
+      "number": 19,
+      "connects": [4, 5],
+      "hebrewLetter": "Teth",
+      "hebrewSymbol": "ט",
+      "tarotCard": "lust",
+      "astrology": "Leo",
+      "color": "#ADFF2F",
+      "description": {
+        "en": "The path of Teth connects Chesed to Geburah, the horizontal balance between mercy and severity. It represents the courageous integration of primal vitality, where raw desire is neither suppressed nor indulged but channeled through strength.",
+        "es": "El sendero de Teth conecta Chesed con Geburah, el equilibrio horizontal entre misericordia y severidad. Representa la integración valiente de la vitalidad primordial, donde el deseo bruto no se suprime ni se consiente sino que se canaliza a través de la fuerza."
+      }
+    },
+    {
+      "number": 20,
+      "connects": [4, 6],
+      "hebrewLetter": "Yod",
+      "hebrewSymbol": "י",
+      "tarotCard": "the-hermit",
+      "astrology": "Virgo",
+      "color": "#9ACD32",
+      "description": {
+        "en": "The path of Yod connects Chesed to Tiphareth, the descent from expansive mercy to centered beauty. It represents the solitary lantern of inner guidance, the seed of divine fire carried in silence.",
+        "es": "El sendero de Yod conecta Chesed con Tiphareth, el descenso desde la misericordia expansiva hacia la belleza centrada. Representa la linterna solitaria de la guía interior, la semilla del fuego divino llevada en silencio."
+      }
+    },
+    {
+      "number": 21,
+      "connects": [4, 7],
+      "hebrewLetter": "Kaph",
+      "hebrewSymbol": "כ",
+      "tarotCard": "fortune",
+      "astrology": "Jupiter",
+      "color": "#8A2BE2",
+      "description": {
+        "en": "The path of Kaph connects Chesed to Netzach, linking the benevolent order of Jupiter to the emotional sphere of Venus. It represents the ever-turning wheel of cycles, where fortune rises and falls according to deeper cosmic rhythms.",
+        "es": "El sendero de Kaph conecta Chesed con Netzach, enlazando el orden benevolente de Júpiter con la esfera emocional de Venus. Representa la rueda de ciclos en constante giro, donde la fortuna sube y baja según ritmos cósmicos más profundos."
+      }
+    },
+    {
+      "number": 22,
+      "connects": [5, 6],
+      "hebrewLetter": "Lamed",
+      "hebrewSymbol": "ל",
+      "tarotCard": "adjustment",
+      "astrology": "Libra",
+      "color": "#00FF00",
+      "description": {
+        "en": "The path of Lamed connects Geburah to Tiphareth, carrying the sharp clarity of severity into the harmonizing center. It represents the precise action of cosmic balance, where every cause finds its exact consequence.",
+        "es": "El sendero de Lamed conecta Geburah con Tiphareth, llevando la aguda claridad de la severidad al centro armonizador. Representa la acción precisa del equilibrio cósmico, donde cada causa encuentra su consecuencia exacta."
+      }
+    },
+    {
+      "number": 23,
+      "connects": [5, 8],
+      "hebrewLetter": "Mem",
+      "hebrewSymbol": "מ",
+      "tarotCard": "the-hanged-man",
+      "astrology": "Water",
+      "color": "#0000FF",
+      "description": {
+        "en": "The path of Mem connects Geburah to Hod, carrying the waters of transformation from strength to intellect. It represents the willing surrender of the ego, the reversal of perspective that reveals hidden truth.",
+        "es": "El sendero de Mem conecta Geburah con Hod, llevando las aguas de la transformación desde la fuerza al intelecto. Representa la entrega voluntaria del ego, la inversión de perspectiva que revela la verdad oculta."
+      }
+    },
+    {
+      "number": 24,
+      "connects": [6, 7],
+      "hebrewLetter": "Nun",
+      "hebrewSymbol": "נ",
+      "tarotCard": "death",
+      "astrology": "Scorpio",
+      "color": "#006400",
+      "description": {
+        "en": "The path of Nun connects Tiphareth to Netzach, linking the solar self to the realm of desire. It represents the transformative death of outworn forms, making space for regeneration and deeper engagement with life.",
+        "es": "El sendero de Nun conecta Tiphareth con Netzach, enlazando el yo solar con el reino del deseo. Representa la muerte transformadora de las formas gastadas, creando espacio para la regeneración y un compromiso más profundo con la vida."
+      }
+    },
+    {
+      "number": 25,
+      "connects": [6, 9],
+      "hebrewLetter": "Samekh",
+      "hebrewSymbol": "ס",
+      "tarotCard": "art",
+      "astrology": "Sagittarius",
+      "color": "#0000FF",
+      "description": {
+        "en": "The path of Samekh connects Tiphareth to Yesod, the central pillar descending from the heart to the foundation. It represents the alchemical art of combining opposites into a greater synthesis, the arrow of aspiration aimed at the higher self.",
+        "es": "El sendero de Samekh conecta Tiphareth con Yesod, el pilar central descendiendo desde el corazón hasta el fundamento. Representa el arte alquímico de combinar opuestos en una síntesis mayor, la flecha de aspiración dirigida al yo superior."
+      }
+    },
+    {
+      "number": 26,
+      "connects": [6, 8],
+      "hebrewLetter": "Ayin",
+      "hebrewSymbol": "ע",
+      "tarotCard": "the-devil",
+      "astrology": "Capricorn",
+      "color": "#4B0082",
+      "description": {
+        "en": "The path of Ayin connects Tiphareth to Hod, linking the solar center to the mercurial intellect. It represents the creative power of material bondage and mirth, the recognition that spirit and matter are not truly separate.",
+        "es": "El sendero de Ayin conecta Tiphareth con Hod, enlazando el centro solar con el intelecto mercurial. Representa el poder creativo de la atadura material y la alegría, el reconocimiento de que espíritu y materia no están verdaderamente separados."
+      }
+    },
+    {
+      "number": 27,
+      "connects": [7, 8],
+      "hebrewLetter": "Peh",
+      "hebrewSymbol": "פ",
+      "tarotCard": "the-tower",
+      "astrology": "Mars",
+      "color": "#FF0000",
+      "description": {
+        "en": "The path of Peh connects Netzach to Hod, the horizontal balance between feeling and thought in the lower Tree. It represents the sudden destruction of false structures, the lightning flash that shatters illusion and clears the ground for truth.",
+        "es": "El sendero de Peh conecta Netzach con Hod, el equilibrio horizontal entre sentimiento y pensamiento en el Árbol inferior. Representa la destrucción súbita de estructuras falsas, el rayo que destroza la ilusión y despeja el terreno para la verdad."
+      }
+    },
+    {
+      "number": 28,
+      "connects": [7, 9],
+      "hebrewLetter": "Tzaddi",
+      "hebrewSymbol": "צ",
+      "tarotCard": "the-star",
+      "astrology": "Aquarius",
+      "color": "#EE82EE",
+      "description": {
+        "en": "The path of Tzaddi connects Netzach to Yesod, pouring the waters of emotional vision into the astral foundation. It represents the meditation upon celestial patterns, the star that guides through darkness toward renewal.",
+        "es": "El sendero de Tzaddi conecta Netzach con Yesod, vertiendo las aguas de la visión emocional en el fundamento astral. Representa la meditación sobre los patrones celestiales, la estrella que guía a través de la oscuridad hacia la renovación."
+      }
+    },
+    {
+      "number": 29,
+      "connects": [7, 10],
+      "hebrewLetter": "Qoph",
+      "hebrewSymbol": "ק",
+      "tarotCard": "the-moon",
+      "astrology": "Pisces",
+      "color": "#DC143C",
+      "description": {
+        "en": "The path of Qoph connects Netzach to Malkuth, the descent from emotional desire into physical reality. It represents the realm of dreams, illusions, and the unconscious depths that must be navigated to bring vision into the world.",
+        "es": "El sendero de Qoph conecta Netzach con Malkuth, el descenso desde el deseo emocional a la realidad física. Representa el reino de los sueños, las ilusiones y las profundidades inconscientes que deben navegarse para traer la visión al mundo."
+      }
+    },
+    {
+      "number": 30,
+      "connects": [8, 9],
+      "hebrewLetter": "Resh",
+      "hebrewSymbol": "ר",
+      "tarotCard": "the-sun",
+      "astrology": "Sun",
+      "color": "#FFA500",
+      "description": {
+        "en": "The path of Resh connects Hod to Yesod, bringing the light of intellectual clarity to illuminate the astral realm. It represents the solar consciousness that dispels shadow, revealing the world in its fullness and vitality.",
+        "es": "El sendero de Resh conecta Hod con Yesod, trayendo la luz de la claridad intelectual para iluminar el reino astral. Representa la conciencia solar que disipa las sombras, revelando el mundo en su plenitud y vitalidad."
+      }
+    },
+    {
+      "number": 31,
+      "connects": [8, 10],
+      "hebrewLetter": "Shin",
+      "hebrewSymbol": "ש",
+      "tarotCard": "the-aeon",
+      "astrology": "Fire",
+      "color": "#FF4500",
+      "description": {
+        "en": "The path of Shin connects Hod to Malkuth, carrying the transformative fire of judgment into the material world. It represents the great awakening, the renewal of an age, and the call to conscious evolution.",
+        "es": "El sendero de Shin conecta Hod con Malkuth, llevando el fuego transformador del juicio al mundo material. Representa el gran despertar, la renovación de una era y el llamado a la evolución consciente."
+      }
+    },
+    {
+      "number": 32,
+      "connects": [9, 10],
+      "hebrewLetter": "Tau",
+      "hebrewSymbol": "ת",
+      "tarotCard": "the-universe",
+      "astrology": "Saturn / Earth",
+      "color": "#4B0082",
+      "description": {
+        "en": "The path of Tau connects Yesod to Malkuth, the final step from the astral foundation into full physical manifestation. It represents the completion of the great work, the dance of matter and spirit united in the kingdom of the real.",
+        "es": "El sendero de Tau conecta Yesod con Malkuth, el paso final desde el fundamento astral hacia la manifestación física completa. Representa la culminación de la gran obra, la danza de materia y espíritu unidos en el reino de lo real."
+      }
+    }
+  ]
+}

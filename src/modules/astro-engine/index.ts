@@ -51,9 +51,21 @@ export { getPlanetHouse } from './planet-in-house';
 export type { PlanetaryHoursResult } from './planetary-hours';
 export { calculatePlanetaryHours } from './planetary-hours';
 
-// Moon phase
-export type { MoonPhaseData } from './moon-phase';
-export { getCurrentMoonPhase } from './moon-phase';
+// Moon phase & Moon sign & Moon rise/set
+export type { MoonPhaseData, MoonSignData, MoonTransitData, MoonRiseSetData } from './moon-phase';
+export { getCurrentMoonPhase, getMoonSign, getMoonTransitTimes, getMoonRiseSet } from './moon-phase';
+
+// Void-of-Course Moon
+export type { VoidOfCourseData } from './void-of-course';
+export { calculateVoidOfCourse } from './void-of-course';
+
+// Synastry
+export type { SynastryAspect } from './synastry';
+export { calculateSynastryAspects } from './synastry';
+
+// Synastry scoring
+export type { CategoryScore, SynastryScores } from './synastry-scoring';
+export { calculateCompatibilityScores, CATEGORY_CONFIG, ASPECT_WEIGHTS } from './synastry-scoring';
 
 // Cosmic Passport
 export type { PassportData } from './passport';

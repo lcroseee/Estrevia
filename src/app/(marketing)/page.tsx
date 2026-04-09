@@ -5,6 +5,7 @@ import { createMetadata, JsonLdScript, softwareAppSchema, howToSchema, faqSchema
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';
 import { LandingAnimations } from './LandingAnimations';
 import { WaitlistForm } from './WaitlistForm';
+import { NewFeatureCards } from './NewFeatureCards';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
@@ -298,6 +299,9 @@ export default function LandingPage() {
             </ul>
           </div>
         </section>
+
+        {/* ── New module feature cards (Synastry, Tarot, Tree of Life) ──── */}
+        <NewFeatureCards />
 
         {/* ── Social proof ──────────────────────────────────────────────────── */}
         <section

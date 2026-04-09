@@ -7,6 +7,7 @@ import { generatePassport } from '@/modules/astro-engine/passport';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { natalCharts, cosmicPassports } from '@/shared/lib/schema';
+import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import type { ApiResponse, PassportResponse } from '@/shared/types';
 
 // ---------------------------------------------------------------------------
@@ -140,6 +141,20 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<P
       { status: 500 },
     );
   }
+
+  // -------------------------------------------------------------------------
+  // 5b. Track passport creation event
+  // -------------------------------------------------------------------------
+  trackServerEvent(
+    chartRow.userId ?? 'anonymous',
+    AnalyticsEvent.PASSPORT_CREATED,
+    {
+      passport_id: passportId,
+      sun_sign: passportData.sunSign,
+      moon_sign: passportData.moonSign,
+      element: passportData.element,
+    },
+  );
 
   // -------------------------------------------------------------------------
   // 6. Return passport response — no PII

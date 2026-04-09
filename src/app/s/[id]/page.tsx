@@ -1,12 +1,15 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/shared/lib/db';
 import { cosmicPassports } from '@/shared/lib/schema';
 import { createMetadata } from '@/shared/seo';
+import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { PassportCard } from '@/modules/astro-engine/components/PassportCard';
 import { ShareButton } from '@/modules/astro-engine/components/ShareButton';
+import { ReferralTracker } from '@/modules/astro-engine/components/ReferralTracker';
 import type { PassportResponse } from '@/shared/types/api';
 
 interface Props {
@@ -91,11 +94,23 @@ export default async function SharePage({ params }: Props) {
     notFound();
   }
 
+  // Track passport view server-side
+  const headersList = await headers();
+  const referer = headersList.get('referer') ?? undefined;
+
+  trackServerEvent('anonymous', AnalyticsEvent.PASSPORT_VIEWED, {
+    passport_id: id,
+    referer,
+  });
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative"
       style={{ background: '#0A0A0F' }}
     >
+      {/* Referral tracking — sets cookie for attribution */}
+      <ReferralTracker passportId={id} />
+
       {/* Radial glow — matches PassportCard ruling planet color */}
       <div
         className="fixed inset-0 pointer-events-none"
@@ -148,7 +163,7 @@ export default async function SharePage({ params }: Props) {
 
         {/* Passport card — the shareable visual artifact */}
         <div className="w-full">
-          <PassportCard passport={passport} />
+          <PassportCard passport={passport} passportId={id} />
         </div>
 
         {/* Rarity callout */}

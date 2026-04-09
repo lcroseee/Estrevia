@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import type { PassportResponse } from '@/shared/types/api';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 interface ShareButtonProps {
   passportId: string;
@@ -9,6 +10,7 @@ interface ShareButtonProps {
 }
 
 type ShareState = 'idle' | 'copied' | 'downloading';
+type DownloadFormat = 'stories' | 'square';
 
 // Build share text
 function buildShareText(passport: PassportResponse): string {
@@ -31,6 +33,7 @@ function buildShareUrl(passportId: string): string {
  */
 export function ShareButton({ passportId, passport }: ShareButtonProps) {
   const [shareState, setShareState] = useState<ShareState>('idle');
+  const [downloadFormat, setDownloadFormat] = useState<DownloadFormat>('stories');
 
   const shareUrl = buildShareUrl(passportId);
   const shareText = buildShareText(passport);
@@ -44,6 +47,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
         text: shareText,
         url: shareUrl,
       });
+      trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'native', passport_id: passportId });
     } catch {
       // User dismissed share sheet — not an error
     }
@@ -54,6 +58,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setShareState('copied');
+      trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'copy_link', passport_id: passportId });
       setTimeout(() => setShareState('idle'), 2000);
     } catch {
       // Fallback for older browsers
@@ -64,32 +69,34 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
       document.execCommand('copy');
       document.body.removeChild(el);
       setShareState('copied');
+      trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'copy_link', passport_id: passportId });
       setTimeout(() => setShareState('idle'), 2000);
     }
   }, [shareUrl]);
 
-  // Download PNG — links to OG image endpoint
+  // Download PNG — links to OG image endpoint with selected format
   const handleDownloadPng = useCallback(async () => {
     setShareState('downloading');
     try {
-      const ogUrl = `/api/og/passport/${passportId}`;
+      const ogUrl = `/api/og/passport/${passportId}?format=${downloadFormat}`;
       const response = await fetch(ogUrl);
       if (!response.ok) throw new Error('Failed to fetch image');
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objectUrl;
-      a.download = `cosmic-passport-${passportId}.png`;
+      a.download = `cosmic-passport-${passportId}-${downloadFormat}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(objectUrl);
+      trackEvent(AnalyticsEvent.PASSPORT_DOWNLOADED, { passport_id: passportId, format: downloadFormat });
     } catch {
       // Silent fail — user sees no broken state
     } finally {
       setShareState('idle');
     }
-  }, [passportId]);
+  }, [passportId, downloadFormat]);
 
   // Twitter/X share intent
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
@@ -176,6 +183,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
             textDecoration: 'none',
           }}
           aria-label="Share on Twitter / X"
+          onClick={() => trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'twitter', passport_id: passportId })}
         >
           <XIcon size={14} />
           X / Twitter
@@ -194,28 +202,64 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
             textDecoration: 'none',
           }}
           aria-label="Share on Telegram"
+          onClick={() => trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'telegram', passport_id: passportId })}
         >
           <TelegramIcon size={14} />
           Telegram
         </a>
 
-        {/* Download PNG */}
-        <button
-          type="button"
-          onClick={handleDownloadPng}
-          disabled={shareState === 'downloading'}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 disabled:opacity-50"
+        {/* WhatsApp */}
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150"
           style={{
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.08)',
             color: 'rgba(255,255,255,0.6)',
+            textDecoration: 'none',
           }}
-          aria-label={shareState === 'downloading' ? 'Downloading image...' : 'Download as PNG for Instagram Stories'}
-          aria-busy={shareState === 'downloading'}
+          aria-label="Share on WhatsApp"
+          onClick={() => trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'whatsapp', passport_id: passportId })}
         >
-          {shareState === 'downloading' ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}
-          PNG
-        </button>
+          <WhatsAppIcon size={14} />
+          WhatsApp
+        </a>
+
+        {/* Download format selector + button */}
+        <div className="flex-1 flex items-center gap-0">
+          <select
+            value={downloadFormat}
+            onChange={(e) => setDownloadFormat(e.target.value as DownloadFormat)}
+            className="h-full px-1.5 py-2.5 rounded-l-xl text-xs outline-none"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.6)',
+            }}
+            aria-label="Download format"
+          >
+            <option value="stories">9:16</option>
+            <option value="square">1:1</option>
+          </select>
+          <button
+            type="button"
+            onClick={handleDownloadPng}
+            disabled={shareState === 'downloading'}
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-r-xl text-xs font-medium transition-all duration-150 disabled:opacity-50"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderLeft: 'none',
+              color: 'rgba(255,255,255,0.6)',
+            }}
+            aria-label={shareState === 'downloading' ? 'Downloading...' : `Download as ${downloadFormat} PNG`}
+          >
+            {shareState === 'downloading' ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}
+            PNG
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -280,6 +324,14 @@ function SpinnerIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true" className="animate-spin">
       <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
   );
 }

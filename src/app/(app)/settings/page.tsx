@@ -9,9 +9,11 @@
 import type { Metadata } from 'next';
 import { createMetadata } from '@/shared/seo';
 import { getCurrentUser } from '@/modules/auth/lib/helpers';
-import { isPremium } from '@/modules/auth/lib/premium';
+import { getSubscriptionDetails } from '@/modules/auth/lib/premium';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { SettingsPortalButton } from './SettingsPortalButton';
+import { SettingsClientSections } from './SettingsClientSections';
 
 export function generateMetadata(): Metadata {
   return createMetadata({
@@ -30,7 +32,32 @@ export default async function SettingsPage() {
     redirect('/sign-in?redirect_url=/settings');
   }
 
-  const premium = await isPremium(user.userId);
+  const sub = await getSubscriptionDetails(user.userId);
+  const t = await getTranslations('settings');
+
+  // Determine plan display name
+  let planLabel: string;
+  if (!sub.isPremium) {
+    planLabel = t('planFree');
+  } else if (sub.plan === 'pro_annual') {
+    planLabel = t('planProAnnual');
+  } else {
+    planLabel = t('planProMonthly');
+  }
+
+  // Trial badge
+  const isTrialing = sub.status === 'trialing' && sub.trialEnd !== null;
+  const trialLabel = isTrialing
+    ? t('trialBadge', {
+        date: sub.trialEnd!.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+      })
+    : null;
+
+  // Past due warning
+  const isPastDue = sub.status === 'past_due';
 
   return (
     <div className="min-h-screen bg-[#0A0A0F]">
@@ -41,7 +68,7 @@ export default async function SettingsPage() {
             className="text-3xl font-light text-white mb-2"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
           >
-            Settings
+            {t('title')}
           </h1>
           <p className="text-sm text-white/40">{user.email}</p>
         </div>
@@ -52,13 +79,13 @@ export default async function SettingsPage() {
             id="subscription-heading"
             className="text-xs tracking-[0.2em] uppercase text-white/35 mb-4"
           >
-            Subscription
+            {t('subscription')}
           </h2>
           <div
             className="rounded-2xl border p-6"
             style={{
-              borderColor: premium ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.06)',
-              background: premium ? 'rgba(255,215,0,0.03)' : 'rgba(255,255,255,0.02)',
+              borderColor: sub.isPremium ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.06)',
+              background: sub.isPremium ? 'rgba(255,215,0,0.03)' : 'rgba(255,255,255,0.02)',
             }}
           >
             <div className="flex items-start justify-between gap-4 mb-4">
@@ -66,11 +93,23 @@ export default async function SettingsPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     className="text-base font-medium"
-                    style={{ color: premium ? '#FFD700' : 'rgba(255,255,255,0.8)' }}
+                    style={{ color: sub.isPremium ? '#FFD700' : 'rgba(255,255,255,0.8)' }}
                   >
-                    {premium ? 'Premium' : 'Free'}
+                    {planLabel}
                   </span>
-                  {premium && (
+                  {isTrialing && trialLabel && (
+                    <span
+                      className="text-[10px] px-2 py-0.5 rounded-full border tracking-wide"
+                      style={{
+                        borderColor: 'rgba(255,215,0,0.25)',
+                        color: 'rgba(255,215,0,0.7)',
+                        background: 'rgba(255,215,0,0.08)',
+                      }}
+                    >
+                      {trialLabel}
+                    </span>
+                  )}
+                  {sub.isPremium && !isTrialing && (
                     <span
                       className="text-[10px] px-2 py-0.5 rounded-full border tracking-wide uppercase"
                       style={{
@@ -83,26 +122,41 @@ export default async function SettingsPage() {
                     </span>
                   )}
                 </div>
+
+                {isPastDue && (
+                  <p
+                    className="text-xs font-medium mb-2 flex items-center gap-1.5"
+                    style={{ color: '#E74C3C' }}
+                    role="alert"
+                  >
+                    <span aria-hidden="true">!</span>
+                    {t('pastDueWarning')}
+                  </p>
+                )}
+
                 <p className="text-sm text-white/40">
-                  {premium
+                  {sub.isPremium
                     ? 'Unlimited saved charts, detailed aspects, priority support.'
                     : 'Up to 3 saved charts. Upgrade for unlimited access.'}
                 </p>
               </div>
             </div>
 
-            {premium ? (
-              <SettingsPortalButton label="Manage subscription" />
+            {sub.isPremium ? (
+              <SettingsPortalButton label={t('manageBilling')} />
             ) : (
               <a
                 href="/pricing"
                 className="inline-flex items-center px-5 py-2.5 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] transition-colors"
               >
-                Upgrade to Premium
+                {t('upgradeToPro')}
               </a>
             )}
           </div>
         </section>
+
+        {/* Language + Notifications — client components */}
+        <SettingsClientSections />
 
         {/* Account section */}
         <section aria-labelledby="account-heading" className="mb-8">
@@ -119,7 +173,7 @@ export default async function SettingsPage() {
             {/* Data export */}
             <div className="p-5 flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-white/80">Export your data</p>
+                <p className="text-sm font-medium text-white/80">{t('exportData')}</p>
                 <p className="text-xs text-white/35 mt-0.5">
                   Download a JSON copy of all your charts and account data (GDPR Article 20).
                 </p>
@@ -136,16 +190,16 @@ export default async function SettingsPage() {
             {/* Delete account */}
             <div className="p-5 flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-white/80">Delete account</p>
+                <p className="text-sm font-medium text-white/80">{t('deleteAccount')}</p>
                 <p className="text-xs text-white/35 mt-0.5">
-                  Permanently delete all your data (GDPR Article 17). This cannot be undone.
+                  {t('deleteWarning')}
                 </p>
               </div>
               <a
                 href="/settings/delete-account"
                 className="flex-shrink-0 text-sm px-4 py-2 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 hover:border-red-500/40 transition-colors"
               >
-                Delete
+                {t('deleteConfirm')}
               </a>
             </div>
           </div>

@@ -36,6 +36,16 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(30, '1m'),
     prefix: 'rl:moon',
   }),
+  'moon/calendar': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1m'),
+    prefix: 'rl:moon/calendar',
+  }),
+  'moon/voc': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1m'),
+    prefix: 'rl:moon/voc',
+  }),
   hours: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(30, '1m'),
@@ -60,6 +70,31 @@ const limiters: Record<string, Ratelimit> = {
     redis,
     limiter: Ratelimit.slidingWindow(10, '1m'),
     prefix: 'rl:stripe/portal',
+  }),
+  'avatar/generate': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, '1m'),
+    prefix: 'rl:avatar/generate',
+  }),
+  'synastry/calculate': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1m'),
+    prefix: 'rl:synastry/calculate',
+  }),
+  'synastry/view': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1m'),
+    prefix: 'rl:synastry/view',
+  }),
+  'tarot/daily': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1m'),
+    prefix: 'rl:tarot/daily',
+  }),
+  'tarot/interpret': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1m'),
+    prefix: 'rl:tarot/interpret',
   }),
 };
 

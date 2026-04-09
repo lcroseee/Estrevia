@@ -1,29 +1,8 @@
 import Link from 'next/link';
-import { Compass, Moon, Clock } from 'lucide-react';
 import { PlanetaryHourBar } from '@/modules/astro-engine/components/PlanetaryHourBar';
 import { UserMenu } from '@/modules/auth/components/UserMenu';
-
-// Bottom navigation items
-const NAV_ITEMS = [
-  {
-    href: '/chart',
-    label: 'Chart',
-    icon: Compass,
-    ariaLabel: 'Natal chart',
-  },
-  {
-    href: '/moon',
-    label: 'Moon',
-    icon: Moon,
-    ariaLabel: 'Moon phase',
-  },
-  {
-    href: '/hours',
-    label: 'Hours',
-    icon: Clock,
-    ariaLabel: 'Planetary hours',
-  },
-] as const;
+import { MobileNav } from './MobileNav';
+import { DesktopNav } from './DesktopNav';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -42,8 +21,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           Estrevia
         </Link>
 
-        {/* Center: Planetary hour bar — the daily hook */}
-        <PlanetaryHourBar />
+        {/* Desktop navigation — visible md+ */}
+        <DesktopNav />
+
+        {/* Center: Planetary hour bar — the daily hook (visible on mobile, hidden on desktop where nav takes space) */}
+        <div className="md:hidden">
+          <PlanetaryHourBar />
+        </div>
 
         {/* Right: user avatar (signed-in) or sign-in button (guest) */}
         <UserMenu />
@@ -55,45 +39,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* ── Bottom mobile navigation ─────────────────────────────────────
-          Visible on mobile/tablet only. Desktop uses a sidebar or top nav
-          (deferred to Phase 2 — MVP is mobile-first).
+          Visible on mobile/tablet only. Desktop uses the header nav above.
       ── */}
-      <nav
-        className="fixed bottom-0 inset-x-0 z-40 flex md:hidden border-t border-white/6"
-        style={{ background: 'rgba(10,10,15,0.95)', backdropFilter: 'blur(16px)' }}
-        aria-label="Primary navigation"
-      >
-        {NAV_ITEMS.map(({ href, label, icon: Icon, ariaLabel }) => (
-          <NavItem
-            key={href}
-            href={href}
-            label={label}
-            icon={<Icon size={20} strokeWidth={1.5} aria-hidden="true" />}
-            ariaLabel={ariaLabel}
-          />
-        ))}
-      </nav>
+      <MobileNav />
     </div>
-  );
-}
-
-// ── NavItem — active state via URL matching ──────────────────────────────────
-// This is a Server Component — active state is applied via CSS :has() or
-// a client wrapper. Using a client wrapper here for accurate pathname matching.
-import { NavItemClient } from './NavItemClient';
-
-function NavItem({
-  href,
-  label,
-  icon,
-  ariaLabel,
-}: {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-  ariaLabel: string;
-}) {
-  return (
-    <NavItemClient href={href} label={label} icon={icon} ariaLabel={ariaLabel} />
   );
 }

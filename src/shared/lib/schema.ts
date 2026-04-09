@@ -1,4 +1,4 @@
-import { pgTable, text, serial, real, jsonb, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, real, jsonb, timestamp, boolean, date, unique } from 'drizzle-orm/pg-core';
 import type { ChartResult } from '@/shared/types/astrology';
 
 // ---------------------------------------------------------------------------
@@ -14,6 +14,11 @@ export const users = pgTable('users', {
     .notNull()
     .default('free'),
   subscriptionExpiresAt: timestamp('subscription_expires_at', { withTimezone: true }),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  plan: text('plan', { enum: ['free', 'pro_monthly', 'pro_annual'] }).notNull().default('free'),
+  subscriptionStatus: text('subscription_status', { enum: ['trialing', 'active', 'canceled', 'past_due'] }).notNull().default('active'),
+  trialEnd: timestamp('trial_end', { withTimezone: true }),
+  currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
@@ -60,3 +65,91 @@ export const waitlistEntries = pgTable('waitlist_entries', {
   source: text('source').notNull().default('organic'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------------------
+// synastry_results
+// ---------------------------------------------------------------------------
+export const synastryResults = pgTable('synastry_results', {
+  id: text('id').primaryKey(), // nanoid
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  chart1Id: text('chart1_id')
+    .notNull()
+    .references(() => natalCharts.id),
+  chart2Id: text('chart2_id')
+    .notNull()
+    .references(() => natalCharts.id),
+  overallScore: real('overall_score').notNull(),
+  categoryScores: jsonb('category_scores').notNull(),
+  aspects: jsonb('aspects').notNull(),
+  aiAnalysis: text('ai_analysis'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// tarot_readings
+// ---------------------------------------------------------------------------
+export const tarotReadings = pgTable('tarot_readings', {
+  id: text('id').primaryKey(), // nanoid
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  spreadType: text('spread_type', { enum: ['daily', 'three_card', 'celtic_cross'] }).notNull(),
+  cards: jsonb('cards').notNull(), // array of {position, cardId, reversed}
+  aiInterpretation: text('ai_interpretation'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// daily_cards
+// ---------------------------------------------------------------------------
+export const dailyCards = pgTable('daily_cards', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  date: date('date', { mode: 'string' }).notNull(),
+  cardId: text('card_id').notNull(),
+  reversed: boolean('reversed').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('daily_cards_user_date_unique').on(table.userId, table.date),
+]);
+
+// ---------------------------------------------------------------------------
+// push_subscriptions
+// ---------------------------------------------------------------------------
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// notification_preferences
+// ---------------------------------------------------------------------------
+export const notificationPreferences = pgTable('notification_preferences', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  dailyMoonPhase: boolean('daily_moon_phase').notNull().default(false),
+  fullNewMoon: boolean('full_new_moon').notNull().default(false),
+  planetaryHourChange: boolean('planetary_hour_change').notNull().default(false),
+  weeklyDigest: boolean('weekly_digest').notNull().default(false),
+  preferredTime: text('preferred_time').notNull().default('08:00'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Type aliases
+// ---------------------------------------------------------------------------
+export type User = typeof users.$inferSelect;
+export type NatalChart = typeof natalCharts.$inferSelect;
+export type CosmicPassport = typeof cosmicPassports.$inferSelect;
+export type SynastryResult = typeof synastryResults.$inferSelect;
+export type TarotReading = typeof tarotReadings.$inferSelect;
+export type DailyCard = typeof dailyCards.$inferSelect;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;

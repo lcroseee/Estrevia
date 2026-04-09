@@ -1,13 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 /**
  * Client component — handles the checkout flow.
  * POSTs to /api/v1/stripe/checkout and redirects to the Stripe Checkout URL.
  * Prevents double-clicks with loading state.
  */
-export function PricingUpgradeButton() {
+export function PricingUpgradeButton({
+  plan = 'pro_annual',
+}: {
+  plan?: 'pro_monthly' | 'pro_annual';
+}) {
+  const t = useTranslations('pricing');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +23,11 @@ export function PricingUpgradeButton() {
     setError(null);
 
     try {
-      const res = await fetch('/api/v1/stripe/checkout', { method: 'POST' });
+      const res = await fetch('/api/v1/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      });
 
       if (res.status === 401) {
         // Not signed in — redirect to sign-in with return URL
@@ -46,10 +56,14 @@ export function PricingUpgradeButton() {
       <button
         onClick={handleUpgrade}
         disabled={loading}
-        className="w-full py-3 px-6 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-3 px-6 rounded-xl text-sm font-semibold tracking-wide disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+        style={{
+          background: 'linear-gradient(135deg, #FFD700, #FFE033)',
+          color: '#0A0A0F',
+        }}
         aria-busy={loading}
       >
-        {loading ? 'Redirecting to checkout…' : 'Upgrade to Premium'}
+        {loading ? 'Redirecting to checkout...' : t('startTrial')}
       </button>
       {error && (
         <p className="text-xs text-red-400 text-center" role="alert">

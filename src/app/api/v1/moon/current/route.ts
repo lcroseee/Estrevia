@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getCurrentMoonPhase } from '@/modules/astro-engine/moon-phase';
+import { getCurrentMoonPhase, getMoonSign, getMoonTransitTimes, getMoonRiseSet } from '@/modules/astro-engine/moon-phase';
+import { dateToJulianDay } from '@/modules/astro-engine/julian-day';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import type { ApiResponse, MoonPhaseResponse } from '@/shared/types';
 
@@ -23,10 +24,12 @@ export async function GET(request: Request): Promise<NextResponse<ApiResponse<Mo
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Parse optional `date` query param (ISO date string, e.g. "2024-01-25")
+  // 2. Parse query params
   // ---------------------------------------------------------------------------
   const { searchParams } = new URL(request.url);
   const dateParam = searchParams.get('date');
+  const latParam = searchParams.get('lat');
+  const lonParam = searchParams.get('lon');
 
   let targetDate: Date;
 
@@ -50,13 +53,72 @@ export async function GET(request: Request): Promise<NextResponse<ApiResponse<Mo
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // 3. Calculate moon phase
-  // ---------------------------------------------------------------------------
-  let phaseData: ReturnType<typeof getCurrentMoonPhase>;
+  // Parse optional lat/lon for moonrise/moonset
+  let latitude: number | null = null;
+  let longitude: number | null = null;
 
+  if (latParam !== null && lonParam !== null) {
+    const lat = parseFloat(latParam);
+    const lon = parseFloat(lonParam);
+    if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      return NextResponse.json(
+        { success: false, data: null, error: 'INVALID_COORDINATES' },
+        { status: 400 },
+      );
+    }
+    latitude = lat;
+    longitude = lon;
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Calculate moon phase + sign + rise/set
+  // ---------------------------------------------------------------------------
   try {
-    phaseData = getCurrentMoonPhase(targetDate);
+    const phaseData = getCurrentMoonPhase(targetDate);
+    const jd = dateToJulianDay(targetDate);
+
+    // Moon sign calculation
+    const moonSignData = getMoonSign(jd);
+    const transitData = getMoonTransitTimes(jd);
+
+    // Moon rise/set (only when coordinates provided)
+    let moonrise: string | null = null;
+    let moonset: string | null = null;
+
+    if (latitude !== null && longitude !== null) {
+      const riseSet = getMoonRiseSet(jd, latitude, longitude);
+      moonrise = riseSet.moonrise?.toISOString() ?? null;
+      moonset = riseSet.moonset?.toISOString() ?? null;
+    }
+
+    // ---------------------------------------------------------------------------
+    // 4. Return response
+    // ---------------------------------------------------------------------------
+    const response: MoonPhaseResponse = {
+      phase: phaseData.phase,
+      illumination: phaseData.illumination,
+      angle: phaseData.angle,
+      emoji: phaseData.emoji,
+      nextNewMoon: phaseData.nextNewMoon.toISOString(),
+      nextFullMoon: phaseData.nextFullMoon.toISOString(),
+      moonSign: moonSignData.siderealSign,
+      moonDegree: Math.round(moonSignData.siderealDegree * 100) / 100,
+      signEntryTime: transitData.signEntryTime.toISOString(),
+      signExitTime: transitData.signExitTime.toISOString(),
+      moonrise,
+      moonset,
+    };
+
+    return NextResponse.json(
+      { success: true, data: response, error: null },
+      {
+        status: 200,
+        headers: {
+          // Cache for 10 minutes on CDN — moon phase changes slowly
+          'Cache-Control': 's-maxage=600, stale-while-revalidate=3600',
+        },
+      },
+    );
   } catch (err) {
     try {
       const { captureException } = await import('@sentry/nextjs');
@@ -70,27 +132,4 @@ export async function GET(request: Request): Promise<NextResponse<ApiResponse<Mo
       { status: 500 },
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // 4. Return response
-  // ---------------------------------------------------------------------------
-  const response: MoonPhaseResponse = {
-    phase: phaseData.phase,
-    illumination: phaseData.illumination,
-    angle: phaseData.angle,
-    emoji: phaseData.emoji,
-    nextNewMoon: phaseData.nextNewMoon.toISOString(),
-    nextFullMoon: phaseData.nextFullMoon.toISOString(),
-  };
-
-  return NextResponse.json(
-    { success: true, data: response, error: null },
-    {
-      status: 200,
-      headers: {
-        // Cache for 10 minutes on CDN — moon phase changes slowly
-        'Cache-Control': 's-maxage=600, stale-while-revalidate=3600',
-      },
-    },
-  );
 }

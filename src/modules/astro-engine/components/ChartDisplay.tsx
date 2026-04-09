@@ -66,7 +66,7 @@ function PassportSection({ chartId }: PassportSectionProps) {
             1 of {passport.rarityPercent}%
           </span>
         </div>
-        <PassportCard passport={passport} />
+        <PassportCard passport={passport} passportId={passport.id} />
         <ShareButton passportId={passport.id} passport={passport} />
       </section>
     );

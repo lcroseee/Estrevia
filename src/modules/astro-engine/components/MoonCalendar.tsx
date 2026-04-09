@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { MoonPhaseResponse, ApiResponse } from '@/shared/types';
+import { MoonPhaseSVG } from './MoonPhaseSVG';
 
 // ---------------------------------------------------------------------------
 // Moon phase computation client-side
@@ -97,12 +98,13 @@ function CurrentPhaseCard({ data }: { data: MoonPhaseResponse }) {
         border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
-      {/* Large moon emoji */}
-      <div
-        className="text-7xl leading-none select-none flex-shrink-0"
-        aria-hidden="true"
-      >
-        {data.emoji}
+      {/* Large SVG moon visualization */}
+      <div className="flex-shrink-0">
+        <MoonPhaseSVG
+          illumination={data.illumination / 100}
+          phaseAngle={data.angle}
+          size={72}
+        />
       </div>
 
       <div className="flex-1 text-center sm:text-left">
@@ -175,9 +177,10 @@ interface CalendarGridProps {
   month: number; // 1-indexed
   days: DayData[];
   today: { year: number; month: number; day: number };
+  onDaySelect: (day: DayData) => void;
 }
 
-function CalendarGrid({ year, month, days, today }: CalendarGridProps) {
+function CalendarGrid({ year, month, days, today, onDaySelect }: CalendarGridProps) {
   const firstWeekday = firstWeekdayOfMonth(year, month);
   const totalDays = daysInMonth(year, month);
 
@@ -225,11 +228,13 @@ function CalendarGrid({ year, month, days, today }: CalendarGridProps) {
             cell.phaseName === 'New Moon' || cell.phaseName === 'Full Moon';
 
           return (
-            <div
+            <button
               key={cell.day}
+              type="button"
               role="gridcell"
+              onClick={() => onDaySelect(cell)}
               aria-label={`${MONTH_NAMES[month - 1]} ${cell.day}: ${cell.phaseName}, ${Math.round(cell.illumination)}% illuminated`}
-              className="flex flex-col items-center justify-center rounded-xl py-2 px-1 transition-colors duration-200 hover:bg-white/5"
+              className="flex flex-col items-center justify-center rounded-xl py-2 px-1 transition-colors duration-200 hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 cursor-pointer"
               style={{
                 background: today_
                   ? 'rgba(240, 208, 128, 0.12)'
@@ -255,13 +260,12 @@ function CalendarGrid({ year, month, days, today }: CalendarGridProps) {
                 {cell.day}
               </span>
 
-              {/* Moon emoji */}
-              <span
-                className="text-xl leading-none select-none"
-                aria-hidden="true"
-              >
-                {cell.emoji}
-              </span>
+              {/* Moon SVG phase visualization */}
+              <MoonPhaseSVG
+                illumination={cell.illumination / 100}
+                phaseAngle={cell.angle}
+                size={24}
+              />
 
               {/* Illumination percentage */}
               <span
@@ -275,7 +279,7 @@ function CalendarGrid({ year, month, days, today }: CalendarGridProps) {
               >
                 {Math.round(cell.illumination)}%
               </span>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -284,6 +288,188 @@ function CalendarGrid({ year, month, days, today }: CalendarGridProps) {
       <div className="sr-only">
         Showing moon phases for {totalDays} days in {MONTH_NAMES[month - 1]} {year}.
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Day detail panel (slide-up sheet)
+// ---------------------------------------------------------------------------
+
+interface DayDetailPanelProps {
+  day: DayData | null;
+  year: number;
+  month: number;
+  onClose: () => void;
+}
+
+function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProps) {
+  if (!day) return null;
+
+  const dateStr = new Date(year, month - 1, day.day).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Slide-up panel */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Moon details for ${dateStr}`}
+        className="fixed bottom-0 inset-x-0 z-50 bg-[#0F0F17] border-t border-white/8 rounded-t-2xl shadow-2xl shadow-black/60 max-h-[60vh] overflow-y-auto"
+      >
+        {/* Handle bar */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-white/15" aria-hidden="true" />
+        </div>
+
+        <div className="px-6 pt-2 pb-8">
+          {/* Close button */}
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h3
+                className="text-lg font-medium text-white/90"
+                style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
+              >
+                {day.phaseName}
+              </h3>
+              <p
+                className="text-xs text-white/40 mt-0.5"
+                style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
+              >
+                {dateStr}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              aria-label="Close"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path d="M5 5l8 8M13 5l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Moon visualization */}
+          <div className="flex items-center gap-6 mb-6">
+            <MoonPhaseSVG
+              illumination={day.illumination / 100}
+              phaseAngle={day.angle}
+              size={80}
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className="flex-1 h-1.5 rounded-full overflow-hidden"
+                  style={{ background: 'rgba(255,255,255,0.1)' }}
+                  role="progressbar"
+                  aria-valuenow={Math.round(day.illumination)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Illumination ${Math.round(day.illumination)}%`}
+                >
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${day.illumination}%`,
+                      background: 'linear-gradient(90deg, #C0A060, #F0D080)',
+                    }}
+                  />
+                </div>
+                <span
+                  className="text-sm tabular-nums flex-shrink-0"
+                  style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: '#F0D080' }}
+                >
+                  {Math.round(day.illumination)}%
+                </span>
+              </div>
+              <p className="text-xs text-white/35" style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}>
+                Illumination
+              </p>
+            </div>
+          </div>
+
+          {/* Details grid */}
+          <div
+            className="grid grid-cols-2 gap-3"
+          >
+            <DetailItem label="Phase" value={day.phaseName} />
+            <DetailItem
+              label="Phase angle"
+              value={`${Math.round(day.angle)}\u00B0`}
+              mono
+            />
+            <DetailItem
+              label="Illumination"
+              value={`${Math.round(day.illumination)}%`}
+              mono
+            />
+            <DetailItem
+              label="Moon sign"
+              value="Available soon"
+              muted
+            />
+          </div>
+
+          {/* VOC placeholder */}
+          <div
+            className="mt-4 px-4 py-3 rounded-xl border border-white/6 text-xs text-white/25"
+            style={{
+              background: 'rgba(255,255,255,0.02)',
+              fontFamily: 'var(--font-geist-sans, sans-serif)',
+            }}
+          >
+            Void of Course data will be available when the API is ready.
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function DetailItem({
+  label,
+  value,
+  mono = false,
+  muted = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  muted?: boolean;
+}) {
+  return (
+    <div
+      className="px-3 py-2.5 rounded-lg"
+      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      <p
+        className="text-[10px] uppercase tracking-widest mb-1"
+        style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
+      >
+        {label}
+      </p>
+      <p
+        className="text-sm"
+        style={{
+          fontFamily: mono ? 'var(--font-geist-mono, monospace)' : 'var(--font-geist-sans, sans-serif)',
+          color: muted ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)',
+        }}
+      >
+        {value}
+      </p>
     </div>
   );
 }
@@ -304,6 +490,7 @@ export function MoonCalendar() {
   const [viewMonth, setViewMonth] = useState(todayRef.month);
   const [currentPhase, setCurrentPhase] = useState<MoonPhaseResponse | null>(null);
   const [referenceAngle, setReferenceAngle] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<DayData | null>(null);
   // Day offset between the API reference date (today) and the 1st of the viewed month
   const [referenceOffset, setReferenceOffset] = useState<number>(0);
   const [loading, setLoading] = useState(true);
@@ -477,24 +664,33 @@ export function MoonCalendar() {
           month={viewMonth}
           days={days}
           today={todayRef}
+          onDaySelect={setSelectedDay}
         />
       )}
+
+      {/* Day detail panel */}
+      <DayDetailPanel
+        day={selectedDay}
+        year={viewYear}
+        month={viewMonth}
+        onClose={() => setSelectedDay(null)}
+      />
 
       {/* Phase legend */}
       {!loading && !error && (
         <div
-          className="mt-6 flex flex-wrap gap-x-4 gap-y-2 justify-center text-xs"
+          className="mt-6 flex flex-wrap gap-x-5 gap-y-2 justify-center text-xs"
           style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
           aria-label="Moon phase legend"
         >
           {[
-            { emoji: '🌑', label: 'New' },
-            { emoji: '🌓', label: 'First Quarter' },
-            { emoji: '🌕', label: 'Full' },
-            { emoji: '🌗', label: 'Last Quarter' },
-          ].map(({ emoji, label }) => (
-            <span key={label} className="flex items-center gap-1">
-              <span aria-hidden="true">{emoji}</span>
+            { angle: 0, illum: 0, label: 'New' },
+            { angle: 90, illum: 0.5, label: 'First Quarter' },
+            { angle: 180, illum: 1, label: 'Full' },
+            { angle: 270, illum: 0.5, label: 'Last Quarter' },
+          ].map(({ angle, illum, label }) => (
+            <span key={label} className="flex items-center gap-1.5">
+              <MoonPhaseSVG illumination={illum} phaseAngle={angle} size={16} />
               <span>{label}</span>
             </span>
           ))}
