@@ -182,19 +182,10 @@ function getEssayRelatedPages(planet: PlanetSlug, sign: SignSlug): RelatedPage[]
     anchorText: `sidereal ${signDisplay}`,
   });
 
-  // 4. Ruling planet page (skip if it's the same as the essay planet)
-  if (rulingPlanet !== planet) {
-    related.push({
-      title: `${PLANET_DISPLAY[rulingPlanet]} in astrology`,
-      href: `/planets/${rulingPlanet}`,
-      anchorText: `${PLANET_DISPLAY[rulingPlanet]}, the ruler of ${signDisplay},`,
-    });
-  }
-
-  // 5. Sidereal vs tropical pillar — always included
+  // 4. Sidereal vs tropical pillar — always included
   related.push({
     title: 'Sidereal vs tropical astrology — key differences',
-    href: '/sidereal-vs-tropical',
+    href: '/why-sidereal',
     anchorText: 'sidereal vs tropical astrology',
   });
 

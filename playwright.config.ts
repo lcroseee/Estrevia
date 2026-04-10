@@ -59,16 +59,14 @@ export default defineConfig({
     },
   ],
 
-  /* Start dev server before running tests (local) */
+  /* Start dev server before running tests (local), production server on CI */
   webServer: {
-    command: 'npm run dev',
+    command: process.env.CI ? 'npm run start' : 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     stderr: 'pipe',
     stdout: 'pipe',
-    // Load .env.ci for stubs when real env vars aren't set.
-    // Run: cp .env.ci .env.local  (or set real env vars)
-    dotenv: '.env.ci',
+    // Load env stubs: cp .env.ci .env.local  (or set real env vars in shell)
   },
 });

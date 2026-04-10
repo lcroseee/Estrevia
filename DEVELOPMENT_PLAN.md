@@ -1464,3 +1464,102 @@ Site-wide checks:
 | Resend | $0 | >100 emails/day |
 | Claude API (essays) | ~$3 one-time | Step 3.3 |
 | **Total** | **~$25/mo** | |
+
+---
+
+## Production Deploy Checklist
+
+Run these steps in order. Do not skip. Do not deploy until all pre-deploy gates pass.
+
+### Pre-Deploy Gates (must pass before `vercel deploy --prod`)
+
+- [ ] `npm run build` succeeds locally with production env vars
+- [ ] `npm run typecheck` — 0 errors
+- [ ] `npm run lint` — 0 errors
+- [ ] `npx vitest run` — all unit tests pass
+- [ ] CI pipeline green on `main` branch (lint-typecheck → unit-tests → build → e2e)
+
+### 1. Connect Vercel Project
+
+```bash
+npm i -g vercel
+vercel link
+# Select: existing project or create new → "estrevia"
+```
+
+### 2. Set Environment Variables
+
+Copy every variable from `.env.example` into the Vercel dashboard (Settings → Environment Variables).
+Set for **Production** environment. Some vars also needed for **Preview**.
+
+Critical vars (app will not boot without these):
+- `DATABASE_URL` — Neon pooled connection string
+- `DATABASE_URL_UNPOOLED` — Neon direct connection (for migrations)
+- `PII_ENCRYPTION_KEY` — 64 hex chars, generate: `openssl rand -hex 32`
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` + `CLERK_WEBHOOK_SECRET`
+- `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
+- `NEXT_PUBLIC_APP_URL=https://estrevia.app`
+- `NEXT_PUBLIC_SITE_URL=https://estrevia.app`
+- `CRON_SECRET` — generate: `openssl rand -hex 32`
+
+Or pull via CLI after linking:
+```bash
+vercel env pull .env.local
+```
+
+### 3. Run Database Migrations
+
+```bash
+# Against production Neon DB (use DATABASE_URL_UNPOOLED for migrations)
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+Verify: connect to Neon console and confirm all tables exist.
+
+### 4. Configure Domain
+
+In Vercel dashboard → Domains → Add `estrevia.app`.
+Update DNS at registrar: add Vercel's nameservers or CNAME records as shown.
+Wait for SSL certificate to provision (usually < 2 min after DNS propagates).
+
+### 5. Deploy to Production
+
+```bash
+vercel deploy --prod
+```
+
+Note the deployment URL printed at the end.
+
+### 6. Smoke Tests (run after deploy)
+
+| Test | Expected result |
+|------|-----------------|
+| `GET https://estrevia.app/api/health/sweph` | `200 OK`, body: `{"status":"ok"}` |
+| `POST https://estrevia.app/api/v1/chart/calculate` with valid birth data | `200 OK`, returns chart with planets |
+| `GET https://estrevia.app/api/og/passport/test` | `200 OK`, returns PNG image |
+| `GET https://estrevia.app/` | Landing page loads, no console errors |
+| `GET https://estrevia.app/s/[any-id]` | Share page renders (or 404 for unknown id) |
+
+### 7. Post-Deploy Verification
+
+- [ ] Open DevTools → Application → Manifest: PWA installable (shows "Add to Home Screen")
+- [ ] Open DevTools → Application → Service Worker: registered and active
+- [ ] Run Lighthouse on `https://estrevia.app` — Performance ≥ 80, Accessibility ≥ 90
+- [ ] Check Sentry dashboard — no new errors after smoke tests
+- [ ] Submit sitemap: Google Search Console → Sitemaps → `https://estrevia.app/sitemap.xml`
+- [ ] Verify Clerk webhook is configured: `https://estrevia.app/api/webhooks/clerk`
+- [ ] Verify Stripe webhook is configured: `https://estrevia.app/api/webhooks/stripe`
+- [ ] PostHog: confirm `passport_created` event fires on first chart calculation
+
+### 8. Rollback Procedure
+
+If smoke tests fail:
+```bash
+vercel rollback  # reverts to previous production deployment instantly
+```
+
+Then investigate logs:
+```bash
+vercel logs --prod
+```

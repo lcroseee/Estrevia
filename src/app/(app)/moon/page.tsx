@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { createMetadata } from '@/shared/seo/metadata';
 import { JsonLdScript, breadcrumbSchema, faqSchema } from '@/shared/seo/json-ld';
 import { SITE_URL } from '@/shared/seo/constants';
@@ -106,8 +107,40 @@ export default function MoonPage() {
         {/* Calendar — client component, fetches its own data */}
         <MoonCalendar />
 
+        {/* Related pages — internal linking for SEO */}
+        <nav aria-label="Related pages" className="mt-16">
+          <h2
+            className="text-xs font-semibold uppercase tracking-widest mb-4"
+            style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-sans)' }}
+          >
+            Explore Sidereal Astrology
+          </h2>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm list-none" role="list">
+            {[
+              { href: '/chart',         label: 'Calculate your sidereal natal chart' },
+              { href: '/hours',         label: 'Planetary hours for today' },
+              { href: '/why-sidereal',  label: 'Why sidereal astrology differs from tropical' },
+              { href: '/essays/moon-in-aries', label: 'Moon in sidereal Aries — essay' },
+            ].map(({ href, label }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg transition-all"
+                  style={{
+                    background: 'rgba(255,255,255,0.025)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    color: 'rgba(255,255,255,0.55)',
+                  }}
+                >
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         {/* FAQ — visible content, feeds JSON-LD */}
-        <section aria-label="About moon phases" className="mt-16 space-y-3">
+        <section aria-label="About moon phases" className="mt-12 space-y-3">
           <h2
             className="text-xs font-medium uppercase tracking-[0.18em] mb-5"
             style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-sans)' }}

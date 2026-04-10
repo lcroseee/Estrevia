@@ -38,12 +38,14 @@ const TAROT_CARD_IDS = [
  * Total URL count at launch:
  *   1  homepage
  *   1  /why-sidereal
+ *   1  /pricing
+ *   2  legal: /privacy, /terms
  *   6  app pages: /chart, /moon, /hours, /synastry, /tarot, /tree-of-life
  *   78 tarot card pages (/tarot/[cardId])
  *   120 essay pages (/essays/[planet]-in-[sign])
  *   12  sign pages (/signs/[sign])
  * ─────
- *   218 total
+ *   221 total
  *
  * Note: /s/synastry/[id] share pages are noIndex and excluded from sitemap.
  */

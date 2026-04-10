@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { requireAuth } from '@/modules/auth/lib/helpers';
+import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { pushSubscriptions } from '@/shared/lib/schema';
 import type { ApiResponse } from '@/shared/types';
@@ -37,7 +38,19 @@ export async function POST(
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Parse & validate body
+  // 2. Rate limiting
+  // ---------------------------------------------------------------------------
+  const limiter = getRateLimiter('push/subscribe');
+  const { success: rateLimitOk } = await limiter.limit(userId);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { success: false, data: null, error: 'RATE_LIMITED' },
+      { status: 429 },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Parse & validate body
   // ---------------------------------------------------------------------------
   let parsed: z.infer<typeof subscribeSchema>;
   try {
@@ -106,7 +119,19 @@ export async function DELETE(): Promise<
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Delete all subscriptions for user
+  // 2. Rate limiting
+  // ---------------------------------------------------------------------------
+  const limiter = getRateLimiter('push/subscribe');
+  const { success: rateLimitOk } = await limiter.limit(userId);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { success: false, data: null, error: 'RATE_LIMITED' },
+      { status: 429 },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Delete all subscriptions for user
   // ---------------------------------------------------------------------------
   try {
     const db = getDb();

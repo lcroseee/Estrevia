@@ -3,11 +3,13 @@ import Link from 'next/link';
 import {
   createMetadata,
   JsonLdScript,
+  articleSchema,
   faqSchema,
   breadcrumbSchema,
   organizationSchema,
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
+import PrecessionDiagramLoader from '@/modules/esoteric/components/PrecessionDiagramLoader';
 
 // ---------------------------------------------------------------------------
 // Metadata
@@ -108,8 +110,18 @@ export default function WhySiderealPage() {
 
   const orgLd = organizationSchema();
 
+  const articleLd = articleSchema({
+    title: 'Why Sidereal Astrology Differs from Tropical',
+    description:
+      'Sidereal astrology tracks real constellations using the Lahiri ayanamsa. Most sun signs shift one sign earlier vs tropical. Calculate your true chart.',
+    url: pageUrl,
+    datePublished: '2024-01-15T00:00:00Z',
+    dateModified: today,
+  });
+
   return (
     <>
+      <JsonLdScript schema={articleLd} />
       <JsonLdScript schema={faqLd} />
       <JsonLdScript schema={breadcrumbLd} />
       <JsonLdScript schema={orgLd} />
@@ -186,6 +198,8 @@ export default function WhySiderealPage() {
               most rigorously defined sidereal reference in use today.
             </p>
           </div>
+
+          <PrecessionDiagramLoader />
         </section>
 
         {/* ── Section 2: How they differ ─────────────────────────────── */}

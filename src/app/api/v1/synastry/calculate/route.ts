@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
+import { z, ZodError } from 'zod';
 import { calculateChart } from '@/modules/astro-engine';
 import { calculateSynastryAspects } from '@/modules/astro-engine/synastry';
 import { calculateCompatibilityScores } from '@/modules/astro-engine/synastry-scoring';
@@ -7,46 +8,27 @@ import { requireAuth } from '@/modules/auth/lib/helpers';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { natalCharts, synastryResults } from '@/shared/lib/schema';
+import { coordinatesSchema, isoDateSchema, timeSchema, timezoneSchema, houseSystemSchema } from '@/shared/validation';
 import type { ChartResult } from '@/shared/types';
 import { HouseSystem } from '@/shared/types';
 
 // Placeholder for temp charts not yet encrypted/saved
 const TEMP_BIRTH_DATA_PLACEHOLDER = 'PENDING';
 
-interface BirthDataInput {
-  name?: string;
-  date: string;
-  time: string | null;
-  latitude: number;
-  longitude: number;
-  timezone: string;
-  houseSystem: string | null;
-}
+const birthDataSchema = z.object({
+  name: z.string().max(100).optional(),
+  date: isoDateSchema,
+  time: timeSchema.nullable(),
+  latitude: coordinatesSchema.shape.latitude,
+  longitude: coordinatesSchema.shape.longitude,
+  timezone: timezoneSchema,
+  houseSystem: houseSystemSchema.nullable().optional(),
+});
 
-interface RequestBody {
-  birthData1: BirthDataInput;
-  birthData2: BirthDataInput;
-}
-
-function validateBirthData(data: unknown, label: string): BirthDataInput {
-  if (!data || typeof data !== 'object') {
-    throw new Error(`${label} is required`);
-  }
-  const d = data as Record<string, unknown>;
-  if (typeof d.date !== 'string' || !d.date) throw new Error(`${label}.date is required`);
-  if (typeof d.latitude !== 'number') throw new Error(`${label}.latitude is required`);
-  if (typeof d.longitude !== 'number') throw new Error(`${label}.longitude is required`);
-  if (typeof d.timezone !== 'string') throw new Error(`${label}.timezone is required`);
-  return {
-    name: typeof d.name === 'string' ? d.name : undefined,
-    date: d.date,
-    time: typeof d.time === 'string' ? d.time : null,
-    latitude: d.latitude,
-    longitude: d.longitude,
-    timezone: d.timezone,
-    houseSystem: typeof d.houseSystem === 'string' ? d.houseSystem : null,
-  };
-}
+const synastryRequestSchema = z.object({
+  birthData1: birthDataSchema,
+  birthData2: birthDataSchema,
+});
 
 export async function POST(request: Request) {
   // 1. Auth — synastry requires authentication to prevent abuse
@@ -70,21 +52,20 @@ export async function POST(request: Request) {
     );
   }
 
-  // 2. Parse request body
-  let body: RequestBody;
+  // 2. Parse and validate request body
+  let body: z.infer<typeof synastryRequestSchema>;
   try {
     const raw = await request.json();
-    body = {
-      birthData1: validateBirthData(raw.birthData1, 'birthData1'),
-      birthData2: validateBirthData(raw.birthData2, 'birthData2'),
-    };
+    body = synastryRequestSchema.parse(raw);
   } catch (err) {
+    if (err instanceof ZodError) {
+      return NextResponse.json(
+        { success: false, data: null, error: 'VALIDATION_ERROR' },
+        { status: 400 },
+      );
+    }
     return NextResponse.json(
-      {
-        success: false,
-        data: null,
-        error: err instanceof Error ? err.message : 'INVALID_REQUEST',
-      },
+      { success: false, data: null, error: 'INVALID_JSON' },
       { status: 400 },
     );
   }
@@ -99,7 +80,7 @@ export async function POST(request: Request) {
       latitude: body.birthData1.latitude,
       longitude: body.birthData1.longitude,
       timezone: body.birthData1.timezone,
-      houseSystem: (body.birthData1.houseSystem as HouseSystem) ?? HouseSystem.Placidus,
+      houseSystem: body.birthData1.houseSystem ?? HouseSystem.Placidus,
     });
     chart2 = calculateChart({
       date: body.birthData2.date,
@@ -107,7 +88,7 @@ export async function POST(request: Request) {
       latitude: body.birthData2.latitude,
       longitude: body.birthData2.longitude,
       timezone: body.birthData2.timezone,
-      houseSystem: (body.birthData2.houseSystem as HouseSystem) ?? HouseSystem.Placidus,
+      houseSystem: body.birthData2.houseSystem ?? HouseSystem.Placidus,
     });
   } catch (err) {
     try {
@@ -139,7 +120,7 @@ export async function POST(request: Request) {
         userId,
         status: 'temp',
         encryptedBirthData: TEMP_BIRTH_DATA_PLACEHOLDER,
-        houseSystem: body.birthData1.houseSystem ?? 'Placidus',
+        houseSystem: body.birthData1.houseSystem ?? HouseSystem.Placidus,
         ayanamsa: 'lahiri',
         chartData: chart1,
       },
@@ -148,7 +129,7 @@ export async function POST(request: Request) {
         userId,
         status: 'temp',
         encryptedBirthData: TEMP_BIRTH_DATA_PLACEHOLDER,
-        houseSystem: body.birthData2.houseSystem ?? 'Placidus',
+        houseSystem: body.birthData2.houseSystem ?? HouseSystem.Placidus,
         ayanamsa: 'lahiri',
         chartData: chart2,
       },

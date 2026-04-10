@@ -65,6 +65,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["sweph"],
+  outputFileTracingIncludes: {
+    '/api/**': ['./data/ephe/**'],
+  },
 
   async headers() {
     return [

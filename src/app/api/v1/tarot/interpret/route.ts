@@ -1,21 +1,24 @@
 import { NextResponse } from 'next/server';
+import { z, ZodError } from 'zod';
 import { requirePremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { requireAuth } from '@/modules/auth/lib/helpers';
 
-interface CardInReading {
-  position: string;
-  cardId: string;
-  cardName: string;
-  reversed: boolean;
-}
+const cardSchema = z.object({
+  position: z.string().min(1).max(100),
+  cardId: z.string().min(1).max(64),
+  cardName: z.string().min(1).max(100),
+  reversed: z.boolean(),
+});
 
-interface InterpretRequest {
-  spreadType: string;
-  cards: CardInReading[];
-  sunSign?: string;
-  moonSign?: string;
-}
+const interpretRequestSchema = z.object({
+  spreadType: z.string().min(1).max(50).default('reading'),
+  cards: z.array(cardSchema).min(1).max(15),
+  sunSign: z.string().max(30).optional(),
+  moonSign: z.string().max(30).optional(),
+});
+
+type InterpretRequest = z.infer<typeof interpretRequestSchema>;
 
 function buildPrompt(data: InterpretRequest): string {
   const cardsText = data.cards
@@ -73,22 +76,20 @@ export async function POST(request: Request) {
     );
   }
 
-  // Parse body
+  // Parse and validate body
   let body: InterpretRequest;
   try {
     const raw = await request.json();
-    if (!Array.isArray(raw.cards) || raw.cards.length === 0) {
-      throw new Error('cards array required');
+    body = interpretRequestSchema.parse(raw);
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return NextResponse.json(
+        { success: false, data: null, error: 'VALIDATION_ERROR' },
+        { status: 400 },
+      );
     }
-    body = {
-      spreadType: String(raw.spreadType ?? 'reading'),
-      cards: raw.cards,
-      sunSign: raw.sunSign,
-      moonSign: raw.moonSign,
-    };
-  } catch {
     return NextResponse.json(
-      { success: false, data: null, error: 'INVALID_REQUEST' },
+      { success: false, data: null, error: 'INVALID_JSON' },
       { status: 400 },
     );
   }

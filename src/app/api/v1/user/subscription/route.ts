@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '@/modules/auth/lib/helpers';
+import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { users } from '@/shared/lib/schema';
 
@@ -19,6 +20,16 @@ export async function GET() {
   } catch (err) {
     if (err instanceof Response) return err as never;
     throw err;
+  }
+
+  // Rate limiting
+  const limiter = getRateLimiter('user/subscription');
+  const { success: rateLimitOk } = await limiter.limit(userId);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { plan: 'free', status: 'active', trialEnd: null, currentPeriodEnd: null, isPro: false, isTrialing: false, error: 'RATE_LIMITED' },
+      { status: 429 },
+    );
   }
 
   const db = getDb();

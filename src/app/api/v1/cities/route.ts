@@ -2,12 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { cityQuerySchema } from '@/shared/validation/city';
 import { searchCities } from '@/modules/astro-engine/cities';
+import { getRateLimiter } from '@/shared/lib/rate-limit';
 import type { CitySearchResponse } from '@/shared/types/api';
 
 // Route Handlers are dynamic by default in Next.js 16 — no `dynamic` export needed.
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  // Rate limiting — keyed by IP
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anonymous';
+
+  const limiter = getRateLimiter('cities');
+  const { success } = await limiter.limit(ip);
+
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429 },
+    );
+  }
+
   // request.nextUrl.searchParams is synchronous URLSearchParams on NextRequest
   const { searchParams } = request.nextUrl;
 

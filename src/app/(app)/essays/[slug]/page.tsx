@@ -56,6 +56,7 @@ export async function generateMetadata(props: {
     publishedTime: essay.meta.publishedAt,
     modifiedTime: essay.meta.updatedAt,
     keywords: essay.meta.keywords,
+    ogImage: `${SITE_URL}/api/og/essay/${slug}`,
   });
 }
 
@@ -90,11 +91,14 @@ export default async function EssaySlugPage(props: {
   const faqItems = extractFaqItems(content);
   const faqLd = faqItems.length > 0 ? faqSchema(faqItems) : null;
 
+  const signDisplay = parsed
+    ? parsed.sign.charAt(0).toUpperCase() + parsed.sign.slice(1)
+    : null;
+
   const breadcrumbLd = breadcrumbSchema([
     { name: 'Home', url: SITE_URL },
-    { name: 'Essays', url: `${SITE_URL}/essays` },
-    ...(parsed
-      ? [{ name: parsed.sign, url: `${SITE_URL}/signs/${parsed.sign}` }]
+    ...(parsed && signDisplay
+      ? [{ name: signDisplay, url: `${SITE_URL}/signs/${parsed.sign}` }]
       : []),
     { name: meta.title, url: canonicalUrl },
   ]);

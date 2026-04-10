@@ -28,12 +28,13 @@ const crimsonPro = Crimson_Pro({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://estrevia.app'),
   title: "Estrevia — Sidereal Astrology",
   description:
     "Calculate your natal chart in sidereal astrology. Discover your true zodiac sign.",
   openGraph: {
     siteName: "Estrevia",
-    images: [{ url: "/og-default.png", width: 1200, height: 630 }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
   other: {
     // PWA manifest link is handled via Next.js metadata.manifest below,

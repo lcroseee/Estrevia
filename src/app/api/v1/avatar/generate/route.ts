@@ -10,6 +10,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/modules/auth/lib/helpers';
+import { isPremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import type { ApiResponse } from '@/shared/types';
 
@@ -75,6 +76,12 @@ export async function POST(
   }
 
   // ---------------------------------------------------------------------------
+  // 2b. Tier check — free users are limited to 'cosmic' style
+  //     (generation count enforcement is a Phase 2 feature requiring a counter table)
+  // ---------------------------------------------------------------------------
+  const userIsPremium = await isPremium(userId);
+
+  // ---------------------------------------------------------------------------
   // 3. Parse & validate body
   // ---------------------------------------------------------------------------
   let parsed: z.infer<typeof bodySchema>;
@@ -95,7 +102,9 @@ export async function POST(
     );
   }
 
-  const { sunSign, moonSign, element, style, ascendantSign } = parsed;
+  // Free users are restricted to 'cosmic' style — override silently
+  const style = userIsPremium ? parsed.style : 'cosmic';
+  const { sunSign, moonSign, element, ascendantSign } = parsed;
 
   // ---------------------------------------------------------------------------
   // 4. Build Imagen prompt

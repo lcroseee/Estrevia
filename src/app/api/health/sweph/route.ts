@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { calcPlanet, SWEPH_BODY_IDS } from '@/modules/astro-engine';
+import { getRateLimiter } from '@/shared/lib/rate-limit';
 
 // Route Handlers are dynamic by default in Next.js 16 — no `dynamic` export needed.
 
@@ -14,7 +15,21 @@ const J2000_JULIAN_DAY = 2451545.0;
  *
  * Returns 200 on success, 500 if the addon fails to load or calculate.
  */
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  // Rate limiting — keyed by IP
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anonymous';
+
+  const limiter = getRateLimiter('health');
+  const { success } = await limiter.limit(ip);
+
+  if (!success) {
+    return NextResponse.json(
+      { status: 'error', message: 'Too many requests' },
+      { status: 429 },
+    );
+  }
+
   try {
     const sun = calcPlanet(J2000_JULIAN_DAY, SWEPH_BODY_IDS.SE_SUN);
 
@@ -31,14 +46,12 @@ export async function GET(): Promise<NextResponse> {
       { status: 200 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-
-    console.error('[health/sweph] sweph native addon check failed:', message);
+    console.error('[health/sweph] sweph native addon check failed:', error);
 
     return NextResponse.json(
       {
         status: 'error',
-        message,
+        message: 'Swiss Ephemeris check failed',
       },
       { status: 500 },
     );

@@ -5,7 +5,7 @@ describe('searchCities', () => {
   it('"Moscow" returns Moscow as the first result', () => {
     const results = searchCities('Moscow');
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].name).toMatch(/москва|Moscow/i);
+    expect(results[0].name).toBe('Moscow');
     expect(results[0].countryCode).toBe('RU');
   });
 
@@ -47,7 +47,7 @@ describe('searchCities', () => {
   it('results are sorted by population descending', () => {
     const results = searchCities('Moscow', 10);
     // Moscow (12M) should come before Saint Petersburg (5M)
-    const moscow = results.findIndex((r) => r.name.includes('осква') || r.name.includes('Moscow'));
+    const moscow = results.findIndex((r) => r.name.includes('Moscow'));
     expect(moscow).toBe(0);
   });
 
@@ -59,7 +59,7 @@ describe('searchCities', () => {
 
   it('"Saint" returns Saint Petersburg', () => {
     const results = searchCities('Saint');
-    const spb = results.find((r) => r.name.includes('Петербург') || r.name.includes('Petersburg'));
+    const spb = results.find((r) => r.name.includes('Petersburg'));
     expect(spb).toBeDefined();
   });
 
@@ -83,9 +83,8 @@ describe('searchCities', () => {
     expect(results[0].longitude).toBeCloseTo(13.405, 1);
   });
 
-  it('"москва" (Cyrillic query) matches Moscow via name field', () => {
+  it('"москва" (Cyrillic query) returns empty — data is English-only', () => {
     const results = searchCities('москва');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].countryCode).toBe('RU');
+    expect(results.length).toBe(0);
   });
 });

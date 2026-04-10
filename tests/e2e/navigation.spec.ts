@@ -117,8 +117,8 @@ test.describe('App layout navigation', () => {
     await page.goto('/moon');
     await page.waitForLoadState('domcontentloaded');
 
-    // App layout has primary nav with aria-label="Primary navigation"
-    const nav = page.locator('nav[aria-label="Primary navigation"]');
+    // Mobile bottom nav (hidden on desktop via md:hidden)
+    const nav = page.locator('nav[aria-label="Primary navigation"].fixed');
     await expect(nav).toBeVisible();
   });
 
@@ -127,8 +127,8 @@ test.describe('App layout navigation', () => {
     await page.goto('/hours');
     await page.waitForLoadState('domcontentloaded');
 
-    // Bottom nav has Chart, Moon, Hours links
-    const chartLink = page.locator('nav[aria-label="Primary navigation"] a[href="/chart"]');
+    // Bottom nav (mobile, fixed position) has Chart link
+    const chartLink = page.locator('nav[aria-label="Primary navigation"].fixed a[href="/chart"]');
     await expect(chartLink).toBeVisible();
   });
 

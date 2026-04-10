@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '@/modules/auth/lib/helpers';
+import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { notificationPreferences } from '@/shared/lib/schema';
 import type { ApiResponse } from '@/shared/types';
@@ -56,7 +57,19 @@ export async function GET(): Promise<
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Fetch preferences (return defaults if none exist)
+  // 2. Rate limiting
+  // ---------------------------------------------------------------------------
+  const limiter = getRateLimiter('push/preferences');
+  const { success: rateLimitOk } = await limiter.limit(userId);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { success: false, data: null, error: 'RATE_LIMITED' },
+      { status: 429 },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Fetch preferences (return defaults if none exist)
   // ---------------------------------------------------------------------------
   try {
     const db = getDb();
@@ -113,7 +126,19 @@ export async function PUT(
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Parse & validate body
+  // 2. Rate limiting
+  // ---------------------------------------------------------------------------
+  const limiter = getRateLimiter('push/preferences');
+  const { success: rateLimitOk } = await limiter.limit(userId);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { success: false, data: null, error: 'RATE_LIMITED' },
+      { status: 429 },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Parse & validate body
   // ---------------------------------------------------------------------------
   let parsed: z.infer<typeof prefsSchema>;
   try {

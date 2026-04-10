@@ -96,6 +96,31 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(5, '1m'),
     prefix: 'rl:tarot/interpret',
   }),
+  'chart/sun-sign': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(15, '1m'),
+    prefix: 'rl:chart/sun-sign',
+  }),
+  'user/account': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, '1h'),
+    prefix: 'rl:user/account',
+  }),
+  'push/subscribe': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1m'),
+    prefix: 'rl:push/subscribe',
+  }),
+  'push/preferences': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(15, '1m'),
+    prefix: 'rl:push/preferences',
+  }),
+  'user/subscription': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1m'),
+    prefix: 'rl:user/subscription',
+  }),
 };
 
 // Fallback limiter for endpoints not explicitly configured (general API limit)

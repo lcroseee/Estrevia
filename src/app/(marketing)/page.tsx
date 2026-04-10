@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { createMetadata, JsonLdScript, softwareAppSchema, howToSchema, faqSchema } from '@/shared/seo';
+import { createMetadata, JsonLdScript, organizationSchema, softwareAppSchema, howToSchema, faqSchema } from '@/shared/seo';
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';
 import { LandingAnimations } from './LandingAnimations';
 import { WaitlistForm } from './WaitlistForm';
@@ -118,6 +118,7 @@ const HOW_IT_WORKS = [
 export default function LandingPage() {
   return (
     <>
+      <JsonLdScript schema={organizationSchema()} />
       <JsonLdScript schema={softwareAppSchema()} />
       <JsonLdScript schema={howToJsonLd} />
       <JsonLdScript schema={faqJsonLd} />

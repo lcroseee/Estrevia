@@ -14,6 +14,7 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '@/modules/auth/lib/helpers';
+import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { natalCharts, users } from '@/shared/lib/schema';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
@@ -40,7 +41,19 @@ export async function DELETE(): Promise<
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Delete all user data
+  // 2. Rate limiting — 3 requests per hour (destructive operation)
+  // ---------------------------------------------------------------------------
+  const limiter = getRateLimiter('user/account');
+  const { success: rateLimitOk } = await limiter.limit(userId);
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { success: false, data: null, error: 'RATE_LIMITED' },
+      { status: 429 },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Delete all user data
   //
   // Deletion order matters for foreign key constraints:
   //   cosmic_passports → natal_charts (ON DELETE CASCADE handles this)
