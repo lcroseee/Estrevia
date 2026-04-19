@@ -25,11 +25,19 @@ jobs:
       # a lockfile generated on macOS. See npm/cli#4828.
       - run: npm ci
       # npm/cli#4828: lockfile generated on macOS omits top-level entries for
-      # Linux-only optional deps (sharp, next-swc, parcel/watcher, rolldown,
-      # rollup, tailwindcss/oxide, unrs/resolver, lightningcss, esbuild).
-      # Re-run install targeting Linux to pull them all in without mutating
-      # the lockfile (--no-save).
-      - run: npm install --no-save --no-audit --no-fund --os=linux --cpu=x64 --libc=glibc
+      # these Linux optional deps. Install explicitly without touching lock.
+      - run: |
+          npm install --no-save --no-audit --no-fund \
+            @rolldown/binding-linux-x64-gnu \
+            @parcel/watcher-linux-x64-glibc \
+            @next/swc-linux-x64-gnu \
+            @rollup/rollup-linux-x64-gnu \
+            @tailwindcss/oxide-linux-x64-gnu \
+            @unrs/resolver-binding-linux-x64-gnu \
+            @img/sharp-linux-x64 \
+            @img/sharp-libvips-linux-x64 \
+            lightningcss-linux-x64-gnu \
+            @esbuild/linux-x64
       - run: npm run lint
       - run: npm run typecheck
 
@@ -44,11 +52,19 @@ jobs:
           cache: npm
       - run: npm ci
       # npm/cli#4828: lockfile generated on macOS omits top-level entries for
-      # Linux-only optional deps (sharp, next-swc, parcel/watcher, rolldown,
-      # rollup, tailwindcss/oxide, unrs/resolver, lightningcss, esbuild).
-      # Re-run install targeting Linux to pull them all in without mutating
-      # the lockfile (--no-save).
-      - run: npm install --no-save --no-audit --no-fund --os=linux --cpu=x64 --libc=glibc
+      # these Linux optional deps. Install explicitly without touching lock.
+      - run: |
+          npm install --no-save --no-audit --no-fund \
+            @rolldown/binding-linux-x64-gnu \
+            @parcel/watcher-linux-x64-glibc \
+            @next/swc-linux-x64-gnu \
+            @rollup/rollup-linux-x64-gnu \
+            @tailwindcss/oxide-linux-x64-gnu \
+            @unrs/resolver-binding-linux-x64-gnu \
+            @img/sharp-linux-x64 \
+            @img/sharp-libvips-linux-x64 \
+            lightningcss-linux-x64-gnu \
+            @esbuild/linux-x64
       - name: Load CI env stubs
         run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - run: npx vitest run --reporter=verbose
@@ -65,11 +81,19 @@ jobs:
           cache: npm
       - run: npm ci
       # npm/cli#4828: lockfile generated on macOS omits top-level entries for
-      # Linux-only optional deps (sharp, next-swc, parcel/watcher, rolldown,
-      # rollup, tailwindcss/oxide, unrs/resolver, lightningcss, esbuild).
-      # Re-run install targeting Linux to pull them all in without mutating
-      # the lockfile (--no-save).
-      - run: npm install --no-save --no-audit --no-fund --os=linux --cpu=x64 --libc=glibc
+      # these Linux optional deps. Install explicitly without touching lock.
+      - run: |
+          npm install --no-save --no-audit --no-fund \
+            @rolldown/binding-linux-x64-gnu \
+            @parcel/watcher-linux-x64-glibc \
+            @next/swc-linux-x64-gnu \
+            @rollup/rollup-linux-x64-gnu \
+            @tailwindcss/oxide-linux-x64-gnu \
+            @unrs/resolver-binding-linux-x64-gnu \
+            @img/sharp-linux-x64 \
+            @img/sharp-libvips-linux-x64 \
+            lightningcss-linux-x64-gnu \
+            @esbuild/linux-x64
       - name: Load CI env stubs
         run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - run: npm run build
@@ -86,11 +110,19 @@ jobs:
           cache: npm
       - run: npm ci
       # npm/cli#4828: lockfile generated on macOS omits top-level entries for
-      # Linux-only optional deps (sharp, next-swc, parcel/watcher, rolldown,
-      # rollup, tailwindcss/oxide, unrs/resolver, lightningcss, esbuild).
-      # Re-run install targeting Linux to pull them all in without mutating
-      # the lockfile (--no-save).
-      - run: npm install --no-save --no-audit --no-fund --os=linux --cpu=x64 --libc=glibc
+      # these Linux optional deps. Install explicitly without touching lock.
+      - run: |
+          npm install --no-save --no-audit --no-fund \
+            @rolldown/binding-linux-x64-gnu \
+            @parcel/watcher-linux-x64-glibc \
+            @next/swc-linux-x64-gnu \
+            @rollup/rollup-linux-x64-gnu \
+            @tailwindcss/oxide-linux-x64-gnu \
+            @unrs/resolver-binding-linux-x64-gnu \
+            @img/sharp-linux-x64 \
+            @img/sharp-libvips-linux-x64 \
+            lightningcss-linux-x64-gnu \
+            @esbuild/linux-x64
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Load CI env stubs
