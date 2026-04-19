@@ -20,7 +20,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # `npm install` (not `npm ci`) works around an npm bug where cross-platform
+      # optional deps (e.g. @rolldown/binding-linux-x64-gnu) aren't recorded in
+      # a lockfile generated on macOS. See npm/cli#4828.
+      - run: npm install --no-audit --no-fund
       - run: npm run lint
       - run: npm run typecheck
 
@@ -33,7 +36,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Load CI env stubs
         run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - run: npx vitest run --reporter=verbose
@@ -48,7 +51,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Load CI env stubs
         run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - run: npm run build
@@ -63,7 +66,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Load CI env stubs
