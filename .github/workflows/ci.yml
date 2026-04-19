@@ -35,7 +35,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Load CI env stubs
-        run: cat .env.ci >> "$GITHUB_ENV"
+        run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - run: npx vitest run --reporter=verbose
 
   build:
@@ -50,7 +50,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Load CI env stubs
-        run: cat .env.ci >> "$GITHUB_ENV"
+        run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - run: npm run build
 
   e2e:
@@ -67,7 +67,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Load CI env stubs
-        run: cat .env.ci >> "$GITHUB_ENV"
+        run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - name: Build application
         run: npm run build
       - name: Run E2E tests
