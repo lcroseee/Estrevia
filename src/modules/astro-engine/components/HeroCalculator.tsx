@@ -132,10 +132,10 @@ export function HeroCalculator() {
           return;
         }
 
-        const json = await res.json() as { success: boolean; data: { chartId: string; chart: { planets: Array<{ planet: string; sign: string; signDegree: number }> } } };
-        const sunPlanet = json.data.chart.planets.find((p) => p.planet === 'Sun');
+        const json = await res.json() as { success: boolean; data: { chartId: string; chart: { planets: Array<{ planet: string; sign: string; signDegree: number }> } } | null };
+        const sunPlanet = json.data?.chart?.planets?.find((p) => p.planet === 'Sun');
 
-        if (!sunPlanet) {
+        if (!json.data || !sunPlanet) {
           setErrors({ general: 'Could not determine Sun sign. Please try again.' });
           return;
         }
@@ -145,8 +145,16 @@ export function HeroCalculator() {
           sunDegree: sunPlanet.signDegree,
           chartId: json.data.chartId,
         });
-      } catch {
-        setErrors({ general: 'Network error. Please check your connection.' });
+      } catch (err) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[HeroCalculator] submit failed:', err);
+        }
+        const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+        setErrors({
+          general: offline
+            ? 'You appear to be offline. Please check your connection.'
+            : 'Something went wrong. Please try again.',
+        });
       } finally {
         setIsLoading(false);
       }
