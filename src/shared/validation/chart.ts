@@ -13,7 +13,11 @@ export const chartCalculateSchema = z.object({
   time: timeSchema.nullable(),
   ...coordinatesSchema.shape,
   timezone: timezoneSchema,
-  houseSystem: houseSystemSchema.default(HouseSystem.Placidus),
+  // Frontend sends `null` when birth time is unknown (no houses needed).
+  // Coerce null/undefined to Placidus so the engine always gets a valid enum.
+  houseSystem: houseSystemSchema
+    .nullish()
+    .transform((v) => v ?? HouseSystem.Placidus),
 });
 
 export type ChartCalculateSchema = z.infer<typeof chartCalculateSchema>;
