@@ -14,8 +14,8 @@
 import * as sweph from 'sweph';
 import path from 'path';
 
-// Resolve path relative to this file's location:
-// src/modules/astro-engine/ → ../../../data/ephe
-const ephePath = path.resolve(__dirname, '../../../data/ephe');
+// Use process.cwd() instead of __dirname because Turbopack rewrites __dirname
+// to a virtual path that doesn't match the real filesystem layout.
+const ephePath = path.resolve(process.cwd(), 'data/ephe');
 
 sweph.set_ephe_path(ephePath);

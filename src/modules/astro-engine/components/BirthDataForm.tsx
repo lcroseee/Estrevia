@@ -3,6 +3,7 @@
 import { useState, useCallback, useId } from 'react';
 import type { ChartResult, CitySearchResult, HouseSystem } from '@/shared/types';
 import { CityAutocomplete } from './CityAutocomplete';
+import { DateInput } from './DateInput';
 
 interface FormValues {
   date: string;
@@ -139,27 +140,18 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
           Date of birth <span className="text-red-400" aria-hidden="true">*</span>
           <span className="sr-only">(required)</span>
         </label>
-        <input
+        <DateInput
           id={dateId}
-          type="date"
           value={values.date}
           max={todayStr()}
-          onChange={(e) => {
-            setValues((v) => ({ ...v, date: e.target.value }));
+          onChange={(v) => {
+            setValues((prev) => ({ ...prev, date: v }));
             if (errors.date) setErrors((e2) => ({ ...e2, date: undefined }));
           }}
-          required
-          aria-required="true"
+          aria-required={true}
           aria-invalid={!!errors.date}
           aria-describedby={errors.date ? `${dateId}-error` : undefined}
-          className={[
-            'w-full rounded-lg border bg-white/5 px-3 py-2.5 text-sm text-white',
-            'focus:outline-none focus:ring-1 transition-colors',
-            '[color-scheme:dark]',
-            errors.date
-              ? 'border-red-500/60 focus:border-red-400 focus:ring-red-400/30'
-              : 'border-white/12 focus:border-white/30 focus:ring-white/10',
-          ].join(' ')}
+          hasError={!!errors.date}
         />
         {errors.date && (
           <p id={`${dateId}-error`} role="alert" className="text-xs text-red-400">
