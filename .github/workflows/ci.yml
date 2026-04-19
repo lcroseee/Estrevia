@@ -23,7 +23,10 @@ jobs:
       # `npm install` (not `npm ci`) works around an npm bug where cross-platform
       # optional deps (e.g. @rolldown/binding-linux-x64-gnu) aren't recorded in
       # a lockfile generated on macOS. See npm/cli#4828.
-      - run: npm install --no-audit --no-fund
+      # npm/cli#4828: lockfile generated on macOS omits top-level entries for
+      # Linux-only optional deps (e.g. @rolldown/binding-linux-x64-gnu pulled in
+      # by vitest 4). Dropping lockfile forces npm to resolve current platform.
+      - run: rm -f package-lock.json && npm install --no-audit --no-fund
       - run: npm run lint
       - run: npm run typecheck
 
@@ -36,7 +39,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm install --no-audit --no-fund
+      # npm/cli#4828: lockfile generated on macOS omits top-level entries for
+      # Linux-only optional deps (e.g. @rolldown/binding-linux-x64-gnu pulled in
+      # by vitest 4). Dropping lockfile forces npm to resolve current platform.
+      - run: rm -f package-lock.json && npm install --no-audit --no-fund
       - name: Load CI env stubs
         run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - run: npx vitest run --reporter=verbose
@@ -51,7 +57,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm install --no-audit --no-fund
+      # npm/cli#4828: lockfile generated on macOS omits top-level entries for
+      # Linux-only optional deps (e.g. @rolldown/binding-linux-x64-gnu pulled in
+      # by vitest 4). Dropping lockfile forces npm to resolve current platform.
+      - run: rm -f package-lock.json && npm install --no-audit --no-fund
       - name: Load CI env stubs
         run: grep -Ev '^\s*(#|$)' .env.ci >> "$GITHUB_ENV"
       - run: npm run build
@@ -66,7 +75,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm install --no-audit --no-fund
+      # npm/cli#4828: lockfile generated on macOS omits top-level entries for
+      # Linux-only optional deps (e.g. @rolldown/binding-linux-x64-gnu pulled in
+      # by vitest 4). Dropping lockfile forces npm to resolve current platform.
+      - run: rm -f package-lock.json && npm install --no-audit --no-fund
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Load CI env stubs
