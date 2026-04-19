@@ -2,7 +2,7 @@
   "common": {
     "appName": "Estrevia",
     "tagline": "Sidereal Astrology",
-    "slogan": "El camino de las estrellas",
+    "slogan": "The path of the stars",
     "loading": "Loading...",
     "error": "Something went wrong",
     "tryAgain": "Try again",
@@ -314,8 +314,6 @@
     "dailyMoonPhaseDesc": "Get a daily notification with the current moon phase and sign.",
     "fullNewMoon": "Full & New Moon alerts",
     "fullNewMoonDesc": "Be notified when a New Moon or Full Moon occurs.",
-    "planetaryHourChange": "Planetary hour changes",
-    "planetaryHourChangeDesc": "Get notified when the planetary hour changes.",
     "weeklyDigest": "Weekly astro digest",
     "weeklyDigestDesc": "A weekly summary of upcoming transits and lunar events.",
     "preferredTime": "Preferred time",

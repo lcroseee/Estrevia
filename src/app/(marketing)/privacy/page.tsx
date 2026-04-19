@@ -308,16 +308,33 @@ export default function PrivacyPage() {
         {/* 9. Children */}
         <Section title="9. Children's Privacy">
           <p>
-            The Service is not directed to children under 13. We do not knowingly
-            collect personal data from children. If you believe a child has
-            provided us with personal data, contact us at{' '}
+            Only users aged 13 or older may create an account. We do not
+            knowingly collect personal data directly from children under 13.
+          </p>
+          <p>
+            <strong>Charts for family members.</strong> An adult account holder
+            may enter a child&apos;s birth data (date, time, location) to
+            calculate a natal chart. In this case the adult acts as the data
+            controller for that information, is responsible for obtaining any
+            required parental consent, and may delete or export the data at any
+            time via{' '}
+            <code className="px-1 py-0.5 rounded bg-white/8 text-[#C8A84B] text-xs">
+              /settings
+            </code>
+            . Birth data is stored encrypted with AES-256-GCM and is never used
+            to profile the child, serve advertising, or train AI models.
+          </p>
+          <p>
+            If you believe a child has created their own account or that
+            personal data of a minor has been collected without proper consent,
+            contact us at{' '}
             <a
               href={`mailto:${CONTACT_EMAIL}`}
               className="text-[#C8A84B] hover:text-[#E0C06A] underline underline-offset-2 transition-colors"
             >
               {CONTACT_EMAIL}
-            </a>
-            .
+            </a>{' '}
+            and we will delete the data within 30 days.
           </p>
         </Section>
 

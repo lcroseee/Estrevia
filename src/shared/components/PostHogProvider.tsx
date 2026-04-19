@@ -54,6 +54,33 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const initAttempted = useRef(false);
 
+  async function initPostHog() {
+    const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+    const host =
+      process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com';
+
+    if (!apiKey) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[PostHog] NEXT_PUBLIC_POSTHOG_KEY is not set. Analytics disabled.');
+      }
+      return;
+    }
+
+    const { default: posthog } = await import('posthog-js');
+
+    posthog.init(apiKey, {
+      api_host: host,
+      capture_pageview: true,
+      disable_session_recording: true,
+      persistence: 'localStorage',
+      autocapture: false,
+      bootstrap: {},
+    });
+
+    (window as unknown as Record<string, unknown>).posthog = posthog;
+    setIsInitialized(true);
+  }
+
   useEffect(() => {
     if (initAttempted.current) return;
     initAttempted.current = true;
@@ -64,6 +91,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     initPostHog().catch(() => {
       // Non-fatal — analytics failure must never break the app.
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Listen for consent changes dispatched by CookieConsent component.
@@ -81,40 +109,8 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     return () => {
       window.removeEventListener('estrevia:consent', handleConsentChange);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized]);
-
-  async function initPostHog() {
-    const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    const host =
-      process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com';
-
-    if (!apiKey) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[PostHog] NEXT_PUBLIC_POSTHOG_KEY is not set. Analytics disabled.');
-      }
-      return;
-    }
-
-    const { default: posthog } = await import('posthog-js');
-
-    posthog.init(apiKey, {
-      api_host: host,
-      // Capture page views automatically
-      capture_pageview: true,
-      // Respect user privacy — no session recording without explicit opt-in
-      disable_session_recording: true,
-      // Persist to localStorage (GDPR: consent already given at this point)
-      persistence: 'localStorage',
-      // Do not capture personal data in autocapture
-      autocapture: false,
-      // Bootstrap with Vercel deployment ID for feature flags
-      bootstrap: {},
-    });
-
-    // Expose on window so analytics.ts helpers can access without re-importing
-    (window as unknown as Record<string, unknown>).posthog = posthog;
-    setIsInitialized(true);
-  }
 
   return (
     <PostHogContext.Provider value={{ isInitialized }}>

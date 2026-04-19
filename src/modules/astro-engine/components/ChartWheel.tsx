@@ -455,7 +455,7 @@ export const ChartWheel = memo(function ChartWheel({
             </span>
           </div>
           <p className="text-white/60 text-xs leading-relaxed font-mono" style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}>
-            {selectedInfo.sign} · {selectedInfo.signDegree}°{selectedInfo.minutes.toString().padStart(2, '0')}'
+            {selectedInfo.sign} · {selectedInfo.signDegree}°{selectedInfo.minutes.toString().padStart(2, '0')}&prime;
             {selectedInfo.house !== null ? ` · House ${selectedInfo.house}` : ''}
           </p>
         </div>

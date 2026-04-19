@@ -11,6 +11,9 @@ export enum Planet {
   Pluto = 'Pluto',
   NorthNode = 'NorthNode',
   Chiron = 'Chiron',
+  // Chart angles — not true bodies, used only as PlanetPosition identifiers
+  Ascendant = 'Ascendant',
+  Midheaven = 'Midheaven',
 }
 
 export enum Sign {

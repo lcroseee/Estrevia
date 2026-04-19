@@ -13,7 +13,8 @@ const ContentSecurityPolicy = [
 
   // Scripts: self + Next.js inline scripts + Clerk + Stripe + PostHog + Sentry + Vercel
   // 'unsafe-eval' is required in dev mode only (React debugging callstacks)
-  `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://js.stripe.com https://*.clerk.accounts.dev https://*.posthog.com https://eu.posthog.com https://*.sentry.io https://vercel.live https://*.vercel-scripts.com`,
+  // Clerk dev instances live at *.accounts.dev (not only *.clerk.accounts.dev)
+  `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://js.stripe.com https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://*.sentry.io https://vercel.live https://*.vercel-scripts.com`,
 
   // Styles: self + unsafe-inline (required by shadcn/ui) + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -25,10 +26,11 @@ const ContentSecurityPolicy = [
   "font-src 'self' https://fonts.gstatic.com",
 
   // Connect (XHR/fetch/WebSocket): self + API services
-  "connect-src 'self' https://api.clerk.com https://*.clerk.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu.i.posthog.com https://*.ingest.sentry.io https://*.sentry.io https://api.stripe.com https://vitals.vercel-insights.com https://vercel.live wss://vercel.live",
+  // *.accounts.dev covers Clerk development instances
+  "connect-src 'self' https://api.clerk.com https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu.i.posthog.com https://*.ingest.sentry.io https://*.sentry.io https://api.stripe.com https://vitals.vercel-insights.com https://vercel.live wss://vercel.live",
 
   // Frames: only Stripe and Clerk (for 3D Secure / auth modals)
-  "frame-src https://js.stripe.com https://*.stripe.com https://*.clerk.accounts.dev https://vercel.live",
+  "frame-src https://js.stripe.com https://*.stripe.com https://*.clerk.accounts.dev https://*.accounts.dev https://vercel.live",
 
   // Workers: self + blob (Next.js service worker / PWA)
   "worker-src 'self' blob:",

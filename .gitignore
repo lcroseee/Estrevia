@@ -29,6 +29,9 @@ serviceAccountKey.json
 # debug
 npm-debug.log*
 
+# claude code local state
+.claude/scheduled_tasks.lock
+
 # vercel
 .vercel
 
@@ -40,6 +43,8 @@ next-env.d.ts
 /coverage
 /test-results
 /playwright-report
+.qa-artifacts/
 
 # sentry
 .sentryclirc
+.env*.local

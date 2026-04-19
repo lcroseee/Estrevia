@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CityAutocomplete } from './CityAutocomplete';
+import { DateInput } from './DateInput';
 import type { CitySearchResult } from '@/shared/types';
 
 // ── Sign glyphs & colors ──────────────────────────────────────────────────────
@@ -131,10 +132,10 @@ export function HeroCalculator() {
           return;
         }
 
-        const data = await res.json() as { chartId: string; chart: { planets: Array<{ planet: string; sign: string; signDegree: number }> } };
-        const sunPlanet = data.chart.planets.find((p) => p.planet === 'Sun');
+        const json = await res.json() as { success: boolean; data: { chartId: string; chart: { planets: Array<{ planet: string; sign: string; signDegree: number }> } } | null };
+        const sunPlanet = json.data?.chart?.planets?.find((p) => p.planet === 'Sun');
 
-        if (!sunPlanet) {
+        if (!json.data || !sunPlanet) {
           setErrors({ general: 'Could not determine Sun sign. Please try again.' });
           return;
         }
@@ -142,10 +143,18 @@ export function HeroCalculator() {
         setResult({
           sunSign: sunPlanet.sign,
           sunDegree: sunPlanet.signDegree,
-          chartId: data.chartId,
+          chartId: json.data.chartId,
         });
-      } catch {
-        setErrors({ general: 'Network error. Please check your connection.' });
+      } catch (err) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[HeroCalculator] submit failed:', err);
+        }
+        const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+        setErrors({
+          general: offline
+            ? 'You appear to be offline. Please check your connection.'
+            : 'Something went wrong. Please try again.',
+        });
       } finally {
         setIsLoading(false);
       }
@@ -264,18 +273,17 @@ export function HeroCalculator() {
         <label htmlFor="hero-date" className="sr-only">
           Birth date
         </label>
-        <input
+        <DateInput
           id="hero-date"
-          type="date"
           value={form.date}
           max={todayStr()}
-          onChange={(e) => {
-            setForm((prev) => ({ ...prev, date: e.target.value }));
+          onChange={(v) => {
+            setForm((prev) => ({ ...prev, date: v }));
             setErrors((prev) => ({ ...prev, date: undefined }));
           }}
           aria-describedby={errors.date ? 'hero-date-error' : undefined}
           aria-invalid={!!errors.date}
-          className="w-full rounded-xl px-4 py-3 text-sm bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-[#FFD700]/50 focus:ring-1 focus:ring-[#FFD700]/30 transition-colors aria-[invalid=true]:border-red-400/50"
+          hasError={!!errors.date}
         />
         {errors.date && (
           <p id="hero-date-error" className="mt-1.5 text-xs text-red-400" role="alert">

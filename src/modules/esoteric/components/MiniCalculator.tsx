@@ -97,7 +97,7 @@ export function MiniCalculator({ sign }: MiniCalculatorProps) {
         Is YOUR Sun in sidereal {sign}?
       </h2>
       <p className="text-xs text-white/40 mb-4 font-[var(--font-geist-sans)]">
-        Enter your birth date — we'll check your sidereal Sun sign instantly.
+        Enter your birth date — we&rsquo;ll check your sidereal Sun sign instantly.
       </p>
 
       {/* Input area */}

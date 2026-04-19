@@ -16,6 +16,8 @@ const PLANET_GLYPHS: Record<Planet, string> = {
   Pluto: '♇',
   NorthNode: '☊',
   Chiron: '⚷',
+  Ascendant: 'AC',
+  Midheaven: 'MC',
 };
 
 export const PLANET_COLORS: Record<Planet, string> = {
@@ -31,6 +33,8 @@ export const PLANET_COLORS: Record<Planet, string> = {
   Pluto: '#9B8B7B',
   NorthNode: '#808080',
   Chiron: '#FF69B4',
+  Ascendant: '#FFD700',
+  Midheaven: '#C0C0C0',
 };
 
 interface PlanetGlyphProps {

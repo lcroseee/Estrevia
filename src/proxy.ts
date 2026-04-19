@@ -7,7 +7,8 @@ const isProtectedRoute = createRouteMatcher([
   '/settings(.*)',
   '/api/v1/chart/save(.*)',
   '/api/v1/chart/list(.*)',
-  '/api/v1/chart/:id(.*)',
+  // Match UUIDs/nanoids only — exclude named sub-routes like /calculate
+  '/api/v1/chart/:id([a-zA-Z0-9_-]{10,})',
   '/api/v1/stripe(.*)',
   '/api/v1/user(.*)',
 ]);

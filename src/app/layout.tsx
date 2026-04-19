@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { PostHogProvider } from "@/shared/components/PostHogProvider";
 import { CookieConsent } from "@/shared/components/CookieConsent";
+import { SITE_URL } from "@/shared/seo/constants";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,7 +29,7 @@ const crimsonPro = Crimson_Pro({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://estrevia.app'),
+  metadataBase: new URL(SITE_URL),
   title: "Estrevia — Sidereal Astrology",
   description:
     "Calculate your natal chart in sidereal astrology. Discover your true zodiac sign.",

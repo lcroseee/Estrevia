@@ -8,7 +8,6 @@ type PermissionState = 'prompt' | 'granted' | 'denied' | 'unsupported';
 interface Preferences {
   dailyMoonPhase: boolean;
   fullNewMoon: boolean;
-  planetaryHourChange: boolean;
   weeklyDigest: boolean;
   preferredTime: string;
 }
@@ -16,7 +15,6 @@ interface Preferences {
 const DEFAULT_PREFS: Preferences = {
   dailyMoonPhase: false,
   fullNewMoon: false,
-  planetaryHourChange: false,
   weeklyDigest: false,
   preferredTime: '08:00',
 };
@@ -181,11 +179,6 @@ export function NotificationSettings() {
       descKey: 'dailyMoonPhaseDesc',
     },
     {
-      key: 'planetaryHourChange',
-      labelKey: 'planetaryHourChange',
-      descKey: 'planetaryHourChangeDesc',
-    },
-    {
       key: 'weeklyDigest',
       labelKey: 'weeklyDigest',
       descKey: 'weeklyDigestDesc',
@@ -282,6 +275,7 @@ export function NotificationSettings() {
                 type="button"
                 role="switch"
                 aria-checked={prefs[key]}
+                aria-label={t(labelKey)}
                 disabled={isSaving}
                 onClick={() => handlePrefChange(key, !prefs[key])}
                 className="relative shrink-0 w-10 h-6 rounded-full transition-colors duration-200"

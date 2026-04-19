@@ -247,7 +247,7 @@ export function CityAutocomplete({
               role="option"
               aria-selected={activeIndex === idx}
               className={[
-                'flex items-center justify-between px-3 py-2.5 text-sm cursor-pointer transition-colors',
+                'flex flex-col px-3 py-2 cursor-pointer transition-colors',
                 activeIndex === idx
                   ? 'bg-white/10 text-white'
                   : 'text-white/70 hover:bg-white/6 hover:text-white',
@@ -258,19 +258,17 @@ export function CityAutocomplete({
                 selectCity(city);
               }}
             >
-              <span className="flex flex-col min-w-0">
-                <span className="truncate font-medium text-white/90">
-                  {city.name}
-                </span>
-                <span className="text-xs text-white/40 truncate">
-                  {city.country}
-                </span>
+              <span className="truncate text-sm font-medium text-white/90 leading-snug">
+                {city.name}
               </span>
-              {city.population > 0 && (
-                <span className="ml-3 flex-shrink-0 text-xs text-white/30 tabular-nums font-mono">
-                  {formatPopulation(city.population)}
-                </span>
-              )}
+              <span className="truncate text-xs text-white/40 leading-snug">
+                {city.country}
+                {city.population > 0 && (
+                  <span className="font-mono tabular-nums">
+                    {'\u00A0\u00B7\u00A0'}{formatPopulation(city.population)}
+                  </span>
+                )}
+              </span>
             </li>
           ))}
         </ul>

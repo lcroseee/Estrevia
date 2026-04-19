@@ -196,7 +196,7 @@ export default function LandingPage() {
 
             {/* Trust line */}
             <p
-              className="mt-5 text-xs text-white/25 tracking-wide"
+              className="mt-5 text-xs text-white/60 tracking-wide"
               data-animate="fade-up-4"
             >
               No account needed · Calculation takes under 2 seconds
@@ -219,7 +219,7 @@ export default function LandingPage() {
               >
                 How it works
               </h2>
-              <p className="text-sm text-white/40 max-w-md mx-auto">
+              <p className="text-sm text-white/70 max-w-md mx-auto">
                 From birth data to shareable card in under a minute.
               </p>
             </div>
@@ -324,7 +324,7 @@ export default function LandingPage() {
             >
               Join astrologers discovering their sidereal signs
             </h2>
-            <p className="text-sm text-white/35 mb-12 max-w-md mx-auto">
+            <p className="text-sm text-white/70 mb-12 max-w-md mx-auto">
               Most discover they carry the energy of the sign before their tropical Sun —
               not the one on their horoscope app.
             </p>
@@ -343,7 +343,7 @@ export default function LandingPage() {
                     {value}
                   </span>
                   <span className="text-sm font-medium text-white/70">{label}</span>
-                  <span className="text-xs text-white/30">{note}</span>
+                  <span className="text-xs text-white/60">{note}</span>
                 </div>
               ))}
             </div>
@@ -452,7 +452,7 @@ export default function LandingPage() {
 
             <WaitlistForm />
 
-            <p className="mt-4 text-xs text-white/25">
+            <p className="mt-4 text-xs text-white/60">
               No spam. Unsubscribe at any time.
             </p>
           </div>
