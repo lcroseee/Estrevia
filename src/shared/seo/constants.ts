@@ -1,6 +1,22 @@
 export const SITE_NAME = 'Estrevia';
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://estrevia.app';
-export const DEFAULT_OG_IMAGE = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://estrevia.app'}/opengraph-image`;
+
+function resolveSiteUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit && !explicit.startsWith('http://localhost')) {
+    return explicit.replace(/\/$/, '');
+  }
+  const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL?.trim() ?? process.env.VERCEL_URL?.trim();
+  if (vercelUrl) {
+    return `https://${vercelUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}`;
+  }
+  if (explicit) {
+    return explicit.replace(/\/$/, '');
+  }
+  return 'https://estrevia.app';
+}
+
+export const SITE_URL = resolveSiteUrl();
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/opengraph-image`;
 export const TWITTER_HANDLE = '@estrevia_app';
 export const SITE_DESCRIPTION =
   'Sidereal astrology platform — natal charts, planetary hours, esoteric correspondences';

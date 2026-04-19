@@ -170,12 +170,34 @@ export function PlanetaryHourBar() {
       <button
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-white/40 hover:text-white/60 transition-colors cursor-pointer"
-        aria-label="Enable location to see planetary hours"
+        className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-white/40 hover:text-white/60 transition-colors cursor-pointer"
+        aria-label="Enable location for planetary hours"
+        title="Enable location for planetary hours"
       >
-        <span className="text-sm">🕐</span>
-        <span className="font-[var(--font-geist-sans)] tracking-wide">
-          Enable location for planetary hours
+        {/* Clock icon — visible on all viewports */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className="shrink-0"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 15 15" />
+        </svg>
+        {/* Label hidden on mobile, visible on sm+ */}
+        <span className="hidden sm:inline font-[var(--font-geist-sans)] tracking-wide whitespace-nowrap">
+          Planetary hours
+        </span>
+        {/* Tiny hint dot visible only on mobile so the button reads as interactive */}
+        <span className="sm:hidden text-white/25 text-[10px] leading-none" aria-hidden="true">
+          ?
         </span>
       </button>
     );
@@ -229,18 +251,30 @@ export function PlanetaryHourBar() {
         </span>
 
         {/* Planet name + time remaining */}
-        <span className="flex items-baseline gap-1.5">
+        <span className="flex items-baseline gap-1.5 min-w-0">
           <span
-            className="text-xs font-medium font-[var(--font-geist-sans)] tracking-wide"
+            className="text-xs font-medium font-[var(--font-geist-sans)] tracking-wide shrink-0"
             style={{ color }}
           >
             {planet}
           </span>
-          <span className="text-xs text-white/50 font-[var(--font-geist-mono)]">
+          {/* Time-range: hidden on mobile to save space */}
+          <span className="hidden sm:inline text-xs text-white/50 font-[var(--font-geist-mono)] whitespace-nowrap">
             {startFmt}–{endFmt}
           </span>
-          <span className="text-xs text-white/35 font-[var(--font-geist-mono)] hidden sm:inline">
+          {/* Time remaining: compact on mobile ("42m"), fuller on sm+ */}
+          <span
+            className="text-xs text-white/35 font-[var(--font-geist-mono)] whitespace-nowrap hidden sm:inline"
+            aria-hidden="true"
+          >
             · {timeLeft}
+          </span>
+          {/* Mobile-only: just the compact time-left, no range */}
+          <span
+            className="sm:hidden text-xs text-white/35 font-[var(--font-geist-mono)] whitespace-nowrap"
+            aria-hidden="true"
+          >
+            {timeLeft}
           </span>
         </span>
 

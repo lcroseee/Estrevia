@@ -60,12 +60,13 @@ export function CookieConsent() {
       aria-label="Cookie consent"
       className={[
         // z-50 keeps cookie banner above bottom nav (z-40)
-        // On mobile: push up by bottom nav height (pb-safe + 56px approx)
-        'fixed left-0 right-0 z-50',
-        // Bottom: 0 on desktop (no bottom nav); on mobile sits above bottom nav
-        'bottom-0 md:bottom-0',
-        'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between',
-        'px-4 pt-4 pb-[calc(1rem+60px)] sm:pb-4 md:pb-4 sm:px-6',
+        'fixed left-0 right-0 z-50 bottom-0',
+        // Mobile: single compact row — text + actions on one line, tight padding
+        // sm+: expand to full two-column layout with relaxed padding
+        'flex flex-row items-center justify-between gap-2',
+        'sm:flex-row sm:items-center sm:justify-between sm:gap-4',
+        'px-3 py-2 pb-[calc(0.5rem+60px)]',
+        'sm:px-6 sm:pt-4 sm:pb-4',
         'bg-[#0F0F18]/97 border-t border-white/10',
         'shadow-[0_-4px_40px_rgba(0,0,0,0.7)]',
         'animate-in slide-in-from-bottom-4 duration-500',
@@ -73,25 +74,40 @@ export function CookieConsent() {
       ].join(' ')}
       style={{ WebkitBackdropFilter: 'blur(12px)' }}
     >
-      {/* Text */}
-      <p className="text-sm text-white/70 leading-relaxed max-w-prose">
-        We use analytics cookies to understand how you use Estrevia and improve
-        the experience. No ads, no third-party tracking.{' '}
-        <a
-          href="/privacy"
-          className="text-[#C8A84B] underline underline-offset-2 hover:text-[#E0C06A] transition-colors"
-        >
-          Privacy Policy
-        </a>
+      {/* Text — short on mobile, full on sm+ */}
+      <p className="text-xs sm:text-sm text-white/70 leading-snug sm:leading-relaxed sm:max-w-prose truncate sm:whitespace-normal min-w-0">
+        {/* Short copy visible only on mobile */}
+        <span className="sm:hidden">
+          Analytics cookies only.{' '}
+          <a
+            href="/privacy"
+            className="text-[#C8A84B] underline underline-offset-2 hover:text-[#E0C06A] transition-colors"
+            aria-label="Privacy Policy"
+          >
+            Privacy
+          </a>
+        </span>
+        {/* Full copy visible on sm+ */}
+        <span className="hidden sm:inline">
+          We use analytics cookies to understand how you use Estrevia and improve
+          the experience. No ads, no third-party tracking.{' '}
+          <a
+            href="/privacy"
+            className="text-[#C8A84B] underline underline-offset-2 hover:text-[#E0C06A] transition-colors"
+          >
+            Privacy Policy
+          </a>
+        </span>
       </p>
 
       {/* Actions */}
-      <div className="flex gap-2.5 shrink-0">
+      <div className="flex gap-1.5 sm:gap-2.5 shrink-0">
         <button
           type="button"
           onClick={() => handleConsent('declined')}
           className={[
-            'px-4 py-2 rounded-lg text-sm font-medium',
+            // Mobile: compact pill; sm+: standard button
+            'px-2.5 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium',
             'text-white/45 hover:text-white/75',
             'border border-white/8 hover:border-white/18',
             'transition-all duration-200',
@@ -106,7 +122,7 @@ export function CookieConsent() {
           type="button"
           onClick={() => handleConsent('accepted')}
           className={[
-            'px-5 py-2 rounded-lg text-sm font-semibold',
+            'px-3 py-1 sm:px-5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold',
             'transition-all duration-200',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700]/50',
             'active:scale-[0.97]',

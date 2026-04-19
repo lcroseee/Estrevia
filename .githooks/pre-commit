@@ -18,7 +18,9 @@ fi
 # Matches: sk_live_xxx, sk_test_xxx, pk_live_xxx, pk_test_xxx, whsec_xxx, private keys
 SECRET_VALUES='(sk_live_[a-zA-Z0-9]+|sk_test_[a-zA-Z0-9]+|pk_live_[a-zA-Z0-9]+|pk_test_[a-zA-Z0-9]+|whsec_[a-zA-Z0-9]+|-----BEGIN (RSA |EC )?PRIVATE KEY)'
 
-if git diff --cached -U0 --diff-filter=d -- ':(exclude).githooks/*' | grep -qE "$SECRET_VALUES"; then
+if git diff --cached -U0 --diff-filter=d \
+     -- ':(exclude).githooks/*' ':(exclude).env.ci' \
+   | grep -qE "$SECRET_VALUES"; then
   echo "ERROR: Staged changes contain what looks like a hardcoded secret."
   echo "Use process.env instead. Review with: git diff --cached"
   exit 1

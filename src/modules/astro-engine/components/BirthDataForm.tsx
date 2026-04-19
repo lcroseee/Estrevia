@@ -4,6 +4,7 @@ import { useState, useCallback, useId } from 'react';
 import type { ChartResult, CitySearchResult, HouseSystem } from '@/shared/types';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
+import { TimeInput } from './TimeInput';
 
 interface FormValues {
   date: string;
@@ -196,16 +197,10 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
             <label htmlFor={timeId} className="block text-sm font-medium text-white/70 mb-1.5">
               Time of birth
             </label>
-            <input
+            <TimeInput
               id={timeId}
-              type="time"
               value={values.time}
-              onChange={(e) => setValues((v) => ({ ...v, time: e.target.value }))}
-              className={[
-                'w-full rounded-lg border border-white/12 bg-white/5 px-3 py-2.5',
-                'text-sm text-white [color-scheme:dark]',
-                'focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/10 transition-colors',
-              ].join(' ')}
+              onChange={(v) => setValues((prev) => ({ ...prev, time: v }))}
             />
             <p className="mt-1 text-xs text-white/30">
               Houses and Ascendant are only calculated when birth time is known.

@@ -80,7 +80,7 @@ export default function PricingPage() {
             >
               Simple, transparent pricing
             </h1>
-            <p className="text-base text-white/45 max-w-md mx-auto leading-relaxed">
+            <p className="text-base text-white/75 max-w-md mx-auto leading-relaxed">
               Start free. Upgrade when you need more. No hidden fees.
             </p>
           </div>
@@ -90,12 +90,12 @@ export default function PricingPage() {
 
           {/* Trust signals */}
           <div className="mt-12 text-center">
-            <p className="text-xs text-white/25 mb-3">
+            <p className="text-xs text-white/60 mb-3">
               Payments processed by Stripe. Cancel anytime from Settings.
             </p>
             <div className="flex items-center justify-center gap-6">
               {['No contracts', 'Cancel anytime', 'Secure payments'].map((item) => (
-                <span key={item} className="text-xs text-white/30">
+                <span key={item} className="text-xs text-white/65">
                   {item}
                 </span>
               ))}
@@ -139,7 +139,7 @@ export default function PricingPage() {
                   >
                     {question}
                   </dt>
-                  <dd className="text-sm text-white/45 leading-relaxed">{answer}</dd>
+                  <dd className="text-sm text-white/75 leading-relaxed">{answer}</dd>
                 </div>
               ))}
             </dl>

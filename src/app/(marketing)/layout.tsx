@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { JsonLdScript, organizationSchema } from '@/shared/seo';
+import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher';
 
 const NAV_LINKS = [
   { href: '/chart', label: 'Chart' },
@@ -40,26 +41,30 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={href}
                   href={href}
-                  className="text-sm text-white/50 hover:text-white/90 transition-colors tracking-wide"
+                  className="text-sm text-white/70 hover:text-white transition-colors tracking-wide"
                 >
                   {label}
                 </Link>
               ))}
+              <LanguageSwitcher />
               <Link
                 href="/chart"
-                className="text-sm px-4 py-1.5 rounded-full border border-[#FFD700]/30 text-[#FFD700]/80 hover:text-[#FFD700] hover:border-[#FFD700]/60 transition-colors tracking-wide"
+                className="text-sm px-4 py-1.5 rounded-full border border-[#FFD700]/40 text-[#FFD700] hover:border-[#FFD700]/80 transition-colors tracking-wide"
               >
                 Open App
               </Link>
             </nav>
 
-            {/* Mobile: open app link only */}
-            <Link
-              href="/chart"
-              className="md:hidden text-xs px-3 py-1.5 rounded-full border border-[#FFD700]/30 text-[#FFD700]/70 hover:text-[#FFD700] transition-colors"
-            >
-              Open App
-            </Link>
+            {/* Mobile: compact switcher + open app */}
+            <div className="md:hidden flex items-center gap-2">
+              <LanguageSwitcher />
+              <Link
+                href="/chart"
+                className="text-xs px-3 py-1.5 rounded-full border border-[#FFD700]/40 text-[#FFD700] hover:border-[#FFD700]/80 transition-colors"
+              >
+                Open App
+              </Link>
+            </div>
           </div>
         </header>
 
@@ -84,35 +89,35 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
                   ☉
                 </span>
                 <span
-                  className="text-xs font-semibold tracking-[0.18em] uppercase text-white/40"
+                  className="text-xs font-semibold tracking-[0.18em] uppercase text-white/80"
                   style={{ fontFamily: 'var(--font-geist-sans)' }}
                 >
                   Estrevia
                 </span>
               </div>
-              <span className="text-xs text-white/22">
+              <span className="text-xs text-white/55">
                 Sidereal astrology — Swiss Ephemeris precision
               </span>
             </div>
 
             <nav className="flex flex-wrap items-center justify-center gap-4 sm:gap-6" aria-label="Footer navigation">
-              <Link href="/essays" className="text-xs text-white/35 hover:text-white/60 transition-colors">
+              <Link href="/essays" className="text-xs text-white/65 hover:text-white/90 transition-colors">
                 Essays
               </Link>
-              <Link href="/pricing" className="text-xs text-white/35 hover:text-white/60 transition-colors">
+              <Link href="/pricing" className="text-xs text-white/65 hover:text-white/90 transition-colors">
                 Pricing
               </Link>
-              <Link href="/terms" className="text-xs text-white/35 hover:text-white/60 transition-colors">
+              <Link href="/terms" className="text-xs text-white/65 hover:text-white/90 transition-colors">
                 Terms
               </Link>
-              <Link href="/privacy" className="text-xs text-white/35 hover:text-white/60 transition-colors">
+              <Link href="/privacy" className="text-xs text-white/65 hover:text-white/90 transition-colors">
                 Privacy
               </Link>
               <a
                 href="https://twitter.com/estrevia_app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-white/35 hover:text-white/60 transition-colors"
+                className="text-xs text-white/65 hover:text-white/90 transition-colors"
                 aria-label="Estrevia on Twitter"
               >
                 Twitter

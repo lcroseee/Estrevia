@@ -48,33 +48,46 @@ export function PricingToggle() {
   return (
     <>
       {/* Billing toggle */}
-      <div className="flex items-center justify-center gap-1 p-1 bg-white/5 rounded-xl mb-12 border border-white/6 max-w-xs mx-auto">
+      <div
+        className="flex items-center justify-center gap-1 p-1 bg-white/5 rounded-xl mb-3 border border-white/10 max-w-xs mx-auto"
+        role="radiogroup"
+        aria-label="Billing period"
+      >
         <button
+          type="button"
+          role="radio"
+          aria-checked={billing === 'monthly'}
           onClick={() => setBilling('monthly')}
           className={[
             'flex-1 text-sm py-2.5 px-4 rounded-lg transition-all font-[var(--font-geist-sans)]',
             billing === 'monthly'
-              ? 'bg-white/10 text-white font-medium shadow-sm'
-              : 'text-white/40 hover:text-white/60',
+              ? 'bg-white/12 text-white font-medium shadow-sm'
+              : 'text-white/70 hover:text-white',
           ].join(' ')}
         >
           {t('monthly')}
         </button>
         <button
+          type="button"
+          role="radio"
+          aria-checked={billing === 'annual'}
           onClick={() => setBilling('annual')}
           className={[
             'flex-1 text-sm py-2.5 px-4 rounded-lg transition-all font-[var(--font-geist-sans)] relative',
             billing === 'annual'
-              ? 'bg-white/10 text-white font-medium shadow-sm'
-              : 'text-white/40 hover:text-white/60',
+              ? 'bg-white/12 text-white font-medium shadow-sm'
+              : 'text-white/70 hover:text-white',
           ].join(' ')}
         >
           {t('annual')}
-          <span className="absolute -top-2.5 -right-2 text-[9px] px-1.5 py-0.5 rounded-full bg-[#FFD700]/15 text-[#FFD700]/80 border border-[#FFD700]/20 tracking-wide font-medium">
+          <span className="absolute -top-2.5 -right-2 text-[9px] px-1.5 py-0.5 rounded-full bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 tracking-wide font-medium">
             {t('saveBadge')}
           </span>
         </button>
       </div>
+      <p className="text-xs text-white/60 text-center mb-12">
+        {billing === 'monthly' ? t('monthlyPrice') + t('monthlyLabel') : t('annualPrice') + t('annualLabel') + ' · ' + t('annualPerMonth')}
+      </p>
 
       {/* Pricing cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">

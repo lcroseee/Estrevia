@@ -2,7 +2,17 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocale } from 'next-intl';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+
+type Segment = 'day' | 'month' | 'year';
+
+const US_ORDER: readonly Segment[] = ['month', 'day', 'year'];
+const INTL_ORDER: readonly Segment[] = ['day', 'month', 'year'];
+
+function orderForLocale(locale: string): readonly Segment[] {
+  return locale.startsWith('en') ? US_ORDER : INTL_ORDER;
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,6 +87,8 @@ export function DateInput({
   hasError = false,
   ...ariaProps
 }: DateInputProps) {
+  const locale = useLocale();
+  const order = orderForLocale(locale);
   const parsed = parseDate(value);
   const [month, setMonth] = useState(parsed.month);
   const [day, setDay] = useState(parsed.day);
@@ -103,12 +115,40 @@ export function DateInput({
     (m: string, d: string, y: string) => {
       const adjusted = clampDay(d, m, y);
       const str = toDateString(m, adjusted, y);
-      if (str) onChange(str);
+      if (!str) return;
+      if (max && str > max) return;
+      onChange(str);
     },
-    [onChange],
+    [onChange, max],
   );
 
   // ── Segment handlers ───────────────────────────────────────────────────
+
+  const refFor = useCallback((seg: Segment): React.RefObject<HTMLInputElement | null> => {
+    if (seg === 'month') return monthRef;
+    if (seg === 'day') return dayRef;
+    return yearRef;
+  }, []);
+
+  const focusNext = useCallback(
+    (seg: Segment) => {
+      const i = order.indexOf(seg);
+      if (i === order.length - 1) return;
+      const next = refFor(order[i + 1]);
+      next.current?.focus();
+      next.current?.select();
+    },
+    [order, refFor],
+  );
+
+  const focusPrev = useCallback(
+    (seg: Segment) => {
+      const i = order.indexOf(seg);
+      if (i === 0) return;
+      refFor(order[i - 1]).current?.focus();
+    },
+    [order, refFor],
+  );
 
   const handleMonthChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,12 +157,11 @@ export function DateInput({
       if (raw.length === 2 && (num < 1 || num > 12)) return;
       setMonth(raw);
       if (raw.length === 2 && num >= 1 && num <= 12) {
-        dayRef.current?.focus();
-        dayRef.current?.select();
+        focusNext('month');
       }
       if (raw.length === 2) emitChange(raw, day, year);
     },
-    [day, year, emitChange],
+    [day, year, emitChange, focusNext],
   );
 
   const handleDayChange = useCallback(
@@ -133,12 +172,11 @@ export function DateInput({
       if (raw.length === 2 && (num < 1 || num > maxDay)) return;
       setDay(raw);
       if (raw.length === 2 && num >= 1 && num <= maxDay) {
-        yearRef.current?.focus();
-        yearRef.current?.select();
+        focusNext('day');
       }
       if (raw.length === 2) emitChange(month, raw, year);
     },
-    [month, year, emitChange],
+    [month, year, emitChange, focusNext],
   );
 
   const handleYearChange = useCallback(
@@ -152,16 +190,12 @@ export function DateInput({
 
   // Backspace on empty field → go back
   const handleKeyDown = useCallback(
-    (field: 'month' | 'day' | 'year') => (e: React.KeyboardEvent<HTMLInputElement>) => {
+    (field: Segment) => (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Backspace' && e.currentTarget.value === '') {
-        if (field === 'day') {
-          monthRef.current?.focus();
-        } else if (field === 'year') {
-          dayRef.current?.focus();
-        }
+        focusPrev(field);
       }
     },
-    [],
+    [focusPrev],
   );
 
   // ── Calendar popover ───────────────────────────────────────────────────
@@ -200,7 +234,7 @@ export function DateInput({
 
   const segmentClass = [
     'bg-transparent text-center text-sm text-white outline-none',
-    'placeholder:text-white/25',
+    'placeholder:text-white/50',
     disabled ? 'cursor-not-allowed opacity-50' : '',
   ].join(' ');
 
@@ -219,55 +253,72 @@ export function DateInput({
           borderClass,
         ].join(' ')}
       >
-        {/* Month */}
-        <input
-          ref={monthRef}
-          id={id}
-          type="text"
-          inputMode="numeric"
-          placeholder="MM"
-          value={month}
-          onChange={handleMonthChange}
-          onKeyDown={handleKeyDown('month')}
-          onFocus={(e) => e.target.select()}
-          disabled={disabled}
-          className={`${segmentClass} w-7`}
-          maxLength={2}
-          aria-label="Month"
-          {...ariaProps}
-        />
-        <span className="text-white/25 text-sm select-none">/</span>
-        {/* Day */}
-        <input
-          ref={dayRef}
-          type="text"
-          inputMode="numeric"
-          placeholder="DD"
-          value={day}
-          onChange={handleDayChange}
-          onKeyDown={handleKeyDown('day')}
-          onFocus={(e) => e.target.select()}
-          disabled={disabled}
-          className={`${segmentClass} w-7`}
-          maxLength={2}
-          aria-label="Day"
-        />
-        <span className="text-white/25 text-sm select-none">/</span>
-        {/* Year */}
-        <input
-          ref={yearRef}
-          type="text"
-          inputMode="numeric"
-          placeholder="YYYY"
-          value={year}
-          onChange={handleYearChange}
-          onKeyDown={handleKeyDown('year')}
-          onFocus={(e) => e.target.select()}
-          disabled={disabled}
-          className={`${segmentClass} w-11 !text-left`}
-          maxLength={4}
-          aria-label="Year"
-        />
+        {order.map((seg, idx) => {
+          const isFirst = idx === 0;
+          const node =
+            seg === 'month' ? (
+              <input
+                key="month"
+                ref={monthRef}
+                {...(isFirst ? { id, ...ariaProps } : {})}
+                type="text"
+                inputMode="numeric"
+                placeholder="MM"
+                value={month}
+                onChange={handleMonthChange}
+                onKeyDown={handleKeyDown('month')}
+                onFocus={(e) => e.target.select()}
+                disabled={disabled}
+                className={`${segmentClass} w-7`}
+                maxLength={2}
+                aria-label="Month"
+              />
+            ) : seg === 'day' ? (
+              <input
+                key="day"
+                ref={dayRef}
+                {...(isFirst ? { id, ...ariaProps } : {})}
+                type="text"
+                inputMode="numeric"
+                placeholder="DD"
+                value={day}
+                onChange={handleDayChange}
+                onKeyDown={handleKeyDown('day')}
+                onFocus={(e) => e.target.select()}
+                disabled={disabled}
+                className={`${segmentClass} w-7`}
+                maxLength={2}
+                aria-label="Day"
+              />
+            ) : (
+              <input
+                key="year"
+                ref={yearRef}
+                {...(isFirst ? { id, ...ariaProps } : {})}
+                type="text"
+                inputMode="numeric"
+                placeholder="YYYY"
+                value={year}
+                onChange={handleYearChange}
+                onKeyDown={handleKeyDown('year')}
+                onFocus={(e) => e.target.select()}
+                disabled={disabled}
+                className={`${segmentClass} w-11 !text-left`}
+                maxLength={4}
+                aria-label="Year"
+              />
+            );
+          return (
+            <span key={seg} className="contents">
+              {node}
+              {idx < order.length - 1 && (
+                <span className="text-white/40 text-sm select-none" aria-hidden="true">
+                  /
+                </span>
+              )}
+            </span>
+          );
+        })}
 
         <div className="flex-1" />
 

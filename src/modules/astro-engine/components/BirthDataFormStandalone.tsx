@@ -4,6 +4,7 @@ import { useCallback, useId } from 'react';
 import type { CitySearchResult } from '@/shared/types';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
+import { TimeInput } from './TimeInput';
 
 interface BirthDataValues {
   name: string;
@@ -129,13 +130,11 @@ export function BirthDataFormStandalone({
         </div>
 
         {values.knowsBirthTime && (
-          <input
+          <TimeInput
             id={timeId}
-            type="time"
             value={values.time}
-            onChange={(e) => update({ time: e.target.value })}
+            onChange={(v) => update({ time: v })}
             disabled={disabled}
-            className="w-full rounded-lg border border-white/12 bg-white/5 px-3 py-2.5 text-sm text-white [color-scheme:dark] focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/10 transition-colors"
           />
         )}
       </div>

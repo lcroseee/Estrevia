@@ -54,7 +54,9 @@ export const CHALDEAN_ORDER: Planet[] = [
   Planet.Moon,
 ];
 
-// Maps Planet enum value to Swiss Ephemeris body ID
+// Maps Planet enum value to Swiss Ephemeris body ID.
+// Ascendant and Midheaven are chart angles, not real bodies — they have no
+// sweph ID. Assign -1 as a sentinel; they must never be passed to calcPlanet().
 export const PLANET_TO_SWEPH_ID: Record<Planet, number> = {
   [Planet.Sun]: SWEPH_BODY_IDS.SE_SUN,
   [Planet.Moon]: SWEPH_BODY_IDS.SE_MOON,
@@ -68,6 +70,8 @@ export const PLANET_TO_SWEPH_ID: Record<Planet, number> = {
   [Planet.Pluto]: SWEPH_BODY_IDS.SE_PLUTO,
   [Planet.NorthNode]: SWEPH_BODY_IDS.SE_MEAN_NODE,
   [Planet.Chiron]: SWEPH_BODY_IDS.SE_CHIRON,
+  [Planet.Ascendant]: -1,
+  [Planet.Midheaven]: -1,
 };
 
 export const SIGN_ELEMENT: Record<Sign, Element> = {

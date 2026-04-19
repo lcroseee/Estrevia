@@ -174,19 +174,18 @@ export function calculateChart(input: ChartInput): ChartResult {
         position.house = getPlanetHouse(position.absoluteDegree, housesResult.cusps);
       }
 
-      // Build Ascendant and Midheaven as PlanetPosition-like objects
-      // We use Sun as a placeholder planet — callers should check .planet
-      // to distinguish angle positions, but these are separate fields in ChartResult.
-      // We assign a unique sentinel: use Planet.Sun since ChartResult.ascendant
-      // is a separate field, not part of planets[]. The planet field here is
-      // semantically meaningless — it exists only because PlanetPosition requires it.
+      // Build Ascendant and Midheaven as PlanetPosition-like objects.
+      // Planet.Ascendant / Planet.Midheaven are dedicated enum values for chart
+      // angles — they are not real bodies and have no sweph body ID. Using them
+      // here ensures that consumers (e.g. PositionTable) can key rows by
+      // pos.planet without colliding with the real Sun entry in chart.planets[].
       ascendant = buildAnglePosition(
-        Planet.Sun, // sentinel — ascendant is accessed via ChartResult.ascendant
+        Planet.Ascendant,
         housesResult.ascendant,
         ayanamsa,
       );
       midheaven = buildAnglePosition(
-        Planet.Sun, // sentinel
+        Planet.Midheaven,
         housesResult.midheaven,
         ayanamsa,
       );

@@ -23,7 +23,8 @@ const SIGN_GLYPHS: Record<string, string> = {
 type SortColumn = 'planet' | 'sign' | 'degree' | 'house';
 type SortDir = 'asc' | 'desc';
 
-// Canonical planet order for default sort
+// Canonical planet order for default sort.
+// Ascendant and Midheaven are chart angles displayed at the bottom of the table.
 const PLANET_ORDER: Record<Planet, number> = {
   [Planet.Sun]: 0,
   [Planet.Moon]: 1,
@@ -37,6 +38,8 @@ const PLANET_ORDER: Record<Planet, number> = {
   [Planet.Pluto]: 9,
   [Planet.NorthNode]: 10,
   [Planet.Chiron]: 11,
+  [Planet.Ascendant]: 12,
+  [Planet.Midheaven]: 13,
 };
 
 function formatDegree(pos: PlanetPosition, isTropical: boolean): string {

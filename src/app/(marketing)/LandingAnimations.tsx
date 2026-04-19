@@ -95,14 +95,25 @@ export function LandingAnimations({ children }: { children: ReactNode }) {
           transition-delay: 460ms;
         }
 
-        /* Respect prefers-reduced-motion */
+        /* Respect prefers-reduced-motion — show content instantly, no animation */
         @media (prefers-reduced-motion: reduce) {
           [data-section] [data-animate] {
             transition-duration: 0.01ms !important;
             transform: none !important;
+            opacity: 1 !important;
           }
         }
       `}</style>
+
+      {/* Fallback: if JS is disabled, IntersectionObserver never runs — show all content */}
+      <noscript>
+        <style>{`
+          [data-section] [data-animate] {
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        `}</style>
+      </noscript>
 
       <div ref={ref}>{children}</div>
     </>
