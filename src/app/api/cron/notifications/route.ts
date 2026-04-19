@@ -57,7 +57,7 @@ export async function GET(request: Request) {
   //
   // For now, this is a placeholder that validates the cron infrastructure works.
 
-  let sent = 0;
+  const sent = 0;
 
   try {
     const db = getDb();

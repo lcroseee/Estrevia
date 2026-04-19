@@ -29,6 +29,9 @@ serviceAccountKey.json
 # debug
 npm-debug.log*
 
+# claude code local state
+.claude/scheduled_tasks.lock
+
 # vercel
 .vercel
 
