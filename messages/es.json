@@ -106,7 +106,9 @@
     "faq2A": "El día se divide en 12 partes iguales entre el amanecer y el atardecer (horas diurnas) y 12 partes iguales entre el atardecer y el siguiente amanecer (horas nocturnas). La duración varía por estación y latitud. La primera hora de cada día está regida por el planeta del día — Sol el domingo, Luna el lunes, Marte el martes, Mercurio el miércoles, Júpiter el jueves, Venus el viernes, Saturno el sábado.",
     "faq3Q": "Sideral vs tropical — ¿importa?",
     "faq3A": "Las horas planetarias se basan en los horarios de amanecer/atardecer, no en posiciones zodiacales, por lo que son idénticas en astrología sideral y tropical. La secuencia caldea (Saturno, Júpiter, Marte, Sol, Venus, Mercurio, Luna) es independiente de la ayanamsa.",
-    "breadcrumb": "Horas Planetarias"
+    "breadcrumb": "Horas Planetarias",
+    "freeTodayOnly": "Plan gratuito: solo hoy.",
+    "unlockAnyDate": "Desbloquea cualquier fecha"
   },
   "essaysPage": {
     "h1": "Ensayos de Astrología Sideral",

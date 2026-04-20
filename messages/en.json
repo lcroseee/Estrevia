@@ -106,7 +106,9 @@
     "faq2A": "The day is split into 12 equal parts between sunrise and sunset (day hours) and 12 equal parts between sunset and the next sunrise (night hours). Hour length varies by season and latitude. The first hour of each day is ruled by the weekday planet — Sun on Sunday, Moon on Monday, Mars on Tuesday, Mercury on Wednesday, Jupiter on Thursday, Venus on Friday, Saturn on Saturday.",
     "faq3Q": "Sidereal vs tropical — does it matter?",
     "faq3A": "Planetary hours are based on sunrise/sunset times, not zodiac positions, so they are identical in both sidereal and tropical astrology. The Chaldean sequence (Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon) is independent of ayanamsa.",
-    "breadcrumb": "Planetary Hours"
+    "breadcrumb": "Planetary Hours",
+    "freeTodayOnly": "Free plan: today only.",
+    "unlockAnyDate": "Unlock any date"
   },
   "essaysPage": {
     "h1": "Sidereal Astrology Essays",
