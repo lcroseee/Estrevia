@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { MoonPhaseResponse, ApiResponse } from '@/shared/types';
 import { MoonPhaseSVG } from './MoonPhaseSVG';
+import { useSubscription } from '@/shared/hooks/useSubscription';
 
 // ---------------------------------------------------------------------------
 // Moon phase computation client-side
@@ -486,6 +487,8 @@ export function MoonCalendar() {
     day: today.getDate(),
   };
 
+  const { isPro, isLoading: subLoading } = useSubscription();
+
   const [viewYear, setViewYear] = useState(todayRef.year);
   const [viewMonth, setViewMonth] = useState(todayRef.month);
   const [currentPhase, setCurrentPhase] = useState<MoonPhaseResponse | null>(null);
@@ -539,6 +542,10 @@ export function MoonCalendar() {
   }, [viewYear, viewMonth, referenceAngle, todayRef.year, todayRef.month, todayRef.day]);
 
   const goToPrevMonth = useCallback(() => {
+    if (!isPro && !subLoading) {
+      // Free users can't navigate away from the current month
+      return;
+    }
     setViewMonth((m) => {
       if (m === 1) {
         setViewYear((y) => y - 1);
@@ -546,9 +553,12 @@ export function MoonCalendar() {
       }
       return m - 1;
     });
-  }, []);
+  }, [isPro, subLoading]);
 
   const goToNextMonth = useCallback(() => {
+    if (!isPro && !subLoading) {
+      return;
+    }
     setViewMonth((m) => {
       if (m === 12) {
         setViewYear((y) => y + 1);
@@ -556,7 +566,7 @@ export function MoonCalendar() {
       }
       return m + 1;
     });
-  }, []);
+  }, [isPro, subLoading]);
 
   const goToToday = useCallback(() => {
     setViewYear(todayRef.year);
@@ -595,9 +605,10 @@ export function MoonCalendar() {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={goToPrevMonth}
-          className="flex items-center justify-center w-9 h-9 rounded-lg transition-colors hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+          disabled={!isPro && !subLoading}
+          className="flex items-center justify-center w-9 h-9 rounded-lg transition-colors hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ color: 'rgba(255,255,255,0.5)' }}
-          aria-label="Previous month"
+          aria-label={!isPro && !subLoading ? 'Previous month (Pro only)' : 'Previous month'}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -628,15 +639,27 @@ export function MoonCalendar() {
 
         <button
           onClick={goToNextMonth}
-          className="flex items-center justify-center w-9 h-9 rounded-lg transition-colors hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+          disabled={!isPro && !subLoading}
+          className="flex items-center justify-center w-9 h-9 rounded-lg transition-colors hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ color: 'rgba(255,255,255,0.5)' }}
-          aria-label="Next month"
+          aria-label={!isPro && !subLoading ? 'Next month (Pro only)' : 'Next month'}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
+
+      {/* Paywall hint for free users */}
+      {!isPro && !subLoading && (
+        <p className="text-[10px] text-center text-white/30 mb-4 -mt-2">
+          {/* Inline because MoonCalendar is a client component without next-intl wired in */}
+          Free plan: current month only.{' '}
+          <a href="/pricing" className="text-[#FFD700]/60 hover:text-[#FFD700]/80 underline">
+            Unlock full calendar
+          </a>
+        </p>
+      )}
 
       {/* Calendar body */}
       {loading && (

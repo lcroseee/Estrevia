@@ -89,7 +89,9 @@
     "faq2A": "No. Moon phase is the angular gap between the Sun and Moon — identical in both systems. The ~24° Lahiri ayanamsa offset shifts the Moon's zodiac sign but not its phase angle.",
     "faq3Q": "How accurate are the new and full moon dates?",
     "faq3A": "Dates are calculated with Swiss Ephemeris using the Moshier analytical ephemeris, accurate to ±0.01°. The event time is narrowed by binary search to within ±1 minute.",
-    "breadcrumb": "Moon Phase"
+    "breadcrumb": "Moon Phase",
+    "freeMonthOnly": "Free plan: current month only.",
+    "unlockFullCalendar": "Unlock full calendar"
   },
   "hoursPage": {
     "eyebrow": "Chaldean Order",

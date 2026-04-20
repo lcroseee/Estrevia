@@ -8,10 +8,12 @@
  */
 
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { getCurrentMoonPhase, getMoonSign } from '@/modules/astro-engine/moon-phase';
 import { calculateVoidOfCourse } from '@/modules/astro-engine/void-of-course';
 import { dateToJulianDay } from '@/modules/astro-engine/julian-day';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
+import { isPremium } from '@/modules/auth/lib/premium';
 import type { ApiResponse, MoonCalendarResponse, MoonCalendarDay } from '@/shared/types';
 
 export const runtime = 'nodejs';
@@ -56,6 +58,30 @@ export async function GET(
       { success: false, data: null, error: 'INVALID_MONTH' },
       { status: 400 },
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 2b. Free-tier gate — only the current UTC month is free
+  // ---------------------------------------------------------------------------
+  const now = new Date();
+  const currentYear = now.getUTCFullYear();
+  const currentMonth = now.getUTCMonth() + 1;
+  const isCurrentMonth = year === currentYear && month === currentMonth;
+
+  if (!isCurrentMonth) {
+    const { userId } = await auth();
+    const userIsPremium = userId ? await isPremium(userId) : false;
+    if (!userIsPremium) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: 'PREMIUM_REQUIRED',
+          meta: { feature: 'moon_calendar_history' },
+        },
+        { status: 403 },
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------
