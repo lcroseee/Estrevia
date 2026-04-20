@@ -56,11 +56,6 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(60, '1m'),
     prefix: 'rl:health',
   }),
-  waitlist: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(5, '1m'),
-    prefix: 'rl:waitlist',
-  }),
   'stripe/checkout': new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(5, '1m'),

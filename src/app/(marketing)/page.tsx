@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { createMetadata, JsonLdScript, organizationSchema, softwareAppSchema, howToSchema, faqSchema } from '@/shared/seo';
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';
 import { LandingAnimations } from './LandingAnimations';
-import { WaitlistForm } from './WaitlistForm';
 import { NewFeatureCards } from './NewFeatureCards';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
@@ -411,50 +410,6 @@ export default function LandingPage() {
                 </div>
               ))}
             </dl>
-          </div>
-        </section>
-
-        {/* ── Waitlist CTA ──────────────────────────────────────────────────── */}
-        <section
-          className="relative px-4 sm:px-6 py-24"
-          aria-labelledby="waitlist-heading"
-          data-section="waitlist"
-        >
-          <div
-            className="absolute top-0 inset-x-0 h-px"
-            style={{ background: 'linear-gradient(to right, transparent, rgba(255,215,0,0.15), transparent)' }}
-            aria-hidden="true"
-          />
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255,215,0,0.04) 0%, transparent 70%)',
-            }}
-            aria-hidden="true"
-          />
-
-          <div className="relative max-w-xl mx-auto text-center" data-animate="fade-up-0">
-            <p className="text-xs tracking-[0.2em] uppercase text-[#FFD700]/50 mb-4">
-              Early access
-            </p>
-            <h2
-              id="waitlist-heading"
-              className="text-3xl sm:text-4xl font-light text-white mb-4"
-              style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
-            >
-              Get notified when we launch
-            </h2>
-            <p className="text-sm text-white/45 mb-8 leading-relaxed">
-              Full natal chart calculation, 120 sidereal essays, Cosmic Passport, and
-              planetary hours — all free at launch.
-            </p>
-
-            <WaitlistForm />
-
-            <p className="mt-4 text-xs text-white/60">
-              No spam. Unsubscribe at any time.
-            </p>
           </div>
         </section>
 
