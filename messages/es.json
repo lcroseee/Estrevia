@@ -807,6 +807,20 @@
     "s10P2Prefix": "Consultas de privacidad, solicitudes RGPD e informes de violación de datos: ",
     "s10P3": "También tienes derecho a presentar una queja ante tu autoridad supervisora local (p. ej., ICO en el Reino Unido, CNIL en Francia)."
   },
+  "support": {
+    "eyebrow": "Ayuda y contacto",
+    "h1": "Estamos para ayudarte",
+    "description": "Envíanos un mensaje. Los miembros Pro reciben respuesta en menos de 24 horas.",
+    "emailLabel": "Tu correo",
+    "subjectLabel": "Asunto",
+    "messageLabel": "Mensaje",
+    "submit": "Enviar Mensaje",
+    "sending": "Enviando...",
+    "successMessage": "Gracias — te responderemos lo antes posible.",
+    "errorSend": "No se pudo enviar tu mensaje. Inténtalo de nuevo.",
+    "errorNetwork": "Error de red. Verifica tu conexión.",
+    "priorityBadge": "Soporte Pro: respuesta prioritaria en menos de 24 horas"
+  },
   "errors": {
     "notFound": "Página no encontrada",
     "notFoundDesc": "La página que buscas no existe.",

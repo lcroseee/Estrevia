@@ -116,6 +116,11 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(30, '1m'),
     prefix: 'rl:user/subscription',
   }),
+  'support/contact': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, '5m'),
+    prefix: 'rl:support/contact',
+  }),
 };
 
 // Fallback limiter for endpoints not explicitly configured (general API limit)

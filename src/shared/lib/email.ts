@@ -56,3 +56,44 @@ export async function sendTrialEndingEmail(email: string, trialEnd: Date): Promi
     ].join('\n'),
   });
 }
+
+interface SupportEmailParams {
+  fromEmail: string;
+  isPro: boolean;
+  plan: string;
+  subject: string;
+  message: string;
+  userId: string | null;
+}
+
+const SUPPORT_INBOX = 'hello@estrevia.app';
+
+export function buildSupportEmailBody(params: SupportEmailParams): {
+  subject: string;
+  text: string;
+} {
+  const tag = params.isPro ? '[PRIORITY] ' : '[Support] ';
+  const subject = `${tag}${params.subject}`;
+  const text = [
+    `From: ${params.fromEmail}`,
+    `User ID: ${params.userId ?? 'anonymous'}`,
+    `Plan: ${params.plan}`,
+    `Pro: ${params.isPro ? 'YES' : 'no'}`,
+    '',
+    '----- Message -----',
+    params.message,
+  ].join('\n');
+  return { subject, text };
+}
+
+export async function sendSupportEmail(params: SupportEmailParams): Promise<void> {
+  const resend = getResend();
+  const { subject, text } = buildSupportEmailBody(params);
+  await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: SUPPORT_INBOX,
+    replyTo: params.fromEmail,
+    subject,
+    text,
+  });
+}

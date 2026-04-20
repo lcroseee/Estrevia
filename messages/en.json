@@ -807,6 +807,20 @@
     "s10P2Prefix": "Privacy enquiries, GDPR requests, and data breach reports: ",
     "s10P3": "You also have the right to lodge a complaint with your local supervisory authority (e.g., ICO in the UK, CNIL in France)."
   },
+  "support": {
+    "eyebrow": "Help & Contact",
+    "h1": "We're here to help",
+    "description": "Send us a message. Pro members receive a reply within 24 hours.",
+    "emailLabel": "Your email",
+    "subjectLabel": "Subject",
+    "messageLabel": "Message",
+    "submit": "Send Message",
+    "sending": "Sending...",
+    "successMessage": "Thanks — we'll reply as soon as possible.",
+    "errorSend": "Could not send your message. Please try again.",
+    "errorNetwork": "Network error. Please check your connection.",
+    "priorityBadge": "Pro support: priority reply within 24 hours"
+  },
   "errors": {
     "notFound": "Page not found",
     "notFoundDesc": "The page you're looking for doesn't exist.",
