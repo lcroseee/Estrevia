@@ -81,6 +81,11 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(30, '1m'),
     prefix: 'rl:synastry/view',
   }),
+  'synastry/analyze': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1m'),
+    prefix: 'rl:synastry/analyze',
+  }),
   'tarot/daily': new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(10, '1m'),
