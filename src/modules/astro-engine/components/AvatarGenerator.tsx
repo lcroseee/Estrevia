@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 
@@ -30,6 +30,15 @@ export function AvatarGenerator({
   const t = useTranslations('avatar');
   const { isPro, isLoading: subLoading } = useSubscription();
 
+  const [quota, setQuota] = useState<{ used: number; limit: number } | null>(null);
+
+  useEffect(() => {
+    if (subLoading || isPro) return;
+    // Lightweight HEAD-style fetch using a known endpoint; we infer current usage from a 403 response.
+    // For now, just rely on FREE_LIMIT_REACHED responses to update quota.
+    setQuota({ used: 0, limit: 3 });
+  }, [isPro, subLoading]);
+
   const [style, setStyle] = useState<AvatarStyle>('cosmic');
   const [state, setState] = useState<GenerationState>('idle');
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
@@ -55,10 +64,17 @@ export function AvatarGenerator({
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        const msg =
-          data.error === 'RATE_LIMITED'
-            ? t('errorRateLimit')
-            : t('errorGeneration');
+        let msg: string;
+        if (data.error === 'FREE_LIMIT_REACHED') {
+          msg = t('freeLimitReached', {
+            limit: data.meta?.limit ?? 3,
+          });
+          setQuota({ used: data.meta?.count ?? 3, limit: data.meta?.limit ?? 3 });
+        } else if (data.error === 'RATE_LIMITED') {
+          msg = t('errorRateLimit');
+        } else {
+          msg = t('errorGeneration');
+        }
         setErrorMessage(msg);
         setState('error');
         return;
@@ -68,6 +84,7 @@ export function AvatarGenerator({
         `data:${data.data.mimeType};base64,${data.data.imageBase64}`,
       );
       setState('done');
+      if (!isPro) setQuota((q) => (q ? { ...q, used: q.used + 1 } : { used: 1, limit: 3 }));
     } catch {
       setErrorMessage(t('errorGeneration'));
       setState('error');
@@ -226,6 +243,13 @@ export function AvatarGenerator({
           </>
         )}
       </button>
+
+      {/* Free quota indicator */}
+      {!isPro && quota && (
+        <p className="text-xs text-center text-white/45">
+          {t('freeRemaining', { used: quota.used, limit: quota.limit })}
+        </p>
+      )}
 
       {/* Free tier hint */}
       {!isPro && state === 'done' && (

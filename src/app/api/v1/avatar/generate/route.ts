@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { requireAuth } from '@/modules/auth/lib/helpers';
 import { isPremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
+import { checkAndIncrementUsage } from '@/shared/lib/usage';
 import type { ApiResponse } from '@/shared/types';
 
 const bodySchema = z.object({
@@ -76,10 +77,24 @@ export async function POST(
   }
 
   // ---------------------------------------------------------------------------
-  // 2b. Tier check — free users are limited to 'cosmic' style
-  //     (generation count enforcement is a Phase 2 feature requiring a counter table)
+  // 2b. Tier check — free users get 3 generations/month and 'cosmic' style only
   // ---------------------------------------------------------------------------
   const userIsPremium = await isPremium(userId);
+
+  if (!userIsPremium) {
+    const usage = await checkAndIncrementUsage(userId, 'avatar', 'month', 3);
+    if (!usage.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: 'FREE_LIMIT_REACHED',
+          meta: { limit: usage.limit, count: usage.count, period: 'month' },
+        },
+        { status: 403 },
+      );
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // 3. Parse & validate body
