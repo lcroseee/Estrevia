@@ -1,4 +1,4 @@
-import { pgTable, text, serial, real, jsonb, timestamp, boolean, date, unique } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, real, jsonb, timestamp, boolean, date, unique, integer } from 'drizzle-orm/pg-core';
 import type { ChartResult } from '@/shared/types/astrology';
 
 // ---------------------------------------------------------------------------
@@ -128,6 +128,23 @@ export const pushSubscriptions = pgTable('push_subscriptions', {
 });
 
 // ---------------------------------------------------------------------------
+// usage_counters — per-user free-tier feature usage (daily/monthly)
+// ---------------------------------------------------------------------------
+export const usageCounters = pgTable('usage_counters', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  feature: text('feature').notNull(), // e.g. 'synastry', 'avatar'
+  periodKey: text('period_key').notNull(), // e.g. '2026-04-19' or '2026-04'
+  count: integer('count').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique('usage_counters_user_feature_period_unique').on(table.userId, table.feature, table.periodKey),
+]);
+
+// ---------------------------------------------------------------------------
 // notification_preferences
 // ---------------------------------------------------------------------------
 export const notificationPreferences = pgTable('notification_preferences', {
@@ -153,3 +170,4 @@ export type TarotReading = typeof tarotReadings.$inferSelect;
 export type DailyCard = typeof dailyCards.$inferSelect;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+export type UsageCounter = typeof usageCounters.$inferSelect;

@@ -58,6 +58,7 @@ export function SynastryClient() {
   const [result, setResult] = useState<SynastryData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showUpgradeCta, setShowUpgradeCta] = useState(false);
 
   const handleCalculate = useCallback(async () => {
     // Validate both forms
@@ -71,6 +72,7 @@ export function SynastryClient() {
     }
 
     setError(null);
+    setShowUpgradeCta(false);
     setIsLoading(true);
 
     try {
@@ -99,18 +101,25 @@ export function SynastryClient() {
         }),
       });
 
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? `Server error ${res.status}`);
-      }
-
-      const data = (await res.json()) as {
+      const data = (await res.json().catch(() => ({}))) as {
         success: boolean;
         data: SynastryData;
+        error?: string;
       };
 
-      if (!data.success || !data.data) {
-        throw new Error('Invalid response');
+      if (!res.ok || !data.success) {
+        if (data.error === 'FREE_LIMIT_REACHED') {
+          setError(t('limitReached'));
+          setShowUpgradeCta(true);
+          return;
+        }
+        setError(t('errorCalculation'));
+        return;
+      }
+
+      if (!data.data) {
+        setError(t('errorCalculation'));
+        return;
       }
 
       setResult(data.data);
@@ -124,6 +133,7 @@ export function SynastryClient() {
   const handleReset = useCallback(() => {
     setResult(null);
     setError(null);
+    setShowUpgradeCta(false);
   }, []);
 
   if (result) {
@@ -192,6 +202,14 @@ export function SynastryClient() {
             className="rounded-lg border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-300"
           >
             {error}
+            {showUpgradeCta && (
+              <a
+                href="/pricing"
+                className="mt-2 inline-block px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-br from-[#FFD700]/90 to-[#FF8C00]/80 text-black"
+              >
+                {t('upgradeCta')}
+              </a>
+            )}
           </div>
         )}
 
