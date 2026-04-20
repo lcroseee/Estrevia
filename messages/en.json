@@ -537,7 +537,9 @@
     "shareButton": "Share Result",
     "newComparison": "New Comparison",
     "limitReached": "Free users can calculate 1 synastry per day",
-    "upgradeCta": "Upgrade for unlimited synastry"
+    "upgradeCta": "Upgrade for unlimited synastry",
+    "analyzing": "Analyzing compatibility...",
+    "analysisError": "Could not generate analysis. Please try again."
   },
   "tarot": {
     "title": "Thoth Tarot",

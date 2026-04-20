@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { BirthDataFormStandalone } from './BirthDataFormStandalone';
 import { SynastryResult } from './SynastryResult';
+import { useSubscription } from '@/shared/hooks/useSubscription';
 import type { SynastryScores } from '@/modules/astro-engine/synastry-scoring';
 import type { SynastryAspect } from '@/modules/astro-engine/synastry';
 
@@ -34,6 +35,7 @@ interface BirthDataValues {
 
 export function SynastryClient() {
   const t = useTranslations('synastry');
+  const { isPro } = useSubscription();
 
   const [person1, setPerson1] = useState<BirthDataValues>({
     name: '',
@@ -58,6 +60,11 @@ export function SynastryClient() {
   const [result, setResult] = useState<SynastryData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // AI Analysis state (Pro only)
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   const handleCalculate = useCallback(async () => {
     // Validate both forms
@@ -124,12 +131,38 @@ export function SynastryClient() {
   const handleReset = useCallback(() => {
     setResult(null);
     setError(null);
+    setAiAnalysis(null);
+    setAnalyzeError(null);
   }, []);
+
+  const handleAnalyze = useCallback(async () => {
+    if (!result?.id || isAnalyzing) return;
+    setIsAnalyzing(true);
+    setAnalyzeError(null);
+    try {
+      const res = await fetch(`/api/v1/synastry/${result.id}/analyze`, {
+        method: 'POST',
+      });
+      const data = (await res.json()) as {
+        success: boolean;
+        data?: { analysis: string };
+      };
+      if (data.success && data.data?.analysis) {
+        setAiAnalysis(data.data.analysis);
+      } else {
+        setAnalyzeError(t('analysisError'));
+      }
+    } catch {
+      setAnalyzeError(t('analysisError'));
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [result, isAnalyzing, t]);
 
   if (result) {
     return (
       <div className="min-h-[calc(100vh-4rem)] px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-6">
           <SynastryResult
             id={result.id}
             scores={result.scores}
@@ -138,6 +171,51 @@ export function SynastryClient() {
             chart2Summary={result.chart2Summary}
             onReset={handleReset}
           />
+
+          {/* AI Analysis section — Pro only; separate from error handling added by Task 3 */}
+          <section aria-labelledby="ai-analysis-heading" className="space-y-3">
+            <h3
+              id="ai-analysis-heading"
+              className="text-sm font-medium text-white/60 uppercase tracking-wider"
+            >
+              {t('aiAnalysis')}
+            </h3>
+
+            {!aiAnalysis && isPro && (
+              <button
+                type="button"
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-[#A78BFA]/20 text-[#A78BFA] hover:bg-[#A78BFA]/30 transition-colors disabled:opacity-50"
+              >
+                {isAnalyzing ? t('analyzing') : t('generateAnalysis')}
+              </button>
+            )}
+
+            {!isPro && (
+              <p className="text-xs text-white/40">
+                {t('aiAnalysis')} &mdash; Pro feature.{' '}
+                <a href="/pricing" className="text-[#FFD700]/70 hover:text-[#FFD700]">
+                  {t('upgradeCta')}
+                </a>
+              </p>
+            )}
+
+            {aiAnalysis && (
+              <p
+                className="text-sm text-white/70 leading-relaxed whitespace-pre-line"
+                style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}
+              >
+                {aiAnalysis}
+              </p>
+            )}
+
+            {analyzeError && (
+              <p className="text-xs text-red-400" role="alert">
+                {analyzeError}
+              </p>
+            )}
+          </section>
         </div>
       </div>
     );

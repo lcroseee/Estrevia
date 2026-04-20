@@ -537,7 +537,9 @@
     "shareButton": "Compartir resultado",
     "newComparison": "Nueva comparación",
     "limitReached": "Los usuarios gratuitos pueden calcular 1 sinastría por día",
-    "upgradeCta": "Mejora para sinastría ilimitada"
+    "upgradeCta": "Mejora para sinastría ilimitada",
+    "analyzing": "Analizando compatibilidad...",
+    "analysisError": "No se pudo generar el análisis. Inténtalo de nuevo."
   },
   "tarot": {
     "title": "Tarot Thoth",
