@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import {
   createMetadata,
   JsonLdScript,
@@ -12,7 +13,7 @@ import { SITE_URL } from '@/shared/seo/constants';
 import PrecessionDiagramLoader from '@/modules/esoteric/components/PrecessionDiagramLoader';
 
 // ---------------------------------------------------------------------------
-// Metadata
+// Metadata (kept English-only — SEO concern, not user-facing UI)
 // ---------------------------------------------------------------------------
 
 export const metadata: Metadata = createMetadata({
@@ -33,91 +34,84 @@ export const metadata: Metadata = createMetadata({
 });
 
 // ---------------------------------------------------------------------------
-// FAQ data (AEO — AI assistants extract these directly)
+// Sign rows — sidereal/tropical date strings come from translations.
+// Sign labels stay in English/Latin form per i18n style guide.
 // ---------------------------------------------------------------------------
 
-const FAQ_ITEMS = [
-  {
-    question: 'What is sidereal astrology?',
-    answer:
-      'Sidereal astrology is a zodiac system that measures planetary positions against the actual constellations in the sky. It uses the Lahiri ayanamsa — currently approximately 24°07′ — to correct for the precession of the equinoxes. Most sidereal practitioners align with Vedic (Jyotish) tradition. The result is that sidereal zodiac dates are roughly 24 days later than tropical dates.',
-  },
-  {
-    question: 'What is the difference between sidereal and tropical astrology?',
-    answer:
-      'Tropical astrology fixes Aries at the spring equinox (around March 21), regardless of where the Aries constellation actually is. Sidereal astrology tracks the actual position of the Aries constellation. Due to the precession of the equinoxes — a 26,000-year wobble in Earth\'s axis — the two systems have drifted approximately 24 degrees apart. This means most people\'s sidereal sun sign is one sign earlier than their tropical sun sign.',
-  },
-  {
-    question: 'What is the Lahiri ayanamsa?',
-    answer:
-      'The ayanamsa is the angular difference between the tropical and sidereal zodiacs at any given moment. The Lahiri ayanamsa — also called the Chitrapaksha ayanamsa — is the official standard of the Indian government and the most widely used in Vedic astrology. As of 2026, it is approximately 24°07′. Estrevia uses the Lahiri ayanamsa for all calculations via the Swiss Ephemeris library.',
-  },
-  {
-    question: 'Will my zodiac sign change with sidereal astrology?',
-    answer:
-      'For most people, yes. If you were born in the first 24 days of your tropical zodiac sign, your sidereal sun sign is likely the previous sign. For example, an Aries born April 1 (tropical) is a sidereal Pisces. Someone born April 15 is a sidereal Aries. Calculate your chart to find your actual sidereal positions.',
-  },
-  {
-    question: 'What is the precession of the equinoxes?',
-    answer:
-      'The precession of the equinoxes is a 25,772-year cycle caused by the gravitational pull of the Moon and Sun on Earth\'s equatorial bulge. It causes Earth\'s rotational axis to trace a slow circle in the sky — much like a spinning top slowly wobbling. The result is that the spring equinox point drifts westward through the zodiac constellations at approximately 50.3 arc-seconds per year, or about 1 degree every 72 years.',
-  },
-  {
-    question: 'Is sidereal astrology more accurate than tropical?',
-    answer:
-      'Accuracy depends on what you are measuring. Sidereal astrology is astronomically accurate — it describes where planets actually are relative to the constellations. Tropical astrology is seasonally accurate — it connects zodiac positions to the solar year and seasons. Neither is objectively more "correct"; they measure different things. Many practitioners, particularly those trained in Vedic tradition, argue that sidereal placement is more personally accurate for individual natal charts.',
-  },
-  {
-    question: 'Which planets does sidereal astrology apply to?',
-    answer:
-      'Sidereal astrology shifts the zodiac position of all celestial bodies: Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto, North Node (Rahu), and Chiron. The ayanamsa correction applies equally to all planets — each one\'s zodiac position shifts by approximately 24°07′ relative to its tropical position.',
-  },
-];
+const SIGN_ROWS = [
+  { sign: 'Aries',       sKey: 'datesAriesS',       tKey: 'datesAriesT' },
+  { sign: 'Taurus',      sKey: 'datesTaurusS',      tKey: 'datesTaurusT' },
+  { sign: 'Gemini',      sKey: 'datesGeminiS',      tKey: 'datesGeminiT' },
+  { sign: 'Cancer',      sKey: 'datesCancerS',      tKey: 'datesCancerT' },
+  { sign: 'Leo',         sKey: 'datesLeoS',         tKey: 'datesLeoT' },
+  { sign: 'Virgo',       sKey: 'datesVirgoS',       tKey: 'datesVirgoT' },
+  { sign: 'Libra',       sKey: 'datesLibraS',       tKey: 'datesLibraT' },
+  { sign: 'Scorpio',     sKey: 'datesScorpioS',     tKey: 'datesScorpioT' },
+  { sign: 'Sagittarius', sKey: 'datesSagittariusS', tKey: 'datesSagittariusT' },
+  { sign: 'Capricorn',   sKey: 'datesCapricornS',   tKey: 'datesCapricornT' },
+  { sign: 'Aquarius',    sKey: 'datesAquariusS',    tKey: 'datesAquariusT' },
+  { sign: 'Pisces',      sKey: 'datesPiscesS',      tKey: 'datesPiscesT' },
+] as const;
 
-// ---------------------------------------------------------------------------
-// Sidereal vs tropical date comparison table data
-// ---------------------------------------------------------------------------
+const COMPARISON_ROWS = [
+  { aspectKey: 'compRow1Aspect', sKey: 'compRow1Sidereal', tKey: 'compRow1Tropical' },
+  { aspectKey: 'compRow2Aspect', sKey: 'compRow2Sidereal', tKey: 'compRow2Tropical' },
+  { aspectKey: 'compRow3Aspect', sKey: 'compRow3Sidereal', tKey: 'compRow3Tropical' },
+  { aspectKey: 'compRow4Aspect', sKey: 'compRow4Sidereal', tKey: 'compRow4Tropical' },
+  { aspectKey: 'compRow5Aspect', sKey: 'compRow5Sidereal', tKey: 'compRow5Tropical' },
+  { aspectKey: 'compRow6Aspect', sKey: 'compRow6Sidereal', tKey: 'compRow6Tropical' },
+  { aspectKey: 'compRow7Aspect', sKey: 'compRow7Sidereal', tKey: 'compRow7Tropical' },
+] as const;
 
-const SIGN_DATE_COMPARISON = [
-  { sign: 'Aries',       sidereal: 'Apr 14 – May 14',   tropical: 'Mar 21 – Apr 19' },
-  { sign: 'Taurus',      sidereal: 'May 15 – Jun 14',   tropical: 'Apr 20 – May 20' },
-  { sign: 'Gemini',      sidereal: 'Jun 15 – Jul 15',   tropical: 'May 21 – Jun 20' },
-  { sign: 'Cancer',      sidereal: 'Jul 16 – Aug 15',   tropical: 'Jun 21 – Jul 22' },
-  { sign: 'Leo',         sidereal: 'Aug 16 – Sep 15',   tropical: 'Jul 23 – Aug 22' },
-  { sign: 'Virgo',       sidereal: 'Sep 16 – Oct 15',   tropical: 'Aug 23 – Sep 22' },
-  { sign: 'Libra',       sidereal: 'Oct 16 – Nov 14',   tropical: 'Sep 23 – Oct 22' },
-  { sign: 'Scorpio',     sidereal: 'Nov 15 – Dec 14',   tropical: 'Oct 23 – Nov 21' },
-  { sign: 'Sagittarius', sidereal: 'Dec 15 – Jan 13',   tropical: 'Nov 22 – Dec 21' },
-  { sign: 'Capricorn',   sidereal: 'Jan 14 – Feb 12',   tropical: 'Dec 22 – Jan 19' },
-  { sign: 'Aquarius',    sidereal: 'Feb 13 – Mar 13',   tropical: 'Jan 20 – Feb 18' },
-  { sign: 'Pisces',      sidereal: 'Mar 14 – Apr 13',   tropical: 'Feb 19 – Mar 20' },
-];
+const FAQS = [
+  { qKey: 'faq1Q', aKey: 'faq1A' },
+  { qKey: 'faq2Q', aKey: 'faq2A' },
+  { qKey: 'faq3Q', aKey: 'faq3A' },
+  { qKey: 'faq4Q', aKey: 'faq4A' },
+  { qKey: 'faq5Q', aKey: 'faq5A' },
+  { qKey: 'faq6Q', aKey: 'faq6A' },
+  { qKey: 'faq7Q', aKey: 'faq7A' },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
-export default function WhySiderealPage() {
+export default async function WhySiderealPage() {
+  const t = await getTranslations('whySidereal');
   const pageUrl = `${SITE_URL}/why-sidereal`;
   const today = new Date().toISOString().split('T')[0];
 
-  const faqLd = faqSchema(FAQ_ITEMS);
+  const faqLd = faqSchema(
+    FAQS.map(({ qKey, aKey }) => ({
+      question: t(qKey),
+      answer: t(aKey),
+    })),
+  );
 
   const breadcrumbLd = breadcrumbSchema([
-    { name: 'Home', url: SITE_URL },
-    { name: 'Why Sidereal', url: pageUrl },
+    { name: t('breadcrumbHome'), url: SITE_URL },
+    { name: t('breadcrumbCurrent'), url: pageUrl },
   ]);
 
   const orgLd = organizationSchema();
 
   const articleLd = articleSchema({
-    title: 'Why Sidereal Astrology Differs from Tropical',
-    description:
-      'Sidereal astrology tracks real constellations using the Lahiri ayanamsa. Most sun signs shift one sign earlier vs tropical. Calculate your true chart.',
+    title: t('h1'),
+    description: t('leadParagraph'),
     url: pageUrl,
     datePublished: '2024-01-15T00:00:00Z',
     dateModified: today,
   });
+
+  const internalLinks = [
+    { href: '/signs/aries',   label: t('linkAries') },
+    { href: '/signs/taurus',  label: t('linkTaurus') },
+    { href: '/signs/scorpio', label: t('linkScorpio') },
+    { href: '/signs/pisces',  label: t('linkPisces') },
+    { href: '/chart',         label: t('linkChart') },
+    { href: '/moon',          label: t('linkMoon') },
+  ];
 
   return (
     <>
@@ -129,11 +123,11 @@ export default function WhySiderealPage() {
       <div className="max-w-3xl mx-auto px-4 py-10 md:py-16">
 
         {/* ── Breadcrumb ─────────────────────────────────────────────── */}
-        <nav aria-label="Breadcrumb" className="mb-8 text-sm text-white/40">
+        <nav aria-label={t('breadcrumbAria')} className="mb-8 text-sm text-white/40">
           <ol className="flex items-center gap-2">
-            <li><Link href="/" className="hover:text-white/70 transition-colors">Home</Link></li>
+            <li><Link href="/" className="hover:text-white/70 transition-colors">{t('breadcrumbHome')}</Link></li>
             <li aria-hidden="true">/</li>
-            <li className="text-white/60" aria-current="page">Why Sidereal</li>
+            <li className="text-white/60" aria-current="page">{t('breadcrumbCurrent')}</li>
           </ol>
         </nav>
 
@@ -145,24 +139,19 @@ export default function WhySiderealPage() {
             style={{ borderColor: 'rgba(255,215,0,0.2)', color: 'rgba(255,215,0,0.55)' }}
           >
             <span aria-hidden="true" style={{ fontFamily: 'serif' }}>★</span>
-            Sidereal · Lahiri Ayanamsa · ~24°07′
+            {t('eyebrow')}
           </div>
 
           <h1
             className="text-3xl md:text-5xl font-light leading-[1.1] mb-5"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
           >
-            Why Sidereal Astrology<br className="hidden sm:block" /> Differs from Tropical
+            {t('h1')}
           </h1>
 
           {/* AEO: direct-answer first paragraph — this is the AI extraction target */}
           <p className="text-lg text-white/72 leading-relaxed" style={{ fontFamily: 'var(--font-geist-sans)' }}>
-            Sidereal astrology measures zodiac positions against the actual constellations in
-            the sky, correcting for the precession of the equinoxes using the Lahiri ayanamsa
-            (currently ~24°07′). Tropical astrology — used by most Western horoscopes — anchors
-            Aries to the spring equinox, which has drifted ~24 degrees from the Aries constellation
-            over 2,000 years. The practical result: most people&apos;s sidereal sun sign is one sign
-            earlier than their tropical sign, and all planetary positions shift by roughly 24 days.
+            {t('leadParagraph')}
           </p>
         </header>
 
@@ -173,30 +162,12 @@ export default function WhySiderealPage() {
             className="text-2xl font-light mb-4"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
-            The Precession of the Equinoxes
+            {t('section1Heading')}
           </h2>
           <div className="text-white/70 leading-relaxed space-y-4 font-[var(--font-geist-sans)]">
-            <p>
-              Earth&apos;s rotational axis is not fixed — it traces a slow circle in the sky over
-              approximately 25,772 years, like a spinning top gradually wobbling. This motion,
-              called the precession of the equinoxes, causes the spring equinox point to drift
-              westward through the zodiac constellations at approximately 50.3 arc-seconds per
-              year — about 1 degree every 72 years.
-            </p>
-            <p>
-              When the Western zodiac was codified (approximately 2,000 years ago in ancient
-              Greece), the spring equinox aligned closely with the Aries constellation. Tropical
-              astrology froze that alignment: 0° Aries always equals the spring equinox.
-              Sidereal astrology did not freeze it. It tracks where the Aries constellation
-              actually is today — which is now approximately 24°07′ behind where it was when
-              the tropical system was created.
-            </p>
-            <p>
-              The International Astronomical Union (IAU) defines the constellation boundaries
-              used as sidereal reference points. The Lahiri ayanamsa — adopted as the Indian
-              national standard in 1955 — calculates this drift with precision, making it the
-              most rigorously defined sidereal reference in use today.
-            </p>
+            <p>{t('section1P1')}</p>
+            <p>{t('section1P2')}</p>
+            <p>{t('section1P3')}</p>
           </div>
 
           <PrecessionDiagramLoader />
@@ -209,48 +180,40 @@ export default function WhySiderealPage() {
             className="text-2xl font-light mb-4"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
-            How Sidereal and Tropical Differ in Practice
+            {t('section2Heading')}
           </h2>
 
           {/* Comparison table — AEO: AI parses tables better than prose */}
           <div className="overflow-x-auto mb-6 rounded-xl border border-white/10">
-            <table className="w-full text-sm" aria-label="Sidereal vs tropical astrology comparison">
+            <table className="w-full text-sm" aria-label={t('compTableAria')}>
               <thead>
                 <tr className="border-b border-white/10 bg-white/5">
                   <th
                     scope="col"
                     className="text-left px-4 py-3 text-white/50 font-medium text-xs uppercase tracking-widest"
                   >
-                    Aspect
+                    {t('compTableH1')}
                   </th>
                   <th
                     scope="col"
                     className="text-left px-4 py-3 text-white/50 font-medium text-xs uppercase tracking-widest"
                   >
-                    Sidereal (Lahiri)
+                    {t('compTableH2')}
                   </th>
                   <th
                     scope="col"
                     className="text-left px-4 py-3 text-white/50 font-medium text-xs uppercase tracking-widest"
                   >
-                    Tropical (Western)
+                    {t('compTableH3')}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  ['Reference point', 'Actual star constellations', 'Spring equinox (seasonal)'],
-                  ['Ayanamsa correction', '~24°07′ (Lahiri, 2026)', '0° (not applied)'],
-                  ['Aries start date', '~April 14', '~March 21'],
-                  ['Traditional roots', 'Vedic / Jyotish astrology', 'Hellenistic / Western astrology'],
-                  ['Astronomically aligned', 'Yes — matches sky positions', 'No — drifts from sky by ~24°'],
-                  ['Sun sign shift', 'Typically 1 sign earlier vs tropical', 'Baseline'],
-                  ['Calculation standard', 'Swiss Ephemeris + Lahiri ayanamsa', 'Swiss Ephemeris (no ayanamsa)'],
-                ].map(([aspect, sidereal, tropicalVal], i) => (
-                  <tr key={i} className="border-b border-white/5 last:border-0">
-                    <td className="px-4 py-3 text-white/50 font-medium">{aspect}</td>
-                    <td className="px-4 py-3 text-white/85">{sidereal}</td>
-                    <td className="px-4 py-3 text-white/60">{tropicalVal}</td>
+                {COMPARISON_ROWS.map(({ aspectKey, sKey, tKey }) => (
+                  <tr key={aspectKey} className="border-b border-white/5 last:border-0">
+                    <td className="px-4 py-3 text-white/50 font-medium">{t(aspectKey)}</td>
+                    <td className="px-4 py-3 text-white/85">{t(sKey)}</td>
+                    <td className="px-4 py-3 text-white/60">{t(tKey)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -258,21 +221,8 @@ export default function WhySiderealPage() {
           </div>
 
           <div className="text-white/70 leading-relaxed space-y-4 font-[var(--font-geist-sans)]">
-            <p>
-              The practical consequence is that if your tropical horoscope says you are a
-              Scorpio, your sidereal chart likely shows your Sun in Libra — or Scorpio if
-              you were born in the second half of Scorpio&apos;s tropical window. Every planet
-              in your chart shifts by approximately 24°07′, which for most people moves
-              each planet into the previous zodiac sign.
-            </p>
-            <p>
-              This is not a correction of an error in tropical astrology — it is a different
-              measurement framework asking different questions. Tropical astrology models
-              the relationship between humanity and the solar seasons; sidereal astrology
-              models the relationship between humanity and the fixed star background.
-              Both descriptions have interpretive validity; they simply describe different
-              layers of the astronomical situation at birth.
-            </p>
+            <p>{t('section2P1')}</p>
+            <p>{t('section2P2')}</p>
           </div>
         </section>
 
@@ -283,21 +233,19 @@ export default function WhySiderealPage() {
             className="text-2xl font-light mb-4"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
-            Sidereal vs Tropical Dates for All 12 Signs
+            {t('section3Heading')}
           </h2>
           <p className="text-white/60 text-sm mb-5">
-            Approximate dates for 2026. Exact boundaries shift slightly each year due to the
-            continuing precession of the equinoxes (~50.3″/year) and variations in planetary
-            positions. Use the{' '}
+            {t('section3IntroBefore')}
             <Link href="/chart" className="text-amber-400 hover:text-amber-300 underline underline-offset-4">
-              sidereal natal chart calculator
-            </Link>{' '}
-            for precise positions.
+              {t('section3IntroLink')}
+            </Link>
+            {t('section3IntroAfter')}
           </p>
           <div className="overflow-x-auto rounded-xl border border-white/10">
             <table
               className="w-full text-sm"
-              aria-label="Sidereal and tropical zodiac sign dates comparison 2026"
+              aria-label={t('datesTableAria')}
             >
               <thead>
                 <tr className="border-b border-white/10 bg-white/5">
@@ -305,39 +253,39 @@ export default function WhySiderealPage() {
                     scope="col"
                     className="text-left px-4 py-3 text-white/50 font-medium text-xs uppercase tracking-widest"
                   >
-                    Sign
+                    {t('datesTableH1')}
                   </th>
                   <th
                     scope="col"
                     className="text-left px-4 py-3 text-white/50 font-medium text-xs uppercase tracking-widest"
                   >
-                    Sidereal (Lahiri)
+                    {t('datesTableH2')}
                   </th>
                   <th
                     scope="col"
                     className="text-left px-4 py-3 text-white/50 font-medium text-xs uppercase tracking-widest"
                   >
-                    Tropical
+                    {t('datesTableH3')}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {SIGN_DATE_COMPARISON.map(({ sign, sidereal, tropical }) => (
+                {SIGN_ROWS.map(({ sign, sKey, tKey }) => (
                   <tr key={sign} className="border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors">
                     <td className="px-4 py-3">
                       <Link
                         href={`/signs/${sign.toLowerCase()}`}
                         className="text-white/85 hover:text-white transition-colors font-medium"
-                        aria-label={`Sidereal ${sign} overview`}
+                        aria-label={t('signOverviewAria', { sign })}
                       >
                         {sign}
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-amber-300/90 font-[var(--font-geist-mono)] text-xs">
-                      {sidereal}
+                      {t(sKey)}
                     </td>
                     <td className="px-4 py-3 text-white/50 font-[var(--font-geist-mono)] text-xs">
-                      {tropical}
+                      {t(tKey)}
                     </td>
                   </tr>
                 ))}
@@ -353,37 +301,29 @@ export default function WhySiderealPage() {
             className="text-2xl font-light mb-4"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
-            The Lahiri Ayanamsa: Estrevia&apos;s Calculation Standard
+            {t('section4Heading')}
           </h2>
           <div className="text-white/70 leading-relaxed space-y-4 font-[var(--font-geist-sans)]">
             <p>
-              The ayanamsa (Sanskrit: <em>ayana</em> = movement, <em>amsha</em> = part) is the
-              angular correction applied to convert a tropical position to a sidereal one. As of
-              2026, the Lahiri ayanamsa is approximately 24°07′ — meaning every planet&apos;s
-              sidereal longitude is 24°07′ less than its tropical longitude.
+              {t('section4P1Before')}
+              <em>{t('section4P1Ayana')}</em>
+              {t('section4P1Mid')}
+              <em>{t('section4P1Amsha')}</em>
+              {t('section4P1End')}
             </p>
             <p>
-              Estrevia calculates all positions using the{' '}
+              {t('section4P2Before')}
               <a
                 href="https://www.astro.com/swisseph/swephinfo_e.htm"
                 rel="noopener"
                 className="text-amber-400 hover:text-amber-300 underline underline-offset-4"
                 target="_blank"
               >
-                Swiss Ephemeris
-              </a>{' '}
-              (accuracy ±0.01°) with the Lahiri ayanamsa mode
-              (SE_SIDM_LAHIRI = 1). The Swiss Ephemeris is the same calculation engine
-              used by Astro.com and most professional astrology software, ensuring
-              that Estrevia&apos;s results can be verified against any other serious sidereal tool.
+                {t('section4P2Link')}
+              </a>
+              {t('section4P2After')}
             </p>
-            <p>
-              Multiple ayanamsa systems exist — Fagan-Bradley (popular in Western sidereal
-              astrology), Krishnamurti (used in KP astrology), and others. They differ by
-              fractions of a degree. Lahiri is the most widely used globally and the official
-              standard of the Government of India. Estrevia uses Lahiri exclusively in MVP;
-              Fagan-Bradley and Krishnamurti support are planned for Phase 2.
-            </p>
+            <p>{t('section4P3')}</p>
           </div>
         </section>
 
@@ -397,12 +337,10 @@ export default function WhySiderealPage() {
             className="text-xl font-light mb-3"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
           >
-            Calculate your sidereal natal chart
+            {t('ctaHeading')}
           </h2>
           <p className="text-white/58 text-sm mb-5 leading-relaxed">
-            Enter your birth date, time, and location. Estrevia calculates your Sun, Moon,
-            Ascendant, and all 10 planetary positions using the Lahiri ayanamsa and Swiss
-            Ephemeris (±0.01° accuracy).
+            {t('ctaP')}
           </p>
           <Link
             href="/chart"
@@ -414,7 +352,7 @@ export default function WhySiderealPage() {
             }}
           >
             <span aria-hidden="true">☉</span>
-            Open chart calculator
+            {t('ctaButton')}
           </Link>
         </section>
 
@@ -425,16 +363,16 @@ export default function WhySiderealPage() {
             className="text-2xl font-light mb-6"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#E8E0D0' }}
           >
-            Frequently Asked Questions
+            {t('faqHeading')}
           </h2>
           <dl className="space-y-6">
-            {FAQ_ITEMS.map((item) => (
-              <div key={item.question} className="border-b border-white/8 pb-6 last:border-0">
+            {FAQS.map(({ qKey, aKey }) => (
+              <div key={qKey} className="border-b border-white/8 pb-6 last:border-0">
                 <dt className="text-white font-medium mb-2 font-[var(--font-geist-sans)]">
-                  {item.question}
+                  {t(qKey)}
                 </dt>
                 <dd className="text-white/65 leading-relaxed text-sm font-[var(--font-geist-sans)]">
-                  {item.answer}
+                  {t(aKey)}
                 </dd>
               </div>
             ))}
@@ -442,19 +380,12 @@ export default function WhySiderealPage() {
         </section>
 
         {/* ── Internal links ─────────────────────────────────────────── */}
-        <nav aria-label="Related pages" className="pt-8 border-t border-white/10">
+        <nav aria-label={t('internalAria')} className="pt-8 border-t border-white/10">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-5">
-            Explore Sidereal Astrology
+            {t('internalHeading')}
           </h2>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm" role="list">
-            {[
-              { href: '/signs/aries',   label: 'Sidereal Aries — traits and planetary placements' },
-              { href: '/signs/taurus',  label: 'Sidereal Taurus — traits and planetary placements' },
-              { href: '/signs/scorpio', label: 'Sidereal Scorpio — traits and planetary placements' },
-              { href: '/signs/pisces',  label: 'Sidereal Pisces — traits and planetary placements' },
-              { href: '/chart',         label: 'Calculate your sidereal natal chart' },
-              { href: '/moon',          label: 'Current moon phase in sidereal astrology' },
-            ].map(({ href, label }) => (
+            {internalLinks.map(({ href, label }) => (
               <li key={href}>
                 <Link
                   href={href}
@@ -468,14 +399,14 @@ export default function WhySiderealPage() {
 
           {/* External authoritative links */}
           <div className="mt-6 text-sm text-white/40 space-y-2">
-            <p className="text-xs uppercase tracking-widest text-white/25 mb-3">Sources</p>
+            <p className="text-xs uppercase tracking-widest text-white/25 mb-3">{t('sourcesLabel')}</p>
             <a
               href="https://en.wikipedia.org/wiki/Astronomical_year_numbering#Precession"
               rel="noopener"
               target="_blank"
               className="block hover:text-white/60 transition-colors"
             >
-              Precession of the equinoxes — Wikipedia
+              {t('sourceWiki')}
             </a>
             <a
               href="https://www.iau.org/public/themes/constellations/"
@@ -483,7 +414,7 @@ export default function WhySiderealPage() {
               target="_blank"
               className="block hover:text-white/60 transition-colors"
             >
-              IAU constellation boundaries — International Astronomical Union
+              {t('sourceIau')}
             </a>
           </div>
         </nav>

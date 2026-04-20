@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function GlobalError({
   error,
@@ -9,6 +10,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('appShell');
+
   useEffect(() => {
     console.error('[Estrevia] Unhandled error:', error);
   }, [error]);
@@ -25,18 +28,18 @@ export default function GlobalError({
         </div>
 
         <h1 className="text-xl font-semibold text-white/90 font-[family-name:var(--font-geist-sans)]">
-          Something went wrong
+          {t('errorH1')}
         </h1>
 
         <p className="text-sm text-white/50 leading-relaxed">
-          An unexpected error occurred. This has been logged and we&apos;ll look into it.
+          {t('errorBody')}
         </p>
 
         <button
           onClick={reset}
           className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-medium text-[#0A0A0F] bg-[#C8A84B] rounded-lg hover:bg-[#D4B85C] transition-colors focus:outline-none focus:ring-2 focus:ring-[#C8A84B]/50"
         >
-          Try again
+          {t('errorRetry')}
         </button>
       </div>
     </div>

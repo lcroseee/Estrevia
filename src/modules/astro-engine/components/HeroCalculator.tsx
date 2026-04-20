@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
 import type { CitySearchResult } from '@/shared/types';
@@ -14,7 +15,9 @@ const SIGN_GLYPHS: Record<string, string> = {
   Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓',
 };
 
-const SIGN_ELEMENTS: Record<string, { element: string; color: string }> = {
+type ElementKey = 'Fire' | 'Earth' | 'Air' | 'Water';
+
+const SIGN_ELEMENTS: Record<string, { element: ElementKey; color: string }> = {
   Aries:       { element: 'Fire',  color: '#FF6B35' },
   Leo:         { element: 'Fire',  color: '#FF6B35' },
   Sagittarius: { element: 'Fire',  color: '#FF6B35' },
@@ -57,6 +60,7 @@ function todayStr(): string {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function HeroCalculator() {
+  const t = useTranslations('heroCalc');
   const [form, setForm] = useState<FormState>({
     date: '',
     cityLabel: '',
@@ -86,17 +90,17 @@ export function HeroCalculator() {
   const validate = useCallback((): FormErrors => {
     const errs: FormErrors = {};
     if (!form.date) {
-      errs.date = 'Birth date is required';
+      errs.date = t('errDateRequired');
     } else {
       const d = new Date(form.date);
-      if (isNaN(d.getTime())) errs.date = 'Invalid date';
-      else if (d > new Date()) errs.date = 'Date cannot be in the future';
+      if (isNaN(d.getTime())) errs.date = t('errDateInvalid');
+      else if (d > new Date()) errs.date = t('errDateFuture');
     }
     if (form.latitude === null || form.longitude === null) {
-      errs.city = 'Please select a city from the list';
+      errs.city = t('errCityRequired');
     }
     return errs;
-  }, [form]);
+  }, [form, t]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -128,7 +132,7 @@ export function HeroCalculator() {
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          setErrors({ general: (data as { error?: string }).error ?? 'Calculation failed. Please try again.' });
+          setErrors({ general: (data as { error?: string }).error ?? t('errCalcFailed') });
           return;
         }
 
@@ -136,7 +140,7 @@ export function HeroCalculator() {
         const sunPlanet = json.data?.chart?.planets?.find((p) => p.planet === 'Sun');
 
         if (!json.data || !sunPlanet) {
-          setErrors({ general: 'Could not determine Sun sign. Please try again.' });
+          setErrors({ general: t('errNoSunSign') });
           return;
         }
 
@@ -151,21 +155,20 @@ export function HeroCalculator() {
         }
         const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
         setErrors({
-          general: offline
-            ? 'You appear to be offline. Please check your connection.'
-            : 'Something went wrong. Please try again.',
+          general: offline ? t('errOffline') : t('errGeneric'),
         });
       } finally {
         setIsLoading(false);
       }
     },
-    [form, validate]
+    [form, validate, t]
   );
 
   // ── Result card ──────────────────────────────────────────────────────────
   if (result) {
     const signInfo = SIGN_ELEMENTS[result.sunSign];
     const glyph = SIGN_GLYPHS[result.sunSign] ?? '';
+    const elementLabel = signInfo ? t(`elements.${signInfo.element}`) : '';
 
     return (
       <AnimatePresence mode="wait">
@@ -176,7 +179,7 @@ export function HeroCalculator() {
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           className="w-full"
           role="region"
-          aria-label="Your sidereal Sun sign result"
+          aria-label={t('resultAria')}
           aria-live="polite"
         >
           {/* Result display */}
@@ -195,7 +198,7 @@ export function HeroCalculator() {
 
             <div className="relative">
               <p className="text-xs tracking-[0.2em] uppercase text-white/40 mb-3">
-                Your Sidereal Sun Sign
+                {t('resultEyebrow')}
               </p>
 
               <motion.div
@@ -225,7 +228,7 @@ export function HeroCalculator() {
                 className="text-sm text-white/40 mb-1"
                 style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
               >
-                {result.sunDegree}° — {signInfo?.element ?? ''} sign
+                {t('elementSign', { degree: result.sunDegree, element: elementLabel })}
               </motion.p>
             </div>
           </div>
@@ -241,7 +244,7 @@ export function HeroCalculator() {
               href={`/chart?chartId=${result.chartId}`}
               className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] transition-colors"
             >
-              See your full natal chart
+              {t('seeFullChart')}
               <span aria-hidden="true">→</span>
             </Link>
             <button
@@ -249,7 +252,7 @@ export function HeroCalculator() {
               onClick={() => setResult(null)}
               className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/12 text-sm text-white/50 hover:text-white/80 hover:border-white/25 transition-colors"
             >
-              Try another date
+              {t('tryAnother')}
             </button>
           </motion.div>
         </motion.div>
@@ -263,7 +266,7 @@ export function HeroCalculator() {
       onSubmit={handleSubmit}
       noValidate
       className="w-full space-y-3"
-      aria-label="Quick sidereal chart calculator"
+      aria-label={t('formAria')}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -271,7 +274,7 @@ export function HeroCalculator() {
       {/* Date input */}
       <div>
         <label htmlFor="hero-date" className="sr-only">
-          Birth date
+          {t('dateLabel')}
         </label>
         <DateInput
           id="hero-date"
@@ -298,7 +301,7 @@ export function HeroCalculator() {
           value={form.cityLabel}
           onCitySelect={handleCitySelect}
           onChange={handleCityChange}
-          placeholder="Birth city"
+          placeholder={t('cityPlaceholder')}
           error={errors.city}
         />
       </div>
@@ -323,18 +326,18 @@ export function HeroCalculator() {
               className="inline-block w-4 h-4 border-2 border-[#0A0A0F]/30 border-t-[#0A0A0F] rounded-full animate-spin"
               aria-hidden="true"
             />
-            Calculating…
+            {t('submitting')}
           </>
         ) : (
           <>
             <span aria-hidden="true">☉</span>
-            Discover My Sun Sign
+            {t('submit')}
           </>
         )}
       </button>
 
       <p className="text-center text-[11px] text-white/25 leading-relaxed">
-        Sidereal system · Lahiri ayanamsa · Swiss Ephemeris
+        {t('footer')}
       </p>
     </motion.form>
   );
