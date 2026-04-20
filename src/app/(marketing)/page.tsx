@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, organizationSchema, softwareAppSchema, howToSchema, faqSchema } from '@/shared/seo';
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';
 import { LandingAnimations } from './LandingAnimations';
@@ -26,96 +27,55 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-// ── JSON-LD schemas ───────────────────────────────────────────────────────────
-const howToJsonLd = howToSchema({
-  name: 'How to Calculate Your Sidereal Natal Chart',
-  description:
-    'A step-by-step guide to finding your true zodiac sign using sidereal astrology and Swiss Ephemeris calculations.',
-  totalTime: 'PT2M',
-  steps: [
-    { name: 'Enter your birth date', text: 'Type your date of birth in the calculator.' },
-    { name: 'Select your birth city', text: 'Choose your birth city from the autocomplete list.' },
-    { name: 'See your sidereal chart', text: 'View your natal chart calculated with Lahiri ayanamsa and Swiss Ephemeris precision.' },
-    { name: 'Share your Cosmic Passport', text: 'Generate a shareable card with your Sun, Moon, and Ascendant signs.' },
-  ],
-});
-
-const faqJsonLd = faqSchema([
-  {
-    question: 'What is the difference between sidereal and tropical astrology?',
-    answer:
-      'Tropical astrology fixes the zodiac to the equinoxes (the Sun enters Aries on the spring equinox). Sidereal astrology aligns the zodiac to the actual star constellations. Due to the precession of the equinoxes — a wobble in Earth\'s axis — the two systems are currently ~24° apart. Most people in sidereal astrology discover their Sun is in the previous tropical sign.',
-  },
-  {
-    question: 'What is the Lahiri ayanamsa?',
-    answer:
-      'The ayanamsa is the angular offset between the tropical and sidereal zodiacs. Lahiri (also called Chitrapaksha) is the official ayanamsa adopted by the Indian government and most used in Vedic/Jyotish astrology. As of 2024 it is approximately 23°49′.',
-  },
-  {
-    question: 'How accurate is the chart calculation?',
-    answer:
-      'Estrevia uses Swiss Ephemeris — the same engine used by professional astrology software like Solar Fire and Astro.com. Accuracy is ±0.01° for all 12 celestial bodies (Sun through Pluto, North Node, Chiron). Over 100 reference charts are verified in CI against Astro.com.',
-  },
-  {
-    question: 'What is a Cosmic Passport?',
-    answer:
-      'The Cosmic Passport is a shareable card showing your sidereal Sun, Moon, and Ascendant signs along with your dominant element and the rarity of your combination (e.g., "1 of 8%"). You can share it on social media or download it as a PNG for Instagram Stories.',
-  },
-]);
-
-// ── Feature cards data ────────────────────────────────────────────────────────
-const FEATURES = [
-  {
-    glyph: '☉',
-    color: '#FFD700',
-    title: 'Natal Chart',
-    description:
-      'Full sidereal natal chart with 12 celestial bodies, Placidus houses, aspects, and degree positions. Swiss Ephemeris precision.',
-  },
-  {
-    glyph: '☽',
-    color: '#C0C0C0',
-    title: 'Moon Phases',
-    description:
-      'Live moon phase with illumination percentage, ingress times, and a 30-day calendar. See exact New and Full Moon moments.',
-  },
-  {
-    glyph: '♄',
-    color: '#B8860B',
-    title: 'Planetary Hours',
-    description:
-      'Classical Chaldean planetary hours for your location. Know which planet governs the current hour and plan accordingly.',
-  },
-  {
-    glyph: '∴',
-    color: '#9B8EC4',
-    title: '777 Correspondences',
-    description:
-      'Crowley\'s 777 — colors, gems, incense, deities, Kabbalistic paths — mapped to every planet and sign. Pre-1929 texts, public domain.',
-  },
-] as const;
-
-// ── How it works steps ────────────────────────────────────────────────────────
-const HOW_IT_WORKS = [
-  {
-    step: '01',
-    title: 'Enter birth data',
-    description: 'Date and birth city. Time is optional — without it you still get planetary signs.',
-  },
-  {
-    step: '02',
-    title: 'See your chart',
-    description: 'Sidereal positions calculated via Swiss Ephemeris, corrected for Lahiri ayanamsa.',
-  },
-  {
-    step: '03',
-    title: 'Share your Passport',
-    description: 'Generate a Cosmic Passport card with your Sun, Moon, ASC — shareable in one tap.',
-  },
-] as const;
-
 // ── Page ──────────────────────────────────────────────────────────────────────
-export default function LandingPage() {
+export default async function LandingPage() {
+  const t = await getTranslations('landing');
+
+  // Structural data only — text comes from translations by key
+  const features = [
+    { glyph: '☉', color: '#FFD700', titleKey: 'feature1Title', descKey: 'feature1Desc' },
+    { glyph: '☽', color: '#C0C0C0', titleKey: 'feature2Title', descKey: 'feature2Desc' },
+    { glyph: '♄', color: '#B8860B', titleKey: 'feature3Title', descKey: 'feature3Desc' },
+    { glyph: '∴', color: '#9B8EC4', titleKey: 'feature4Title', descKey: 'feature4Desc' },
+  ] as const;
+
+  const howSteps = [
+    { step: '01', titleKey: 'stepEnterTitle', descKey: 'stepEnterDesc' },
+    { step: '02', titleKey: 'stepSeeTitle', descKey: 'stepSeeDesc' },
+    { step: '03', titleKey: 'stepShareTitle', descKey: 'stepShareDesc' },
+  ] as const;
+
+  const stats = [
+    { valueKey: 'stat1Value', labelKey: 'stat1Label', noteKey: 'stat1Note' },
+    { valueKey: 'stat2Value', labelKey: 'stat2Label', noteKey: 'stat2Note' },
+    { valueKey: 'stat3Value', labelKey: 'stat3Label', noteKey: 'stat3Note' },
+  ] as const;
+
+  const faqs = [
+    { qKey: 'faq1Q', aKey: 'faq1A' },
+    { qKey: 'faq2Q', aKey: 'faq2A' },
+    { qKey: 'faq3Q', aKey: 'faq3A' },
+    { qKey: 'faq4Q', aKey: 'faq4A' },
+  ] as const;
+
+  // ── JSON-LD schemas (locale-aware) ──────────────────────────────────────────
+  const howToJsonLd = howToSchema({
+    name: t('howHeading'),
+    description: t('howSubtitle'),
+    totalTime: 'PT2M',
+    steps: howSteps.map(({ titleKey, descKey }) => ({
+      name: t(titleKey),
+      text: t(descKey),
+    })),
+  });
+
+  const faqJsonLd = faqSchema(
+    faqs.map(({ qKey, aKey }) => ({
+      question: t(qKey),
+      answer: t(aKey),
+    })),
+  );
+
   return (
     <>
       <JsonLdScript schema={organizationSchema()} />
@@ -158,7 +118,7 @@ export default function LandingPage() {
               data-animate="fade-down"
             >
               <span aria-hidden="true">☉</span>
-              Sidereal · Lahiri · Swiss Ephemeris
+              {t('heroEyebrow')}
             </div>
 
             {/* Headline */}
@@ -168,9 +128,9 @@ export default function LandingPage() {
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
               data-animate="fade-up-1"
             >
-              Your True
+              {t('heroLine1')}
               <br />
-              <em className="not-italic text-[#FFD700]">Zodiac Sign</em>
+              <em className="not-italic text-[#FFD700]">{t('heroLine2')}</em>
             </h1>
 
             {/* Subtext */}
@@ -178,9 +138,7 @@ export default function LandingPage() {
               className="text-base sm:text-lg text-white/50 leading-relaxed max-w-xl mx-auto mb-10"
               data-animate="fade-up-2"
             >
-              Western astrology froze the zodiac to the seasons in 100 AD. The sky has
-              shifted 24° since then. Sidereal astrology tracks the actual constellations —
-              most people discover their Sun is in a different sign entirely.
+              {t('heroSubtext')}
             </p>
 
             {/* Calculator card */}
@@ -199,7 +157,7 @@ export default function LandingPage() {
               className="mt-5 text-xs text-white/60 tracking-wide"
               data-animate="fade-up-4"
             >
-              No account needed · Calculation takes under 2 seconds
+              {t('heroTrust')}
             </p>
           </div>
         </section>
@@ -217,15 +175,15 @@ export default function LandingPage() {
                 className="text-3xl sm:text-4xl font-light text-white mb-3"
                 style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
               >
-                How it works
+                {t('howHeading')}
               </h2>
               <p className="text-sm text-white/70 max-w-md mx-auto">
-                From birth data to shareable card in under a minute.
+                {t('howSubtitle')}
               </p>
             </div>
 
             <ol className="grid grid-cols-1 sm:grid-cols-3 gap-6 list-none" role="list">
-              {HOW_IT_WORKS.map(({ step, title, description }, i) => (
+              {howSteps.map(({ step, titleKey, descKey }, i) => (
                 <li
                   key={step}
                   data-animate={`fade-up-${i}`}
@@ -235,12 +193,12 @@ export default function LandingPage() {
                   <span
                     className="text-xs tracking-[0.2em] uppercase"
                     style={{ color: 'rgba(255,215,0,0.5)', fontFamily: 'var(--font-geist-mono, monospace)' }}
-                    aria-label={`Step ${step}`}
+                    aria-label={t('stepAria', { step })}
                   >
                     {step}
                   </span>
-                  <h3 className="text-lg font-medium text-white/90">{title}</h3>
-                  <p className="text-sm text-white/45 leading-relaxed flex-1">{description}</p>
+                  <h3 className="text-lg font-medium text-white/90">{t(titleKey)}</h3>
+                  <p className="text-sm text-white/45 leading-relaxed flex-1">{t(descKey)}</p>
                 </li>
               ))}
             </ol>
@@ -267,22 +225,21 @@ export default function LandingPage() {
                 className="text-3xl sm:text-4xl font-light text-white mb-3"
                 style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
               >
-                Everything in one place
+                {t('featuresHeading')}
               </h2>
             </div>
 
             <ul
               className="grid grid-cols-1 sm:grid-cols-2 gap-5 list-none"
-              aria-label="Estrevia features"
+              aria-label={t('featuresAria')}
             >
-              {FEATURES.map(({ glyph, color, title, description }, i) => (
+              {features.map(({ glyph, color, titleKey, descKey }, i) => (
                 <li
-                  key={title}
+                  key={titleKey}
                   data-animate={`fade-up-${i}`}
                   className="flex flex-col gap-4 rounded-2xl border border-white/6 p-6 group transition-all duration-300 hover:border-white/15 hover:shadow-lg"
                   style={{
                     background: 'rgba(255,255,255,0.02)',
-                    // CSS custom property for planetary color glow on hover
                     '--planet-color': color,
                   } as React.CSSProperties}
                 >
@@ -293,8 +250,8 @@ export default function LandingPage() {
                   >
                     {glyph}
                   </span>
-                  <h3 className="text-base font-semibold text-white/90 tracking-wide">{title}</h3>
-                  <p className="text-sm text-white/45 leading-relaxed">{description}</p>
+                  <h3 className="text-base font-semibold text-white/90 tracking-wide">{t(titleKey)}</h3>
+                  <p className="text-sm text-white/45 leading-relaxed">{t(descKey)}</p>
                 </li>
               ))}
             </ul>
@@ -322,28 +279,23 @@ export default function LandingPage() {
               className="text-2xl sm:text-3xl font-light text-white/80 mb-3"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
             >
-              Join astrologers discovering their sidereal signs
+              {t('statsHeading')}
             </h2>
             <p className="text-sm text-white/70 mb-12 max-w-md mx-auto">
-              Most discover they carry the energy of the sign before their tropical Sun —
-              not the one on their horoscope app.
+              {t('statsSubtitle')}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-              {[
-                { value: '±0.01°', label: 'Calculation accuracy', note: 'Swiss Ephemeris' },
-                { value: '12', label: 'Celestial bodies', note: 'Sun → Chiron' },
-                { value: '120', label: 'Esoteric essays', note: '10 planets × 12 signs' },
-              ].map(({ value, label, note }) => (
-                <div key={label} className="flex flex-col items-center gap-1">
+              {stats.map(({ valueKey, labelKey, noteKey }) => (
+                <div key={labelKey} className="flex flex-col items-center gap-1">
                   <span
                     className="text-4xl sm:text-5xl font-light text-[#FFD700]"
                     style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
                   >
-                    {value}
+                    {t(valueKey)}
                   </span>
-                  <span className="text-sm font-medium text-white/70">{label}</span>
-                  <span className="text-xs text-white/60">{note}</span>
+                  <span className="text-sm font-medium text-white/70">{t(labelKey)}</span>
+                  <span className="text-xs text-white/60">{t(noteKey)}</span>
                 </div>
               ))}
             </div>
@@ -369,34 +321,13 @@ export default function LandingPage() {
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
               data-animate="fade-up-0"
             >
-              Common questions
+              {t('faqHeading')}
             </h2>
 
             <dl className="space-y-6">
-              {[
-                {
-                  question: 'What is the difference between sidereal and tropical astrology?',
-                  answer:
-                    'Tropical astrology fixes the zodiac to the equinoxes — the Sun enters Aries on the spring equinox. Sidereal astrology aligns the zodiac to the actual star constellations. Due to the precession of the equinoxes (~50″ per year), the two systems are currently ~24° apart. Most people in sidereal astrology find their Sun is in the sign before their tropical one.',
-                },
-                {
-                  question: 'What is the Lahiri ayanamsa?',
-                  answer:
-                    'The ayanamsa is the angular offset between tropical and sidereal zodiacs. Lahiri (also called Chitrapaksha) is the official ayanamsa adopted by the Indian government and the most widely used in Vedic/Jyotish astrology. As of 2026 it is approximately 24°7′.',
-                },
-                {
-                  question: 'How accurate are the calculations?',
-                  answer:
-                    'Estrevia uses Swiss Ephemeris — the same engine used by Solar Fire and Astro.com — with ±0.01° accuracy for all 12 celestial bodies. Over 100 reference charts are verified in CI against Astro.com before every release.',
-                },
-                {
-                  question: 'What is a Cosmic Passport?',
-                  answer:
-                    'A shareable card with your sidereal Sun, Moon, and Ascendant signs, dominant element, and combination rarity percentage. Share it as an image or link — works without creating an account.',
-                },
-              ].map(({ question, answer }, i) => (
+              {faqs.map(({ qKey, aKey }, i) => (
                 <div
-                  key={question}
+                  key={qKey}
                   data-animate={`fade-up-${i}`}
                   className="rounded-xl border border-white/6 p-5"
                   style={{ background: 'rgba(255,255,255,0.02)' }}
@@ -405,9 +336,9 @@ export default function LandingPage() {
                     className="text-base font-medium text-white/85 mb-3"
                     style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
                   >
-                    {question}
+                    {t(qKey)}
                   </dt>
-                  <dd className="text-sm text-white/50 leading-relaxed">{answer}</dd>
+                  <dd className="text-sm text-white/50 leading-relaxed">{t(aKey)}</dd>
                 </div>
               ))}
             </dl>
@@ -436,24 +367,23 @@ export default function LandingPage() {
 
           <div className="relative max-w-xl mx-auto text-center" data-animate="fade-up-0">
             <p className="text-xs tracking-[0.2em] uppercase text-[#FFD700]/50 mb-4">
-              Early access
+              {t('waitlistEyebrow')}
             </p>
             <h2
               id="waitlist-heading"
               className="text-3xl sm:text-4xl font-light text-white mb-4"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
             >
-              Get notified when we launch
+              {t('waitlistHeading')}
             </h2>
             <p className="text-sm text-white/45 mb-8 leading-relaxed">
-              Full natal chart calculation, 120 sidereal essays, Cosmic Passport, and
-              planetary hours — all free at launch.
+              {t('waitlistSubtitle')}
             </p>
 
             <WaitlistForm />
 
             <p className="mt-4 text-xs text-white/60">
-              No spam. Unsubscribe at any time.
+              {t('waitlistDisclaimer')}
             </p>
           </div>
         </section>
@@ -473,7 +403,7 @@ export default function LandingPage() {
             }}
           >
             <span aria-hidden="true">☉</span>
-            Calculate My Sidereal Chart
+            {t('finalCta')}
           </Link>
         </div>
       </LandingAnimations>

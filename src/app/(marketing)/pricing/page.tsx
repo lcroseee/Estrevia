@@ -7,6 +7,7 @@
  */
 
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, faqSchema, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { PricingToggle } from './PricingToggle';
@@ -21,33 +22,36 @@ export function generateMetadata(): Metadata {
   });
 }
 
-const breadcrumbLd = breadcrumbSchema([
-  { name: 'Estrevia', url: SITE_URL },
-  { name: 'Pricing', url: `${SITE_URL}/pricing` },
-]);
-
-const faqJsonLd = faqSchema([
-  {
-    question: 'Is Estrevia free?',
-    answer:
-      'Yes — chart calculation, moon phases, planetary hours, and basic saved charts are free forever. Premium adds unlimited saves, detailed aspect analysis, and future transits.',
-  },
-  {
-    question: 'Can I cancel anytime?',
-    answer:
-      'Yes. Cancel from the billing portal in Settings. Your premium access continues until the end of the current billing period.',
-  },
-  {
-    question: 'What payment methods are accepted?',
-    answer:
-      'All major credit and debit cards via Stripe. Apple Pay and Google Pay are available on supported devices.',
-  },
-]);
-
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
-export default function PricingPage() {
+export default async function PricingPage() {
+  const t = await getTranslations('pricing');
+
+  const breadcrumbLd = breadcrumbSchema([
+    { name: 'Estrevia', url: SITE_URL },
+    { name: t('title'), url: `${SITE_URL}/pricing` },
+  ]);
+
+  const faqs = [
+    { qKey: 'faq1Q', aKey: 'faq1A' },
+    { qKey: 'faq2Q', aKey: 'faq2A' },
+    { qKey: 'faq3Q', aKey: 'faq3A' },
+  ] as const;
+
+  const faqJsonLd = faqSchema(
+    faqs.map(({ qKey, aKey }) => ({
+      question: t(qKey),
+      answer: t(aKey),
+    })),
+  );
+
+  const trustItems = [
+    t('trustNoContracts'),
+    t('trustCancel'),
+    t('trustSecure'),
+  ];
+
   return (
     <>
       <JsonLdScript schema={breadcrumbLd} />
@@ -72,16 +76,16 @@ export default function PricingPage() {
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FFD700]/20 text-[11px] tracking-[0.2em] uppercase text-[#FFD700]/60 mb-8"
             >
               <span aria-hidden="true">♄</span>
-              Plans & Pricing
+              {t('eyebrow')}
             </div>
             <h1
               className="text-4xl sm:text-5xl font-light text-white mb-4 leading-tight"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
             >
-              Simple, transparent pricing
+              {t('heading')}
             </h1>
             <p className="text-base text-white/75 max-w-md mx-auto leading-relaxed">
-              Start free. Upgrade when you need more. No hidden fees.
+              {t('subheading')}
             </p>
           </div>
 
@@ -91,10 +95,10 @@ export default function PricingPage() {
           {/* Trust signals */}
           <div className="mt-12 text-center">
             <p className="text-xs text-white/60 mb-3">
-              Payments processed by Stripe. Cancel anytime from Settings.
+              {t('trustNote')}
             </p>
             <div className="flex items-center justify-center gap-6">
-              {['No contracts', 'Cancel anytime', 'Secure payments'].map((item) => (
+              {trustItems.map((item) => (
                 <span key={item} className="text-xs text-white/65">
                   {item}
                 </span>
@@ -108,28 +112,12 @@ export default function PricingPage() {
               className="text-2xl font-light text-white mb-8 text-center"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
             >
-              Questions
+              {t('questionsHeading')}
             </h2>
             <dl className="space-y-4">
-              {[
-                {
-                  question: 'Is Estrevia free?',
-                  answer:
-                    'Yes — chart calculation, moon phases, planetary hours, and basic saved charts are free forever. Premium adds unlimited saves and detailed analysis.',
-                },
-                {
-                  question: 'Can I cancel anytime?',
-                  answer:
-                    'Yes. Cancel from the billing portal in Settings. Premium access continues until the end of the billing period — no partial refunds needed.',
-                },
-                {
-                  question: 'What payment methods are accepted?',
-                  answer:
-                    'All major credit/debit cards via Stripe. Apple Pay and Google Pay available on supported devices.',
-                },
-              ].map(({ question, answer }) => (
+              {faqs.map(({ qKey, aKey }) => (
                 <div
-                  key={question}
+                  key={qKey}
                   className="rounded-xl border border-white/6 p-5"
                   style={{ background: 'rgba(255,255,255,0.02)' }}
                 >
@@ -137,9 +125,9 @@ export default function PricingPage() {
                     className="text-sm font-medium text-white/80 mb-2"
                     style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
                   >
-                    {question}
+                    {t(qKey)}
                   </dt>
-                  <dd className="text-sm text-white/75 leading-relaxed">{answer}</dd>
+                  <dd className="text-sm text-white/75 leading-relaxed">{t(aKey)}</dd>
                 </div>
               ))}
             </dl>

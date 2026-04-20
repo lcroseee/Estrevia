@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, softwareAppSchema, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { ChartDisplay } from '@/modules/astro-engine/components/ChartDisplay';
@@ -20,12 +21,13 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-function ChartSkeleton() {
+async function ChartSkeleton() {
+  const t = await getTranslations('chartDisplay');
   return (
     <div
       className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-10"
       aria-busy="true"
-      aria-label="Loading chart..."
+      aria-label={t('loadingAria')}
     >
       <div className="space-y-4 w-full max-w-md">
         {/* Wheel skeleton */}
@@ -47,14 +49,14 @@ const chartBreadcrumb = breadcrumbSchema([
   { name: 'Natal Chart Calculator', url: `${SITE_URL}/chart` },
 ]);
 
-export default function ChartPage() {
+export default async function ChartPage() {
   const schema = softwareAppSchema();
 
   return (
     <>
       <JsonLdScript schema={schema} />
       <JsonLdScript schema={chartBreadcrumb} />
-      <Suspense fallback={<ChartSkeleton />}>
+      <Suspense fallback={await ChartSkeleton()}>
         <ChartDisplay />
       </Suspense>
     </>

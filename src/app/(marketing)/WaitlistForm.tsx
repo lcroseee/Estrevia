@@ -2,10 +2,12 @@
 
 import { useState, useCallback, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 type FormState = 'idle' | 'loading' | 'success' | 'error';
 
 export function WaitlistForm() {
+  const t = useTranslations('waitlistForm');
   const emailId = useId();
   const errorId = useId();
   const [email, setEmail] = useState('');
@@ -19,7 +21,7 @@ export function WaitlistForm() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!validateEmail(email)) {
-        setErrorMessage('Please enter a valid email address.');
+        setErrorMessage(t('errorInvalid'));
         setFormState('error');
         return;
       }
@@ -37,21 +39,21 @@ export function WaitlistForm() {
         if (res.ok) {
           setFormState('success');
         } else if (res.status === 422) {
-          setErrorMessage('Please enter a valid email address.');
+          setErrorMessage(t('errorInvalid'));
           setFormState('error');
         } else if (res.status === 429) {
-          setErrorMessage('Too many requests. Please try again in a moment.');
+          setErrorMessage(t('errorRateLimit'));
           setFormState('error');
         } else {
-          setErrorMessage('Something went wrong. Please try again.');
+          setErrorMessage(t('errorGeneric'));
           setFormState('error');
         }
       } catch {
-        setErrorMessage('Network error. Please check your connection.');
+        setErrorMessage(t('errorNetwork'));
         setFormState('error');
       }
     },
-    [email]
+    [email, t]
   );
 
   // ── Success state ────────────────────────────────────────────────────────
@@ -66,7 +68,7 @@ export function WaitlistForm() {
           className="flex flex-col items-center gap-3 py-4"
           role="status"
           aria-live="polite"
-          aria-label="Successfully joined the waitlist"
+          aria-label={t('successAriaLabel')}
         >
           <span className="text-3xl" aria-hidden="true">
             ☽
@@ -75,10 +77,10 @@ export function WaitlistForm() {
             className="text-base text-white/80"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
           >
-            You are on the list.
+            {t('successHeadline')}
           </p>
           <p className="text-xs text-white/35">
-            We will notify you when Estrevia launches.
+            {t('successSubtext')}
           </p>
         </motion.div>
       </AnimatePresence>
@@ -90,20 +92,20 @@ export function WaitlistForm() {
     <form
       onSubmit={handleSubmit}
       noValidate
-      aria-label="Waitlist sign-up form"
+      aria-label={t('formAriaLabel')}
       className="flex flex-col gap-3 w-full"
     >
       {/* Input + button row */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex-1">
           <label htmlFor={emailId} className="sr-only">
-            Email address
+            {t('emailLabel')}
           </label>
           <input
             id={emailId}
             type="email"
             autoComplete="email"
-            placeholder="your@email.com"
+            placeholder={t('placeholder')}
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -131,10 +133,10 @@ export function WaitlistForm() {
                 className="inline-block w-4 h-4 border-2 border-[#0A0A0F]/30 border-t-[#0A0A0F] rounded-full animate-spin"
                 aria-hidden="true"
               />
-              Joining…
+              {t('joining')}
             </>
           ) : (
-            'Join Waitlist'
+            t('submit')
           )}
         </button>
       </div>

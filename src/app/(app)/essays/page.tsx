@@ -7,6 +7,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { PLANETS, SIGNS } from '@/shared/seo/internal-links';
@@ -50,20 +51,10 @@ const PLANET_COLORS: Record<string, string> = {
   pluto: '#8B0000',
 };
 
-// Display names matching the canonical casing used across the project
-const PLANET_DISPLAY: Record<string, string> = {
-  sun: 'Sun',
-  moon: 'Moon',
-  mercury: 'Mercury',
-  venus: 'Venus',
-  mars: 'Mars',
-  jupiter: 'Jupiter',
-  saturn: 'Saturn',
-  uranus: 'Uranus',
-  neptune: 'Neptune',
-  pluto: 'Pluto',
-};
-
+// Sign display names stay in their English/Latin form per i18n style guide
+// (Aries = Aries, Taurus = Taurus across locales). Planet names ARE translated
+// via the essaysPage.planets namespace because they have distinct Spanish forms
+// (Sun → Sol, Moon → Luna, etc.).
 const SIGN_DISPLAY: Record<string, string> = {
   aries: 'Aries',
   taurus: 'Taurus',
@@ -80,15 +71,6 @@ const SIGN_DISPLAY: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// JSON-LD breadcrumb
-// ---------------------------------------------------------------------------
-
-const essaysBreadcrumb = breadcrumbSchema([
-  { name: 'Estrevia', url: SITE_URL },
-  { name: 'Sidereal Essays', url: `${SITE_URL}/essays` },
-]);
-
-// ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
@@ -96,13 +78,15 @@ interface SignCardProps {
   essay: EssayMeta | undefined;
   planet: string;
   sign: string;
+  signLabel: string;
+  cardAria: string;
+  fallbackDesc: string;
 }
 
-function SignCard({ essay, planet, sign }: SignCardProps) {
+function SignCard({ essay, planet, sign, signLabel, cardAria, fallbackDesc }: SignCardProps) {
   const slug = `${planet}-in-${sign}`;
   const planetColor = PLANET_COLORS[planet] ?? '#FFFFFF';
-  const signLabel = SIGN_DISPLAY[sign] ?? sign;
-  const description = essay?.description ?? `${PLANET_DISPLAY[planet] ?? planet} in sidereal ${signLabel}.`;
+  const description = essay?.description ?? fallbackDesc;
 
   return (
     <li>
@@ -114,7 +98,7 @@ function SignCard({ essay, planet, sign }: SignCardProps) {
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
           'transition-colors duration-150',
         ].join(' ')}
-        aria-label={`${PLANET_DISPLAY[planet] ?? planet} in ${signLabel} — sidereal essay`}
+        aria-label={cardAria}
       >
         {/* Sign name with planet accent */}
         <h3
@@ -143,7 +127,14 @@ function SignCard({ essay, planet, sign }: SignCardProps) {
 // Page
 // ---------------------------------------------------------------------------
 
-export default function EssaysIndexPage() {
+export default async function EssaysIndexPage() {
+  const t = await getTranslations('essaysPage');
+
+  const essaysBreadcrumb = breadcrumbSchema([
+    { name: 'Estrevia', url: SITE_URL },
+    { name: t('breadcrumb'), url: `${SITE_URL}/essays` },
+  ]);
+
   // getAllEssays() returns only essays that exist as MDX files.
   // Build a lookup map so sign cards can show real descriptions when available.
   const allEssays = getAllEssays();
@@ -168,13 +159,10 @@ export default function EssaysIndexPage() {
               className="text-2xl font-semibold tracking-tight text-white/90"
               style={{ fontFamily: 'var(--font-crimson-pro, serif)' }}
             >
-              Sidereal Astrology Essays
+              {t('h1')}
             </h1>
             <p className="text-sm text-white/50 max-w-prose leading-relaxed">
-              In sidereal astrology, planetary positions are calculated against the fixed stars
-              using the Lahiri ayanamsa — roughly 24° earlier than the tropical zodiac most
-              Western horoscopes use. Below are 120 interpretations: each of the ten classical
-              planets placed in each of the twelve signs of the sidereal zodiac.
+              {t('description')}
             </p>
           </header>
 
@@ -182,7 +170,7 @@ export default function EssaysIndexPage() {
           <div className="space-y-12">
             {PLANETS.map((planet) => {
               const planetColor = PLANET_COLORS[planet] ?? '#FFFFFF';
-              const planetLabel = PLANET_DISPLAY[planet] ?? planet;
+              const planetLabel = t(`planets.${planet}`);
 
               return (
                 <section
@@ -198,22 +186,26 @@ export default function EssaysIndexPage() {
                       color: planetColor,
                     }}
                   >
-                    {planetLabel} in the Signs
+                    {t('groupHeading', { planet: planetLabel })}
                   </h2>
 
                   {/* 12-sign grid */}
                   <ul
                     className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
-                    aria-label={`${planetLabel} essays — all twelve signs`}
+                    aria-label={t('groupAria', { planet: planetLabel })}
                   >
                     {SIGNS.map((sign) => {
                       const slug = `${planet}-in-${sign}`;
+                      const signLabel = SIGN_DISPLAY[sign] ?? sign;
                       return (
                         <SignCard
                           key={sign}
                           essay={essayMap.get(slug)}
                           planet={planet}
                           sign={sign}
+                          signLabel={signLabel}
+                          cardAria={t('cardAria', { planet: planetLabel, sign: signLabel })}
+                          fallbackDesc={t('fallbackDesc', { planet: planetLabel, sign: signLabel })}
                         />
                       );
                     })}
