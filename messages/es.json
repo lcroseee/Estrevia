@@ -601,7 +601,9 @@
     },
     "saveToProfile": "Guardar en perfil",
     "freeGeneration": "1 generación gratis",
-    "proUnlimited": "Ilimitado con Pro"
+    "proUnlimited": "Ilimitado con Pro",
+    "freeRemaining": "{used} de {limit} avatares gratuitos usados este mes",
+    "freeLimitReached": "Has usado los {limit} avatares gratuitos del mes. Mejora a Pro para tener acceso ilimitado."
   },
   "notifications": {
     "title": "Preferencias de notificaciones",

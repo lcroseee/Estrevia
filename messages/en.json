@@ -601,7 +601,9 @@
     },
     "saveToProfile": "Save to Profile",
     "freeGeneration": "1 free generation",
-    "proUnlimited": "Unlimited with Pro"
+    "proUnlimited": "Unlimited with Pro",
+    "freeRemaining": "{used} of {limit} free avatars used this month",
+    "freeLimitReached": "You've used all {limit} free avatars for this month. Upgrade to Pro for unlimited."
   },
   "notifications": {
     "title": "Notification Preferences",
