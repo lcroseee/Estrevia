@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo';
 
 export const metadata: Metadata = createMetadata({
@@ -51,7 +52,8 @@ function ConstellationWatermark() {
   );
 }
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getTranslations('appShell');
   return (
     <main
       role="main"
@@ -91,11 +93,10 @@ export default function NotFound() {
             className="font-[family-name:var(--font-crimson-pro)] italic text-3xl leading-tight"
             style={{ color: '#C8A84B' }}
           >
-            Page not found
+            {t('notFoundH1')}
           </h1>
           <p className="font-[family-name:var(--font-geist-sans)] text-sm text-white/55 leading-relaxed max-w-xs mx-auto">
-            The stars don&apos;t recognize this path. Let&apos;s get you back on
-            course.
+            {t('notFoundBody')}
           </p>
         </div>
 
@@ -109,7 +110,7 @@ export default function NotFound() {
               background: 'linear-gradient(135deg, #D4B85C 0%, #C8A84B 50%, #B8943A 100%)',
             }}
           >
-            Calculate My Chart
+            {t('notFoundCalcChart')}
           </Link>
 
           {/* Secondary ghost */}
@@ -117,7 +118,7 @@ export default function NotFound() {
             href="/"
             className="inline-flex items-center justify-center px-7 py-3 rounded-lg text-sm font-medium text-white/65 border border-white/10 transition-all duration-200 hover:border-white/25 hover:text-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
           >
-            Return Home
+            {t('notFoundReturnHome')}
           </Link>
         </div>
       </div>

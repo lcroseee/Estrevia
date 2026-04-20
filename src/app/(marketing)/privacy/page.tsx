@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo';
 
 export function generateMetadata(): Metadata {
@@ -13,224 +14,230 @@ export function generateMetadata(): Metadata {
 const EFFECTIVE_DATE = 'April 6, 2026';
 const CONTACT_EMAIL = 'privacy@estrevia.app';
 const RETENTION_TEMP_CHARTS = '7 days';
-const RETENTION_SAVED_CHARTS = 'until account deletion';
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const t = await getTranslations('privacyPage');
+  const tCommon = await getTranslations('legalCommon');
+
+  // RETENTION_SAVED_CHARTS uses "row4Retention" copy ("until account deletion")
+  // — same string, kept consistent across the page for both locales.
+  const retentionSavedCharts = t('row4Retention');
+
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-16 sm:py-24">
       {/* Header */}
       <header className="mb-12">
         <p className="text-xs tracking-[0.2em] uppercase text-[#C8A84B]/70 mb-3">
-          Legal
+          {tCommon('eyebrow')}
         </p>
         <h1
           className="text-3xl sm:text-4xl font-semibold text-white/95 mb-4"
           style={{ fontFamily: 'var(--font-crimson-pro)' }}
         >
-          Privacy Policy
+          {t('h1')}
         </h1>
         <p className="text-sm text-white/40">
-          Effective date: {EFFECTIVE_DATE}
+          {tCommon('effectiveDate', { date: EFFECTIVE_DATE })}
+        </p>
+        <p className="mt-3 text-xs text-white/35 italic border-l-2 border-[#C8A84B]/30 pl-3">
+          {tCommon('translationNote')}
         </p>
       </header>
 
       <div className="space-y-10 text-white/70 leading-relaxed">
 
         {/* Overview */}
-        <Section title="Overview">
-          <p>
-            Estrevia is built on a privacy-first principle: your birth data is
-            personal. We collect only what is necessary to provide the Service,
-            encrypt sensitive data at rest, and give you full control over your
-            information.
-          </p>
+        <Section title={t('overviewTitle')}>
+          <p>{t('overviewP1')}</p>
         </Section>
 
         {/* 1. Data we collect */}
-        <Section title="1. Data We Collect">
+        <Section title={t('s1Title')}>
           <div className="space-y-5">
             <DataCategory
-              label="Birth Data (PII)"
-              badge="Encrypted"
+              label={t('categoryBirthLabel')}
+              badge={t('categoryBirthBadge')}
               items={[
-                'Date of birth',
-                'Time of birth (optional — required for house calculations)',
-                'Place of birth (city, country, coordinates)',
+                t('categoryBirthItem1'),
+                t('categoryBirthItem2'),
+                t('categoryBirthItem3'),
               ]}
-              note={`Encrypted with AES-256-GCM before storage. The encryption key lives in Vercel's secret environment — it never touches the database.`}
+              note={t('categoryBirthNote')}
             />
 
             <DataCategory
-              label="Account Data"
+              label={t('categoryAccountLabel')}
               items={[
-                'Email address (required to create an account)',
-                'Authentication tokens managed by Clerk',
+                t('categoryAccountItem1'),
+                t('categoryAccountItem2'),
               ]}
             />
 
             <DataCategory
-              label="Cosmic Passport Share Data"
-              badge="Not PII"
+              label={t('categoryPassportLabel')}
+              badge={t('categoryPassportBadge')}
               items={[
-                'Sun sign, Moon sign, Ascendant sign',
-                'Element, ruling planet, rarity percentage',
+                t('categoryPassportItem1'),
+                t('categoryPassportItem2'),
               ]}
-              note="Share data contains derived astrological results only — never raw birth data."
+              note={t('categoryPassportNote')}
             />
 
             <DataCategory
-              label="Usage Data (Analytics)"
-              badge="Anonymised"
+              label={t('categoryUsageLabel')}
+              badge={t('categoryUsageBadge')}
               items={[
-                'Pages visited, features used',
-                'Chart calculation count',
-                'Passport share events',
+                t('categoryUsageItem1'),
+                t('categoryUsageItem2'),
+                t('categoryUsageItem3'),
               ]}
-              note="Collected only with your consent via cookie acceptance. Processed by PostHog (EU region)."
+              note={t('categoryUsageNote')}
             />
 
             <DataCategory
-              label="Payment Data"
+              label={t('categoryPaymentLabel')}
               items={[
-                'Billing information (card last 4 digits, expiry) — processed by Stripe',
-                'Subscription status and plan',
+                t('categoryPaymentItem1'),
+                t('categoryPaymentItem2'),
               ]}
-              note="We never store full card numbers. All payment processing is handled by Stripe, Inc."
+              note={t('categoryPaymentNote')}
             />
           </div>
         </Section>
 
         {/* 2. How we use data */}
-        <Section title="2. How We Use Your Data">
+        <Section title={t('s2Title')}>
           <ul className="list-disc list-outside ml-5 space-y-1.5 text-sm sm:text-base">
-            <li>Calculate and store your natal charts</li>
-            <li>Generate and display your Cosmic Passport</li>
-            <li>Authenticate you via Clerk</li>
-            <li>Process subscription payments via Stripe</li>
-            <li>Send transactional emails (chart saved, subscription confirmation) via Resend</li>
-            <li>Analyse product usage to improve the Service (with your consent)</li>
-            <li>Monitor errors and performance via Sentry</li>
+            <li>{t('s2L1')}</li>
+            <li>{t('s2L2')}</li>
+            <li>{t('s2L3')}</li>
+            <li>{t('s2L4')}</li>
+            <li>{t('s2L5')}</li>
+            <li>{t('s2L6')}</li>
+            <li>{t('s2L7')}</li>
           </ul>
           <p className="text-sm sm:text-base mt-3">
-            We do <strong className="text-white/85">not</strong> sell your data,
-            use it for advertising targeting, or share it with data brokers.
+            <strong className="text-white/85">{t('s2NotSell')}</strong>
           </p>
         </Section>
 
         {/* 3. Birth data encryption */}
-        <Section title="3. Birth Data Encryption">
+        <Section title={t('s3Title')}>
           <div className="rounded-lg border border-[#C8A84B]/20 bg-[#C8A84B]/5 px-5 py-4 space-y-3">
             <p>
-              Birth date, time, and location are classified as personal data
-              under GDPR. We protect this data with{' '}
-              <strong className="text-white/85">AES-256-GCM encryption</strong>{' '}
-              before it is written to the database.
+              {t('s3P1Before')}
+              <strong className="text-white/85">{t('s3P1Strong')}</strong>
+              {t('s3P1After')}
             </p>
             <ul className="list-disc list-outside ml-5 space-y-1.5 text-sm">
-              <li>Each record uses a unique IV (initialisation vector)</li>
-              <li>Encryption key stored in Vercel environment variables — not in the database</li>
-              <li>Decryption happens only at request time, inside secure server functions</li>
-              <li>Decrypted data is never logged or stored in intermediate systems</li>
+              <li>{t('s3L1')}</li>
+              <li>{t('s3L2')}</li>
+              <li>{t('s3L3')}</li>
+              <li>{t('s3L4')}</li>
             </ul>
           </div>
         </Section>
 
         {/* 4. Third parties */}
-        <Section title="4. Third-Party Services">
+        <Section title={t('s4Title')}>
           <div className="space-y-4">
             <ThirdParty
               name="Clerk"
-              purpose="Authentication and session management"
+              purpose={t('tpClerkPurpose')}
               link="https://clerk.com/privacy"
-              data="Email, OAuth tokens"
+              data={t('tpClerkData')}
+              dataPrefix={t('tpDataSharedPrefix')}
             />
             <ThirdParty
               name="Stripe"
-              purpose="Payment processing"
+              purpose={t('tpStripePurpose')}
               link="https://stripe.com/privacy"
-              data="Billing information, subscription events"
+              data={t('tpStripeData')}
+              dataPrefix={t('tpDataSharedPrefix')}
             />
             <ThirdParty
               name="PostHog"
-              purpose="Product analytics (EU region)"
+              purpose={t('tpPosthogPurpose')}
               link="https://posthog.com/privacy"
-              data="Anonymised usage events — only with cookie consent"
+              data={t('tpPosthogData')}
+              dataPrefix={t('tpDataSharedPrefix')}
             />
             <ThirdParty
               name="Neon"
-              purpose="Serverless PostgreSQL database"
+              purpose={t('tpNeonPurpose')}
               link="https://neon.tech/privacy"
-              data="Encrypted user data at rest"
+              data={t('tpNeonData')}
+              dataPrefix={t('tpDataSharedPrefix')}
             />
             <ThirdParty
               name="Vercel"
-              purpose="Hosting and edge infrastructure"
+              purpose={t('tpVercelPurpose')}
               link="https://vercel.com/legal/privacy-policy"
-              data="Request logs (IP, headers) — retained per Vercel policy"
+              data={t('tpVercelData')}
+              dataPrefix={t('tpDataSharedPrefix')}
             />
             <ThirdParty
               name="Resend"
-              purpose="Transactional email delivery"
+              purpose={t('tpResendPurpose')}
               link="https://resend.com/privacy"
-              data="Email address, email content"
+              data={t('tpResendData')}
+              dataPrefix={t('tpDataSharedPrefix')}
             />
             <ThirdParty
               name="Sentry"
-              purpose="Error monitoring"
+              purpose={t('tpSentryPurpose')}
               link="https://sentry.io/privacy/"
-              data="Error stack traces, anonymised user context"
+              data={t('tpSentryData')}
+              dataPrefix={t('tpDataSharedPrefix')}
             />
           </div>
         </Section>
 
         {/* 5. Data retention */}
-        <Section title="5. Data Retention">
+        <Section title={t('s5Title')}>
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left py-2 pr-4 text-white/50 font-medium">Data</th>
-                <th className="text-left py-2 text-white/50 font-medium">Retention</th>
+                <th className="text-left py-2 pr-4 text-white/50 font-medium">{t('tableHeaderData')}</th>
+                <th className="text-left py-2 text-white/50 font-medium">{t('tableHeaderRetention')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               <tr>
-                <td className="py-2.5 pr-4 text-white/70">Temporary charts (no account)</td>
+                <td className="py-2.5 pr-4 text-white/70">{t('row1Data')}</td>
                 <td className="py-2.5 text-white/70">{RETENTION_TEMP_CHARTS}</td>
               </tr>
               <tr>
-                <td className="py-2.5 pr-4 text-white/70">Saved charts (with account)</td>
-                <td className="py-2.5 text-white/70">{RETENTION_SAVED_CHARTS}</td>
+                <td className="py-2.5 pr-4 text-white/70">{t('row2Data')}</td>
+                <td className="py-2.5 text-white/70">{retentionSavedCharts}</td>
               </tr>
               <tr>
-                <td className="py-2.5 pr-4 text-white/70">Cosmic Passport share data</td>
-                <td className="py-2.5 text-white/70">Until chart is deleted</td>
+                <td className="py-2.5 pr-4 text-white/70">{t('row3Data')}</td>
+                <td className="py-2.5 text-white/70">{t('row3Retention')}</td>
               </tr>
               <tr>
-                <td className="py-2.5 pr-4 text-white/70">Account data (email)</td>
-                <td className="py-2.5 text-white/70">Until account deletion</td>
+                <td className="py-2.5 pr-4 text-white/70">{t('row4Data')}</td>
+                <td className="py-2.5 text-white/70">{t('row4Retention')}</td>
               </tr>
               <tr>
-                <td className="py-2.5 pr-4 text-white/70">Analytics events</td>
-                <td className="py-2.5 text-white/70">12 months (PostHog default)</td>
+                <td className="py-2.5 pr-4 text-white/70">{t('row5Data')}</td>
+                <td className="py-2.5 text-white/70">{t('row5Retention')}</td>
               </tr>
             </tbody>
           </table>
         </Section>
 
         {/* 6. GDPR rights */}
-        <Section title="6. Your Rights (GDPR)">
-          <p>
-            If you are in the European Economic Area or the United Kingdom, you
-            have the following rights regarding your personal data:
-          </p>
+        <Section title={t('s6Title')}>
+          <p>{t('s6Intro')}</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {[
-              { right: 'Access', desc: 'Request a copy of all data we hold about you.' },
-              { right: 'Rectification', desc: 'Correct inaccurate personal data.' },
-              { right: 'Deletion', desc: 'Delete your account and all associated data.' },
-              { right: 'Export', desc: 'Download your data in machine-readable JSON.' },
-              { right: 'Restriction', desc: 'Restrict processing of your data.' },
-              { right: 'Objection', desc: 'Object to processing based on legitimate interests.' },
+              { right: t('rightAccess'), desc: t('rightAccessDesc') },
+              { right: t('rightRectification'), desc: t('rightRectificationDesc') },
+              { right: t('rightDeletion'), desc: t('rightDeletionDesc') },
+              { right: t('rightExport'), desc: t('rightExportDesc') },
+              { right: t('rightRestriction'), desc: t('rightRestrictionDesc') },
+              { right: t('rightObjection'), desc: t('rightObjectionDesc') },
             ].map(({ right, desc }) => (
               <div
                 key={right}
@@ -244,108 +251,82 @@ export default function PrivacyPage() {
 
           <div className="mt-5 space-y-2 text-sm sm:text-base">
             <p>
-              <strong className="text-white/85">To export your data:</strong>{' '}
+              <strong className="text-white/85">{t('exportLabel')}</strong>{' '}
               <code className="text-[#C8A84B]/80 bg-white/5 px-1.5 py-0.5 rounded text-xs font-mono">
                 GET /api/v1/user/data-export
-              </code>{' '}
-              (authenticated) — returns JSON with all charts and profile data.
+              </code>
+              {t('exportSuffix')}
             </p>
             <p>
-              <strong className="text-white/85">To delete your account:</strong>{' '}
-              Account Settings → Delete Account, or{' '}
+              <strong className="text-white/85">{t('deleteLabel')}</strong>
+              {t('deleteMid')}
               <code className="text-[#C8A84B]/80 bg-white/5 px-1.5 py-0.5 rounded text-xs font-mono">
                 DELETE /api/v1/user/account
-              </code>{' '}
-              — permanently deletes all data with cascade.
+              </code>
+              {t('deleteSuffix')}
             </p>
             <p>
-              To exercise any other right, email{' '}
+              {t('exerciseEmailPrefix')}
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
                 className="text-[#C8A84B] hover:text-[#E0C06A] underline underline-offset-2 transition-colors"
               >
                 {CONTACT_EMAIL}
               </a>
-              . We will respond within 30 days.
+              {t('exerciseEmailSuffix')}
             </p>
           </div>
         </Section>
 
         {/* 7. Cookies */}
-        <Section title="7. Cookies and Tracking">
-          <p>
-            We use cookies and localStorage for:
-          </p>
+        <Section title={t('s7Title')}>
+          <p>{t('s7Intro')}</p>
           <ul className="list-disc list-outside ml-5 space-y-1.5 text-sm sm:text-base mt-2">
             <li>
-              <strong className="text-white/85">Authentication</strong> — Clerk
-              session tokens. Necessary for the Service to function. No consent
-              required.
+              <strong className="text-white/85">{t('s7L1Strong')}</strong>
+              {t('s7L1Suffix')}
             </li>
             <li>
-              <strong className="text-white/85">Analytics</strong> — PostHog
-              client identifier (localStorage). Requires explicit consent via the
-              cookie banner.
+              <strong className="text-white/85">{t('s7L2Strong')}</strong>
+              {t('s7L2Suffix')}
             </li>
           </ul>
-          <p className="mt-3 text-sm sm:text-base">
-            You can withdraw analytics consent at any time by clearing your
-            browser&apos;s localStorage or contacting us. We do not use
-            advertising cookies.
-          </p>
+          <p className="mt-3 text-sm sm:text-base">{t('s7Footer')}</p>
         </Section>
 
         {/* 8. Data transfers */}
-        <Section title="8. International Data Transfers">
-          <p>
-            Our analytics data (PostHog) is processed in the EU. Database
-            infrastructure (Neon) may store data in the US. Where applicable,
-            transfers are governed by Standard Contractual Clauses (SCCs)
-            approved by the European Commission.
-          </p>
+        <Section title={t('s8Title')}>
+          <p>{t('s8P1')}</p>
         </Section>
 
         {/* 9. Children */}
-        <Section title="9. Children's Privacy">
+        <Section title={t('s9Title')}>
+          <p>{t('s9P1')}</p>
           <p>
-            Only users aged 13 or older may create an account. We do not
-            knowingly collect personal data directly from children under 13.
-          </p>
-          <p>
-            <strong>Charts for family members.</strong> An adult account holder
-            may enter a child&apos;s birth data (date, time, location) to
-            calculate a natal chart. In this case the adult acts as the data
-            controller for that information, is responsible for obtaining any
-            required parental consent, and may delete or export the data at any
-            time via{' '}
+            <strong>{t('s9P2Strong')}</strong>
+            {t('s9P2Mid')}
             <code className="px-1 py-0.5 rounded bg-white/8 text-[#C8A84B] text-xs">
               /settings
             </code>
-            . Birth data is stored encrypted with AES-256-GCM and is never used
-            to profile the child, serve advertising, or train AI models.
+            {t('s9P2After')}
           </p>
           <p>
-            If you believe a child has created their own account or that
-            personal data of a minor has been collected without proper consent,
-            contact us at{' '}
+            {t('s9P3Before')}
             <a
               href={`mailto:${CONTACT_EMAIL}`}
               className="text-[#C8A84B] hover:text-[#E0C06A] underline underline-offset-2 transition-colors"
             >
               {CONTACT_EMAIL}
-            </a>{' '}
-            and we will delete the data within 30 days.
+            </a>
+            {t('s9P3After')}
           </p>
         </Section>
 
         {/* 10. Contact */}
-        <Section title="10. Contact and Data Controller">
+        <Section title={t('s10Title')}>
+          <p>{t('s10P1')}</p>
           <p>
-            Estrevia operates as the data controller for personal data processed
-            through the Service.
-          </p>
-          <p>
-            Privacy enquiries, GDPR requests, and data breach reports:{' '}
+            {t('s10P2Prefix')}
             <a
               href={`mailto:${CONTACT_EMAIL}`}
               className="text-[#C8A84B] hover:text-[#E0C06A] underline underline-offset-2 transition-colors"
@@ -353,10 +334,7 @@ export default function PrivacyPage() {
               {CONTACT_EMAIL}
             </a>
           </p>
-          <p>
-            You also have the right to lodge a complaint with your local
-            supervisory authority (e.g., ICO in the UK, CNIL in France).
-          </p>
+          <p>{t('s10P3')}</p>
         </Section>
 
       </div>
@@ -428,11 +406,13 @@ function ThirdParty({
   purpose,
   link,
   data,
+  dataPrefix,
 }: {
   name: string;
   purpose: string;
   link: string;
   data: string;
+  dataPrefix: string;
 }) {
   return (
     <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-sm border-b border-white/5 pb-3 last:border-0">
@@ -448,7 +428,10 @@ function ThirdParty({
       </div>
       <div className="flex-1 space-y-0.5">
         <p className="text-white/70">{purpose}</p>
-        <p className="text-white/40 text-xs">Data shared: {data}</p>
+        <p className="text-white/40 text-xs">
+          {dataPrefix}
+          {data}
+        </p>
       </div>
     </div>
   );

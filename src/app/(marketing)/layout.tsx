@@ -1,16 +1,21 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { JsonLdScript, organizationSchema } from '@/shared/seo';
 import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher';
 
-const NAV_LINKS = [
-  { href: '/chart', label: 'Chart' },
-  { href: '/moon', label: 'Moon' },
-  { href: '/essays', label: 'Essays' },
-  { href: '/pricing', label: 'Pricing' },
-] as const;
+export default async function MarketingLayout({ children }: { children: ReactNode }) {
+  const tNav = await getTranslations('nav');
+  const tCommon = await getTranslations('common');
+  const tMarketing = await getTranslations('marketing');
 
-export default function MarketingLayout({ children }: { children: ReactNode }) {
+  const navLinks = [
+    { href: '/chart', label: tNav('chart') },
+    { href: '/moon', label: tNav('moon') },
+    { href: '/essays', label: tNav('essays') },
+    { href: '/pricing', label: tNav('pricing') },
+  ];
+
   return (
     <>
       <JsonLdScript schema={organizationSchema()} />
@@ -27,7 +32,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
               href="/"
               className="text-sm font-semibold tracking-[0.18em] uppercase text-white/85 hover:text-white transition-all duration-200 hover:tracking-[0.22em]"
               style={{ fontFamily: 'var(--font-geist-sans)' }}
-              aria-label="Estrevia — home"
+              aria-label={tMarketing('logoAriaHome')}
             >
               Estrevia
             </Link>
@@ -35,9 +40,9 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
             {/* Desktop nav */}
             <nav
               className="hidden md:flex items-center gap-6"
-              aria-label="Marketing navigation"
+              aria-label={tMarketing('navAriaMarketing')}
             >
-              {NAV_LINKS.map(({ href, label }) => (
+              {navLinks.map(({ href, label }) => (
                 <Link
                   key={href}
                   href={href}
@@ -51,7 +56,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
                 href="/chart"
                 className="text-sm px-4 py-1.5 rounded-full border border-[#FFD700]/40 text-[#FFD700] hover:border-[#FFD700]/80 transition-colors tracking-wide"
               >
-                Open App
+                {tCommon('openApp')}
               </Link>
             </nav>
 
@@ -62,7 +67,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
                 href="/chart"
                 className="text-xs px-3 py-1.5 rounded-full border border-[#FFD700]/40 text-[#FFD700] hover:border-[#FFD700]/80 transition-colors"
               >
-                Open App
+                {tCommon('openApp')}
               </Link>
             </div>
           </div>
@@ -95,32 +100,33 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
                   Estrevia
                 </span>
               </div>
-              <span className="text-xs text-white/55">
-                Sidereal astrology — Swiss Ephemeris precision
-              </span>
+              <span className="text-xs text-white/55">{tMarketing('footerTagline')}</span>
             </div>
 
-            <nav className="flex flex-wrap items-center justify-center gap-4 sm:gap-6" aria-label="Footer navigation">
+            <nav
+              className="flex flex-wrap items-center justify-center gap-4 sm:gap-6"
+              aria-label={tMarketing('navAriaFooter')}
+            >
               <Link href="/essays" className="text-xs text-white/65 hover:text-white/90 transition-colors">
-                Essays
+                {tNav('essays')}
               </Link>
               <Link href="/pricing" className="text-xs text-white/65 hover:text-white/90 transition-colors">
-                Pricing
+                {tNav('pricing')}
               </Link>
               <Link href="/terms" className="text-xs text-white/65 hover:text-white/90 transition-colors">
-                Terms
+                {tMarketing('footerTerms')}
               </Link>
               <Link href="/privacy" className="text-xs text-white/65 hover:text-white/90 transition-colors">
-                Privacy
+                {tMarketing('footerPrivacy')}
               </Link>
               <a
                 href="https://twitter.com/estrevia_app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-white/65 hover:text-white/90 transition-colors"
-                aria-label="Estrevia on Twitter"
+                aria-label={tMarketing('twitterAria')}
               >
-                Twitter
+                {tMarketing('footerTwitter')}
               </a>
             </nav>
           </div>

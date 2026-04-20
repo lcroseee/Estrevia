@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo/metadata';
 import { JsonLdScript, breadcrumbSchema, faqSchema } from '@/shared/seo/json-ld';
 import { SITE_URL } from '@/shared/seo/constants';
@@ -24,47 +25,37 @@ export function generateMetadata(): Metadata {
 }
 
 // ---------------------------------------------------------------------------
-// JSON-LD schemas
-// ---------------------------------------------------------------------------
-
-const breadcrumb = breadcrumbSchema([
-  { name: 'Estrevia', url: SITE_URL },
-  { name: 'Moon Phase', url: `${SITE_URL}/moon` },
-]);
-
-const faq = faqSchema([
-  {
-    question: 'What is the moon phase today?',
-    answer:
-      'The current moon phase is calculated in real time using Swiss Ephemeris from the angular distance between the Moon and the Sun. The phase changes continuously as the Moon orbits Earth over ~29.5 days.',
-  },
-  {
-    question: 'How is moon phase illumination calculated?',
-    answer:
-      'Illumination is derived from the Sun–Moon elongation angle using the formula: (1 - cos(angle)) / 2 × 100%. At 0° (New Moon) illumination is 0%; at 180° (Full Moon) it reaches 100%.',
-  },
-  {
-    question: 'What is the difference between sidereal and tropical moon phases?',
-    answer:
-      'Moon phase is a measure of the Sun–Moon angle, which is the same in both sidereal and tropical systems. The ~24° Lahiri ayanamsa offset affects which zodiac sign the Moon occupies, but does not change the phase angle or illumination percentage.',
-  },
-  {
-    question: 'When is the next new moon?',
-    answer:
-      'New moons occur approximately every 29.5 days when the Moon passes between Earth and the Sun. The exact date is shown on this page and calculated to within ±1 minute using Swiss Ephemeris.',
-  },
-  {
-    question: 'When is the next full moon?',
-    answer:
-      'Full moons occur when the Moon is directly opposite the Sun (180° elongation). The exact date and time are shown on this page and recalculate daily.',
-  },
-]);
-
-// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export default function MoonPage() {
+export default async function MoonPage() {
+  const t = await getTranslations('moonPage');
+
+  const breadcrumb = breadcrumbSchema([
+    { name: 'Estrevia', url: SITE_URL },
+    { name: t('breadcrumb'), url: `${SITE_URL}/moon` },
+  ]);
+
+  const visibleFaqs = [
+    { qKey: 'faq1Q', aKey: 'faq1A' },
+    { qKey: 'faq2Q', aKey: 'faq2A' },
+    { qKey: 'faq3Q', aKey: 'faq3A' },
+  ] as const;
+
+  const faq = faqSchema(
+    visibleFaqs.map(({ qKey, aKey }) => ({
+      question: t(qKey),
+      answer: t(aKey),
+    })),
+  );
+
+  const relatedLinks = [
+    { href: '/chart', label: t('relatedChart') },
+    { href: '/hours', label: t('relatedHours') },
+    { href: '/why-sidereal', label: t('relatedWhy') },
+    { href: '/essays/moon-in-aries', label: t('relatedMoonAries') },
+  ];
+
   return (
     <>
       <JsonLdScript schema={breadcrumb} />
@@ -87,20 +78,19 @@ export default function MoonPage() {
             className="text-[10px] tracking-[0.22em] uppercase mb-3"
             style={{ color: 'rgba(192,192,192,0.45)', fontFamily: 'var(--font-geist-mono, monospace)' }}
           >
-            ☽ &nbsp;Lunar Calendar
+            ☽ &nbsp;{t('eyebrow')}
           </p>
           <h1
             className="text-3xl sm:text-4xl font-light leading-tight mb-3"
             style={{ color: '#E8E0D0', fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
           >
-            Moon Phase Today
+            {t('h1')}
           </h1>
           <p
             className="text-sm leading-relaxed max-w-md"
             style={{ color: 'rgba(255,255,255,0.42)' }}
           >
-            Live lunar phase with illumination and monthly calendar. New and full
-            moon dates calculated with Swiss Ephemeris to ±1 minute accuracy.
+            {t('description')}
           </p>
         </header>
 
@@ -108,20 +98,15 @@ export default function MoonPage() {
         <MoonCalendar />
 
         {/* Related pages — internal linking for SEO */}
-        <nav aria-label="Related pages" className="mt-16">
+        <nav aria-label={t('relatedAria')} className="mt-16">
           <h2
             className="text-xs font-semibold uppercase tracking-widest mb-4"
             style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-sans)' }}
           >
-            Explore Sidereal Astrology
+            {t('relatedHeading')}
           </h2>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm list-none" role="list">
-            {[
-              { href: '/chart',         label: 'Calculate your sidereal natal chart' },
-              { href: '/hours',         label: 'Planetary hours for today' },
-              { href: '/why-sidereal',  label: 'Why sidereal astrology differs from tropical' },
-              { href: '/essays/moon-in-aries', label: 'Moon in sidereal Aries — essay' },
-            ].map(({ href, label }) => (
+            {relatedLinks.map(({ href, label }) => (
               <li key={href}>
                 <Link
                   href={href}
@@ -140,30 +125,17 @@ export default function MoonPage() {
         </nav>
 
         {/* FAQ — visible content, feeds JSON-LD */}
-        <section aria-label="About moon phases" className="mt-12 space-y-3">
+        <section aria-label={t('aboutAria')} className="mt-12 space-y-3">
           <h2
             className="text-xs font-medium uppercase tracking-[0.18em] mb-5"
             style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-sans)' }}
           >
-            About Moon Phases
+            {t('aboutHeading')}
           </h2>
 
-          {[
-            {
-              q: 'How is moon phase illumination calculated?',
-              a: 'Illumination comes from the Sun–Moon elongation angle: (1 − cos θ) / 2 × 100%. At New Moon (0°) illumination is 0%; at Full Moon (180°) it is 100%.',
-            },
-            {
-              q: 'Sidereal vs tropical — does the moon phase change?',
-              a: 'No. Moon phase is the angular gap between the Sun and Moon — identical in both systems. The ~24° Lahiri ayanamsa offset shifts the Moon\'s zodiac sign but not its phase angle.',
-            },
-            {
-              q: 'How accurate are the new and full moon dates?',
-              a: 'Dates are calculated with Swiss Ephemeris using the Moshier analytical ephemeris, accurate to ±0.01°. The event time is narrowed by binary search to within ±1 minute.',
-            },
-          ].map(({ q, a }) => (
+          {visibleFaqs.map(({ qKey, aKey }) => (
             <details
-              key={q}
+              key={qKey}
               className="group rounded-xl overflow-hidden transition-all"
               style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}
             >
@@ -174,7 +146,7 @@ export default function MoonPage() {
                   fontFamily: 'var(--font-geist-sans)',
                 }}
               >
-                {q}
+                {t(qKey)}
                 <span
                   className="text-[10px] ml-3 flex-shrink-0 group-open:rotate-180 transition-transform duration-200"
                   style={{ color: 'rgba(255,255,255,0.22)' }}
@@ -187,7 +159,7 @@ export default function MoonPage() {
                 className="px-5 pb-5 pt-1 text-sm leading-relaxed"
                 style={{ color: 'rgba(255,255,255,0.42)', fontFamily: 'var(--font-crimson-pro, Georgia, serif)', fontSize: '0.9375rem' }}
               >
-                {a}
+                {t(aKey)}
               </p>
             </details>
           ))}

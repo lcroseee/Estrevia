@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ChartResult } from '@/shared/types';
 import type { PassportResponse } from '@/shared/types/api';
 import { BirthDataForm } from './BirthDataForm';
@@ -19,6 +20,7 @@ interface PassportSectionProps {
 }
 
 function PassportSection({ chartId }: PassportSectionProps) {
+  const t = useTranslations('chartDisplay');
   const [passport, setPassport] = useState<PassportResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,22 +36,22 @@ function PassportSection({ chartId }: PassportSectionProps) {
       });
       const json = await response.json() as { success: boolean; data: PassportResponse | null; error: string | null };
       if (!json.success || !json.data) {
-        setError('Could not create passport. Try again.');
+        setError(t('errCreate'));
         return;
       }
       setPassport(json.data);
     } catch {
-      setError('Network error. Check connection and try again.');
+      setError(t('errNetwork'));
     } finally {
       setIsLoading(false);
     }
-  }, [chartId]);
+  }, [chartId, t]);
 
   if (passport) {
     return (
       <section
         className="space-y-4"
-        aria-label="Cosmic Passport"
+        aria-label={t('passportSectionAria')}
         aria-live="polite"
       >
         <div className="flex items-center justify-between">
@@ -57,13 +59,13 @@ function PassportSection({ chartId }: PassportSectionProps) {
             className="text-sm font-semibold text-white/70 tracking-wide uppercase"
             style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
           >
-            Cosmic Passport
+            {t('passportSectionLabel')}
           </h2>
           <span
             className="text-xs text-white/30 font-mono"
-            aria-label={`Rarity: 1 of ${passport.rarityPercent}%`}
+            aria-label={t('rarityAria', { percent: passport.rarityPercent })}
           >
-            1 of {passport.rarityPercent}%
+            {t('rarityDisplay', { percent: passport.rarityPercent })}
           </span>
         </div>
         <PassportCard passport={passport} passportId={passport.id} />
@@ -73,7 +75,7 @@ function PassportSection({ chartId }: PassportSectionProps) {
   }
 
   return (
-    <section aria-label="Create Cosmic Passport">
+    <section aria-label={t('createPassportAria')}>
       <button
         type="button"
         onClick={handleCreatePassport}
@@ -89,12 +91,12 @@ function PassportSection({ chartId }: PassportSectionProps) {
         {isLoading ? (
           <>
             <SpinnerIcon />
-            Creating Passport...
+            {t('creating')}
           </>
         ) : (
           <>
             <span aria-hidden="true" style={{ fontFamily: 'serif', fontSize: '1rem' }}>✦</span>
-            Create Cosmic Passport
+            {t('createButton')}
           </>
         )}
       </button>
@@ -111,7 +113,7 @@ function PassportSection({ chartId }: PassportSectionProps) {
         className="mt-2 text-[10px] text-center text-white/25"
         style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
       >
-        Shareable card · No personal data stored
+        {t('passportFooter')}
       </p>
     </section>
   );
@@ -126,6 +128,7 @@ function SpinnerIcon() {
 }
 
 export function ChartDisplay() {
+  const t = useTranslations('chartDisplay');
   const [chart, setChart] = useState<ChartResult | null>(null);
   const [chartId, setChartId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('wheel');
@@ -153,7 +156,7 @@ export function ChartDisplay() {
     return (
       <section
         className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-10"
-        aria-label="Birth data entry"
+        aria-label={t('birthDataAria')}
       >
         {/* Decorative star field hint */}
         <div className="mb-8 text-center space-y-2">
@@ -167,10 +170,10 @@ export function ChartDisplay() {
             className="text-2xl font-semibold text-white/90 tracking-tight"
             style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
           >
-            Your Natal Chart
+            {t('h1')}
           </h1>
           <p className="text-sm text-white/40 max-w-xs mx-auto">
-            Calculate your sidereal natal chart using Swiss Ephemeris. Accurate to within 0.01°.
+            {t('description')}
           </p>
         </div>
         <BirthDataForm onChartCalculated={handleChartCalculated} />
@@ -178,19 +181,24 @@ export function ChartDisplay() {
     );
   }
 
+  const tabs: [Tab, string][] = [
+    ['wheel', t('tabWheel')],
+    ['table', t('tabTable')],
+  ];
+
   return (
     <section
       id="chart-result"
       className="max-w-2xl mx-auto px-4 py-6 space-y-6"
-      aria-label="Natal chart result"
+      aria-label={t('resultAria')}
     >
       {/* Header row */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-white/90">Natal Chart</h1>
+          <h1 className="text-lg font-semibold text-white/90">{t('headerTitle')}</h1>
           <p className="text-xs text-white/35 font-mono mt-0.5">
             {chart.system === 'sidereal' ? 'Sidereal' : 'Tropical'} · {chart.houseSystem}
-            {!chart.houses && ' · No houses (no birth time)'}
+            {!chart.houses && ` · ${t('noHouses')}`}
           </p>
         </div>
         <button
@@ -198,17 +206,17 @@ export function ChartDisplay() {
           onClick={handleRecalculate}
           className="text-xs text-white/40 hover:text-white/70 transition-colors underline underline-offset-2"
         >
-          New chart
+          {t('newChart')}
         </button>
       </div>
 
       {/* Tabs */}
       <div
         role="tablist"
-        aria-label="Chart view"
+        aria-label={t('tabsAria')}
         className="flex gap-1 p-1 rounded-xl bg-white/4 border border-white/6"
       >
-        {([['wheel', 'Wheel'], ['table', 'Table']] as [Tab, string][]).map(([tab, label]) => (
+        {tabs.map(([tab, label]) => (
           <button
             key={tab}
             role="tab"
@@ -245,7 +253,7 @@ export function ChartDisplay() {
               onChange={(e) => setShowAspects(e.target.checked)}
               className="accent-[#FFD700] w-3.5 h-3.5 rounded"
             />
-            Aspects
+            {t('aspects')}
           </label>
           {chart.houses && (
             <label className="flex items-center gap-2 text-xs text-white/50 cursor-pointer select-none">
@@ -255,7 +263,7 @@ export function ChartDisplay() {
                 onChange={(e) => setShowHouses(e.target.checked)}
                 className="accent-[#FFD700] w-3.5 h-3.5 rounded"
               />
-              Houses
+              {t('houses')}
             </label>
           )}
         </div>

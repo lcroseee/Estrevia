@@ -1,4 +1,7 @@
-export default function AppLoading() {
+import { getTranslations } from 'next-intl/server';
+
+export default async function AppLoading() {
+  const t = await getTranslations('appShell');
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">
@@ -27,7 +30,7 @@ export default function AppLoading() {
           />
         </svg>
         <span className="text-xs text-white/30 font-[family-name:var(--font-geist-mono)] tracking-wider uppercase">
-          Calculating&hellip;
+          {t('loadingCalculating')}
         </span>
       </div>
     </div>
