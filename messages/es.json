@@ -570,7 +570,14 @@
     "futurePosition": "Futuro",
     "proRequired": "Esta función requiere una suscripción Pro",
     "upgradeToPro": "Mejorar a Pro",
-    "proOnly": "Función Pro"
+    "proOnly": "Función Pro",
+    "spreadsTitle": "Tiradas de Tarot",
+    "spreadsSubtitle": "Tirada de tres cartas y Cruz Celta con correspondencias del Thoth",
+    "openSpreads": "Abrir Tiradas",
+    "threeCardTab": "Tres Cartas",
+    "celticCrossTab": "Cruz Celta",
+    "threeCardDescription": "Pasado, presente, futuro — una instantánea concentrada",
+    "celticCrossDescription": "Diez cartas que exploran todas las dimensiones de una pregunta"
   },
   "treeOfLife": {
     "title": "Árbol de la Vida",

@@ -570,7 +570,14 @@
     "futurePosition": "Future",
     "proRequired": "This feature requires a Pro subscription",
     "upgradeToPro": "Upgrade to Pro",
-    "proOnly": "Pro feature"
+    "proOnly": "Pro feature",
+    "spreadsTitle": "Tarot Spreads",
+    "spreadsSubtitle": "Three-Card and Celtic Cross spreads with Thoth correspondences",
+    "openSpreads": "Open Spreads",
+    "threeCardTab": "Three Card",
+    "celticCrossTab": "Celtic Cross",
+    "threeCardDescription": "Past, Present, Future — a focused snapshot",
+    "celticCrossDescription": "Ten cards exploring all dimensions of a question"
   },
   "treeOfLife": {
     "title": "Tree of Life",
