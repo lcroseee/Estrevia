@@ -89,7 +89,9 @@
     "faq2A": "No. La fase lunar es el ángulo entre el Sol y la Luna — idéntico en ambos sistemas. El desplazamiento de ~24° de la ayanamsa Lahiri cambia el signo zodiacal de la Luna pero no el ángulo de fase.",
     "faq3Q": "¿Qué tan precisas son las fechas de luna nueva y llena?",
     "faq3A": "Las fechas se calculan con Swiss Ephemeris usando la efeméride analítica de Moshier, con precisión de ±0,01°. La hora del evento se acota por búsqueda binaria a ±1 minuto.",
-    "breadcrumb": "Fase Lunar"
+    "breadcrumb": "Fase Lunar",
+    "freeMonthOnly": "Plan gratuito: solo el mes actual.",
+    "unlockFullCalendar": "Desbloquea el calendario completo"
   },
   "hoursPage": {
     "eyebrow": "Orden Caldeo",
