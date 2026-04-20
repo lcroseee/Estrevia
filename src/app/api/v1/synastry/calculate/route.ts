@@ -6,6 +6,8 @@ import { calculateSynastryAspects } from '@/modules/astro-engine/synastry';
 import { calculateCompatibilityScores } from '@/modules/astro-engine/synastry-scoring';
 import { requireAuth } from '@/modules/auth/lib/helpers';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
+import { isPremium } from '@/modules/auth/lib/premium';
+import { checkAndIncrementUsage } from '@/shared/lib/usage';
 import { getDb } from '@/shared/lib/db';
 import { natalCharts, synastryResults } from '@/shared/lib/schema';
 import { coordinatesSchema, isoDateSchema, timeSchema, timezoneSchema, houseSystemSchema } from '@/shared/validation';
@@ -50,6 +52,25 @@ export async function POST(request: Request) {
       { success: false, data: null, error: 'RATE_LIMITED' },
       { status: 429 },
     );
+  }
+
+  // Note: usage is consumed BEFORE calculation. A failed calculation still
+  // counts against the free daily quota — keeps the check atomic.
+  // 2b. Free-tier daily limit (1/day). Pro users skip this check.
+  const userIsPremium = await isPremium(userId);
+  if (!userIsPremium) {
+    const usage = await checkAndIncrementUsage(userId, 'synastry', 'day', 1);
+    if (!usage.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: 'FREE_LIMIT_REACHED',
+          meta: { limit: usage.limit, count: usage.count, period: 'day' },
+        },
+        { status: 403 },
+      );
+    }
   }
 
   // 2. Parse and validate request body
