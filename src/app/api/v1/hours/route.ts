@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { toZonedTime } from 'date-fns-tz';
+import { auth } from '@clerk/nextjs/server';
 import { planetaryHoursQuerySchema } from '@/shared/validation/hours';
 import { calculatePlanetaryHours } from '@/modules/astro-engine/planetary-hours';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
+import { isPremium } from '@/modules/auth/lib/premium';
 import type { PlanetaryHoursResponse, ApiResponse } from '@/shared/types/api';
 
 // Route Handlers are dynamic by default in Next.js 16 — no `dynamic` export needed.
@@ -77,6 +79,29 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
       nowInTz.getDate(),
       12, 0, 0, 0,
     ));
+  }
+
+  // Pro gate: free users can only request "today" (in their tz). Non-today requests
+  // require a Pro subscription. We compare the requested date in the same timezone
+  // as the resolved target.
+  if (dateParam) {
+    const todayInTz = toZonedTime(new Date(), timezone);
+    const todayStr = `${todayInTz.getFullYear()}-${String(todayInTz.getMonth() + 1).padStart(2, '0')}-${String(todayInTz.getDate()).padStart(2, '0')}`;
+    if (dateParam !== todayStr) {
+      const { userId } = await auth();
+      const userIsPremium = userId ? await isPremium(userId) : false;
+      if (!userIsPremium) {
+        return NextResponse.json(
+          {
+            success: false,
+            data: null,
+            error: 'PREMIUM_REQUIRED',
+            meta: { feature: 'hours_history' },
+          },
+          { status: 403 },
+        );
+      }
+    }
   }
 
   try {

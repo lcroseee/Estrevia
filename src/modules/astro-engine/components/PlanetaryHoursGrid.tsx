@@ -5,6 +5,7 @@ import { Planet } from '@/shared/types';
 import type { PlanetaryHour, PlanetaryHoursResponse, ApiResponse, CitySearchResult } from '@/shared/types';
 import { PLANET_COLORS } from './PlanetGlyph';
 import { CityAutocomplete } from './CityAutocomplete';
+import { useSubscription } from '@/shared/hooks/useSubscription';
 
 const LOCATION_STORAGE_KEY = 'estrevia_last_location';
 
@@ -75,6 +76,15 @@ export function PlanetaryHoursGrid() {
   const [isPending, startTransition] = useTransition();
   // Live tick so the "current hour" highlight stays in sync
   const [, setTick] = useState(0);
+
+  const { isPro, isLoading: subLoading } = useSubscription();
+
+  // Force free users back to today if they somehow have a non-today date selected
+  useEffect(() => {
+    if (!isPro && !subLoading && selectedDate !== toDateInputValue(new Date())) {
+      setSelectedDate(toDateInputValue(new Date()));
+    }
+  }, [isPro, subLoading, selectedDate]);
 
   const fetchHours = useCallback(
     async (latitude: number, longitude: number, timezone: string, date: string) => {
@@ -282,9 +292,18 @@ export function PlanetaryHoursGrid() {
             value={selectedDate}
             onChange={handleDateChange}
             max={toDateInputValue(new Date(now.getFullYear() + 1, 11, 31))}
-            className="bg-white/5 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white/80 font-[var(--font-geist-mono)] focus:outline-none focus:ring-2 focus:ring-white/20 cursor-pointer transition-colors hover:bg-white/10"
-            aria-label="Select date for planetary hours"
+            disabled={!isPro && !subLoading}
+            aria-label={!isPro ? 'Date (Pro only — free locked to today)' : 'Select date for planetary hours'}
+            className="bg-white/5 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white/80 font-[var(--font-geist-mono)] focus:outline-none focus:ring-2 focus:ring-white/20 cursor-pointer transition-colors hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
           />
+          {!isPro && !subLoading && (
+            <p className="mt-1 text-[10px] text-white/35">
+              Free plan: today only.{' '}
+              <a href="/pricing" className="text-[#FFD700]/60 hover:text-[#FFD700]/80 underline">
+                Unlock any date
+              </a>
+            </p>
+          )}
         </label>
       </div>
 
