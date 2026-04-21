@@ -10,7 +10,7 @@ if (!url) {
 const sql = neon(url);
 
 async function main() {
-  console.log('[migrate] Connecting to', url.replace(/:[^:@/]+@/, ':***@'));
+  console.log('[migrate] Connecting to', url!.replace(/:[^:@/]+@/, ':***@'));
 
   const exists = await sql`
     SELECT to_regclass('public.usage_counters') AS oid
