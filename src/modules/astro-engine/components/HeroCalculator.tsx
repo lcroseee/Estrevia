@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
+import { TimePickerField } from './TimePickerField';
 import type { CitySearchResult } from '@/shared/types';
 
 // ── Sign glyphs & colors ──────────────────────────────────────────────────────
@@ -60,6 +61,8 @@ interface HeroResult {
 
 interface FormState {
   date: string;
+  time: string;
+  knowsBirthTime: boolean;
   cityLabel: string;
   latitude: number | null;
   longitude: number | null;
@@ -68,6 +71,7 @@ interface FormState {
 
 interface FormErrors {
   date?: string;
+  time?: string;
   city?: string;
   general?: string;
 }
@@ -146,6 +150,8 @@ export function HeroCalculator() {
   const t = useTranslations('heroCalc');
   const [form, setForm] = useState<FormState>({
     date: '',
+    time: '',
+    knowsBirthTime: false,
     cityLabel: '',
     latitude: null,
     longitude: null,
@@ -179,6 +185,9 @@ export function HeroCalculator() {
       if (isNaN(d.getTime())) errs.date = t('errDateInvalid');
       else if (d > new Date()) errs.date = t('errDateFuture');
     }
+    if (form.knowsBirthTime && !form.time) {
+      errs.time = t('errTimeRequired');
+    }
     if (form.latitude === null || form.longitude === null) {
       errs.city = t('errCityRequired');
     }
@@ -202,13 +211,12 @@ export function HeroCalculator() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             date: form.date,
-            // Use noon when time is unknown — midday Sun position for quick preview
-            time: '12:00',
-            knowsBirthTime: false,
+            time: form.knowsBirthTime ? form.time : '12:00',
+            knowsBirthTime: form.knowsBirthTime,
             latitude: form.latitude,
             longitude: form.longitude,
             timezone: form.timezone,
-            houseSystem: 'Placidus',
+            houseSystem: form.knowsBirthTime ? 'Placidus' : null,
             ayanamsa: 'lahiri',
           }),
         });
@@ -358,6 +366,59 @@ export function HeroCalculator() {
             <p id="hero-date-error" className="mt-1.5 text-xs text-red-400" role="alert">
               {errors.date}
             </p>
+          )}
+        </div>
+
+        {/* Birth-time opt-in */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.knowsBirthTime}
+              onClick={() =>
+                setForm((f) => ({ ...f, knowsBirthTime: !f.knowsBirthTime }))
+              }
+              className={[
+                'relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent',
+                'transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-white/20',
+                form.knowsBirthTime ? 'bg-[#FFD700]/70' : 'bg-white/15',
+              ].join(' ')}
+              aria-label={t('knowsBirthTimeLabel')}
+            >
+              <span
+                className={[
+                  'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow',
+                  'transition-transform duration-200 ease-in-out',
+                  form.knowsBirthTime ? 'translate-x-4' : 'translate-x-0',
+                ].join(' ')}
+              />
+            </button>
+            <span className="text-sm text-white/60">
+              {t('knowsBirthTimeLabel')}
+            </span>
+          </div>
+
+          {form.knowsBirthTime && (
+            <div>
+              <TimePickerField
+                id="hero-time"
+                value={form.time}
+                onChange={(v) => {
+                  setForm((f) => ({ ...f, time: v }));
+                  setErrors((prev) => ({ ...prev, time: undefined }));
+                }}
+                hasError={!!errors.time}
+                aria-invalid={!!errors.time}
+                aria-describedby={errors.time ? 'hero-time-error' : undefined}
+              />
+              {errors.time && (
+                <p id="hero-time-error" className="mt-1.5 text-xs text-red-400" role="alert">
+                  {errors.time}
+                </p>
+              )}
+              <p className="mt-1 text-[11px] text-white/40">{t('timeHelper')}</p>
+            </div>
           )}
         </div>
 
