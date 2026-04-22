@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 interface PaywallModalProps {
   open: boolean;
@@ -41,6 +42,11 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Track paywall open (conversion-funnel entry)
+  useEffect(() => {
+    if (open) trackEvent(AnalyticsEvent.PAYWALL_OPENED, { returnUrl: returnUrl ?? null });
+  }, [open, returnUrl]);
 
   // Escape key closes the modal (WCAG 2.1.2)
   useEffect(() => {
@@ -81,6 +87,7 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
     if (loading) return;
     setLoading(true);
     setError(null);
+    trackEvent(AnalyticsEvent.PAYWALL_TRIAL_CLICKED, { plan, returnUrl: returnUrl ?? null });
 
     try {
       const res = await fetch('/api/v1/stripe/checkout', {
@@ -101,8 +108,14 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
         !contentType.includes('application/json');
 
       if (isAuthFailure) {
+        // Send the user to sign-up (they're on a trial CTA — most have no
+        // account yet). Post-auth, Clerk redirects to /checkout/start, which
+        // auto-creates the Stripe session and redirects to Stripe. Zero
+        // extra clicks between sign-up and payment.
         const target = returnUrl ?? window.location.pathname;
-        window.location.href = `/sign-in?redirect_url=${encodeURIComponent(target)}`;
+        const checkoutStart = `/checkout/start?plan=${plan}&return=${encodeURIComponent(target)}`;
+        trackEvent(AnalyticsEvent.CHECKOUT_AUTH_REDIRECT, { plan, returnUrl: target });
+        window.location.href = `/sign-up?redirect_url=${encodeURIComponent(checkoutStart)}`;
         return;
       }
 
@@ -120,6 +133,7 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
         return;
       }
 
+      trackEvent(AnalyticsEvent.CHECKOUT_STRIPE_REDIRECTED, { plan });
       window.location.href = data.data.url;
     } catch {
       // fetch() itself threw — genuine network failure (offline, DNS, timeout).

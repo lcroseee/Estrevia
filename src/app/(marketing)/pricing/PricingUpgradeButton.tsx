@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 /**
  * Client component — handles the checkout flow.
@@ -21,6 +22,7 @@ export function PricingUpgradeButton({
     if (loading) return;
     setLoading(true);
     setError(null);
+    trackEvent(AnalyticsEvent.PAYWALL_TRIAL_CLICKED, { plan, source: 'pricing' });
 
     try {
       const res = await fetch('/api/v1/stripe/checkout', {
@@ -37,7 +39,12 @@ export function PricingUpgradeButton({
         !contentType.includes('application/json');
 
       if (isAuthFailure) {
-        window.location.href = '/sign-in?redirect_url=/pricing';
+        // Seamless funnel: after sign-up, Clerk lands the user on
+        // /checkout/start which auto-creates the Stripe session and
+        // redirects to Stripe without another click.
+        const checkoutStart = `/checkout/start?plan=${plan}&return=${encodeURIComponent('/pricing')}`;
+        trackEvent(AnalyticsEvent.CHECKOUT_AUTH_REDIRECT, { plan, source: 'pricing' });
+        window.location.href = `/sign-up?redirect_url=${encodeURIComponent(checkoutStart)}`;
         return;
       }
 
@@ -55,6 +62,7 @@ export function PricingUpgradeButton({
       }
 
       // Redirect to Stripe Checkout
+      trackEvent(AnalyticsEvent.CHECKOUT_STRIPE_REDIRECTED, { plan, source: 'pricing' });
       window.location.href = data.data.url;
     } catch {
       setError('Network error. Please check your connection and try again.');

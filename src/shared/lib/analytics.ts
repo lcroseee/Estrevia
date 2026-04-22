@@ -144,6 +144,13 @@ export const AnalyticsEvent = {
   // Auth
   USER_SIGNED_UP: 'user_signed_up',
   USER_SIGNED_IN: 'user_signed_in',
+  // Conversion funnel — paywall → sign-up → checkout → Stripe
+  PAYWALL_OPENED: 'paywall_opened',
+  PAYWALL_TRIAL_CLICKED: 'paywall_trial_clicked',
+  CHECKOUT_AUTH_REDIRECT: 'checkout_auth_redirect',
+  CHECKOUT_AUTO_STARTED: 'checkout_auto_started',
+  CHECKOUT_STRIPE_REDIRECTED: 'checkout_stripe_redirected',
+  CHECKOUT_ERROR: 'checkout_error',
   // GDPR
   COOKIE_CONSENT_ACCEPTED: 'cookie_consent_accepted',
   COOKIE_CONSENT_DECLINED: 'cookie_consent_declined',
