@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { apiFetch, postJson } from '@/shared/lib/apiFetch';
+import type { ApiResponse } from '@/shared/types';
 
 type PermissionState = 'prompt' | 'granted' | 'denied' | 'unsupported';
 
@@ -49,17 +51,29 @@ export function NotificationSettings() {
       });
 
     // Fetch current preferences from API
-    fetch('/api/v1/push/preferences')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.success && data.data) {
-          setPrefs(data.data);
+    apiFetch<ApiResponse<Preferences>>('/api/v1/push/preferences').then(
+      (result) => {
+        switch (result.kind) {
+          case 'ok':
+            if (result.data.success && result.data.data) {
+              setPrefs(result.data.data);
+            }
+            break;
+          case 'auth-required':
+            window.location.href = '/sign-in?redirect_url=/settings';
+            break;
+          case 'error':
+            // Use defaults; server error logged below for debugging
+            console.error('[notifications] preferences load error:', result.message);
+            break;
+          case 'network-error':
+            // Use defaults on network failure
+            console.error('[notifications] preferences network error:', result.error);
+            break;
         }
-      })
-      .catch(() => {
-        // Use defaults on error
-      })
-      .finally(() => setIsLoading(false));
+        setIsLoading(false);
+      },
+    );
   }, []);
 
   // Enable push notifications: request permission + register SW + subscribe
@@ -70,9 +84,9 @@ export function NotificationSettings() {
     }
 
     // Request permission
-    const result = await Notification.requestPermission();
-    setPermission(result as PermissionState);
-    if (result !== 'granted') return;
+    const permissionResult = await Notification.requestPermission();
+    setPermission(permissionResult as PermissionState);
+    if (permissionResult !== 'granted') return;
 
     try {
       // Register service worker
@@ -93,20 +107,32 @@ export function NotificationSettings() {
 
       // Send subscription to our API
       const subJson = subscription.toJSON();
-      const res = await fetch('/api/v1/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const result = await postJson<ApiResponse<{ subscribed: boolean }>>(
+        '/api/v1/push/subscribe',
+        {
           endpoint: subJson.endpoint,
           keys: {
             p256dh: subJson.keys?.p256dh,
             auth: subJson.keys?.auth,
           },
-        }),
-      });
+        },
+      );
 
-      if (res.ok) {
-        setIsSubscribed(true);
+      switch (result.kind) {
+        case 'ok':
+          if (result.data.success) {
+            setIsSubscribed(true);
+          }
+          break;
+        case 'auth-required':
+          window.location.href = '/sign-in?redirect_url=/settings';
+          break;
+        case 'error':
+          console.error('[notifications] subscribe error:', result.message);
+          break;
+        case 'network-error':
+          console.error('[notifications] subscribe network error:', result.error);
+          break;
       }
     } catch (err) {
       console.error('[notifications] subscription error:', err);
@@ -122,8 +148,30 @@ export function NotificationSettings() {
         await sub.unsubscribe();
       }
 
-      await fetch('/api/v1/push/subscribe', { method: 'DELETE' });
-      setIsSubscribed(false);
+      const result = await apiFetch<ApiResponse<{ unsubscribed: boolean }>>(
+        '/api/v1/push/subscribe',
+        { method: 'DELETE' },
+      );
+
+      switch (result.kind) {
+        case 'ok':
+          // Success regardless of data.unsubscribed — SW already unsubscribed above
+          setIsSubscribed(false);
+          break;
+        case 'auth-required':
+          window.location.href = '/sign-in?redirect_url=/settings';
+          break;
+        case 'error':
+          // SW subscription already revoked locally; treat as success to keep UI consistent
+          setIsSubscribed(false);
+          console.error('[notifications] unsubscribe error:', result.message);
+          break;
+        case 'network-error':
+          // Same: SW already unsubscribed, reflect that in UI
+          setIsSubscribed(false);
+          console.error('[notifications] unsubscribe network error:', result.error);
+          break;
+      }
     } catch (err) {
       console.error('[notifications] unsubscribe error:', err);
     }
@@ -132,22 +180,40 @@ export function NotificationSettings() {
   // Save preference change to API
   const handlePrefChange = useCallback(
     async (key: keyof Preferences, value: boolean | string) => {
+      const prevPrefs = prefs;
       const newPrefs = { ...prefs, [key]: value };
+      // Optimistic update — revert on any failure
       setPrefs(newPrefs);
       setIsSaving(true);
 
-      try {
-        await fetch('/api/v1/push/preferences', {
+      const putResult = await apiFetch<ApiResponse<{ updated: boolean }>>(
+        '/api/v1/push/preferences',
+        {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ [key]: value }),
-        });
-      } catch {
-        // Revert on error
-        setPrefs(prefs);
-      } finally {
-        setIsSaving(false);
+        },
+      );
+
+      switch (putResult.kind) {
+        case 'ok':
+          // Optimistic update already applied; nothing to do
+          break;
+        case 'auth-required':
+          setPrefs(prevPrefs);
+          window.location.href = '/sign-in?redirect_url=/settings';
+          break;
+        case 'error':
+          setPrefs(prevPrefs);
+          console.error('[notifications] preferences save error:', putResult.message);
+          break;
+        case 'network-error':
+          setPrefs(prevPrefs);
+          console.error('[notifications] preferences network error:', putResult.error);
+          break;
       }
+
+      setIsSaving(false);
     },
     [prefs],
   );

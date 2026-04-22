@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+import { apiFetch, postJson } from '@/shared/lib/apiFetch';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
 
@@ -16,31 +18,34 @@ interface DailyCardState {
 
 export function DailyCard({ allCards }: DailyCardProps) {
   const prefersReduced = useReducedMotion();
+  const t = useTranslations('tarot');
   const [dailyCard, setDailyCard] = useState<DailyCardState | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [saveHint, setSaveHint] = useState<string | null>(null);
 
   // Check if user already drew today
   useEffect(() => {
     let cancelled = false;
     async function check() {
-      try {
-        const res = await fetch('/api/v1/tarot/daily');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.data) {
-            if (!cancelled) {
-              setDailyCard({ cardId: data.data.cardId, reversed: data.data.reversed });
-              setIsFlipped(true);
-            }
+      const result = await apiFetch<{ success: boolean; data?: { cardId: string; reversed: boolean } }>('/api/v1/tarot/daily');
+      switch (result.kind) {
+        case 'ok':
+          if (result.data.success && result.data.data && !cancelled) {
+            setDailyCard({ cardId: result.data.data.cardId, reversed: result.data.data.reversed });
+            setIsFlipped(true);
           }
-        }
-      } catch {
-        // Not logged in or no card — show draw button
-      } finally {
-        if (!cancelled) setIsLoading(false);
+          break;
+        case 'auth-required':
+          // Anonymous user — no saved card, show draw UI
+          break;
+        case 'error':
+        case 'network-error':
+          console.debug('[DailyCard] GET /api/v1/tarot/daily:', result);
+          break;
       }
+      if (!cancelled) setIsLoading(false);
     }
     check();
     return () => { cancelled = true; };
@@ -48,6 +53,7 @@ export function DailyCard({ allCards }: DailyCardProps) {
 
   const handleDraw = useCallback(async () => {
     setIsDrawing(true);
+    setSaveHint(null);
 
     // Client-side random selection
     const randomBytes = new Uint32Array(2);
@@ -56,40 +62,30 @@ export function DailyCard({ allCards }: DailyCardProps) {
     const reversed = (randomBytes[1] % 2) === 0;
     const selectedCard = allCards[cardIndex];
 
-    // Save to server
-    try {
-      const res = await fetch('/api/v1/tarot/daily', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cardId: selectedCard.id,
-          reversed,
-        }),
-      });
+    // Save to server — non-blocking, card is shown regardless
+    const result = await postJson<{ success: boolean }>('/api/v1/tarot/daily', {
+      cardId: selectedCard.id,
+      reversed,
+    });
 
-      if (res.ok) {
-        setDailyCard({ cardId: selectedCard.id, reversed });
-        // Trigger flip animation
-        setTimeout(() => {
-          setIsFlipped(true);
-          setIsDrawing(false);
-        }, 300);
-      } else {
-        // Still show the card even if save fails (user might not be logged in)
-        setDailyCard({ cardId: selectedCard.id, reversed });
-        setTimeout(() => {
-          setIsFlipped(true);
-          setIsDrawing(false);
-        }, 300);
-      }
-    } catch {
-      setDailyCard({ cardId: selectedCard.id, reversed });
-      setTimeout(() => {
-        setIsFlipped(true);
-        setIsDrawing(false);
-      }, 300);
+    switch (result.kind) {
+      case 'ok':
+        break;
+      case 'auth-required':
+        setSaveHint(t('signInToSave'));
+        break;
+      case 'error':
+      case 'network-error':
+        console.debug('[DailyCard] POST /api/v1/tarot/daily:', result);
+        break;
     }
-  }, [allCards]);
+
+    setDailyCard({ cardId: selectedCard.id, reversed });
+    setTimeout(() => {
+      setIsFlipped(true);
+      setIsDrawing(false);
+    }, 300);
+  }, [allCards, t]);
 
   const cardData = dailyCard
     ? allCards.find((c) => c.id === dailyCard.cardId)
@@ -172,6 +168,10 @@ export function DailyCard({ allCards }: DailyCardProps) {
             </p>
           )}
         </motion.div>
+      )}
+
+      {saveHint && (
+        <p className="text-xs text-[#A78BFA]/60">{saveHint}</p>
       )}
 
       {!isFlipped && !isDrawing && (

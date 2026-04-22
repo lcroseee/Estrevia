@@ -27,12 +27,28 @@ export function SettingsPortalButton({ label = 'Manage subscription', variant = 
 
     try {
       const res = await fetch('/api/v1/stripe/portal', { method: 'POST' });
-      const data = (await res.json()) as {
-        success: boolean;
-        data?: { url: string };
-        error?: string;
-        message?: string;
-      };
+
+      const contentType = res.headers.get('content-type') ?? '';
+      const clerkAuthStatus = res.headers.get('x-clerk-auth-status');
+      // Clerk v6 can rewrite unauthenticated requests to /_not-found (HTTP 200, text/html)
+      // instead of returning 401, so we check all three signals.
+      const isAuthFailure =
+        res.status === 401 ||
+        clerkAuthStatus === 'signed-out' ||
+        !contentType.includes('application/json');
+
+      if (isAuthFailure) {
+        window.location.href = '/sign-in?redirect_url=/settings';
+        return;
+      }
+
+      let data: { success: boolean; data?: { url: string }; error?: string; message?: string };
+      try {
+        data = await res.json();
+      } catch {
+        setError('Unexpected response from server. Please try again.');
+        return;
+      }
 
       if (!data.success || !data.data?.url) {
         const msg =

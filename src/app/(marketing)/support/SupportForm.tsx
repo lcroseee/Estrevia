@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
+import { postJson } from '@/shared/lib/apiFetch';
 
 export function SupportForm() {
   const t = useTranslations('support');
@@ -20,25 +21,39 @@ export function SupportForm() {
     if (state === 'sending') return;
     setState('sending');
     setError(null);
-    try {
-      const res = await fetch('/api/v1/support/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, subject, message }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setState('success');
-        setEmail('');
-        setSubject('');
-        setMessage('');
-      } else {
+    const result = await postJson<{ success: boolean; data?: unknown; error?: string }>(
+      '/api/v1/support/contact',
+      { email, subject, message },
+    );
+
+    switch (result.kind) {
+      case 'ok':
+        if (result.data.success) {
+          setState('success');
+          setEmail('');
+          setSubject('');
+          setMessage('');
+        } else {
+          // Server returned 2xx but success: false — treat as a send failure.
+          setState('error');
+          setError(t('errorSend'));
+        }
+        break;
+
+      case 'auth-required':
+        // Clerk middleware intercepted the request — redirect to sign-in.
+        window.location.href = `/sign-in?redirect_url=${encodeURIComponent('/support')}`;
+        break;
+
+      case 'error':
         setState('error');
         setError(t('errorSend'));
-      }
-    } catch {
-      setState('error');
-      setError(t('errorNetwork'));
+        break;
+
+      case 'network-error':
+        setState('error');
+        setError(t('errorNetwork'));
+        break;
     }
   }
 

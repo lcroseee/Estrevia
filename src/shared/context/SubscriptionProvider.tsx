@@ -6,8 +6,10 @@
  * calls that previously fired from every paywalled component on mount.
  *
  * Wrap this at the highest authenticated layout level — `(app)/layout.tsx`.
- * DO NOT wrap public layouts (marketing, `/s/[id]`) because the API route
- * requires an authenticated Clerk session and would 401 for anonymous users.
+ * Public pages (essays, `/s/[id]`) may also be wrapped; anonymous viewers are
+ * handled gracefully — any auth-failure response (401, non-JSON body, or the
+ * Clerk middleware `x-clerk-auth-status: signed-out` header) is treated as
+ * "free tier, not loading" rather than an error.
  */
 
 import {
@@ -63,11 +65,37 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         // parallel fetches within the same frame.
         cache: 'no-store',
       });
-      if (!res.ok) {
-        setState((prev) => ({ ...prev, isLoading: false }));
+
+      const contentType = res.headers.get('content-type') ?? '';
+      const clerkAuthStatus = res.headers.get('x-clerk-auth-status');
+
+      // Treat as anonymous/unauthorized when:
+      //   - HTTP 401 (future middleware fix returns this)
+      //   - Clerk header signals signed-out
+      //   - Body is not JSON (covers current Clerk v6 HTML-404 rewrite and
+      //     any CDN error page that slips through)
+      const isAuthFailure =
+        res.status === 401 ||
+        clerkAuthStatus === 'signed-out' ||
+        !contentType.includes('application/json');
+
+      if (!res.ok || isAuthFailure) {
+        // Anonymous viewer on a public page — fall back to free-tier defaults.
+        setState({ ...DEFAULT_STATE, isLoading: false });
+        lastFetchRef.current = Date.now();
         return;
       }
-      const data = await res.json();
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        // Malformed JSON — treat the same as auth failure so the provider
+        // doesn't stay stuck in isLoading: true.
+        setState({ ...DEFAULT_STATE, isLoading: false });
+        return;
+      }
+
       setState({
         plan: data.plan,
         status: data.status,

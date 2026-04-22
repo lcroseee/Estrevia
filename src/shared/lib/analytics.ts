@@ -8,16 +8,7 @@
  * is imported in both RSC and Client Component contexts.
  */
 
-// @vercel/functions is only available in the Vercel/Node runtime.
-// We guard the import so the module remains importable in test environments
-// and Edge runtimes where waitUntil is either provided natively or not needed.
-let _waitUntil: ((promise: Promise<unknown>) => void) | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  _waitUntil = (require('@vercel/functions') as { waitUntil: (p: Promise<unknown>) => void }).waitUntil;
-} catch {
-  // Not available in this runtime — fall back to fire-and-forget
-}
+import { waitUntil } from '@vercel/functions';
 
 // ---------------------------------------------------------------------------
 // Client-side helpers
@@ -121,9 +112,7 @@ export function trackServerEvent(
   // Keep the serverless function alive until posthog flushes the event.
   // Without this, Vercel may terminate the function before the batch is sent.
   const flushPromise = Promise.resolve().then(() => client.shutdown());
-  if (_waitUntil) {
-    _waitUntil(flushPromise);
-  }
+  waitUntil(flushPromise);
 }
 
 // ---------------------------------------------------------------------------

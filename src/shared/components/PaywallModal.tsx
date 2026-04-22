@@ -89,16 +89,31 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
         body: JSON.stringify({ plan, returnUrl }),
       });
 
-      if (res.status === 401) {
-        window.location.href = `/sign-in?redirect_url=${encodeURIComponent(returnUrl ?? window.location.pathname)}`;
+      // Detect auth failure before attempting JSON.parse.
+      // Handles both the fixed path (401 JSON) and the Clerk protect-rewrite
+      // path (200 + text/html pointing to /_not-found), plus any CDN/proxy
+      // error pages that are non-JSON.
+      const contentType = res.headers.get('content-type') ?? '';
+      const clerkAuthStatus = res.headers.get('x-clerk-auth-status');
+      const isAuthFailure =
+        res.status === 401 ||
+        clerkAuthStatus === 'signed-out' ||
+        !contentType.includes('application/json');
+
+      if (isAuthFailure) {
+        const target = returnUrl ?? window.location.pathname;
+        window.location.href = `/sign-in?redirect_url=${encodeURIComponent(target)}`;
         return;
       }
 
-      const data = (await res.json()) as {
-        success: boolean;
-        data?: { url: string };
-        error?: string;
-      };
+      let data: { success: boolean; data?: { url: string }; error?: string };
+      try {
+        data = (await res.json()) as typeof data;
+      } catch {
+        // Server returned valid JSON content-type but unparseable body.
+        setError('Unexpected response from server. Please try again.');
+        return;
+      }
 
       if (!data.success || !data.data?.url) {
         setError('Something went wrong. Please try again.');
@@ -107,6 +122,7 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
 
       window.location.href = data.data.url;
     } catch {
+      // fetch() itself threw — genuine network failure (offline, DNS, timeout).
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);

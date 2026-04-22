@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { postJson } from '@/shared/lib/apiFetch';
 
 /**
  * V08-2: Post-signup attribution hook.
@@ -40,13 +41,31 @@ export function PostSignupAttribution() {
     // re-renders before the fetch completes.
     sessionStorage.setItem(sessionKey, '1');
 
-    fetch('/api/v1/user/attribution', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ passportId }),
-    }).catch(() => {
-      // Non-fatal. Clear the flag so we retry next session if the request failed.
-      sessionStorage.removeItem(sessionKey);
+    postJson<{ success: boolean; data: null; error: string | null }>(
+      '/api/v1/user/attribution',
+      { passportId },
+    ).then((result) => {
+      switch (result.kind) {
+        case 'ok':
+          // Attribution recorded. Flag remains set — no further action needed.
+          break;
+        case 'auth-required':
+          // Race condition: Clerk session not yet established. Provider will
+          // re-trigger on next visibility change once the session is ready.
+          console.debug('[PostSignupAttribution] auth-required — session not ready yet');
+          sessionStorage.removeItem(sessionKey);
+          break;
+        case 'error':
+          // Non-fatal server error. Clear flag so we retry next session.
+          console.debug('[PostSignupAttribution] server error', result.status, result.message);
+          sessionStorage.removeItem(sessionKey);
+          break;
+        case 'network-error':
+          // Offline or DNS failure. Clear flag so we retry next session.
+          console.debug('[PostSignupAttribution] network error', result.error);
+          sessionStorage.removeItem(sessionKey);
+          break;
+      }
     });
   }, [isSignedIn, userId]);
 

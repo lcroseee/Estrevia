@@ -599,7 +599,11 @@
     "threeCardTab": "Three Card",
     "celticCrossTab": "Celtic Cross",
     "threeCardDescription": "Past, Present, Future — a focused snapshot",
-    "celticCrossDescription": "Ten cards exploring all dimensions of a question"
+    "celticCrossDescription": "Ten cards exploring all dimensions of a question",
+    "interpretError": "Interpretation failed. Please try again.",
+    "interpretNetworkError": "Network error. Please check your connection.",
+    "interpretProRequired": "An active Pro subscription is required for AI interpretation.",
+    "signInToSave": "Sign in to save your daily card"
   },
   "treeOfLife": {
     "title": "Tree of Life",

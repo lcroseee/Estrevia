@@ -599,7 +599,11 @@
     "threeCardTab": "Tres cartas",
     "celticCrossTab": "Cruz Celta",
     "threeCardDescription": "Pasado, Presente, Futuro — una instantánea enfocada",
-    "celticCrossDescription": "Diez cartas que exploran todas las dimensiones de una pregunta"
+    "celticCrossDescription": "Diez cartas que exploran todas las dimensiones de una pregunta",
+    "interpretError": "La interpretación falló. Por favor, inténtalo de nuevo.",
+    "interpretNetworkError": "Error de red. Por favor, revisa tu conexión.",
+    "interpretProRequired": "Se requiere una suscripción Pro activa para la interpretación IA.",
+    "signInToSave": "Inicia sesión para guardar tu carta del día"
   },
   "treeOfLife": {
     "title": "Árbol de la Vida",

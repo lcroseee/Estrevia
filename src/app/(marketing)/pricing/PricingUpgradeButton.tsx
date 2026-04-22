@@ -29,13 +29,25 @@ export function PricingUpgradeButton({
         body: JSON.stringify({ plan }),
       });
 
-      if (res.status === 401) {
-        // Not signed in — redirect to sign-in with return URL
+      const contentType = res.headers.get('content-type') ?? '';
+      const clerkAuthStatus = res.headers.get('x-clerk-auth-status');
+      const isAuthFailure =
+        res.status === 401 ||
+        clerkAuthStatus === 'signed-out' ||
+        !contentType.includes('application/json');
+
+      if (isAuthFailure) {
         window.location.href = '/sign-in?redirect_url=/pricing';
         return;
       }
 
-      const data = (await res.json()) as { success: boolean; data?: { url: string }; error?: string };
+      let data: { success: boolean; data?: { url: string }; error?: string };
+      try {
+        data = await res.json();
+      } catch {
+        setError('Unexpected response from server. Please try again.');
+        return;
+      }
 
       if (!data.success || !data.data?.url) {
         setError('Something went wrong. Please try again.');

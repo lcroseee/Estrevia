@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { postJson } from '@/shared/lib/apiFetch';
 
 interface ReferralTrackerProps {
   passportId: string;
@@ -71,15 +72,29 @@ export function ReferralTracker({ passportId, deviceId }: ReferralTrackerProps) 
     sentRef.current = true;
     sessionStorage.setItem(sessionKey, '1');
 
-    fetch('/api/v1/user/attribution', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ passportId }),
-    }).catch(() => {
-      // Non-fatal — clear flags so we can retry next session if the request failed.
-      sentRef.current = false;
-      sessionStorage.removeItem(sessionKey);
-    });
+    postJson<{ success: boolean }>('/api/v1/user/attribution', { passportId }).then(
+      (result) => {
+        switch (result.kind) {
+          case 'ok':
+            // Attribution persisted — flags remain set, no retry needed.
+            break;
+          case 'auth-required':
+            // User not authenticated; nothing to attribute. Silent no-op.
+            console.debug('[ReferralTracker] attribution skipped: auth-required');
+            break;
+          case 'error':
+            // Server rejected the request (4xx/5xx). Silent no-op — no retry.
+            console.debug('[ReferralTracker] attribution error:', result.status, result.message);
+            break;
+          case 'network-error':
+            // No response received — clear flags so we can retry next session.
+            console.debug('[ReferralTracker] attribution network-error:', result.error);
+            sentRef.current = false;
+            sessionStorage.removeItem(sessionKey);
+            break;
+        }
+      },
+    );
   }, [isSignedIn, userId, passportId]);
 
   return null;

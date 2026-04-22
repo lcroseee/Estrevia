@@ -2,9 +2,11 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { BirthDataFormStandalone } from './BirthDataFormStandalone';
 import { SynastryResult } from './SynastryResult';
 import { useSubscription } from '@/shared/hooks/useSubscription';
+import { postJson } from '@/shared/lib/apiFetch';
 import type { SynastryScores } from '@/modules/astro-engine/synastry-scoring';
 import type { SynastryAspect } from '@/modules/astro-engine/synastry';
 
@@ -36,6 +38,7 @@ interface BirthDataValues {
 export function SynastryClient() {
   const t = useTranslations('synastry');
   const { isPro } = useSubscription();
+  const pathname = usePathname();
 
   const [person1, setPerson1] = useState<BirthDataValues>({
     name: '',
@@ -82,40 +85,49 @@ export function SynastryClient() {
     setShowUpgradeCta(false);
     setIsLoading(true);
 
-    try {
-      const res = await fetch('/api/v1/synastry/calculate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          birthData1: {
-            name: person1.name || undefined,
-            date: person1.date,
-            time: person1.knowsBirthTime ? person1.time : null,
-            latitude: person1.latitude,
-            longitude: person1.longitude,
-            timezone: person1.timezone,
-            houseSystem: person1.knowsBirthTime ? 'Placidus' : null,
-          },
-          birthData2: {
-            name: person2.name || undefined,
-            date: person2.date,
-            time: person2.knowsBirthTime ? person2.time : null,
-            latitude: person2.latitude,
-            longitude: person2.longitude,
-            timezone: person2.timezone,
-            houseSystem: person2.knowsBirthTime ? 'Placidus' : null,
-          },
-        }),
-      });
+    const result = await postJson<{ success: boolean; data: SynastryData; error?: string }>(
+      '/api/v1/synastry/calculate',
+      {
+        birthData1: {
+          name: person1.name || undefined,
+          date: person1.date,
+          time: person1.knowsBirthTime ? person1.time : null,
+          latitude: person1.latitude,
+          longitude: person1.longitude,
+          timezone: person1.timezone,
+          houseSystem: person1.knowsBirthTime ? 'Placidus' : null,
+        },
+        birthData2: {
+          name: person2.name || undefined,
+          date: person2.date,
+          time: person2.knowsBirthTime ? person2.time : null,
+          latitude: person2.latitude,
+          longitude: person2.longitude,
+          timezone: person2.timezone,
+          houseSystem: person2.knowsBirthTime ? 'Placidus' : null,
+        },
+      },
+    );
 
-      const data = (await res.json().catch(() => ({}))) as {
-        success: boolean;
-        data: SynastryData;
-        error?: string;
-      };
+    setIsLoading(false);
 
-      if (!res.ok || !data.success) {
-        if (data.error === 'FREE_LIMIT_REACHED') {
+    switch (result.kind) {
+      case 'ok': {
+        if (!result.data.data) {
+          setError(t('errorCalculation'));
+          return;
+        }
+        setResult(result.data.data);
+        return;
+      }
+      case 'auth-required': {
+        window.location.href = `/sign-in?redirect_url=${encodeURIComponent(pathname)}`;
+        return;
+      }
+      case 'error': {
+        const payload = result.payload as { error?: string } | undefined;
+        const serverError = payload?.error;
+        if (result.status === 429 || serverError === 'FREE_LIMIT_REACHED') {
           setError(t('limitReached'));
           setShowUpgradeCta(true);
           return;
@@ -123,19 +135,12 @@ export function SynastryClient() {
         setError(t('errorCalculation'));
         return;
       }
-
-      if (!data.data) {
+      case 'network-error': {
         setError(t('errorCalculation'));
         return;
       }
-
-      setResult(data.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errorCalculation'));
-    } finally {
-      setIsLoading(false);
     }
-  }, [person1, person2, t]);
+  }, [person1, person2, t, pathname]);
 
   const handleReset = useCallback(() => {
     setResult(null);
@@ -149,25 +154,44 @@ export function SynastryClient() {
     if (!result?.id || isAnalyzing) return;
     setIsAnalyzing(true);
     setAnalyzeError(null);
-    try {
-      const res = await fetch(`/api/v1/synastry/${result.id}/analyze`, {
-        method: 'POST',
-      });
-      const data = (await res.json()) as {
-        success: boolean;
-        data?: { analysis: string };
-      };
-      if (data.success && data.data?.analysis) {
-        setAiAnalysis(data.data.analysis);
-      } else {
-        setAnalyzeError(t('analysisError'));
+
+    const apiResult = await postJson<{ success: boolean; data?: { analysis: string } }>(
+      `/api/v1/synastry/${result.id}/analyze`,
+      {},
+    );
+
+    setIsAnalyzing(false);
+
+    switch (apiResult.kind) {
+      case 'ok': {
+        if (apiResult.data.data?.analysis) {
+          setAiAnalysis(apiResult.data.data.analysis);
+        } else {
+          setAnalyzeError(t('analysisError'));
+        }
+        return;
       }
-    } catch {
-      setAnalyzeError(t('analysisError'));
-    } finally {
-      setIsAnalyzing(false);
+      case 'auth-required': {
+        // Covers both unauthenticated and non-Pro users (requirePremium throws → Clerk redirect).
+        window.location.href = `/sign-in?redirect_url=${encodeURIComponent(pathname)}`;
+        return;
+      }
+      case 'error': {
+        const payload = apiResult.payload as { error?: string } | undefined;
+        if (apiResult.status === 401 || apiResult.status === 403 || payload?.error === 'UNAUTHORIZED') {
+          // Non-Pro user hit the premium gate — redirect to pricing.
+          window.location.href = `/pricing`;
+          return;
+        }
+        setAnalyzeError(t('analysisError'));
+        return;
+      }
+      case 'network-error': {
+        setAnalyzeError(t('analysisError'));
+        return;
+      }
     }
-  }, [result, isAnalyzing, t]);
+  }, [result, isAnalyzing, t, pathname]);
 
   if (result) {
     return (

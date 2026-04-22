@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
+import { postJson } from '@/shared/lib/apiFetch';
 
 type AvatarStyle = 'cosmic' | 'tarot' | 'geometric' | 'nebula';
 type GenerationState = 'idle' | 'loading' | 'done' | 'error';
@@ -48,29 +49,60 @@ export function AvatarGenerator({
     setState('loading');
     setErrorMessage(null);
 
-    try {
-      const res = await fetch('/api/v1/avatar/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sunSign,
-          moonSign,
-          ascendantSign,
-          element,
-          style,
-        }),
-      });
+    type AvatarResponse = {
+      success: boolean;
+      data?: { mimeType: string; imageBase64: string };
+      error?: string;
+      meta?: { count?: number; limit?: number };
+    };
 
-      const data = await res.json();
+    const result = await postJson<AvatarResponse>('/api/v1/avatar/generate', {
+      sunSign,
+      moonSign,
+      ascendantSign,
+      element,
+      style,
+    });
 
-      if (!res.ok || !data.success) {
+    switch (result.kind) {
+      case 'ok': {
+        const data = result.data;
+        if (!data.success || !data.data) {
+          // Server returned 2xx but flagged a business-logic error in the body.
+          let msg: string;
+          if (data.error === 'FREE_LIMIT_REACHED') {
+            msg = t('freeLimitReached', { limit: data.meta?.limit ?? 3 });
+            setQuota({ used: data.meta?.count ?? 3, limit: data.meta?.limit ?? 3 });
+          } else if (data.error === 'RATE_LIMITED') {
+            msg = t('errorRateLimit');
+          } else {
+            msg = t('errorGeneration');
+          }
+          setErrorMessage(msg);
+          setState('error');
+          return;
+        }
+        setImageDataUri(
+          `data:${data.data.mimeType};base64,${data.data.imageBase64}`,
+        );
+        setState('done');
+        if (!isPro) setQuota((q) => (q ? { ...q, used: q.used + 1 } : { used: 1, limit: 3 }));
+        return;
+      }
+
+      case 'auth-required':
+        window.location.href =
+          '/sign-in?redirect_url=' + encodeURIComponent(window.location.pathname);
+        return;
+
+      case 'error': {
+        // Server responded 4xx/5xx with a JSON body — inspect known error codes.
+        const payload = result.payload as AvatarResponse | undefined;
         let msg: string;
-        if (data.error === 'FREE_LIMIT_REACHED') {
-          msg = t('freeLimitReached', {
-            limit: data.meta?.limit ?? 3,
-          });
-          setQuota({ used: data.meta?.count ?? 3, limit: data.meta?.limit ?? 3 });
-        } else if (data.error === 'RATE_LIMITED') {
+        if (payload?.error === 'FREE_LIMIT_REACHED') {
+          msg = t('freeLimitReached', { limit: payload.meta?.limit ?? 3 });
+          setQuota({ used: payload.meta?.count ?? 3, limit: payload.meta?.limit ?? 3 });
+        } else if (payload?.error === 'RATE_LIMITED') {
           msg = t('errorRateLimit');
         } else {
           msg = t('errorGeneration');
@@ -80,14 +112,10 @@ export function AvatarGenerator({
         return;
       }
 
-      setImageDataUri(
-        `data:${data.data.mimeType};base64,${data.data.imageBase64}`,
-      );
-      setState('done');
-      if (!isPro) setQuota((q) => (q ? { ...q, used: q.used + 1 } : { used: 1, limit: 3 }));
-    } catch {
-      setErrorMessage(t('errorGeneration'));
-      setState('error');
+      case 'network-error':
+        setErrorMessage(t('errorGeneration'));
+        setState('error');
+        return;
     }
   }, [sunSign, moonSign, ascendantSign, element, style, t]);
 

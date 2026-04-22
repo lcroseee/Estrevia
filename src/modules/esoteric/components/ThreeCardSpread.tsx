@@ -3,7 +3,9 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { useSubscription } from '@/shared/hooks/useSubscription';
+import { postJson } from '@/shared/lib/apiFetch';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
 import Link from 'next/link';
@@ -34,11 +36,14 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
   const [selectedCard, setSelectedCard] = useState<DrawnCard | null>(null);
   const [interpretation, setInterpretation] = useState<string | null>(null);
   const [isInterpreting, setIsInterpreting] = useState(false);
+  const [interpretError, setInterpretError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleDraw = useCallback(() => {
     setIsDrawing(true);
     setRevealedCount(0);
     setInterpretation(null);
+    setInterpretError(null);
 
     const randomBytes = new Uint32Array(6);
     crypto.getRandomValues(randomBytes);
@@ -70,48 +75,52 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
       setIsDrawing(false);
     }, 1400);
 
-    // Save reading
-    fetch('/api/v1/tarot/daily', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        spreadType: 'three_card',
-        cards,
-      }),
-    }).catch(() => {});
+    // Fire-and-forget: save reading. postJson used for consistency; result ignored.
+    void postJson('/api/v1/tarot/daily', { spreadType: 'three_card', cards });
   }, [allCards]);
 
   const handleInterpret = useCallback(async () => {
     if (!isPro || drawnCards.length === 0) return;
     setIsInterpreting(true);
+    setInterpretError(null);
 
-    try {
-      const res = await fetch('/api/v1/tarot/interpret', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          spreadType: 'three_card',
-          cards: drawnCards.map((dc) => ({
-            position: POSITIONS.find((p) => p.id === dc.positionId)?.label,
-            cardId: dc.cardId,
-            cardName: allCards.find((c) => c.id === dc.cardId)?.name.en,
-            reversed: dc.reversed,
-          })),
-        }),
-      });
+    const result = await postJson<{ success: boolean; data: { interpretation: string } | null }>(
+      '/api/v1/tarot/interpret',
+      {
+        spreadType: 'three_card',
+        cards: drawnCards.map((dc) => ({
+          position: POSITIONS.find((p) => p.id === dc.positionId)?.label,
+          cardId: dc.cardId,
+          cardName: allCards.find((c) => c.id === dc.cardId)?.name.en,
+          reversed: dc.reversed,
+        })),
+      },
+    );
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.data?.interpretation) {
-          setInterpretation(data.data.interpretation);
+    setIsInterpreting(false);
+
+    switch (result.kind) {
+      case 'ok':
+        if (result.data.success && result.data.data?.interpretation) {
+          setInterpretation(result.data.data.interpretation);
         }
-      }
-    } catch {
-      // Silently fail
-    } finally {
-      setIsInterpreting(false);
+        break;
+      case 'auth-required':
+        router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
+        break;
+      case 'error':
+        // 403 FORBIDDEN = authenticated user without an active Pro subscription.
+        if (result.status === 403 && (result.payload as Record<string, unknown>)?.error === 'FORBIDDEN') {
+          setInterpretError(t('interpretProRequired'));
+        } else {
+          setInterpretError(t('interpretError'));
+        }
+        break;
+      case 'network-error':
+        setInterpretError(t('interpretNetworkError'));
+        break;
     }
-  }, [isPro, drawnCards, allCards]);
+  }, [isPro, drawnCards, allCards, router, t]);
 
   if (subLoading) {
     return <div className="h-52 flex items-center justify-center"><div className="w-28 h-44 rounded-lg bg-white/4 animate-pulse" /></div>;
@@ -211,6 +220,11 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
           </div>
         )}
       </div>
+
+      {/* Interpret error */}
+      {interpretError && (
+        <p className="text-xs text-red-400/80 text-center">{interpretError}</p>
+      )}
 
       {/* AI Interpretation */}
       {interpretation && (
