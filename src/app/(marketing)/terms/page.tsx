@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo';
 
+// R10: force-static + hourly revalidate. Legal copy rarely changes.
+export const dynamic = 'force-static';
+export const revalidate = 3600;
+
 export function generateMetadata(): Metadata {
   return createMetadata({
     title: 'Terms of Service',
@@ -13,7 +17,7 @@ export function generateMetadata(): Metadata {
 
 const EFFECTIVE_DATE = 'April 6, 2026';
 const CONTACT_EMAIL = 'legal@estrevia.app';
-const REPO_URL = 'https://github.com/estrevia-app/estrevia';
+const REPO_URL = 'https://github.com/lcroseee/Estrevia';
 
 export default async function TermsPage() {
   const t = await getTranslations('termsPage');

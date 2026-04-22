@@ -32,11 +32,11 @@
  */
 
 import { headers } from 'next/headers';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type Stripe from 'stripe';
 import { getStripe } from '@/shared/lib/stripe';
 import { getDb } from '@/shared/lib/db';
-import { users } from '@/shared/lib/schema';
+import { users, processedStripeEvents } from '@/shared/lib/schema';
 
 // ---------------------------------------------------------------------------
 // Helper: resolve clerkUserId from a Stripe object
@@ -114,7 +114,17 @@ export async function POST(request: Request): Promise<Response> {
     const stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, signature, WEBHOOK_SECRET);
   } catch (err) {
-    console.error('[stripe-webhook] Signature verification failed', err);
+    // Log only the message — never the raw err (which may contain the raw request body).
+    console.error(
+      '[stripe-webhook] Signature verification failed',
+      err instanceof Error ? err.message : 'unknown',
+    );
+    try {
+      const { captureException } = await import('@sentry/nextjs');
+      captureException(err, { tags: { webhook: 'stripe' } });
+    } catch {
+      // Sentry capture is best-effort; do not mask the original 401.
+    }
     return Response.json(
       { error: 'UNAUTHORIZED', message: 'Webhook signature verification failed' },
       { status: 401 },
@@ -122,6 +132,26 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const db = getDb();
+
+  // ---------------------------------------------------------------------------
+  // Idempotency: deduplicate via processed_stripe_events.
+  // INSERT … ON CONFLICT DO NOTHING returns the row only when it was inserted.
+  // An empty RETURNING means the event was already processed — return 200 to
+  // acknowledge it and prevent Stripe from retrying.
+  // ---------------------------------------------------------------------------
+  const deduped = await db
+    .insert(processedStripeEvents)
+    .values({ eventId: event.id, eventType: event.type })
+    .onConflictDoNothing()
+    .returning({ eventId: processedStripeEvents.eventId });
+
+  if (deduped.length === 0) {
+    console.info('[stripe-webhook] duplicate event — already processed', {
+      eventId: event.id,
+      eventType: event.type,
+    });
+    return Response.json({ received: true, duplicate: true }, { status: 200 });
+  }
 
   try {
     switch (event.type) {
@@ -171,20 +201,43 @@ export async function POST(request: Request): Promise<Response> {
           stripeSubscriptionId = sub.id;
         }
 
+        // Upsert: if the Clerk user.created webhook hasn't fired yet, create the row
+        // so the subscription is never silently dropped due to a missing user.
+        // email is set to a placeholder and must be overwritten when the Clerk webhook arrives.
+        // On conflict we update all subscription fields but do NOT overwrite email if it is
+        // already set (keeps the real email from Clerk's user.created handler).
         await db
-          .update(users)
-          .set({
+          .insert(users)
+          .values({
+            id: clerkUserId,
+            email: `stripe-pending-${clerkUserId}@placeholder.invalid`,
             stripeCustomerId,
             stripeSubscriptionId,
             subscriptionTier: 'premium',
             subscriptionExpiresAt: expiresAt,
             plan,
-            subscriptionStatus: subscriptionStatus as 'trialing' | 'active' | 'canceled' | 'past_due',
+            subscriptionStatus: subscriptionStatus as 'trialing' | 'active' | 'canceled' | 'past_due' | 'incomplete' | 'unpaid' | 'free',
             trialEnd,
             currentPeriodEnd: expiresAt,
             updatedAt: new Date(),
           })
-          .where(eq(users.id, clerkUserId));
+          .onConflictDoUpdate({
+            target: users.id,
+            set: {
+              stripeCustomerId,
+              stripeSubscriptionId,
+              subscriptionTier: 'premium',
+              subscriptionExpiresAt: expiresAt,
+              plan,
+              subscriptionStatus: subscriptionStatus as 'trialing' | 'active' | 'canceled' | 'past_due' | 'incomplete' | 'unpaid' | 'free',
+              trialEnd,
+              currentPeriodEnd: expiresAt,
+              updatedAt: new Date(),
+              // Preserve existing email: never overwrite a real address with the
+              // stripe-pending placeholder. On conflict, keep whatever is already stored.
+              email: sql`${users.email}`,
+            },
+          });
 
         console.info('[stripe-webhook] checkout.session.completed → premium activated', {
           clerkUserId,
@@ -258,8 +311,10 @@ export async function POST(request: Request): Promise<Response> {
         }
 
         await db
-          .update(users)
-          .set({
+          .insert(users)
+          .values({
+            id: userId,
+            email: `stripe-pending-${userId}@placeholder.invalid`,
             subscriptionTier: 'free',
             subscriptionExpiresAt: null,
             stripeSubscriptionId: null,
@@ -269,7 +324,19 @@ export async function POST(request: Request): Promise<Response> {
             currentPeriodEnd: null,
             updatedAt: new Date(),
           })
-          .where(eq(users.id, userId));
+          .onConflictDoUpdate({
+            target: users.id,
+            set: {
+              subscriptionTier: 'free',
+              subscriptionExpiresAt: null,
+              stripeSubscriptionId: null,
+              plan: 'free',
+              subscriptionStatus: 'canceled',
+              trialEnd: null,
+              currentPeriodEnd: null,
+              updatedAt: new Date(),
+            },
+          });
 
         console.info('[stripe-webhook] subscription.deleted → downgraded to free', { userId });
         break;
@@ -343,7 +410,11 @@ export async function POST(request: Request): Promise<Response> {
         });
         const expiresAt = periodEndToDate(getSubscriptionPeriodEnd(sub));
 
-        await db
+        // Plain update by stripeCustomerId — this event always follows a
+        // checkout.session.completed that already upserted the user row.
+        // A missing row here means the upsert hasn't run yet (out-of-order
+        // delivery); we log a warning but do not fail so Stripe doesn't retry.
+        const invoiceUpdateResult = await db
           .update(users)
           .set({
             currentPeriodEnd: expiresAt,
@@ -351,6 +422,12 @@ export async function POST(request: Request): Promise<Response> {
             updatedAt: new Date(),
           })
           .where(eq(users.stripeCustomerId, customerId));
+
+        if ((invoiceUpdateResult as { rowCount?: number }).rowCount === 0) {
+          console.warn('[stripe-webhook] invoice.payment_succeeded: no user row for customer', {
+            customerId,
+          });
+        }
 
         console.info('[stripe-webhook] invoice.payment_succeeded → period updated', {
           customerId,
@@ -364,11 +441,17 @@ export async function POST(request: Request): Promise<Response> {
         console.info('[stripe-webhook] unhandled event type', { type: event.type });
     }
   } catch (err) {
+    // Never log the raw err — it may serialize the Stripe event payload (emails, names, card info).
+    console.error('[stripe-webhook] event processing error', {
+      eventType: event.type,
+      message: err instanceof Error ? err.message : 'unknown',
+      name: err instanceof Error ? err.name : undefined,
+    });
     try {
       const { captureException } = await import('@sentry/nextjs');
-      captureException(err);
+      captureException(err, { tags: { webhook: 'stripe', eventType: event.type } });
     } catch {
-      console.error('[stripe-webhook] event processing error', { eventType: event.type, err });
+      // Sentry capture is best-effort; do not mask the 500 we return to Stripe.
     }
 
     // Return 500 so Stripe retries the event (idempotent handlers are safe to retry)
@@ -384,6 +467,19 @@ export async function POST(request: Request): Promise<Response> {
 // ---------------------------------------------------------------------------
 // Shared helper: update subscription tier + expiresAt from a subscription object
 // ---------------------------------------------------------------------------
+// Type for all subscription statuses we write to DB (widened enum)
+type DbSubscriptionStatus = 'free' | 'trialing' | 'active' | 'canceled' | 'past_due' | 'incomplete' | 'unpaid';
+
+/**
+ * Map Stripe subscription status to a DB-safe value.
+ * 'incomplete_expired' and any unknown statuses fall back to 'canceled'.
+ */
+function toDbStatus(stripeStatus: string): DbSubscriptionStatus {
+  const allowed: DbSubscriptionStatus[] = ['free', 'trialing', 'active', 'canceled', 'past_due', 'incomplete', 'unpaid'];
+  if ((allowed as string[]).includes(stripeStatus)) return stripeStatus as DbSubscriptionStatus;
+  return 'canceled';
+}
+
 async function handleSubscriptionUpdate(
   db: ReturnType<typeof import('@/shared/lib/db').getDb>,
   userId: string,
@@ -397,20 +493,36 @@ async function handleSubscriptionUpdate(
   const tier = isActive || isPastDue ? 'premium' : 'free';
   const plan = tier === 'free' ? 'free' : derivePlan(sub);
   const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : null;
+  const dbStatus = toDbStatus(sub.status);
 
+  const updatePayload = {
+    subscriptionTier: tier,
+    subscriptionExpiresAt: tier === 'free' ? null : expiresAt,
+    stripeSubscriptionId: sub.id,
+    plan,
+    subscriptionStatus: dbStatus,
+    trialEnd,
+    currentPeriodEnd: expiresAt,
+    updatedAt: new Date(),
+  } as const;
+
+  // Upsert: handles the case where subscription.updated arrives before
+  // checkout.session.completed or before the Clerk user.created webhook.
   await db
-    .update(users)
-    .set({
-      subscriptionTier: tier,
-      subscriptionExpiresAt: tier === 'free' ? null : expiresAt,
-      stripeSubscriptionId: sub.id,
-      plan,
-      subscriptionStatus: sub.status as 'trialing' | 'active' | 'canceled' | 'past_due',
-      trialEnd,
-      currentPeriodEnd: expiresAt,
-      updatedAt: new Date(),
+    .insert(users)
+    .values({
+      id: userId,
+      email: `stripe-pending-${userId}@placeholder.invalid`,
+      ...updatePayload,
     })
-    .where(eq(users.id, userId));
+    .onConflictDoUpdate({
+      target: users.id,
+      set: {
+        ...updatePayload,
+        // Keep existing email if already set
+        email: sql`${users.email}`,
+      },
+    });
 
   console.info('[stripe-webhook] subscription.updated', {
     userId,

@@ -196,7 +196,7 @@ export function ChartDisplay() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-white/90">{t('headerTitle')}</h1>
-          <p className="text-xs text-white/35 font-mono mt-0.5">
+          <p className="text-xs text-white/60 font-mono mt-0.5">
             {chart.system === 'sidereal' ? 'Sidereal' : 'Tropical'} · {chart.houseSystem}
             {!chart.houses && ` · ${t('noHouses')}`}
           </p>

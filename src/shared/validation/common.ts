@@ -6,8 +6,16 @@ export const coordinatesSchema = z.object({
   longitude: z.number().min(-180).max(180),
 });
 
+// Accepts valid IANA timezone identifiers including:
+//   Standard multi-component zones:  America/New_York, Asia/Kolkata
+//   Numeric offset zones:            Etc/GMT+5, Etc/GMT-12
+//   Legacy US aliases:               US/Eastern, US/Pacific
+//   Single-component zones:          UTC, GMT
+//
+// Previous regex /^[A-Za-z_]+\/[A-Za-z_\/]+$/ rejected Etc/GMT+N and digits,
+// causing VALIDATION_ERROR for users whose GIS database returns numeric offset zones.
 export const timezoneSchema = z.string().regex(
-  /^[A-Za-z_]+\/[A-Za-z_\/]+$/,
+  /^(?:[A-Za-z_]+\/[A-Za-z0-9_/+-]+|[A-Za-z]+)$/,
   'Invalid IANA timezone format',
 );
 

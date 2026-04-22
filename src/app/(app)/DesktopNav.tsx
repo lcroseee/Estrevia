@@ -48,6 +48,7 @@ export function DesktopNav() {
             className={[
               'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
               'font-[var(--font-geist-sans)] tracking-wide',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]',
               active
                 ? 'text-white bg-white/8'
                 : 'text-white/40 hover:text-white/70 hover:bg-white/4',

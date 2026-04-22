@@ -1,11 +1,15 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { headers, cookies } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/shared/lib/db';
 import { synastryResults } from '@/shared/lib/schema';
 import { createMetadata } from '@/shared/seo';
+import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { ReferralTracker } from '@/modules/astro-engine/components/ReferralTracker';
 import type { CategoryScore } from '@/modules/astro-engine/synastry-scoring';
+import { SynastryCta } from './SynastryCta';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -69,11 +73,32 @@ export default async function SynastrySharePage({ params }: Props) {
 
   const categories = result.categoryScores as CategoryScore[];
 
+  // V08-6: Track synastry share page view with session-scoped distinctId (same pattern as /s/[id]).
+  const headersList = await headers();
+  const cookieStore = await cookies();
+  const referer = headersList.get('referer') ?? undefined;
+
+  let deviceId = cookieStore.get('ph_device_id')?.value ?? null;
+  const isNewDeviceId = !deviceId;
+  if (!deviceId) {
+    deviceId = crypto.randomUUID();
+  }
+
+  trackServerEvent(deviceId, AnalyticsEvent.PASSPORT_VIEWED, {
+    passport_id: id,
+    source: 'synastry_share_page',
+    referer,
+    is_new_device: isNewDeviceId,
+  });
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative"
       style={{ background: '#0A0A0F' }}
     >
+      {/* V08-6: Referral tracking — sets cookie for attribution + syncs deviceId */}
+      <ReferralTracker passportId={id} deviceId={deviceId} />
+
       {/* Radial glow */}
       <div
         className="fixed inset-0 pointer-events-none"
@@ -154,20 +179,8 @@ export default async function SynastrySharePage({ params }: Props) {
           <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} aria-hidden="true" />
         </div>
 
-        {/* Primary CTA */}
-        <Link
-          href="/synastry"
-          className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-xl active:scale-[0.98]"
-          style={{
-            background: 'linear-gradient(135deg, #FFD700 0%, #FF8C00 100%)',
-            color: '#0A0A0F',
-            textDecoration: 'none',
-            boxShadow: '0 4px 20px rgba(255,215,0,0.25)',
-          }}
-          aria-label="Check your compatibility"
-        >
-          Check Your Compatibility
-        </Link>
+        {/* Primary CTA — fires passport_converted then navigates */}
+        <SynastryCta synastryId={id} />
 
         <p
           className="text-[10px] text-center text-white/20"

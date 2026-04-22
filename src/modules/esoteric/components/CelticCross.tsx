@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 import { TarotCard } from './TarotCard';
@@ -48,6 +48,7 @@ const GRID_POSITIONS: Record<number, { gridColumn: string; gridRow: string; rota
 
 export function CelticCross({ allCards }: CelticCrossProps) {
   const t = useTranslations('tarot');
+  const prefersReduced = useReducedMotion();
   const { isPro, isLoading: subLoading } = useSubscription();
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   const [revealedCount, setRevealedCount] = useState(0);
@@ -137,9 +138,9 @@ export function CelticCross({ allCards }: CelticCrossProps) {
                 {isRevealed && cardData ? (
                   <motion.div
                     key="revealed"
-                    initial={{ rotateY: -90, opacity: 0 }}
+                    initial={prefersReduced ? false : { rotateY: -90, opacity: 0 }}
                     animate={{ rotateY: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    transition={prefersReduced ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' }}
                     style={{
                       willChange: 'transform',
                       transform: gridPos.rotate ? `rotate(${gridPos.rotate}deg)` : undefined,
@@ -206,16 +207,16 @@ export function CelticCross({ allCards }: CelticCrossProps) {
           return (
             <motion.div
               key="modal"
-              initial={{ opacity: 0 }}
+              initial={prefersReduced ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={prefersReduced ? {} : { opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
               onClick={() => setSelectedCard(null)}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={prefersReduced ? false : { scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+                exit={prefersReduced ? {} : { scale: 0.9, opacity: 0 }}
                 className="w-full max-w-sm rounded-xl border border-white/10 p-6 space-y-4"
                 style={{ background: '#0F0F18' }}
                 onClick={(e) => e.stopPropagation()}

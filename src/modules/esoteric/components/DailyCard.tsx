@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
 
@@ -15,6 +15,7 @@ interface DailyCardState {
 }
 
 export function DailyCard({ allCards }: DailyCardProps) {
+  const prefersReduced = useReducedMotion();
   const [dailyCard, setDailyCard] = useState<DailyCardState | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,9 +110,9 @@ export function DailyCard({ allCards }: DailyCardProps) {
           {!isFlipped ? (
             <motion.div
               key="back"
-              initial={{ rotateY: 0 }}
-              exit={{ rotateY: 90 }}
-              transition={{ duration: 0.3, ease: 'easeIn' }}
+              initial={prefersReduced ? false : { rotateY: 0 }}
+              exit={prefersReduced ? {} : { rotateY: 90 }}
+              transition={prefersReduced ? { duration: 0 } : { duration: 0.3, ease: 'easeIn' }}
               style={{ backfaceVisibility: 'hidden' }}
             >
               {/* Card back */}
@@ -133,9 +134,9 @@ export function DailyCard({ allCards }: DailyCardProps) {
           ) : cardData ? (
             <motion.div
               key="front"
-              initial={{ rotateY: -90 }}
+              initial={prefersReduced ? false : { rotateY: -90 }}
               animate={{ rotateY: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
+              transition={prefersReduced ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' }}
               style={{ backfaceVisibility: 'hidden' }}
             >
               <TarotCard
@@ -153,9 +154,9 @@ export function DailyCard({ allCards }: DailyCardProps) {
       {isFlipped && cardData && (
         <motion.div
           className="text-center space-y-1.5 max-w-xs"
-          initial={{ opacity: 0, y: 10 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
+          transition={prefersReduced ? { duration: 0 } : { delay: 0.3, duration: 0.4 }}
         >
           <p className="text-sm font-medium text-white/80">
             {cardData.name.en}

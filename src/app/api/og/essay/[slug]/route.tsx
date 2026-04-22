@@ -1,7 +1,32 @@
 import { ImageResponse } from '@vercel/og';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { getEssayBySlug } from '@/modules/esoteric/lib/essays';
+import { getRateLimiter } from '@/shared/lib/rate-limit';
 
 export const runtime = 'nodejs';
+
+// ---------------------------------------------------------------------------
+// Font buffer — loaded once per cold start and reused across invocations.
+// AstroSymbols-subset.ttf is a pyftsubset of Noto Sans Symbols 2 (SIL OFL),
+// containing astro glyph ranges + basic ASCII used in the essay OG layout.
+// ---------------------------------------------------------------------------
+let astroFontBuffer: ArrayBuffer | null = null;
+
+async function getAstroFont(): Promise<ArrayBuffer> {
+  if (astroFontBuffer) return astroFontBuffer;
+  const fontPath = path.join(process.cwd(), 'public', 'fonts', 'AstroSymbols-subset.ttf');
+  const buf = await fs.readFile(fontPath);
+  astroFontBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  return astroFontBuffer;
+}
+
+// ---------------------------------------------------------------------------
+// Response helpers
+// ---------------------------------------------------------------------------
+const NO_STORE = 'no-store, no-cache, must-revalidate, max-age=0';
+const IMMUTABLE_1Y =
+  'public, max-age=31536000, s-maxage=31536000, immutable, stale-while-revalidate=86400';
 
 const PLANET_COLOR: Record<string, string> = {
   Sun:     '#FFD700',
@@ -39,14 +64,49 @@ const ELEMENT_COLOR: Record<string, string> = {
 };
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
+  // -------------------------------------------------------------------------
+  // Rate limiting — 60 req/min per IP (P1 fix: audit 10 High-2)
+  // -------------------------------------------------------------------------
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anon';
+  const { success, limit, remaining, reset } = await getRateLimiter('essay/view').limit(ip);
+  if (!success) {
+    return new Response('Too Many Requests', {
+      status: 429,
+      headers: {
+        'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
+        'X-RateLimit-Limit': String(limit),
+        'X-RateLimit-Remaining': String(remaining),
+        'Cache-Control': NO_STORE,
+      },
+    });
+  }
+
   const { slug } = await params;
 
   const essay = getEssayBySlug(slug);
   if (!essay) {
-    return new Response('Not found', { status: 404 });
+    return new Response('Not found', {
+      status: 404,
+      headers: { 'Cache-Control': NO_STORE },
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Load astro symbols font buffer (P0 fix: audit 05 B-3)
+  // -------------------------------------------------------------------------
+  let fontBuffer: ArrayBuffer;
+  try {
+    fontBuffer = await getAstroFont();
+  } catch (err) {
+    console.error('[og/essay] font load error:', String(err));
+    return new Response('Internal Server Error', {
+      status: 500,
+      headers: { 'Cache-Control': NO_STORE },
+    });
   }
 
   const { planet, sign, element, title } = essay.meta;
@@ -67,7 +127,7 @@ export async function GET(
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '56px 72px',
-          fontFamily: 'serif',
+          fontFamily: 'AstroSymbols, serif',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -112,6 +172,7 @@ export async function GET(
               color: 'rgba(255,255,255,0.35)',
               textTransform: 'uppercase',
               display: 'flex',
+              fontFamily: 'AstroSymbols, serif',
             }}
           >
             SIDEREAL ASTROLOGY
@@ -142,6 +203,7 @@ export async function GET(
               color: planetColor,
               lineHeight: 1,
               display: 'flex',
+              fontFamily: 'AstroSymbols, serif',
             }}
           >
             {signGlyph}
@@ -154,6 +216,7 @@ export async function GET(
               textAlign: 'center',
               letterSpacing: '1px',
               display: 'flex',
+              fontFamily: 'AstroSymbols, serif',
             }}
           >
             {title}
@@ -182,6 +245,7 @@ export async function GET(
               border: `1px solid ${elementColor}50`,
               borderRadius: '32px',
               padding: '8px 20px',
+              fontFamily: 'AstroSymbols, serif',
             }}
           >
             <div
@@ -212,6 +276,7 @@ export async function GET(
               color: 'rgba(255,255,255,0.22)',
               letterSpacing: '2px',
               display: 'flex',
+              fontFamily: 'AstroSymbols, serif',
             }}
           >
             estrevia.app
@@ -222,8 +287,18 @@ export async function GET(
     {
       width: 1200,
       height: 630,
+      // P0 fix: pass astro font buffer so Satori renders Unicode glyphs correctly
+      fonts: [
+        {
+          name: 'AstroSymbols',
+          data: fontBuffer,
+          weight: 400,
+          style: 'normal',
+        },
+      ],
       headers: {
-        'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=3600',
+        // P2 fix: immutable cache headers for successful 200 responses
+        'Cache-Control': IMMUTABLE_1Y,
       },
     },
   );

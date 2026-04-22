@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 
@@ -13,7 +14,7 @@ export default function GlobalError({
   const t = useTranslations('appShell');
 
   useEffect(() => {
-    console.error('[Estrevia] Unhandled error:', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

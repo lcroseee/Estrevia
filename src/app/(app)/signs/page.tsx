@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 import descriptionsData from '../../../../content/signs/descriptions.json';
+
+// ISR: rebuild the signs index daily. R10 CWV win.
+export const revalidate = 86400;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -302,6 +306,8 @@ export default function SignsIndexPage() {
             </li>
           </ul>
         </nav>
+
+        <Disclaimer />
 
       </div>
     </>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 
@@ -39,6 +39,39 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
   const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_annual');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Escape key closes the modal (WCAG 2.1.2)
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+      // Focus trap: keep Tab / Shift+Tab inside the dialog
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    // Move focus into the dialog on open
+    closeButtonRef.current?.focus();
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -91,6 +124,7 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
 
       {/* Modal */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={t('title')}
@@ -98,6 +132,7 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
       >
         {/* Close button */}
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           aria-label="Close"
@@ -155,12 +190,12 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
               >
                 {plan === 'pro_monthly' ? tp('monthlyPrice') : tp('annualPrice')}
               </span>
-              <span className="text-sm text-white/35 mb-1.5">
+              <span className="text-sm text-white/60 mb-1.5">
                 {plan === 'pro_monthly' ? tp('monthlyLabel') : tp('annualLabel')}
               </span>
             </div>
             {plan === 'pro_annual' && (
-              <p className="text-xs text-white/40 mt-1 font-[var(--font-geist-mono)]">
+              <p className="text-xs text-white/60 mt-1 font-[var(--font-geist-mono)]">
                 {tp('annualPerMonth')}
               </p>
             )}
@@ -168,7 +203,7 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
 
           {/* Features list */}
           <div className="mb-6">
-            <p className="text-xs text-white/35 uppercase tracking-widest mb-3 font-[var(--font-geist-sans)]">
+            <p className="text-xs text-white/60 uppercase tracking-widest mb-3 font-[var(--font-geist-sans)]">
               {t('features')}
             </p>
             <ul className="space-y-2.5" role="list">

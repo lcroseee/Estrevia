@@ -31,6 +31,11 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(60, '1m'),
     prefix: 'rl:passport/view',
   }),
+  'essay/view': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(60, '1m'),
+    prefix: 'rl:essay/view',
+  }),
   moon: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(30, '1m'),

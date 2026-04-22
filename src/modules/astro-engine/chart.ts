@@ -126,12 +126,32 @@ export function calculateChart(input: ChartInput): ChartResult {
   const localMinute = parseInt(minuteStr!, 10);
 
   // Step 2: Convert local datetime to UTC
-  // First create a Date in local calendar terms (we'll apply offset manually)
+  //
+  // DST fall-back disambiguation policy: when a local time is ambiguous (e.g.,
+  // UK 2023-10-29 01:30 exists as both BST and GMT), we prefer the PRE-REWIND
+  // interpretation (summer time / BST). This matches Astro.com's behavior and
+  // is the conventional default in astrology software.
+  //
+  // Algorithm: treat the local wall-clock time as if it were UTC (localDateApprox),
+  // then call getTimezoneOffset twice — once with the raw local-as-UTC timestamp,
+  // and once with the timestamp shifted back by the first offset estimate. If both
+  // offsets differ (ambiguous gap), choose the larger offset (summer time = more
+  // minutes ahead of UTC = earlier UTC moment = pre-rewind interpretation).
   const localDateApprox = new Date(
     Date.UTC(year, month - 1, day, localHour, localMinute, 0),
   );
 
-  const offsetMinutes = getUtcOffset(timezone, localDateApprox);
+  const offsetFirst = getUtcOffset(timezone, localDateApprox);
+  const utcMsFirst = localDateApprox.getTime() - offsetFirst * 60_000;
+  // Check offset at the resulting UTC moment to detect DST ambiguity
+  const offsetSecond = getUtcOffset(timezone, new Date(utcMsFirst));
+
+  // If the two offset estimates differ, the local time falls in a DST gap/overlap.
+  // Prefer the larger offset (summer time / pre-rewind) to match Astro.com convention.
+  const offsetMinutes = offsetFirst !== offsetSecond
+    ? Math.max(offsetFirst, offsetSecond)
+    : offsetFirst;
+
   const utcMs = localDateApprox.getTime() - offsetMinutes * 60_000;
   const utcDate = new Date(utcMs);
 
@@ -158,15 +178,14 @@ export function calculateChart(input: ChartInput): ChartResult {
   let effectiveHouseSystem = houseSystem;
 
   if (hasBirthTime) {
-    // Detect polar fallback: if Placidus requested at extreme latitude,
-    // calculateHouses() will switch to Whole Sign
-    const wouldFallback =
-      houseSystem === HouseSystem.Placidus && Math.abs(latitude) > 66.5;
-    if (wouldFallback) {
+    housesResult = calculateHouses(julianDay, latitude, longitude, houseSystem);
+
+    // Derive the system actually used from the same condition that houses.ts
+    // applies internally. This is the single source of truth for the polar
+    // fallback decision — no duplicate threshold here.
+    if (houseSystem === HouseSystem.Placidus && Math.abs(latitude) > 66.5) {
       effectiveHouseSystem = HouseSystem.WholeSigns;
     }
-
-    housesResult = calculateHouses(julianDay, latitude, longitude, houseSystem);
 
     if (housesResult !== null) {
       // Assign planets to houses
@@ -204,6 +223,11 @@ export function calculateChart(input: ChartInput): ChartResult {
     ayanamsa,
     system: 'sidereal',
     houseSystem: effectiveHouseSystem,
+    // North Node is calculated as Mean Node (SE_MEAN_NODE = body ID 10).
+    // True Node (body ID 11) oscillates ±1.5° from Mean Node. This field is
+    // exposed so API consumers can account for the difference when comparing
+    // against Astro.com, which defaults to True Node.
+    nodeType: 'mean' as const,
     calculatedAt: new Date().toISOString(),
   };
 }

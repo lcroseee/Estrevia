@@ -33,6 +33,21 @@ const TAROT_CARD_IDS = [
 ] as const;
 
 /**
+ * Builds hreflang alternates for cookie-based locale switching.
+ * Both EN and ES point to the same canonical URL (no URL prefix).
+ * Google accepts this for cookie/JS-based locale switching.
+ */
+function hreflangAlternates(url: string): { languages: Record<string, string> } {
+  return {
+    languages: {
+      'en-US': url,
+      'es': url,
+      'x-default': url,
+    },
+  };
+}
+
+/**
  * Dynamic sitemap for Estrevia.
  *
  * Total URL count at launch:
@@ -48,6 +63,7 @@ const TAROT_CARD_IDS = [
  *   221 total
  *
  * Note: /s/synastry/[id] share pages are noIndex and excluded from sitemap.
+ * hreflang: EN + ES both map to the same URL (cookie-based locale, no URL prefix).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -59,18 +75,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 1.0,
+      alternates: hreflangAlternates(SITE_URL),
     },
     {
       url: `${SITE_URL}/why-sidereal`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.9,
+      alternates: hreflangAlternates(`${SITE_URL}/why-sidereal`),
     },
     {
       url: `${SITE_URL}/pricing`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
+      alternates: hreflangAlternates(`${SITE_URL}/pricing`),
     },
     // Legal pages — low priority, indexed for trust signals
     {
@@ -78,12 +97,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
+      alternates: hreflangAlternates(`${SITE_URL}/privacy`),
     },
     {
       url: `${SITE_URL}/terms`,
       lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
+      alternates: hreflangAlternates(`${SITE_URL}/terms`),
     },
   ];
 
@@ -94,36 +115,42 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.9,
+      alternates: hreflangAlternates(`${SITE_URL}/chart`),
     },
     {
       url: `${SITE_URL}/moon`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.8,
+      alternates: hreflangAlternates(`${SITE_URL}/moon`),
     },
     {
       url: `${SITE_URL}/hours`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.8,
+      alternates: hreflangAlternates(`${SITE_URL}/hours`),
     },
     {
       url: `${SITE_URL}/synastry`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
+      alternates: hreflangAlternates(`${SITE_URL}/synastry`),
     },
     {
       url: `${SITE_URL}/tarot`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
+      alternates: hreflangAlternates(`${SITE_URL}/tarot`),
     },
     {
       url: `${SITE_URL}/tree-of-life`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
+      alternates: hreflangAlternates(`${SITE_URL}/tree-of-life`),
     },
   ];
 
@@ -133,6 +160,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency: 'monthly' as const,
     priority: 0.6,
+    alternates: hreflangAlternates(`${SITE_URL}/tarot/${cardId}`),
   }));
 
   // ── Essay pages (120 total: 10 planets × 12 signs) ────────────────────────
@@ -141,6 +169,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency: 'monthly' as const,
     priority: 0.7,
+    alternates: hreflangAlternates(`${SITE_URL}/essays/${slug}`),
   }));
 
   // ── Sign overview pages (12 total) ────────────────────────────────────────
@@ -149,6 +178,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency: 'monthly' as const,
     priority: 0.75,
+    alternates: hreflangAlternates(`${SITE_URL}/signs/${sign}`),
   }));
 
   return [...staticPages, ...appPages, ...tarotPages, ...essayPages, ...signPages];

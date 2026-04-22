@@ -273,7 +273,10 @@
     "footerTerms": "Terms",
     "footerPrivacy": "Privacy",
     "footerTwitter": "Twitter",
-    "twitterAria": "Estrevia on Twitter"
+    "twitterAria": "Estrevia on Twitter",
+    "footerSourceLabel": "Source (AGPL-3.0)",
+    "footerSourceAria": "Estrevia source code on GitHub (opens in new tab)",
+    "footerLicenseNotice": "Licensed under AGPL-3.0"
   },
   "landing": {
     "heroTitle": "Discover Your True Zodiac Sign",
@@ -345,6 +348,23 @@
     "faq4Q": "What is a Cosmic Passport?",
     "faq4A": "A shareable card with your sidereal Sun, Moon, and Ascendant signs, dominant element, and combination rarity percentage. Share it as an image or link — works without creating an account.",
     "finalCta": "Calculate My Sidereal Chart"
+  },
+  "birthDataForm": {
+    "formAria": "Birth data form for natal chart calculation",
+    "dateLabel": "Date of birth",
+    "dateRequired": "Birth date is required",
+    "dateInvalid": "Invalid date",
+    "dateFuture": "Date cannot be in the future",
+    "knowsBirthTimeLabel": "I know my birth time",
+    "timeLabel": "Time of birth",
+    "timeHelper": "Houses and Ascendant are only calculated when birth time is known.",
+    "cityLabel": "Birth place",
+    "cityRequired": "Please select a city from the list",
+    "cityPlaceholder": "Start typing city name...",
+    "calcFailed": "Calculation failed. Please try again.",
+    "submitting": "Calculating chart...",
+    "submit": "Calculate Chart",
+    "footer": "Using Lahiri ayanamsa · Sidereal zodiac · Placidus houses"
   },
   "chart": {
     "title": "Natal Chart",
@@ -831,5 +851,9 @@
     "serverError": "Something went wrong",
     "serverErrorDesc": "We're working on fixing this.",
     "goHome": "Go Home"
+  },
+  "disclaimer": {
+    "text": "Astrology is for personal reflection and entertainment purposes only. Nothing on this site constitutes medical, financial, legal, or psychological advice. Always consult a qualified professional for decisions affecting your health, finances, or wellbeing.",
+    "ariaLabel": "Legal disclaimer"
   }
 }

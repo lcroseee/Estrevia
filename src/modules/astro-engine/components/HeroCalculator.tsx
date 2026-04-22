@@ -1,8 +1,27 @@
 'use client';
 
+/**
+ * HeroCalculator — landing-page hero calculator.
+ *
+ * Previously used `framer-motion` for entrance animations on the result
+ * card and form. That cost ~35-55 KB gzipped on EVERY landing-page visit
+ * (the motion library is imported at module scope, so it's in the initial
+ * JS bundle regardless of whether the user ever triggers an animation).
+ *
+ * The animations here are trivially expressible with CSS keyframes:
+ *   - Fade + rise on mount (form)
+ *   - Fade + rise + scale on reveal (result card)
+ *   - Staggered child fades with delays (glyph, heading, meta, CTAs)
+ *
+ * Pattern mirrors `LandingAnimations.tsx` in `(marketing)/` — also zero-dep.
+ *
+ * `prefers-reduced-motion` is respected via a media query in the injected
+ * `<style>` that zeroes animations out. No `useReducedMotion` hook needed
+ * because CSS media queries evaluate at render time by the user agent.
+ */
+
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
@@ -57,6 +76,70 @@ interface FormErrors {
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+// ── Zero-dep CSS animation styles ─────────────────────────────────────────────
+// Keyframe names are prefixed with `hc-` (HeroCalculator) to avoid collisions
+// with `LandingAnimations`, which uses its own `data-animate` attribute
+// selectors for a different pattern.
+const HERO_CALC_STYLES = `
+  @keyframes hc-fade-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes hc-fade-rise-scale {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes hc-pop {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .hc-form {
+    animation: hc-fade-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hc-result-card {
+    animation: hc-fade-rise-scale 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Staggered child reveals inside the result card.
+     Each child starts hidden (opacity 0) and runs its animation after
+     a short delay so the eye tracks through them one at a time. */
+  .hc-result-glyph,
+  .hc-result-heading,
+  .hc-result-meta,
+  .hc-result-ctas {
+    opacity: 0;
+    animation-fill-mode: both;
+  }
+  .hc-result-glyph {
+    animation: hc-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
+  }
+  .hc-result-heading {
+    animation: hc-fade-rise 0.4s ease-out 0.25s forwards;
+  }
+  .hc-result-meta {
+    animation: hc-fade-rise 0.4s ease-out 0.35s forwards;
+  }
+  .hc-result-ctas {
+    animation: hc-fade-rise 0.4s ease-out 0.45s forwards;
+  }
+
+  /* Respect user motion preferences — no animation, show content instantly. */
+  @media (prefers-reduced-motion: reduce) {
+    .hc-form,
+    .hc-result-card,
+    .hc-result-glyph,
+    .hc-result-heading,
+    .hc-result-meta,
+    .hc-result-ctas {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+`;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function HeroCalculator() {
@@ -171,13 +254,11 @@ export function HeroCalculator() {
     const elementLabel = signInfo ? t(`elements.${signInfo.element}`) : '';
 
     return (
-      <AnimatePresence mode="wait">
-        <motion.div
+      <>
+        <style>{HERO_CALC_STYLES}</style>
+        <div
           key="result"
-          initial={{ opacity: 0, y: 12, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full"
+          className="w-full hc-result-card"
           role="region"
           aria-label={t('resultAria')}
           aria-live="polite"
@@ -201,45 +282,31 @@ export function HeroCalculator() {
                 {t('resultEyebrow')}
               </p>
 
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="text-6xl mb-2"
+              <div
+                className="text-6xl mb-2 hc-result-glyph"
                 aria-hidden="true"
               >
                 {glyph}
-              </motion.div>
+              </div>
 
-              <motion.h3
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.4 }}
-                className="text-3xl sm:text-4xl font-light text-white mb-1"
+              <h3
+                className="text-3xl sm:text-4xl font-light text-white mb-1 hc-result-heading"
                 style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
               >
                 {result.sunSign}
-              </motion.h3>
+              </h3>
 
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.35, duration: 0.4 }}
-                className="text-sm text-white/40 mb-1"
+              <p
+                className="text-sm text-white/40 mb-1 hc-result-meta"
                 style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
               >
                 {t('elementSign', { degree: result.sunDegree, element: elementLabel })}
-              </motion.p>
+              </p>
             </div>
           </div>
 
           {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45, duration: 0.4 }}
-            className="mt-4 flex flex-col sm:flex-row items-center gap-3"
-          >
+          <div className="mt-4 flex flex-col sm:flex-row items-center gap-3 hc-result-ctas">
             <Link
               href={`/chart?chartId=${result.chartId}`}
               className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] transition-colors"
@@ -254,91 +321,91 @@ export function HeroCalculator() {
             >
               {t('tryAnother')}
             </button>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
+          </div>
+        </div>
+      </>
     );
   }
 
   // ── Form ─────────────────────────────────────────────────────────────────
   return (
-    <motion.form
-      onSubmit={handleSubmit}
-      noValidate
-      className="w-full space-y-3"
-      aria-label={t('formAria')}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-    >
-      {/* Date input */}
-      <div>
-        <label htmlFor="hero-date" className="sr-only">
-          {t('dateLabel')}
-        </label>
-        <DateInput
-          id="hero-date"
-          value={form.date}
-          max={todayStr()}
-          onChange={(v) => {
-            setForm((prev) => ({ ...prev, date: v }));
-            setErrors((prev) => ({ ...prev, date: undefined }));
-          }}
-          aria-describedby={errors.date ? 'hero-date-error' : undefined}
-          aria-invalid={!!errors.date}
-          hasError={!!errors.date}
-        />
-        {errors.date && (
-          <p id="hero-date-error" className="mt-1.5 text-xs text-red-400" role="alert">
-            {errors.date}
+    <>
+      <style>{HERO_CALC_STYLES}</style>
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="w-full space-y-3 hc-form"
+        aria-label={t('formAria')}
+      >
+        {/* Date input */}
+        <div>
+          <label htmlFor="hero-date" className="sr-only">
+            {t('dateLabel')}
+          </label>
+          <DateInput
+            id="hero-date"
+            value={form.date}
+            max={todayStr()}
+            onChange={(v) => {
+              setForm((prev) => ({ ...prev, date: v }));
+              setErrors((prev) => ({ ...prev, date: undefined }));
+            }}
+            aria-describedby={errors.date ? 'hero-date-error' : undefined}
+            aria-invalid={!!errors.date}
+            hasError={!!errors.date}
+          />
+          {errors.date && (
+            <p id="hero-date-error" className="mt-1.5 text-xs text-red-400" role="alert">
+              {errors.date}
+            </p>
+          )}
+        </div>
+
+        {/* City input */}
+        <div>
+          <CityAutocomplete
+            value={form.cityLabel}
+            onCitySelect={handleCitySelect}
+            onChange={handleCityChange}
+            placeholder={t('cityPlaceholder')}
+            error={errors.city}
+          />
+        </div>
+
+        {/* General error */}
+        {errors.general && (
+          <p className="text-xs text-red-400 text-center" role="alert">
+            {errors.general}
           </p>
         )}
-      </div>
 
-      {/* City input */}
-      <div>
-        <CityAutocomplete
-          value={form.cityLabel}
-          onCitySelect={handleCitySelect}
-          onChange={handleCityChange}
-          placeholder={t('cityPlaceholder')}
-          error={errors.city}
-        />
-      </div>
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-busy={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <span
+                className="inline-block w-4 h-4 border-2 border-[#0A0A0F]/30 border-t-[#0A0A0F] rounded-full animate-spin"
+                aria-hidden="true"
+              />
+              {t('submitting')}
+            </>
+          ) : (
+            <>
+              <span aria-hidden="true">☉</span>
+              {t('submit')}
+            </>
+          )}
+        </button>
 
-      {/* General error */}
-      {errors.general && (
-        <p className="text-xs text-red-400 text-center" role="alert">
-          {errors.general}
+        <p className="text-center text-[11px] text-white/25 leading-relaxed">
+          {t('footer')}
         </p>
-      )}
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        aria-busy={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <span
-              className="inline-block w-4 h-4 border-2 border-[#0A0A0F]/30 border-t-[#0A0A0F] rounded-full animate-spin"
-              aria-hidden="true"
-            />
-            {t('submitting')}
-          </>
-        ) : (
-          <>
-            <span aria-hidden="true">☉</span>
-            {t('submit')}
-          </>
-        )}
-      </button>
-
-      <p className="text-center text-[11px] text-white/25 leading-relaxed">
-        {t('footer')}
-      </p>
-    </motion.form>
+      </form>
+    </>
   );
 }

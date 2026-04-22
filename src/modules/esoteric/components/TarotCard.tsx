@@ -1,7 +1,7 @@
 'use client';
 
 import { memo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 // Suit colors matching Thoth tradition
 const SUIT_COLORS: Record<string, string> = {
@@ -61,6 +61,7 @@ export const TarotCard = memo(function TarotCard({
   onClick,
   interactive = true,
 }: TarotCardProps) {
+  const prefersReduced = useReducedMotion();
   const color = SUIT_COLORS[card.suit] ?? SUIT_COLORS.major;
   const symbol = SUIT_SYMBOLS[card.suit] ?? SUIT_SYMBOLS.major;
   const fonts = FONT_SIZES[size];
@@ -81,7 +82,7 @@ export const TarotCard = memo(function TarotCard({
         background: `linear-gradient(135deg, rgba(10,10,15,0.95) 0%, ${color}15 100%)`,
         transform: reversed ? 'rotate(180deg)' : undefined,
       }}
-      whileHover={interactive ? { y: -4 } : undefined}
+      whileHover={interactive && !prefersReduced ? { y: -4 } : undefined}
       aria-label={`${card.name.en}${reversed ? ' (reversed)' : ''}`}
       disabled={!interactive}
     >

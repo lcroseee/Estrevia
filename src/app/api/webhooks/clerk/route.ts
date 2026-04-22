@@ -57,7 +57,17 @@ export async function POST(req: Request) {
       'svix-signature': svixSignature,
     }) as WebhookEvent;
   } catch (err) {
-    console.error('[clerk-webhook] Signature verification failed', err);
+    // Log only the error message — never the raw err (which may include headers / body).
+    console.error(
+      '[clerk-webhook] Signature verification failed',
+      err instanceof Error ? err.message : 'unknown',
+    );
+    try {
+      const { captureException } = await import('@sentry/nextjs');
+      captureException(err, { tags: { webhook: 'clerk' } });
+    } catch {
+      // Sentry capture is best-effort; do not mask the original 401.
+    }
     return Response.json(
       { error: 'UNAUTHORIZED', message: 'Webhook verification failed' },
       { status: 401 },
@@ -100,7 +110,18 @@ export async function POST(req: Request) {
       }
     }
   } catch (err) {
-    console.error('[clerk-webhook] DB operation failed', { eventType, err });
+    // Never log the raw err — it may serialize the Clerk event payload (emails, names).
+    console.error('[clerk-webhook] DB operation failed', {
+      eventType,
+      message: err instanceof Error ? err.message : 'unknown',
+      name: err instanceof Error ? err.name : undefined,
+    });
+    try {
+      const { captureException } = await import('@sentry/nextjs');
+      captureException(err, { tags: { webhook: 'clerk', eventType } });
+    } catch {
+      // Sentry capture is best-effort; do not mask the 500 we return to Clerk.
+    }
     return Response.json(
       { error: 'INTERNAL_ERROR', message: 'Failed to process webhook' },
       { status: 500 },

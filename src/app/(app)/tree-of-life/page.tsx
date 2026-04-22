@@ -4,6 +4,7 @@ import { join } from 'path';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { TreeOfLifeClient } from '@/modules/esoteric/components/TreeOfLife';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
   return createMetadata({
@@ -83,6 +84,8 @@ export default async function TreeOfLifePage() {
           </div>
 
           <TreeOfLifeClient sephiroth={sephiroth} paths={paths} />
+
+          <Disclaimer />
         </div>
       </div>
     </>

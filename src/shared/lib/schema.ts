@@ -16,7 +16,9 @@ export const users = pgTable('users', {
   subscriptionExpiresAt: timestamp('subscription_expires_at', { withTimezone: true }),
   stripeSubscriptionId: text('stripe_subscription_id'),
   plan: text('plan', { enum: ['free', 'pro_monthly', 'pro_annual'] }).notNull().default('free'),
-  subscriptionStatus: text('subscription_status', { enum: ['trialing', 'active', 'canceled', 'past_due'] }).notNull().default('active'),
+  subscriptionStatus: text('subscription_status', {
+    enum: ['free', 'trialing', 'active', 'canceled', 'past_due', 'incomplete', 'unpaid'],
+  }).default('free'),
   trialEnd: timestamp('trial_end', { withTimezone: true }),
   currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -59,6 +61,13 @@ export const cosmicPassports = pgTable('cosmic_passports', {
 // ---------------------------------------------------------------------------
 // waitlist_entries
 // ---------------------------------------------------------------------------
+// Retention policy (GDPR Art. 5(1)(e) — storage limitation):
+//   Waitlist e-mail addresses are personal data. Entries are retained for
+//   90 days from `created_at`. The cron `/api/cron/cleanup-temp-charts`
+//   (schedule: `0 3 * * *`) deletes rows older than 90 days every night.
+//   Users who register are migrated to `users.email`; orphaned waitlist
+//   rows after 90 days are purged.
+// ---------------------------------------------------------------------------
 export const waitlistEntries = pgTable('waitlist_entries', {
   id: serial('id').primaryKey(),
   email: text('email').notNull().unique(),
@@ -74,10 +83,10 @@ export const synastryResults = pgTable('synastry_results', {
   userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
   chart1Id: text('chart1_id')
     .notNull()
-    .references(() => natalCharts.id),
+    .references(() => natalCharts.id, { onDelete: 'cascade' }),
   chart2Id: text('chart2_id')
     .notNull()
-    .references(() => natalCharts.id),
+    .references(() => natalCharts.id, { onDelete: 'cascade' }),
   overallScore: real('overall_score').notNull(),
   categoryScores: jsonb('category_scores').notNull(),
   aspects: jsonb('aspects').notNull(),
@@ -160,6 +169,15 @@ export const notificationPreferences = pgTable('notification_preferences', {
 });
 
 // ---------------------------------------------------------------------------
+// processed_stripe_events — webhook idempotency deduplication table
+// ---------------------------------------------------------------------------
+export const processedStripeEvents = pgTable('processed_stripe_events', {
+  eventId: text('event_id').primaryKey(),
+  eventType: text('event_type').notNull(),
+  processedAt: timestamp('processed_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
 // Type aliases
 // ---------------------------------------------------------------------------
 export type User = typeof users.$inferSelect;
@@ -171,3 +189,4 @@ export type DailyCard = typeof dailyCards.$inferSelect;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
 export type UsageCounter = typeof usageCounters.$inferSelect;
+export type ProcessedStripeEvent = typeof processedStripeEvents.$inferSelect;

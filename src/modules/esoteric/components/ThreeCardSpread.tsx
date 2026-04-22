@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 import { TarotCard } from './TarotCard';
@@ -26,6 +26,7 @@ const POSITIONS = [
 
 export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
   const t = useTranslations('tarot');
+  const prefersReduced = useReducedMotion();
   const { isPro, isLoading: subLoading } = useSubscription();
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   const [revealedCount, setRevealedCount] = useState(0);
@@ -145,9 +146,9 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
                 {isRevealed && cardData ? (
                   <motion.div
                     key="revealed"
-                    initial={{ rotateY: -90, opacity: 0 }}
+                    initial={prefersReduced ? false : { rotateY: -90, opacity: 0 }}
                     animate={{ rotateY: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    transition={prefersReduced ? { duration: 0 } : { duration: 0.5, ease: 'easeOut' }}
                     style={{ willChange: 'transform' }}
                   >
                     <TarotCard
@@ -160,7 +161,7 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
                 ) : (
                   <motion.div
                     key="placeholder"
-                    initial={{ scale: 0.95 }}
+                    initial={prefersReduced ? false : { scale: 0.95 }}
                     animate={{ scale: 1 }}
                     className="w-20 h-32 rounded-lg border border-white/8 flex items-center justify-center"
                     style={{ background: 'rgba(255,255,255,0.02)' }}
@@ -214,7 +215,7 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
       {/* AI Interpretation */}
       {interpretation && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="rounded-xl border border-[#A78BFA]/20 p-5 space-y-2"
           style={{ background: 'rgba(167,139,250,0.05)' }}
@@ -241,16 +242,16 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
           return (
             <motion.div
               key="modal"
-              initial={{ opacity: 0 }}
+              initial={prefersReduced ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={prefersReduced ? {} : { opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
               onClick={() => setSelectedCard(null)}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={prefersReduced ? false : { scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
+                exit={prefersReduced ? {} : { scale: 0.9, opacity: 0 }}
                 className="w-full max-w-sm rounded-xl border border-white/10 p-6 space-y-4"
                 style={{ background: '#0F0F18' }}
                 onClick={(e) => e.stopPropagation()}

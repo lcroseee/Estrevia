@@ -25,6 +25,10 @@ import { EssayPageClient } from '@/modules/esoteric/components/EssayPageClient';
 // Static params — all 120 essays pre-rendered at build time
 // ---------------------------------------------------------------------------
 
+// ISR: rebuild each essay page at most once per day in the background.
+// R10 CWV win — serves from CDN edge cache, TTFB ~500ms → ~50ms.
+export const revalidate = 86400;
+
 export function generateStaticParams(): Array<{ slug: string }> {
   return getAllEssaySlugs().map((slug) => ({ slug }));
 }

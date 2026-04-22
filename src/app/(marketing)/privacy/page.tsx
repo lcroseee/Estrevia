@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo';
 
+// R10: force-static + hourly revalidate. Legal copy rarely changes.
+export const dynamic = 'force-static';
+export const revalidate = 3600;
+
 export function generateMetadata(): Metadata {
   return createMetadata({
     title: 'Privacy Policy',

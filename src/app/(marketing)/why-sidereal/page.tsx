@@ -10,7 +10,12 @@ import {
   organizationSchema,
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 import PrecessionDiagramLoader from '@/modules/esoteric/components/PrecessionDiagramLoader';
+
+// R10: force-static + hourly revalidate. Explainer copy rarely changes.
+export const dynamic = 'force-static';
+export const revalidate = 3600;
 
 // ---------------------------------------------------------------------------
 // Metadata (kept English-only — SEO concern, not user-facing UI)
@@ -418,6 +423,8 @@ export default async function WhySiderealPage() {
             </a>
           </div>
         </nav>
+
+        <Disclaimer />
 
       </div>
     </>

@@ -8,9 +8,14 @@
 
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { createMetadata, JsonLdScript, faqSchema, breadcrumbSchema } from '@/shared/seo';
+import { createMetadata, JsonLdScript, faqSchema, breadcrumbSchema, productSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { PricingToggle } from './PricingToggle';
+
+// R10: force-static + hourly revalidate. Pricing copy rarely changes;
+// Stripe Checkout is invoked from the client island, not on page render.
+export const dynamic = 'force-static';
+export const revalidate = 3600;
 
 export function generateMetadata(): Metadata {
   return createMetadata({
@@ -46,6 +51,35 @@ export default async function PricingPage() {
     })),
   );
 
+  // Product schema — enables Rich Results eligibility for pricing queries.
+  // Two offers: Free (price 0) and Premium (billed monthly; annual is a variant).
+  // Prices are kept as static strings here — match Stripe price configuration.
+  const productJsonLd = productSchema({
+    name: 'Estrevia Sidereal Astrology',
+    description:
+      'Sidereal natal chart calculator. Free plan includes one chart. Premium unlocks unlimited saved charts, detailed aspects, future transits, and synastry.',
+    offers: [
+      {
+        price: '0',
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/pricing`,
+      },
+      {
+        price: '4.99',
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/pricing`,
+      },
+      {
+        price: '34.99',
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/pricing`,
+      },
+    ],
+  });
+
   const trustItems = [
     t('trustNoContracts'),
     t('trustCancel'),
@@ -56,6 +90,7 @@ export default async function PricingPage() {
     <>
       <JsonLdScript schema={breadcrumbLd} />
       <JsonLdScript schema={faqJsonLd} />
+      <JsonLdScript schema={productJsonLd} />
 
       <div className="min-h-screen bg-[#0A0A0F]">
         {/* Noise texture */}

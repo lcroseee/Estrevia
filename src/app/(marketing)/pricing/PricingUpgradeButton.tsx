@@ -56,7 +56,7 @@ export function PricingUpgradeButton({
       <button
         onClick={handleUpgrade}
         disabled={loading}
-        className="w-full py-3 px-6 rounded-xl text-sm font-semibold tracking-wide disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+        className="w-full py-3 px-6 rounded-xl text-sm font-semibold tracking-wide disabled:opacity-60 disabled:cursor-not-allowed transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
         style={{
           background: 'linear-gradient(135deg, #FFD700, #FFE033)',
           color: '#0A0A0F',

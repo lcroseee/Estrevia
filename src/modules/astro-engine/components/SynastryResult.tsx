@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { SynastryScores, CategoryScore } from '@/modules/astro-engine/synastry-scoring';
 import type { SynastryAspect } from '@/modules/astro-engine/synastry';
 
@@ -43,6 +43,7 @@ const ASPECT_STYLES: Record<string, { color: string; symbol: string }> = {
 };
 
 function ScoreCircle({ score }: { score: number }) {
+  const prefersReduced = useReducedMotion();
   const circumference = 2 * Math.PI * 54;
   const dashOffset = circumference - (score / 100) * circumference;
 
@@ -68,18 +69,18 @@ function ScoreCircle({ score }: { score: number }) {
           strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
+          initial={{ strokeDashoffset: prefersReduced ? dashOffset : circumference }}
           animate={{ strokeDashoffset: dashOffset }}
-          transition={{ duration: 1.2, ease: 'easeOut' }}
+          transition={prefersReduced ? { duration: 0 } : { duration: 1.2, ease: 'easeOut' }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
           className="text-3xl font-bold text-white"
           style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
-          initial={{ opacity: 0 }}
+          initial={prefersReduced ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
+          transition={prefersReduced ? { duration: 0 } : { delay: 0.5, duration: 0.5 }}
         >
           {Math.round(score)}%
         </motion.span>
@@ -92,14 +93,15 @@ function ScoreCircle({ score }: { score: number }) {
 }
 
 function CategoryBar({ category, index }: { category: CategoryScore; index: number }) {
+  const prefersReduced = useReducedMotion();
   const color = CATEGORY_COLORS[category.category] ?? '#94A3B8';
 
   return (
     <motion.div
       className="space-y-1.5"
-      initial={{ opacity: 0, x: -20 }}
+      initial={prefersReduced ? false : { opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
+      transition={prefersReduced ? { duration: 0 } : { delay: 0.3 + index * 0.1, duration: 0.4 }}
     >
       <div className="flex items-center justify-between">
         <span className="text-sm text-white/70">{category.label}</span>
@@ -114,9 +116,9 @@ function CategoryBar({ category, index }: { category: CategoryScore; index: numb
         <motion.div
           className="h-full rounded-full"
           style={{ backgroundColor: color }}
-          initial={{ width: 0 }}
+          initial={{ width: prefersReduced ? `${category.score}%` : 0 }}
           animate={{ width: `${category.score}%` }}
-          transition={{ delay: 0.5 + index * 0.1, duration: 0.8, ease: 'easeOut' }}
+          transition={prefersReduced ? { duration: 0 } : { delay: 0.5 + index * 0.1, duration: 0.8, ease: 'easeOut' }}
         />
       </div>
     </motion.div>
@@ -132,6 +134,7 @@ export function SynastryResult({
   onReset,
 }: SynastryResultProps) {
   const t = useTranslations('synastry');
+  const prefersReduced = useReducedMotion();
   const [showAspects, setShowAspects] = useState(false);
 
   const sortedAspects = useMemo(
@@ -219,10 +222,10 @@ export function SynastryResult({
         <AnimatePresence>
           {showAspects && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
+              initial={prefersReduced ? false : { height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              exit={prefersReduced ? {} : { height: 0, opacity: 0 }}
+              transition={prefersReduced ? { duration: 0 } : { duration: 0.3 }}
               className="overflow-hidden"
             >
               <div className="mt-3 space-y-1 max-h-80 overflow-y-auto">

@@ -5,6 +5,7 @@ import { createMetadata } from '@/shared/seo/metadata';
 import { JsonLdScript, breadcrumbSchema, faqSchema } from '@/shared/seo/json-ld';
 import { SITE_URL } from '@/shared/seo/constants';
 import { MoonCalendar } from '@/modules/astro-engine/components/MoonCalendar';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export function generateMetadata(): Metadata {
   return createMetadata({
@@ -164,6 +165,8 @@ export default async function MoonPage() {
             </details>
           ))}
         </section>
+
+        <Disclaimer />
       </main>
     </>
   );

@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/notifications",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/prewarm-voc",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-temp-charts",
+      "schedule": "0 3 * * *"
     }
   ]
 }

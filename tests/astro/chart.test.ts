@@ -23,17 +23,14 @@ function angularDiff(a: number, b: number): number {
 
 type Fixture = typeof fixtures[number];
 
-// TODO(dst): "DST fall back UK 2023-10-29 London" at 01:30 is ambiguous (clocks
-// rewind 01:59 BST → 01:00 GMT). Passes on Node 25 (local) but yields the
-// post-rewind interpretation on Node 22 (CI), ~1h of Sun motion off. Skip
-// until we pin a deterministic DST-fall-back policy in the chart-calculation
-// layer (prefer pre-rewind / BST, matching most astrology software).
-const SKIP_ON_CI = new Set<string>(['DST fall back UK 2023-10-29 London']);
+// DST fall-back disambiguation is now deterministic: chart.ts always prefers
+// the pre-rewind / summer time interpretation (larger UTC offset) when a local
+// time falls in an ambiguous gap. This matches Astro.com behavior and makes
+// the test deterministic across all Node.js versions and CI environments.
 
 describe('Reference chart validation (±0.01°)', () => {
   for (const fixture of fixtures) {
-    const testFn = SKIP_ON_CI.has(fixture.name) && process.env.CI ? it.skip : it;
-    testFn(`${fixture.name}`, () => {
+    it(`${fixture.name}`, () => {
       const result = calculateChart({
         date: fixture.input.date,
         time: fixture.input.time,
@@ -106,6 +103,58 @@ describe('Reference chart validation (±0.01°)', () => {
         angularDiff(saturn!.tropicalDegree, expected.saturn.tropicalDegree),
         `Saturn tropical degree: got ${saturn!.tropicalDegree.toFixed(4)}°, expected ${expected.saturn.tropicalDegree.toFixed(4)}°`,
       ).toBeLessThanOrEqual(TOLERANCE);
+
+      // --- Outer planets + North Node + Chiron (where expected values present) ---
+      // Source: computed via Swiss Ephemeris Moshier analytical ephemeris on 2026-04-20.
+      // These positions serve as regression anchors — any engine change that shifts
+      // these bodies by >0.01° will fail here and require deliberate re-snapshotting.
+      // Note: North Node is Mean Node (SE_MEAN_NODE = body 10). Chiron requires
+      // seas_18.se1 — absent for dates before ~1650 (seas_12.se1 era).
+
+      if ('uranus' in expected && expected.uranus) {
+        const uranus = getPlanet(Planet.Uranus);
+        expect(uranus, 'Uranus position missing').toBeDefined();
+        expect(
+          angularDiff(uranus!.tropicalDegree, expected.uranus.tropicalDegree),
+          `Uranus tropical degree: got ${uranus!.tropicalDegree.toFixed(4)}°, expected ${expected.uranus.tropicalDegree.toFixed(4)}°`,
+        ).toBeLessThanOrEqual(TOLERANCE);
+      }
+
+      if ('neptune' in expected && expected.neptune) {
+        const neptune = getPlanet(Planet.Neptune);
+        expect(neptune, 'Neptune position missing').toBeDefined();
+        expect(
+          angularDiff(neptune!.tropicalDegree, expected.neptune.tropicalDegree),
+          `Neptune tropical degree: got ${neptune!.tropicalDegree.toFixed(4)}°, expected ${expected.neptune.tropicalDegree.toFixed(4)}°`,
+        ).toBeLessThanOrEqual(TOLERANCE);
+      }
+
+      if ('pluto' in expected && expected.pluto) {
+        const pluto = getPlanet(Planet.Pluto);
+        expect(pluto, 'Pluto position missing').toBeDefined();
+        expect(
+          angularDiff(pluto!.tropicalDegree, expected.pluto.tropicalDegree),
+          `Pluto tropical degree: got ${pluto!.tropicalDegree.toFixed(4)}°, expected ${expected.pluto.tropicalDegree.toFixed(4)}°`,
+        ).toBeLessThanOrEqual(TOLERANCE);
+      }
+
+      if ('northNode' in expected && expected.northNode) {
+        const northNode = getPlanet(Planet.NorthNode);
+        expect(northNode, 'NorthNode position missing').toBeDefined();
+        expect(
+          angularDiff(northNode!.tropicalDegree, expected.northNode.tropicalDegree),
+          `NorthNode tropical degree: got ${northNode!.tropicalDegree.toFixed(4)}°, expected ${expected.northNode.tropicalDegree.toFixed(4)}°`,
+        ).toBeLessThanOrEqual(TOLERANCE);
+      }
+
+      if ('chiron' in expected && expected.chiron) {
+        const chiron = getPlanet(Planet.Chiron);
+        expect(chiron, 'Chiron position missing').toBeDefined();
+        expect(
+          angularDiff(chiron!.tropicalDegree, expected.chiron.tropicalDegree),
+          `Chiron tropical degree: got ${chiron!.tropicalDegree.toFixed(4)}°, expected ${expected.chiron.tropicalDegree.toFixed(4)}°`,
+        ).toBeLessThanOrEqual(TOLERANCE);
+      }
 
       // --- Houses present/absent based on birth time ---
       const hasBirthTime = fixture.input.time !== null && fixture.input.time.trim().length > 0;

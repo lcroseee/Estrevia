@@ -29,12 +29,15 @@ export {
   faqSchema,
   howToSchema,
   breadcrumbSchema,
+  productSchema,
 } from './json-ld';
 export type {
   ArticleSchemaOptions,
   FaqItem,
   HowToSchemaOptions,
   BreadcrumbItem,
+  ProductSchemaOptions,
+  ProductOffer,
 } from './json-ld';
 
 export {

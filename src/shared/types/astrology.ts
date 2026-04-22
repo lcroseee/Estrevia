@@ -115,5 +115,15 @@ export interface ChartResult {
   ayanamsa: number;
   system: 'sidereal' | 'tropical';
   houseSystem: HouseSystem;
+  /**
+   * Which North Node variant was used in the calculation.
+   * 'mean' = Mean Node (SE_MEAN_NODE, body ID 10) — stable average position.
+   * 'true' = True Node (SE_TRUE_NODE, body ID 11) — oscillates ±1.5° from mean.
+   *
+   * Currently always 'mean'. Exposed in API response so consumers can compare
+   * against reference software (Astro.com uses True Node by default, which
+   * may differ by up to 1.5°). A toggle parameter is planned for Phase 2.
+   */
+  nodeType: 'mean' | 'true';
   calculatedAt: string;
 }

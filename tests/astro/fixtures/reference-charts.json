@@ -36,7 +36,22 @@
         "tropicalDegree": 319.517294
       },
       "ascendant": 127.986568,
-      "midheaven": 16.401119
+      "midheaven": 16.401119,
+      "uranus": {
+        "tropicalDegree": 139.127182
+      },
+      "neptune": {
+        "tropicalDegree": 31.996403
+      },
+      "pluto": {
+        "tropicalDegree": 53.242724
+      },
+      "northNode": {
+        "tropicalDegree": 7.586376
+      },
+      "chiron": {
+        "tropicalDegree": 24.269228
+      }
     }
   },
   {
@@ -76,7 +91,22 @@
         "tropicalDegree": 4.18866
       },
       "ascendant": 98.824114,
-      "midheaven": 339.208404
+      "midheaven": 339.208404,
+      "uranus": {
+        "tropicalDegree": 151.28876
+      },
+      "neptune": {
+        "tropicalDegree": 37.871939
+      },
+      "pluto": {
+        "tropicalDegree": 54.725243
+      },
+      "northNode": {
+        "tropicalDegree": 301.480859
+      },
+      "chiron": {
+        "tropicalDegree": 35.544201
+      }
     }
   },
   {
@@ -116,7 +146,22 @@
         "tropicalDegree": 95.559086
       },
       "ascendant": 23.900053,
-      "midheaven": 281.835651
+      "midheaven": 281.835651,
+      "uranus": {
+        "tropicalDegree": 53.937666
+      },
+      "neptune": {
+        "tropicalDegree": 350.366344
+      },
+      "pluto": {
+        "tropicalDegree": 35.542725
+      },
+      "northNode": {
+        "tropicalDegree": 20.066039
+      },
+      "chiron": {
+        "tropicalDegree": 303.833027
+      }
     }
   },
   {
@@ -156,7 +201,22 @@
         "tropicalDegree": 231.162694
       },
       "ascendant": 172.291253,
-      "midheaven": 81.315115
+      "midheaven": 81.315115,
+      "uranus": {
+        "tropicalDegree": 114.134906
+      },
+      "neptune": {
+        "tropicalDegree": 208.051298
+      },
+      "pluto": {
+        "tropicalDegree": 145.322788
+      },
+      "northNode": {
+        "tropicalDegree": 272.504948
+      },
+      "chiron": {
+        "tropicalDegree": 302.332235
+      }
     }
   },
   {
@@ -196,7 +256,22 @@
         "tropicalDegree": 297.814035
       },
       "ascendant": 258.427103,
-      "midheaven": 203.068051
+      "midheaven": 203.068051,
+      "uranus": {
+        "tropicalDegree": 143.335954
+      },
+      "neptune": {
+        "tropicalDegree": 218.63661
+      },
+      "pluto": {
+        "tropicalDegree": 156.04422
+      },
+      "northNode": {
+        "tropicalDegree": 149.716493
+      },
+      "chiron": {
+        "tropicalDegree": 336.467952
+      }
     }
   },
   {
@@ -236,7 +311,22 @@
         "tropicalDegree": 357.446658
       },
       "ascendant": 143.511286,
-      "midheaven": 53.326484
+      "midheaven": 53.326484,
+      "uranus": {
+        "tropicalDegree": 280.613297
+      },
+      "neptune": {
+        "tropicalDegree": 102.396757
+      },
+      "pluto": {
+        "tropicalDegree": 83.746005
+      },
+      "northNode": {
+        "tropicalDegree": 113.91931
+      },
+      "chiron": {
+        "tropicalDegree": 317.293355
+      }
     }
   },
   {
@@ -276,7 +366,22 @@
         "tropicalDegree": 135.032478
       },
       "ascendant": 263.805035,
-      "midheaven": 155.989319
+      "midheaven": 155.989319,
+      "uranus": {
+        "tropicalDegree": 326.927434
+      },
+      "neptune": {
+        "tropicalDegree": 126.376824
+      },
+      "pluto": {
+        "tropicalDegree": 95.541473
+      },
+      "northNode": {
+        "tropicalDegree": 260.529308
+      },
+      "chiron": {
+        "tropicalDegree": 3.420091
+      }
     }
   },
   {
@@ -316,7 +421,22 @@
         "tropicalDegree": 235.274951
       },
       "ascendant": 282.076708,
-      "midheaven": 228.633813
+      "midheaven": 228.633813,
+      "uranus": {
+        "tropicalDegree": 102.728643
+      },
+      "neptune": {
+        "tropicalDegree": 12.847214
+      },
+      "pluto": {
+        "tropicalDegree": 45.124108
+      },
+      "northNode": {
+        "tropicalDegree": 160.968702
+      },
+      "chiron": {
+        "tropicalDegree": 352.327611
+      }
     }
   },
   {
@@ -356,7 +476,22 @@
         "tropicalDegree": 252.35934
       },
       "ascendant": 194.258148,
-      "midheaven": 104.146202
+      "midheaven": 104.146202,
+      "uranus": {
+        "tropicalDegree": 111.688764
+      },
+      "neptune": {
+        "tropicalDegree": 18.418329
+      },
+      "pluto": {
+        "tropicalDegree": 47.657199
+      },
+      "northNode": {
+        "tropicalDegree": 124.183329
+      },
+      "chiron": {
+        "tropicalDegree": 1.384838
+      }
     }
   },
   {
@@ -396,7 +531,22 @@
         "tropicalDegree": 294.212375
       },
       "ascendant": 158.75188,
-      "midheaven": 60.181998
+      "midheaven": 60.181998,
+      "uranus": {
+        "tropicalDegree": 278.28718
+      },
+      "neptune": {
+        "tropicalDegree": 283.795236
+      },
+      "pluto": {
+        "tropicalDegree": 225.467267
+      },
+      "northNode": {
+        "tropicalDegree": 309.865571
+      },
+      "chiron": {
+        "tropicalDegree": 105.74221
+      }
     }
   },
   {
@@ -1760,7 +1910,7 @@
     }
   },
   {
-    "name": "Tromso Norway — polar latitude 69.6N",
+    "name": "Tromso Norway \u2014 polar latitude 69.6N",
     "input": {
       "date": "2000-06-21",
       "time": "12:00",
@@ -2560,7 +2710,7 @@
     }
   },
   {
-    "name": "Consecutive Sun movement Day 1 — 2000-01-01 London noon",
+    "name": "Consecutive Sun movement Day 1 \u2014 2000-01-01 London noon",
     "input": {
       "date": "2000-01-01",
       "time": "12:00",
@@ -2600,7 +2750,7 @@
     }
   },
   {
-    "name": "Consecutive Sun movement Day 2 — 2000-01-02 London noon",
+    "name": "Consecutive Sun movement Day 2 \u2014 2000-01-02 London noon",
     "input": {
       "date": "2000-01-02",
       "time": "12:00",
@@ -2640,7 +2790,7 @@
     }
   },
   {
-    "name": "Consecutive Sun movement Day 3 — 2000-01-03 London noon",
+    "name": "Consecutive Sun movement Day 3 \u2014 2000-01-03 London noon",
     "input": {
       "date": "2000-01-03",
       "time": "12:00",
@@ -2680,7 +2830,7 @@
     }
   },
   {
-    "name": "Consecutive Sun movement Day 4 — 2000-01-04 London noon",
+    "name": "Consecutive Sun movement Day 4 \u2014 2000-01-04 London noon",
     "input": {
       "date": "2000-01-04",
       "time": "12:00",
@@ -2720,7 +2870,7 @@
     }
   },
   {
-    "name": "Consecutive Sun movement Day 5 — 2000-01-05 London noon",
+    "name": "Consecutive Sun movement Day 5 \u2014 2000-01-05 London noon",
     "input": {
       "date": "2000-01-05",
       "time": "12:00",
@@ -2760,7 +2910,7 @@
     }
   },
   {
-    "name": "Consecutive Moon check Day 1 — 2010-05-01 London noon",
+    "name": "Consecutive Moon check Day 1 \u2014 2010-05-01 London noon",
     "input": {
       "date": "2010-05-01",
       "time": "12:00",
@@ -2800,7 +2950,7 @@
     }
   },
   {
-    "name": "Consecutive Moon check Day 2 — 2010-05-02 London noon",
+    "name": "Consecutive Moon check Day 2 \u2014 2010-05-02 London noon",
     "input": {
       "date": "2010-05-02",
       "time": "12:00",
@@ -2840,7 +2990,7 @@
     }
   },
   {
-    "name": "Consecutive Moon check Day 3 — 2010-05-03 London noon",
+    "name": "Consecutive Moon check Day 3 \u2014 2010-05-03 London noon",
     "input": {
       "date": "2010-05-03",
       "time": "12:00",
@@ -2880,7 +3030,7 @@
     }
   },
   {
-    "name": "Consecutive Moon check Day 4 — 2010-05-04 London noon",
+    "name": "Consecutive Moon check Day 4 \u2014 2010-05-04 London noon",
     "input": {
       "date": "2010-05-04",
       "time": "12:00",
@@ -2920,7 +3070,7 @@
     }
   },
   {
-    "name": "Consecutive Moon check Day 5 — 2010-05-05 London noon",
+    "name": "Consecutive Moon check Day 5 \u2014 2010-05-05 London noon",
     "input": {
       "date": "2010-05-05",
       "time": "12:00",

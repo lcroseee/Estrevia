@@ -1,62 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+/**
+ * useSubscription — reads the current user's subscription state from the
+ * React context established by `<SubscriptionProvider>` in `(app)/layout.tsx`.
+ *
+ * Historically this hook did its own `fetch('/api/v1/user/subscription')`
+ * on every mount. With 5+ call sites (EssayPageClient, AvatarGenerator,
+ * MoonCalendar, PlanetaryHoursGrid, PaywallModal, etc.), that caused
+ * 2–5 redundant round-trips per pageview. The fetch is now centralized
+ * in the provider so every consumer shares one cached result.
+ *
+ * Outside a provider (e.g. public share pages) the hook returns the
+ * default free-tier state with `isLoading: true` — safe for any gated
+ * component that falls back to "locked" UI until it knows otherwise.
+ */
 
-interface SubscriptionState {
-  plan: 'free' | 'pro_monthly' | 'pro_annual';
-  status: 'trialing' | 'active' | 'canceled' | 'past_due' | null;
-  trialEnd: string | null;
-  currentPeriodEnd: string | null;
-  isPro: boolean;
-  isTrialing: boolean;
-  isLoading: boolean;
-}
+import {
+  useSubscriptionContext,
+  type SubscriptionState,
+} from '@/shared/context/SubscriptionProvider';
 
-const DEFAULT_STATE: SubscriptionState = {
-  plan: 'free',
-  status: null,
-  trialEnd: null,
-  currentPeriodEnd: null,
-  isPro: false,
-  isTrialing: false,
-  isLoading: true,
-};
+export type { SubscriptionState };
 
 export function useSubscription(): SubscriptionState {
-  const [state, setState] = useState<SubscriptionState>(DEFAULT_STATE);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchSubscription() {
-      try {
-        const res = await fetch('/api/v1/user/subscription');
-        if (!res.ok) {
-          setState(prev => ({ ...prev, isLoading: false }));
-          return;
-        }
-        const data = await res.json();
-        if (!cancelled) {
-          setState({
-            plan: data.plan,
-            status: data.status,
-            trialEnd: data.trialEnd,
-            currentPeriodEnd: data.currentPeriodEnd,
-            isPro: data.isPro,
-            isTrialing: data.isTrialing,
-            isLoading: false,
-          });
-        }
-      } catch {
-        if (!cancelled) {
-          setState(prev => ({ ...prev, isLoading: false }));
-        }
-      }
-    }
-
-    fetchSubscription();
-    return () => { cancelled = true; };
-  }, []);
-
-  return state;
+  return useSubscriptionContext();
 }

@@ -3,21 +3,21 @@ import { Sign } from '@/shared/types/astrology';
 // ---------------------------------------------------------------------------
 // Sun × Moon rarity table — 12×12 matrix of percentages
 //
-// Based on statistical frequency of Sun-Moon sign combinations.
-// Moon spends ~2.5 days in each sign per month → roughly uniform distribution
-// across 12 signs, so naively all 144 combos = 100/144 ≈ 0.69%.
+// These values represent a relative weighting of Sun-Moon sign combinations
+// used to produce a qualitative rarity tier label on the Cosmic Passport.
+// They are NOT presented as statistical frequency claims.
 //
-// In practice, slight asymmetries arise from:
-//   - Birth seasonality (more births in certain months in Western populations)
-//   - The Sun's uneven progression through signs (elliptical orbit)
+// Relative weighting rationale:
+//   - Same/adjacent sign combos (Sun-Moon in same or neighboring sign):
+//     higher weight (~8-10) — these combos are more energetically unified
+//   - Opposing sign combos: lower weight (~4-6) — polarity energy is rarer
+//     in the sense of being more dramatically differentiated
+//   - All other combos: mid weight (~6-9)
 //
-// We dramatize slightly for product appeal:
-//   - Same/adjacent sign combos (Sun-Moon conjunct or close): ~8-10% (most "common")
-//   - Opposing sign combos: ~4-6% (rarest, opposition = dramatically different energy)
-//   - All other: ~6-9%
+// The displayed output is a qualitative tier ("Rare", "Exceptional", etc.),
+// not a frequency percentage. See getRarityTier() below.
 //
 // Column keys = Moon sign, Row keys = Sun sign.
-// Values sum to approximately 100 across the full 12×12 matrix.
 // ---------------------------------------------------------------------------
 
 const RARITY_TABLE: Record<Sign, Record<Sign, number>> = {
@@ -192,12 +192,38 @@ const RARITY_TABLE: Record<Sign, Record<Sign, number>> = {
 };
 
 /**
- * Returns the rarity percentage (0–100) for a given Sun-Moon sign combination.
+ * Returns the relative rarity weight (arbitrary unit) for a given Sun-Moon
+ * sign combination. Lower = rarer.
  *
- * Lower value = rarer combination.
- * Use in UI as: "1 of X%" where X is the returned value.
- * E.g. getRarity(Sign.Aries, Sign.Scorpio) → 4.8 → displayed as "1 of 4.8%"
+ * Do NOT display this number directly as a frequency percentage — it is a
+ * relative weight, not a statistical frequency. Use getRarityTier() for UI.
  */
 export function getRarity(sunSign: Sign, moonSign: Sign): number {
   return RARITY_TABLE[sunSign]?.[moonSign] ?? 6.9;
+}
+
+// ---------------------------------------------------------------------------
+// Qualitative rarity tiers
+// ---------------------------------------------------------------------------
+
+export type RarityTier = 'Exceptional' | 'Very Rare' | 'Rare' | 'Uncommon';
+
+/**
+ * Maps a rarity weight to a qualitative tier label.
+ * Thresholds correspond to the lower end of the weight distribution (4.1)
+ * and upper end (9.3):
+ *
+ *   weight < 5   → Exceptional   (~10% of the weight range)
+ *   weight < 6   → Very Rare     (~next 15%)
+ *   weight < 7.5 → Rare          (~next 35%)
+ *   weight ≥ 7.5 → Uncommon      (~top 40%)
+ *
+ * These tiers are a qualitative description of relative uniqueness —
+ * not a statistical claim about birth frequency.
+ */
+export function getRarityTier(weight: number): RarityTier {
+  if (weight < 5) return 'Exceptional';
+  if (weight < 6) return 'Very Rare';
+  if (weight < 7.5) return 'Rare';
+  return 'Uncommon';
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { Planet } from '@/shared/types';
 
 // Standard astrological Unicode glyphs
@@ -60,13 +61,14 @@ export function PlanetGlyph({
 }: PlanetGlyphProps) {
   const resolvedColor = color ?? PLANET_COLORS[planet];
   const bgRadius = size * 0.9;
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
     <g
       transform={`translate(${x}, ${y})`}
       role="img"
       aria-label={`${planet}${isRetrograde ? ' (retrograde)' : ''}`}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      style={{ cursor: onClick ? 'pointer' : 'default', outline: 'none' }}
       onClick={onClick}
       tabIndex={onClick ? 0 : -1}
       onKeyDown={(e) => {
@@ -75,7 +77,26 @@ export function PlanetGlyph({
           onClick();
         }
       }}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
     >
+      {/* Focus ring — visible on keyboard focus */}
+      {isFocused && (
+        <circle
+          r={bgRadius + 5}
+          fill="none"
+          stroke="rgba(255,255,255,0.7)"
+          strokeWidth={1.5}
+          strokeDasharray="none"
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+      {/* Invisible touch target — expands tap area to ≥44px (44px diameter) */}
+      <circle
+        r={22}
+        fill="transparent"
+        style={{ pointerEvents: onClick ? 'all' : 'none' }}
+      />
       {/* Highlight ring */}
       {isHighlighted && (
         <circle

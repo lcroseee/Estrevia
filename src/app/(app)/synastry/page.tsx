@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { SynastryClient } from '@/modules/astro-engine/components/SynastryClient';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
   return createMetadata({
@@ -56,6 +57,9 @@ export default function SynastryPage() {
       <Suspense fallback={<SynastrySkeleton />}>
         <SynastryClient />
       </Suspense>
+      <div className="px-4 pb-10 max-w-2xl mx-auto">
+        <Disclaimer />
+      </div>
     </>
   );
 }

@@ -56,7 +56,7 @@ export async function POST(
   if (userId) {
     const sub = await getSubscriptionDetails(userId);
     isPro = sub.isPremium;
-    plan = sub.plan;
+    plan = sub.plan ?? 'free';
   }
 
   // 5. Send email

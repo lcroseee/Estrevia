@@ -1,11 +1,37 @@
 import { ImageResponse } from '@vercel/og';
 import { eq } from 'drizzle-orm';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { getDb } from '@/shared/lib/db';
 import { cosmicPassports } from '@/shared/lib/schema';
+import { getRateLimiter } from '@/shared/lib/rate-limit';
+import { getRarityTier } from '@/modules/astro-engine/rarity';
 
 // nodejs runtime required: Neon HTTP driver uses Node.js net/tls APIs
 // not available in the Edge runtime.
 export const runtime = 'nodejs';
+
+// ---------------------------------------------------------------------------
+// Font buffer — loaded once per cold start and reused across invocations.
+// AstroSymbols-subset.ttf is a pyftsubset of Noto Sans Symbols 2 (SIL OFL),
+// containing only the astro glyph ranges we render plus basic ASCII.
+// ---------------------------------------------------------------------------
+let astroFontBuffer: ArrayBuffer | null = null;
+
+async function getAstroFont(): Promise<ArrayBuffer> {
+  if (astroFontBuffer) return astroFontBuffer;
+  const fontPath = path.join(process.cwd(), 'public', 'fonts', 'AstroSymbols-subset.ttf');
+  const buf = await fs.readFile(fontPath);
+  astroFontBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  return astroFontBuffer;
+}
+
+// ---------------------------------------------------------------------------
+// Response helpers
+// ---------------------------------------------------------------------------
+const NO_STORE = 'no-store, no-cache, must-revalidate, max-age=0';
+const IMMUTABLE_1Y =
+  'public, max-age=31536000, s-maxage=31536000, immutable, stale-while-revalidate=86400';
 
 // Sign → Unicode glyph mapping
 const SIGN_GLYPH: Record<string, string> = {
@@ -53,13 +79,31 @@ const FORMAT_DIMS: Record<string, { width: number; height: number }> = {
 };
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // -------------------------------------------------------------------------
+  // Rate limiting — 60 req/min per IP (P1 fix: audit 10 High-1)
+  // -------------------------------------------------------------------------
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anon';
+  const { success, limit, remaining, reset } = await getRateLimiter('passport/view').limit(ip);
+  if (!success) {
+    return new Response('Too Many Requests', {
+      status: 429,
+      headers: {
+        'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
+        'X-RateLimit-Limit': String(limit),
+        'X-RateLimit-Remaining': String(remaining),
+        'Cache-Control': NO_STORE,
+      },
+    });
+  }
+
   const { id } = await params;
 
   // Parse format from query string
-  const url = new URL(_request.url);
+  const url = new URL(request.url);
   const format = url.searchParams.get('format') ?? 'og';
   const dims = FORMAT_DIMS[format] ?? FORMAT_DIMS.og;
 
@@ -82,12 +126,32 @@ export async function GET(
     } catch {
       console.error('[og/passport] db select error:', { id, error: String(err) });
     }
-    return new Response('Internal Server Error', { status: 500 });
+    return new Response('Internal Server Error', {
+      status: 500,
+      headers: { 'Cache-Control': NO_STORE },
+    });
   }
 
   if (!passport) {
     console.warn('[og/passport] passport not found', { id });
-    return new Response('Passport not found', { status: 404 });
+    return new Response('Passport not found', {
+      status: 404,
+      headers: { 'Cache-Control': NO_STORE },
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Load astro symbols font buffer (P0 fix: audit 05 B-3)
+  // -------------------------------------------------------------------------
+  let fontBuffer: ArrayBuffer;
+  try {
+    fontBuffer = await getAstroFont();
+  } catch (err) {
+    console.error('[og/passport] font load error:', String(err));
+    return new Response('Internal Server Error', {
+      status: 500,
+      headers: { 'Cache-Control': NO_STORE },
+    });
   }
 
   const sunGlyph  = SIGN_GLYPH[passport.sunSign]  ?? '?';
@@ -97,7 +161,8 @@ export async function GET(
   const elementStyle = ELEMENT_STYLE[passport.element] ?? { color: '#888', symbol: '◇' };
   const planetSymbol = PLANET_SYMBOL[passport.rulingPlanet] ?? '★';
 
-  const rarityDisplay = passport.rarityPercent.toFixed(1);
+  // V08 bonus: use qualitative tier label instead of raw float — consistent with page UI.
+  const rarityDisplay = getRarityTier(passport.rarityPercent);
 
   // Capture for use in nested helper functions (TS narrowing doesn't cross function boundaries)
   const passportElement = passport.element;
@@ -105,6 +170,7 @@ export async function GET(
 
   // -------------------------------------------------------------------------
   // Shared Satori fragments — inline styles only, no Tailwind
+  // All fontFamily values use 'AstroSymbols, serif' to render Unicode glyphs.
   // -------------------------------------------------------------------------
 
   // Starfield background (shared across all formats)
@@ -154,6 +220,7 @@ export async function GET(
             color: 'rgba(255,255,255,0.4)',
             textTransform: 'uppercase',
             display: 'flex',
+            fontFamily: 'AstroSymbols, serif',
           }}
         >
           SIDEREAL ASTROLOGY
@@ -166,6 +233,7 @@ export async function GET(
             letterSpacing: '8px',
             textTransform: 'uppercase',
             display: 'flex',
+            fontFamily: 'AstroSymbols, serif',
           }}
         >
           COSMIC PASSPORT
@@ -195,6 +263,7 @@ export async function GET(
           flexDirection: 'column',
           alignItems: 'center',
           gap: '8px',
+          fontFamily: 'AstroSymbols, serif',
         }}
       >
         <div style={{ fontSize: labelSize, color: 'rgba(255,255,255,0.4)', display: 'flex' }}>
@@ -237,6 +306,7 @@ export async function GET(
           border: `1px solid ${elementStyle.color}40`,
           borderRadius: '32px',
           padding,
+          fontFamily: 'AstroSymbols, serif',
         }}
       >
         <span style={{ fontSize: iconSize, color: elementStyle.color, display: 'flex' }}>
@@ -262,6 +332,7 @@ export async function GET(
           border: '1px solid rgba(255,255,255,0.12)',
           borderRadius: '32px',
           padding,
+          fontFamily: 'AstroSymbols, serif',
         }}
       >
         <span style={{ fontSize: iconSize, color: '#E2C97E', display: 'flex' }}>
@@ -290,13 +361,11 @@ export async function GET(
           border: '1px solid rgba(139,92,246,0.3)',
           borderRadius: '32px',
           padding,
+          fontFamily: 'AstroSymbols, serif',
         }}
       >
-        <span style={{ fontSize, color: 'rgba(255,255,255,0.6)', display: 'flex' }}>
-          1 of{' '}
-        </span>
-        <span style={{ fontSize: valueSize, color: '#A78BFA', fontWeight: 700, display: 'flex' }}>
-          {rarityDisplay}%
+        <span style={{ fontSize, color: '#A78BFA', fontWeight: 700, display: 'flex' }}>
+          {rarityDisplay}
         </span>
       </div>
     );
@@ -315,7 +384,7 @@ export async function GET(
           zIndex: 1,
         }}
       >
-        <div style={{ fontSize, color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', display: 'flex' }}>
+        <div style={{ fontSize, color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', display: 'flex', fontFamily: 'AstroSymbols, serif' }}>
           estrevia.app
         </div>
       </div>
@@ -340,7 +409,7 @@ export async function GET(
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '64px 72px',
-          fontFamily: 'serif',
+          fontFamily: 'AstroSymbols, serif',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -401,7 +470,7 @@ export async function GET(
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '80px 64px',
-          fontFamily: 'serif',
+          fontFamily: 'AstroSymbols, serif',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -471,7 +540,7 @@ export async function GET(
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '48px 64px',
-          fontFamily: 'serif',
+          fontFamily: 'AstroSymbols, serif',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -523,8 +592,18 @@ export async function GET(
   return new ImageResponse(layoutJsx, {
     width: dims.width,
     height: dims.height,
+    // P0 fix: pass astro font buffer so Satori renders Unicode glyphs correctly
+    fonts: [
+      {
+        name: 'AstroSymbols',
+        data: fontBuffer,
+        weight: 400,
+        style: 'normal',
+      },
+    ],
     headers: {
-      'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=3600',
+      // P2 fix: immutable cache headers for successful 200 responses
+      'Cache-Control': IMMUTABLE_1Y,
     },
   });
 }

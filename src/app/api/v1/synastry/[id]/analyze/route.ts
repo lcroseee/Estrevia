@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { requirePremium } from '@/modules/auth/lib/premium';
-import { requireAuth } from '@/modules/auth/lib/helpers';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { synastryResults } from '@/shared/lib/schema';
@@ -80,11 +79,10 @@ export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<NextResponse<ApiResponse<AnalyzeResponse>>> {
-  // 1. Auth + premium
+  // 1. Auth + premium — single call; requirePremium() returns the resolved AuthUser
   let userId: string;
   try {
-    await requirePremium();
-    const user = await requireAuth();
+    const user = await requirePremium();
     userId = user.userId;
   } catch (err) {
     if (err instanceof Response) return err as never;

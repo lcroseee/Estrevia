@@ -3,6 +3,11 @@ import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo/metadata';
 import { SupportForm } from './SupportForm';
 
+// R10: force-static + hourly revalidate. Support page shell is static;
+// the form itself is a client island that POSTs to /api/v1/support at runtime.
+export const dynamic = 'force-static';
+export const revalidate = 3600;
+
 export async function generateMetadata(): Promise<Metadata> {
   return createMetadata({
     title: 'Support',

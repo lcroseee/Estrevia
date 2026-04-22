@@ -6,6 +6,11 @@ import { join } from 'path';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 
+// NOTE: cards.json no longer contains an `image` field.
+// Tarot imagery by Frieda Harris is copyright until 2064 per CLAUDE.md.
+// Original illustrations will be commissioned post-MVP.
+// UI renders a Unicode glyph + suit colour as a placeholder.
+
 interface CardData {
   id: string;
   number: number;
@@ -28,6 +33,22 @@ async function loadCard(cardId: string): Promise<CardData | null> {
   const raw = await readFile(filePath, 'utf-8');
   const data = JSON.parse(raw) as { cards: CardData[] };
   return data.cards.find((c) => c.id === cardId) ?? null;
+}
+
+// ISR: rebuild each tarot card page at most once per day in the background.
+// R10 CWV win — serves from CDN edge cache, TTFB ~500ms → ~50ms.
+export const revalidate = 86400;
+
+/**
+ * Pre-render all 78 tarot card pages at build time.
+ * Without this, Next.js App Router defaults to dynamic SSR on first request —
+ * pages would not be pre-built and Googlebot would hit cold-start renders.
+ */
+export async function generateStaticParams() {
+  const filePath = join(process.cwd(), 'content/tarot/cards.json');
+  const raw = await readFile(filePath, 'utf-8');
+  const data = JSON.parse(raw) as { cards: { id: string }[] };
+  return data.cards.map((c) => ({ cardId: c.id }));
 }
 
 interface Props {

@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
 import { requirePremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
-import { requireAuth } from '@/modules/auth/lib/helpers';
 
 const cardSchema = z.object({
   position: z.string().min(1).max(100),
@@ -52,11 +51,10 @@ Use evocative language appropriate to the Thoth tradition. Do NOT use the word "
  * AI-powered tarot reading interpretation. Pro feature only.
  */
 export async function POST(request: Request) {
-  // Auth + premium check
+  // Auth + premium check — single call; requirePremium() returns the resolved AuthUser
   let userId: string;
   try {
-    await requirePremium();
-    const user = await requireAuth();
+    const user = await requirePremium();
     userId = user.userId;
   } catch (err) {
     if (err instanceof Response) return err;

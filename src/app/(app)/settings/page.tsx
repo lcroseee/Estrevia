@@ -1,7 +1,7 @@
 /**
  * /settings — User settings page
  *
- * Auth required (enforced via proxy.ts middleware).
+ * Auth required (enforced via src/middleware.ts Clerk middleware).
  * Shows current subscription tier and account management options.
  * Server Component — subscription data fetched at request time.
  */
@@ -35,9 +35,10 @@ export default async function SettingsPage() {
   const sub = await getSubscriptionDetails(user.userId);
   const t = await getTranslations('settings');
 
-  // Determine plan display name
+  // Determine plan display name — use tier (not isPremium alone) so past_due
+  // users see "Pro" while the needsPaymentUpdate banner is also shown.
   let planLabel: string;
-  if (!sub.isPremium) {
+  if (sub.tier !== 'premium') {
     planLabel = t('planFree');
   } else if (sub.plan === 'pro_annual') {
     planLabel = t('planProAnnual');
@@ -56,8 +57,9 @@ export default async function SettingsPage() {
       })
     : null;
 
-  // Past due warning
-  const isPastDue = sub.status === 'past_due';
+  // Past due: user still has premium access but payment failed — show banner.
+  const isPastDue = sub.needsPaymentUpdate;
+  const gracePeriodEndsAt = sub.gracePeriodEndsAt;
 
   return (
     <div className="min-h-screen bg-[#0A0A0F]">
@@ -124,14 +126,33 @@ export default async function SettingsPage() {
                 </div>
 
                 {isPastDue && (
-                  <p
-                    className="text-xs font-medium mb-2 flex items-center gap-1.5"
-                    style={{ color: '#E74C3C' }}
+                  <div
+                    className="mb-3 rounded-xl border px-4 py-3"
+                    style={{
+                      borderColor: 'rgba(231,76,60,0.3)',
+                      background: 'rgba(231,76,60,0.07)',
+                    }}
                     role="alert"
                   >
-                    <span aria-hidden="true">!</span>
-                    {t('pastDueWarning')}
-                  </p>
+                    <p className="text-xs font-medium flex items-center gap-1.5 mb-1" style={{ color: '#E74C3C' }}>
+                      <span aria-hidden="true">!</span>
+                      {t('pastDueWarning')}
+                    </p>
+                    {gracePeriodEndsAt && (
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        {t('pastDueGrace', {
+                          date: gracePeriodEndsAt.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          }),
+                        })}
+                      </p>
+                    )}
+                    <SettingsPortalButton
+                      label={t('updatePaymentMethod')}
+                      variant="danger"
+                    />
+                  </div>
                 )}
 
                 <p className="text-sm text-white/40">

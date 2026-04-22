@@ -200,20 +200,32 @@ export function DateInput({
 
   // ── Calendar popover ───────────────────────────────────────────────────
 
-  // Close calendar on outside click
+  // Close calendar on outside click or Escape key
   useEffect(() => {
     if (!calendarOpen) return;
-    const handler = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) => {
       if (
         calendarRef.current &&
         !calendarRef.current.contains(e.target as Node) &&
         !toggleRef.current?.contains(e.target as Node)
       ) {
         setCalendarOpen(false);
+        toggleRef.current?.focus();
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setCalendarOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKeyDown, true);
+    };
   }, [calendarOpen]);
 
   const handleCalendarSelect = useCallback(
@@ -378,6 +390,35 @@ interface CalendarPopoverProps {
 const CalendarPopover = forwardRef<HTMLDivElement, CalendarPopoverProps>(
   function CalendarPopover({ selectedYear, selectedMonth, selectedDay, max, onSelect, style }, ref) {
     const today = new Date();
+
+    // Move focus into popover when it opens, trap Tab within it
+    useEffect(() => {
+      const el = (ref as React.RefObject<HTMLDivElement>)?.current;
+      if (!el) return;
+      const focusable = el.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      focusable[0]?.focus();
+
+      const handleTab = (e: KeyboardEvent) => {
+        if (e.key !== 'Tab' || focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      };
+      el.addEventListener('keydown', handleTab);
+      return () => el.removeEventListener('keydown', handleTab);
+    }, [ref]);
     const [viewYear, setViewYear] = useState(selectedYear ?? today.getFullYear());
     const [viewMonth, setViewMonth] = useState(selectedMonth ?? today.getMonth() + 1);
 

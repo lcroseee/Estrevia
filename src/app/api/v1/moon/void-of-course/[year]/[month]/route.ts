@@ -3,15 +3,26 @@
  *
  * Returns all Void-of-Course Moon periods for a given month.
  * Each period: start, end, lastAspect, fromSign, toSign.
- * Rate limited. Cached for 24 hours.
+ *
+ * Performance strategy to prevent Vercel 10s cold-start timeout:
+ *   - Results are cached in Upstash Redis under key voc:YYYY-MM (25h TTL).
+ *   - A daily Vercel Cron at /api/cron/prewarm-voc pre-warms current month
+ *     and the next 3 days of the following month.
+ *   - On cache miss for near-present months (±7 days), compute synchronously.
+ *   - On cache miss for distant future months, return 503 "computing".
+ *
+ * Rate limited. Cached for 24 hours via Cache-Control.
  */
 
 import { NextResponse } from 'next/server';
-import { getMoonSign } from '@/modules/astro-engine/moon-phase';
-import { calculateVoidOfCourse } from '@/modules/astro-engine/void-of-course';
-import { dateToJulianDay } from '@/modules/astro-engine/julian-day';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
-import type { ApiResponse, VocMonthResponse, VocPeriod } from '@/shared/types';
+import type { ApiResponse, VocMonthResponse } from '@/shared/types';
+import {
+  readVocCache,
+  writeVocCache,
+  computeVocMonth,
+  isNearPresentMonth,
+} from '@/modules/astro-engine/voc-cache';
 
 export const runtime = 'nodejs';
 
@@ -58,68 +69,59 @@ export async function GET(
   }
 
   // ---------------------------------------------------------------------------
-  // 3. Find all VOC periods in the month
+  // 3. Cache lookup → compute → cache write
   // ---------------------------------------------------------------------------
   try {
-    const monthStart = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
-    const monthEnd = new Date(Date.UTC(year, month, 0, 23, 59, 59)); // last day of month
+    // Check Redis cache first
+    const cached = await readVocCache(year, month);
 
-    const monthStartJd = dateToJulianDay(monthStart);
-    const monthEndJd = dateToJulianDay(monthEnd);
-
-    const periods: VocPeriod[] = [];
-    const seen = new Set<string>(); // dedup by vocStart ISO string
-
-    // Step through the month in 12-hour increments.
-    // The Moon changes sign roughly every 2.3 days, so 12-hour steps
-    // ensure we sample every sign transit at least once.
-    const STEP = 0.5; // 12 hours in JD
-    let jd = monthStartJd;
-
-    while (jd <= monthEndJd) {
-      const vocData = calculateVoidOfCourse(jd);
-
-      if (vocData.vocStart && vocData.vocEnd) {
-        const key = vocData.vocStart.toISOString();
-
-        // Only include VOC periods that overlap with the target month
-        const vocStartJd = dateToJulianDay(vocData.vocStart);
-        const vocEndJd = dateToJulianDay(vocData.vocEnd);
-        const overlapsMonth = vocEndJd >= monthStartJd && vocStartJd <= monthEndJd;
-
-        if (overlapsMonth && !seen.has(key)) {
-          seen.add(key);
-
-          // Determine fromSign (current sign at VOC start) and toSign (next sign after VOC end)
-          const fromSignData = getMoonSign(dateToJulianDay(vocData.vocStart));
-          const toSignJd = dateToJulianDay(vocData.vocEnd);
-          const toSignData = getMoonSign(toSignJd);
-
-          periods.push({
-            start: vocData.vocStart.toISOString(),
-            end: vocData.vocEnd.toISOString(),
-            lastAspect: vocData.lastAspect,
-            fromSign: fromSignData.siderealSign,
-            toSign: toSignData.siderealSign,
-          });
-        }
-      }
-
-      jd += STEP;
+    if (cached !== null) {
+      const response: VocMonthResponse = { year, month, periods: cached };
+      return NextResponse.json(
+        { success: true, data: response, error: null },
+        {
+          status: 200,
+          headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' },
+        },
+      );
     }
 
-    // Sort by start time
-    periods.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    // Cache miss: decide whether to compute synchronously or return 503
+    if (!isNearPresentMonth(year, month)) {
+      // Distant future month — the cron hasn't pre-warmed it yet.
+      // Return 503 so the client can retry after the cron runs.
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: 'CACHE_MISS_COMPUTING',
+          // Non-standard message field for debugging; not in the ApiResponse type
+        } as ApiResponse<VocMonthResponse>,
+        {
+          status: 503,
+          headers: {
+            'Retry-After': '3600',
+            'Cache-Control': 'no-store',
+          },
+        },
+      );
+    }
+
+    // Near-present month: compute synchronously and cache the result
+    // ~132 000 sweph calls — acceptable on warm functions, marginal on cold start
+    const periods = computeVocMonth(year, month);
+
+    // Fire-and-forget cache write — do not block the response
+    writeVocCache(year, month, periods).catch((err) => {
+      console.error('[moon/voc] Redis write failed (non-fatal):', err);
+    });
 
     const response: VocMonthResponse = { year, month, periods };
-
     return NextResponse.json(
       { success: true, data: response, error: null },
       {
         status: 200,
-        headers: {
-          'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-        },
+        headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' },
       },
     );
   } catch (err) {

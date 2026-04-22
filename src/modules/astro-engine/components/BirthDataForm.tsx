@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useCallback, useId } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { useTranslations } from 'next-intl';
 import type { ChartResult, CitySearchResult, HouseSystem } from '@/shared/types';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
 import { TimeInput } from './TimeInput';
@@ -34,6 +37,8 @@ function todayStr(): string {
 
 export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
   const formId = useId();
+  const t = useTranslations('birthDataForm');
+  const { isSignedIn } = useAuth();
 
   const [values, setValues] = useState<FormValues>({
     date: '',
@@ -52,17 +57,17 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
   const validate = useCallback((): FormErrors => {
     const errs: FormErrors = {};
     if (!values.date) {
-      errs.date = 'Birth date is required';
+      errs.date = t('dateRequired');
     } else {
       const d = new Date(values.date);
-      if (isNaN(d.getTime())) errs.date = 'Invalid date';
-      else if (d > new Date()) errs.date = 'Date cannot be in the future';
+      if (isNaN(d.getTime())) errs.date = t('dateInvalid');
+      else if (d > new Date()) errs.date = t('dateFuture');
     }
     if (values.latitude === null || values.longitude === null) {
-      errs.city = 'Please select a city from the list';
+      errs.city = t('cityRequired');
     }
     return errs;
-  }, [values]);
+  }, [values, t]);
 
   const handleCitySelect = useCallback((city: CitySearchResult) => {
     setValues((v) => ({
@@ -113,9 +118,19 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
         }
 
         onChartCalculated(data.data.chart, data.data.chartId);
+
+        // V08-1: fire chart_calculated — first event in the viral funnel.
+        // NO PII: birth date / time / location are NOT included in the payload.
+        trackEvent(AnalyticsEvent.CHART_CALCULATED, {
+          source: 'form',
+          has_birth_time: values.knowsBirthTime,
+          sun: data.data.chart.planets?.find((p) => p.planet === 'Sun')?.sign ?? null,
+          moon: data.data.chart.planets?.find((p) => p.planet === 'Moon')?.sign ?? null,
+          is_authenticated: isSignedIn ?? false,
+        });
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : 'Calculation failed. Please try again.';
+          err instanceof Error ? err.message : t('calcFailed');
         setErrors({ general: message });
       } finally {
         setIsLoading(false);
@@ -132,13 +147,13 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
     <form
       onSubmit={handleSubmit}
       noValidate
-      aria-label="Birth data form for natal chart calculation"
+      aria-label={t('formAria')}
       className="w-full max-w-md space-y-5"
     >
       {/* Date */}
       <div className="space-y-1.5">
         <label htmlFor={dateId} className="block text-sm font-medium text-white/70">
-          Date of birth <span className="text-red-400" aria-hidden="true">*</span>
+          {t('dateLabel')} <span className="text-red-400" aria-hidden="true">*</span>
           <span className="sr-only">(required)</span>
         </label>
         <DateInput
@@ -177,7 +192,7 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
               'transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-white/20',
               values.knowsBirthTime ? 'bg-[#FFD700]/70' : 'bg-white/15',
             ].join(' ')}
-            aria-label="I know my birth time"
+            aria-label={t('knowsBirthTimeLabel')}
           >
             <span
               className={[
@@ -188,22 +203,22 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
             />
           </button>
           <label htmlFor={timeToggleId} className="text-sm text-white/70 cursor-pointer">
-            I know my birth time
+            {t('knowsBirthTimeLabel')}
           </label>
         </div>
 
         {values.knowsBirthTime && (
           <div>
             <label htmlFor={timeId} className="block text-sm font-medium text-white/70 mb-1.5">
-              Time of birth
+              {t('timeLabel')}
             </label>
             <TimeInput
               id={timeId}
               value={values.time}
               onChange={(v) => setValues((prev) => ({ ...prev, time: v }))}
             />
-            <p className="mt-1 text-xs text-white/30">
-              Houses and Ascendant are only calculated when birth time is known.
+            <p className="mt-1 text-xs text-white/60">
+              {t('timeHelper')}
             </p>
           </div>
         )}
@@ -212,7 +227,7 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
       {/* City autocomplete */}
       <div className="space-y-1.5">
         <label className="block text-sm font-medium text-white/70">
-          Birth place <span className="text-red-400" aria-hidden="true">*</span>
+          {t('cityLabel')} <span className="text-red-400" aria-hidden="true">*</span>
           <span className="sr-only">(required)</span>
         </label>
         <CityAutocomplete
@@ -230,7 +245,7 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
               }));
             }
           }}
-          placeholder="Start typing city name..."
+          placeholder={t('cityPlaceholder')}
           disabled={isLoading}
           error={errors.city}
         />
@@ -275,15 +290,15 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            Calculating chart...
+            {t('submitting')}
           </span>
         ) : (
-          'Calculate Chart'
+          t('submit')
         )}
       </button>
 
       <p className="text-center text-xs text-white/25">
-        Using Lahiri ayanamsa · Sidereal zodiac · Placidus houses
+        {t('footer')}
       </p>
     </form>
   );

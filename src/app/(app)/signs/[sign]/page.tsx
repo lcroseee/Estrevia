@@ -11,6 +11,7 @@ import {
   SIGNS,
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 import descriptionsData from '../../../../../content/signs/descriptions.json';
 
 // ---------------------------------------------------------------------------
@@ -32,6 +33,10 @@ interface SignDescription {
 // ---------------------------------------------------------------------------
 // Static params — generate all 12 sign routes at build time
 // ---------------------------------------------------------------------------
+
+// ISR: rebuild each sign page at most once per day in the background.
+// R10 CWV win — serves from CDN edge cache, TTFB ~500ms → ~50ms.
+export const revalidate = 86400;
 
 export function generateStaticParams(): { sign: string }[] {
   return getAllSignSlugs().map((sign) => ({ sign }));
@@ -388,6 +393,8 @@ export default async function SignPage({
             </li>
           </ul>
         </nav>
+
+        <Disclaimer />
 
       </div>
     </>

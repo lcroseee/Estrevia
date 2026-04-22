@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, softwareAppSchema, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { ChartDisplay } from '@/modules/astro-engine/components/ChartDisplay';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
   return createMetadata({
@@ -59,6 +60,9 @@ export default async function ChartPage() {
       <Suspense fallback={await ChartSkeleton()}>
         <ChartDisplay />
       </Suspense>
+      <div className="px-4 pb-10 max-w-2xl mx-auto">
+        <Disclaimer />
+      </div>
     </>
   );
 }

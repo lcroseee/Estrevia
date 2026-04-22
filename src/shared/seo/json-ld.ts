@@ -25,6 +25,7 @@ import type {
   FAQPage,
   HowTo,
   BreadcrumbList,
+  Product,
 } from 'schema-dts';
 import { SITE_NAME, SITE_URL } from './constants';
 
@@ -246,6 +247,83 @@ export function breadcrumbSchema(items: BreadcrumbItem[]): WithContext<Breadcrum
       position: index + 1,
       name: item.name,
       item: item.url,
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Product
+// ---------------------------------------------------------------------------
+
+export interface ProductOffer {
+  /** Price as a string, e.g. "0" for free, "4.99" for monthly paid, "34.99" for annual. */
+  price: string;
+  priceCurrency: string;
+  /** "InStock" | "PreOrder" | "SoldOut" etc. */
+  availability?: string;
+  /** Canonical URL of the pricing page. */
+  url: string;
+  /** ISO 8601 price validity start date. */
+  priceValidUntil?: string;
+}
+
+export interface ProductSchemaOptions {
+  name: string;
+  description: string;
+  /** Brand / publisher name. Defaults to SITE_NAME. */
+  brand?: string;
+  offers: ProductOffer[];
+  /** Product image URL — 1200×630 recommended. */
+  imageUrl?: string;
+}
+
+/**
+ * Returns a Product schema with Offer(s).
+ * Use on the pricing page to enable Rich Results eligibility and AEO for
+ * "how much does Estrevia cost" type queries.
+ *
+ * @example
+ * productSchema({
+ *   name: 'Estrevia Premium',
+ *   description: 'Unlimited saved charts, detailed aspects, future transits.',
+ *   offers: [
+ *     { price: '0',    priceCurrency: 'USD', url: `${SITE_URL}/pricing` },
+ *     { price: '4.99',  priceCurrency: 'USD', url: `${SITE_URL}/pricing` },
+ *     { price: '34.99', priceCurrency: 'USD', url: `${SITE_URL}/pricing` },
+ *   ],
+ * })
+ */
+export function productSchema(options: ProductSchemaOptions): WithContext<Product> {
+  const { name, description, brand = SITE_NAME, offers, imageUrl } = options;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name,
+    description,
+    brand: {
+      '@type': 'Brand',
+      name: brand,
+    },
+    ...(imageUrl
+      ? {
+          image: {
+            '@type': 'ImageObject',
+            url: imageUrl,
+          },
+        }
+      : {}),
+    // schema-dts types `availability` as a narrow ItemAvailability enum rather than string.
+    // We cast the offers array to satisfy the type while keeping our interface simple.
+    // The value is a valid schema.org URL — this is correct at runtime.
+    offers: offers.map((offer) => ({
+      '@type': 'Offer' as const,
+      price: offer.price,
+      priceCurrency: offer.priceCurrency,
+      // ItemAvailability values are schema.org URLs — cast required due to schema-dts narrow types
+      availability: (offer.availability ?? 'https://schema.org/InStock') as 'https://schema.org/InStock',
+      url: offer.url,
+      ...(offer.priceValidUntil ? { priceValidUntil: offer.priceValidUntil } : {}),
     })),
   };
 }

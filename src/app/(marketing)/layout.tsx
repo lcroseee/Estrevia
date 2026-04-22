@@ -9,6 +9,9 @@ export default async function MarketingLayout({ children }: { children: ReactNod
   const tCommon = await getTranslations('common');
   const tMarketing = await getTranslations('marketing');
 
+  const focusRing =
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F] rounded-sm';
+
   const navLinks = [
     { href: '/chart', label: tNav('chart') },
     { href: '/moon', label: tNav('moon') },
@@ -30,7 +33,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
             {/* Logo */}
             <Link
               href="/"
-              className="text-sm font-semibold tracking-[0.18em] uppercase text-white/85 hover:text-white transition-all duration-200 hover:tracking-[0.22em]"
+              className={`text-sm font-semibold tracking-[0.18em] uppercase text-white/85 hover:text-white transition-all duration-200 hover:tracking-[0.22em] ${focusRing}`}
               style={{ fontFamily: 'var(--font-geist-sans)' }}
               aria-label={tMarketing('logoAriaHome')}
             >
@@ -46,7 +49,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
                 <Link
                   key={href}
                   href={href}
-                  className="text-sm text-white/70 hover:text-white transition-colors tracking-wide"
+                  className={`text-sm text-white/70 hover:text-white transition-colors tracking-wide ${focusRing}`}
                 >
                   {label}
                 </Link>
@@ -54,7 +57,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
               <LanguageSwitcher />
               <Link
                 href="/chart"
-                className="text-sm px-4 py-1.5 rounded-full border border-[#FFD700]/40 text-[#FFD700] hover:border-[#FFD700]/80 transition-colors tracking-wide"
+                className={`text-sm px-4 py-1.5 rounded-full border border-[#FFD700]/40 text-[#FFD700] hover:border-[#FFD700]/80 transition-colors tracking-wide ${focusRing}`}
               >
                 {tCommon('openApp')}
               </Link>
@@ -65,7 +68,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
               <LanguageSwitcher />
               <Link
                 href="/chart"
-                className="text-xs px-3 py-1.5 rounded-full border border-[#FFD700]/40 text-[#FFD700] hover:border-[#FFD700]/80 transition-colors"
+                className={`text-xs px-3 py-1.5 rounded-full border border-[#FFD700]/40 text-[#FFD700] hover:border-[#FFD700]/80 transition-colors ${focusRing}`}
               >
                 {tCommon('openApp')}
               </Link>
@@ -74,7 +77,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
         </header>
 
         {/* ── Content ─────────────────────────────────────────────────────── */}
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1">{children}</main>
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
         <footer className="border-t border-white/6 mt-24 relative">
@@ -101,32 +104,42 @@ export default async function MarketingLayout({ children }: { children: ReactNod
                 </span>
               </div>
               <span className="text-xs text-white/55">{tMarketing('footerTagline')}</span>
+              <span className="text-xs text-white/35">{tMarketing('footerLicenseNotice')}</span>
             </div>
 
             <nav
               className="flex flex-wrap items-center justify-center gap-4 sm:gap-6"
               aria-label={tMarketing('navAriaFooter')}
             >
-              <Link href="/essays" className="text-xs text-white/65 hover:text-white/90 transition-colors">
+              <Link href="/essays" className={`text-xs text-white/65 hover:text-white/90 transition-colors ${focusRing}`}>
                 {tNav('essays')}
               </Link>
-              <Link href="/pricing" className="text-xs text-white/65 hover:text-white/90 transition-colors">
+              <Link href="/pricing" className={`text-xs text-white/65 hover:text-white/90 transition-colors ${focusRing}`}>
                 {tNav('pricing')}
               </Link>
-              <Link href="/terms" className="text-xs text-white/65 hover:text-white/90 transition-colors">
+              <Link href="/terms" className={`text-xs text-white/65 hover:text-white/90 transition-colors ${focusRing}`}>
                 {tMarketing('footerTerms')}
               </Link>
-              <Link href="/privacy" className="text-xs text-white/65 hover:text-white/90 transition-colors">
+              <Link href="/privacy" className={`text-xs text-white/65 hover:text-white/90 transition-colors ${focusRing}`}>
                 {tMarketing('footerPrivacy')}
               </Link>
               <a
                 href="https://twitter.com/estrevia_app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-white/65 hover:text-white/90 transition-colors"
+                className={`text-xs text-white/65 hover:text-white/90 transition-colors ${focusRing}`}
                 aria-label={tMarketing('twitterAria')}
               >
                 {tMarketing('footerTwitter')}
+              </a>
+              <a
+                href="https://github.com/lcroseee/Estrevia"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`text-xs text-white/65 hover:text-white/90 transition-colors ${focusRing}`}
+                aria-label={tMarketing('footerSourceAria')}
+              >
+                {tMarketing('footerSourceLabel')}
               </a>
             </nav>
           </div>

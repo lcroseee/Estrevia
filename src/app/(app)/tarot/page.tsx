@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import Link from 'next/link';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { TarotCatalogClient } from '@/modules/esoteric/components/TarotCatalogClient';
+
+// ISR: rebuild the tarot catalog daily. R10 CWV win.
+export const revalidate = 86400;
 
 export async function generateMetadata(): Promise<Metadata> {
   return createMetadata({
@@ -68,12 +72,12 @@ export default async function TarotPage() {
                 78 cards of the Thoth deck with Kabbalistic correspondences
               </p>
             </div>
-            <a
+            <Link
               href="/tarot/spread"
-              className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium bg-gradient-to-br from-[#FFD700]/90 to-[#FF8C00]/80 text-black hover:shadow-lg hover:shadow-[#FFD700]/20 transition-all"
+              className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium bg-gradient-to-br from-[#FFD700]/90 to-[#FF8C00]/80 text-black hover:shadow-lg hover:shadow-[#FFD700]/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
             >
               Open Spreads
-            </a>
+            </Link>
           </div>
 
           <TarotCatalogClient cards={cards} />

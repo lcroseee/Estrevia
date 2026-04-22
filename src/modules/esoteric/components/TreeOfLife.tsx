@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 
@@ -71,6 +71,7 @@ export function TreeOfLifeClient({
   chartData,
 }: TreeOfLifeClientProps) {
   const t = useTranslations('treeOfLife');
+  const prefersReduced = useReducedMotion();
   const { isPro } = useSubscription();
 
   const [selectedSephira, setSelectedSephira] = useState<SephirahData | null>(null);
@@ -339,10 +340,10 @@ export function TreeOfLifeClient({
         {(selectedSephira || selectedPath) && (
           <motion.div
             key={selectedSephira ? `s-${selectedSephira.number}` : `p-${selectedPath?.number}`}
-            initial={{ opacity: 0, x: 20 }}
+            initial={prefersReduced ? false : { opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.25 }}
+            exit={prefersReduced ? {} : { opacity: 0, x: 20 }}
+            transition={prefersReduced ? { duration: 0 } : { duration: 0.25 }}
             className="w-full lg:w-80 rounded-xl border border-white/8 p-5 space-y-4 max-h-[70vh] overflow-y-auto lg:sticky lg:top-20"
             style={{ background: 'rgba(255,255,255,0.025)' }}
           >

@@ -1,7 +1,24 @@
-'use client';
+/**
+ * PassportCard — the primary viral sharing artifact. Physical ID card
+ * aspect ratio (3:2), no PII, only sign results + element + rarity.
+ *
+ * This is a SHARED component: it carries no `'use client'` directive
+ * and uses no client-only APIs, so it renders as a Server Component
+ * when imported from a server tree (`/s/[id]/page.tsx`) and as a
+ * client component when imported from a client tree (`ChartDisplay`,
+ * which is `'use client'`).
+ *
+ * The interactive QR code piece lives in `PassportCardQR` — a tiny
+ * client leaf that lazy-loads the `qrcode` library only when the
+ * card is actually rendered. Splitting it out of this component
+ * eliminates the hydration cost of the static visual on the viral
+ * share page (the single most important journey for growth).
+ */
 
-import { useState, useEffect } from 'react';
+import { SITE_URL } from '@/shared/seo/constants';
 import type { PassportResponse } from '@/shared/types/api';
+import { getRarityTier } from '@/modules/astro-engine/rarity';
+import { PassportCardQR } from './PassportCardQR';
 
 // Planetary colors matching the design system
 const PLANET_COLORS: Record<string, string> = {
@@ -125,19 +142,6 @@ interface PassportCardProps {
  * No PII — only sign results, element, rarity.
  */
 export function PassportCard({ passport, passportId }: PassportCardProps) {
-  const [qrSvg, setQrSvg] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!passportId) return;
-    import('qrcode').then((QR) => {
-      QR.toString(`https://estrevia.app/s/${passportId}`, {
-        type: 'svg',
-        margin: 1,
-        width: 56,
-        color: { dark: '#FFFFFF', light: '#00000000' },
-      }).then(setQrSvg).catch(() => {});
-    });
-  }, [passportId]);
   const {
     sunSign,
     moonSign,
@@ -165,7 +169,7 @@ export function PassportCard({ passport, passportId }: PassportCardProps) {
         border: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 0 0 1px rgba(255,215,0,0.06), 0 24px 48px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
-      aria-label={`Cosmic Passport: Sun in ${sunSign}, Moon in ${moonSign}, ${ascendantSign ? `Ascendant in ${ascendantSign}` : 'Ascendant unknown'}, Element ${element}, Ruling planet ${rulingPlanet}, Rarity 1 of ${rarityPercent}%`}
+      aria-label={`Cosmic Passport: Sun in ${sunSign}, Moon in ${moonSign}, ${ascendantSign ? `Ascendant in ${ascendantSign}` : 'Ascendant unknown'}, Element ${element}, Ruling planet ${rulingPlanet}, Rarity ${getRarityTier(rarityPercent)}`}
     >
       {/* Subtle noise texture overlay */}
       <div
@@ -206,10 +210,10 @@ export function PassportCard({ passport, passportId }: PassportCardProps) {
             </p>
           </div>
 
-          {/* Rarity badge */}
+          {/* Rarity badge — qualitative tier, not a frequency claim */}
           <div
             className="flex flex-col items-end gap-0.5"
-            aria-label={`Rarity: 1 of ${rarityPercent}%`}
+            aria-label={`Rarity tier: ${getRarityTier(rarityPercent)}`}
           >
             <span
               className="text-[9px] tracking-[0.15em] uppercase text-white/30"
@@ -218,13 +222,18 @@ export function PassportCard({ passport, passportId }: PassportCardProps) {
               Rarity
             </span>
             <span
-              className="text-base font-bold leading-none"
+              className="text-xs font-bold leading-none tracking-wide"
               style={{
-                color: rarityPercent <= 2 ? '#FFD700' : rarityPercent <= 5 ? '#C0C0C0' : 'rgba(255,255,255,0.7)',
+                color:
+                  rarityPercent < 5
+                    ? '#FFD700'
+                    : rarityPercent < 6
+                    ? '#C0C0C0'
+                    : 'rgba(255,255,255,0.7)',
                 fontFamily: 'var(--font-geist-mono, monospace)',
               }}
             >
-              {rarityPercent}%
+              {getRarityTier(rarityPercent)}
             </span>
           </div>
         </div>
@@ -322,16 +331,9 @@ export function PassportCard({ passport, passportId }: PassportCardProps) {
         aria-hidden="true"
       />
 
-      {/* QR code — bottom-right corner.
-          SVG is generated locally by the qrcode library, not from user input. */}
-      {qrSvg && (
-        <div
-          className="absolute bottom-3 right-3 opacity-40"
-          style={{ width: 28, height: 28 }}
-          aria-label="QR code link to this passport"
-          dangerouslySetInnerHTML={{ __html: qrSvg }}
-        />
-      )}
+      {/* QR code — bottom-right corner. Rendered by a tiny client leaf
+          that lazy-loads the `qrcode` library only when needed. */}
+      {passportId && <PassportCardQR passportId={passportId} siteUrl={SITE_URL} />}
     </article>
   );
 }

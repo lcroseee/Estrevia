@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { MoonPhaseResponse, ApiResponse } from '@/shared/types';
 import { MoonPhaseSVG } from './MoonPhaseSVG';
 import { useSubscription } from '@/shared/hooks/useSubscription';
@@ -305,6 +305,32 @@ interface DayDetailPanelProps {
 }
 
 function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!day) return;
+    // Focus the close button when panel opens
+    closeButtonRef.current?.focus();
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'Tab' && panelRef.current) {
+        const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        } else {
+          if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [day, onClose]);
+
   if (!day) return null;
 
   const dateStr = new Date(year, month - 1, day.day).toLocaleDateString('en-US', {
@@ -325,6 +351,7 @@ function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProps) {
 
       {/* Slide-up panel */}
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={`Moon details for ${dateStr}`}
@@ -346,13 +373,14 @@ function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProps) {
                 {day.phaseName}
               </h3>
               <p
-                className="text-xs text-white/40 mt-0.5"
+                className="text-xs text-white/60 mt-0.5"
                 style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
               >
                 {dateStr}
               </p>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={onClose}
               className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               aria-label="Close"
@@ -652,7 +680,7 @@ export function MoonCalendar() {
 
       {/* Paywall hint for free users */}
       {!isPro && !subLoading && (
-        <p className="text-[10px] text-center text-white/30 mb-4 -mt-2">
+        <p className="text-[10px] text-center text-white/60 mb-4 -mt-2">
           {/* Inline because MoonCalendar is a client component without next-intl wired in */}
           Free plan: current month only.{' '}
           <a href="/pricing" className="text-[#FFD700]/60 hover:text-[#FFD700]/80 underline">

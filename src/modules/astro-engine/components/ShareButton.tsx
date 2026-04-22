@@ -51,7 +51,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
     } catch {
       // User dismissed share sheet — not an error
     }
-  }, [shareUrl, shareText]);
+  }, [shareUrl, shareText, passportId]);
 
   // Copy link to clipboard
   const handleCopyLink = useCallback(async () => {
@@ -72,7 +72,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
       trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'copy_link', passport_id: passportId });
       setTimeout(() => setShareState('idle'), 2000);
     }
-  }, [shareUrl]);
+  }, [shareUrl, passportId]);
 
   // Download PNG — links to OG image endpoint with selected format
   const handleDownloadPng = useCallback(async () => {
@@ -116,7 +116,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
         <button
           type="button"
           onClick={handleNativeShare}
-          className="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-[0.98]"
+          className="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
           style={{
             background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
             color: '#0A0A0F',
@@ -131,7 +131,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
         <button
           type="button"
           onClick={handleCopyLink}
-          className="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-[0.98]"
+          className="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
           style={{
             background: shareState === 'copied'
               ? 'linear-gradient(135deg, #2ECC71 0%, #27AE60 100%)'
@@ -156,7 +156,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
           <button
             type="button"
             onClick={handleCopyLink}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 active:scale-[0.98]"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
             style={{
               background: shareState === 'copied' ? 'rgba(46,204,113,0.12)' : 'rgba(255,255,255,0.06)',
               border: shareState === 'copied' ? '1px solid rgba(46,204,113,0.3)' : '1px solid rgba(255,255,255,0.08)',
@@ -175,7 +175,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
           href={twitterUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
           style={{
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -194,7 +194,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
           href={telegramUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
           style={{
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -213,7 +213,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
           href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
           style={{
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -247,7 +247,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
             type="button"
             onClick={handleDownloadPng}
             disabled={shareState === 'downloading'}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-r-xl text-xs font-medium transition-all duration-150 disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-r-xl text-xs font-medium transition-all duration-150 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
             style={{
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.08)',

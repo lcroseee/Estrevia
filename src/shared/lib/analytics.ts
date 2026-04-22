@@ -8,6 +8,17 @@
  * is imported in both RSC and Client Component contexts.
  */
 
+// @vercel/functions is only available in the Vercel/Node runtime.
+// We guard the import so the module remains importable in test environments
+// and Edge runtimes where waitUntil is either provided natively or not needed.
+let _waitUntil: ((promise: Promise<unknown>) => void) | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  _waitUntil = (require('@vercel/functions') as { waitUntil: (p: Promise<unknown>) => void }).waitUntil;
+} catch {
+  // Not available in this runtime — fall back to fire-and-forget
+}
+
 // ---------------------------------------------------------------------------
 // Client-side helpers
 // ---------------------------------------------------------------------------
@@ -93,6 +104,9 @@ function getServerClient(): PostHogNodeClient | null {
 /**
  * Track an event server-side. Use in Route Handlers and Server Actions.
  * `distinctId` is the Clerk user ID or a temporary anonymous ID.
+ *
+ * Uses waitUntil() from @vercel/functions so the Vercel Function stays alive
+ * until posthog-node flushes, preventing event loss on cold starts.
  */
 export function trackServerEvent(
   distinctId: string,
@@ -103,6 +117,13 @@ export function trackServerEvent(
   if (!client) return;
 
   client.capture({ distinctId, event: name, properties });
+
+  // Keep the serverless function alive until posthog flushes the event.
+  // Without this, Vercel may terminate the function before the batch is sent.
+  const flushPromise = Promise.resolve().then(() => client.shutdown());
+  if (_waitUntil) {
+    _waitUntil(flushPromise);
+  }
 }
 
 // ---------------------------------------------------------------------------

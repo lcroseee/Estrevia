@@ -7,6 +7,7 @@
  * Protected by CRON_SECRET (Vercel sends Bearer token in Authorization header).
  */
 
+import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import webpush from 'web-push';
@@ -15,17 +16,16 @@ import {
   pushSubscriptions,
   notificationPreferences,
 } from '@/shared/lib/schema';
+import { assertCronAuth } from '@/shared/lib/cron-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   // ---------------------------------------------------------------------------
-  // 1. Verify cron secret
+  // 1. Verify cron secret (CRON_SECRET must be set; missing env var → 500)
   // ---------------------------------------------------------------------------
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authError = assertCronAuth(request);
+  if (authError) return authError;
 
   // ---------------------------------------------------------------------------
   // 2. Configure web-push VAPID
@@ -88,6 +88,7 @@ export async function GET(request: Request) {
     void _subscribers; // suppress unused warning until logic is implemented
   } catch (err) {
     console.error('[cron/notifications] error:', err);
+    Sentry.captureException(err, { tags: { cron: true, route: '/api/cron/notifications' } });
     return NextResponse.json(
       { success: false, error: 'INTERNAL_ERROR', sent },
       { status: 500 },

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { randomBytes } from 'crypto';
+import { createCipheriv, randomBytes } from 'crypto';
 import { encrypt, decrypt, encryptBirthData, decryptBirthData, BirthData } from '../pii';
 
 beforeAll(() => {
@@ -40,13 +40,62 @@ describe('encrypt / decrypt round-trip', () => {
     expect(first).not.toBe(second);
   });
 
-  it('output has three colon-separated parts (iv:authTag:ciphertext)', () => {
+  it('output has four colon-separated parts (version:iv:authTag:ciphertext)', () => {
     const parts = encrypt('test').split(':');
-    expect(parts).toHaveLength(3);
-    // Each part must be non-empty hex
-    for (const part of parts) {
+    expect(parts).toHaveLength(4);
+    // First part is the version marker
+    expect(parts[0]).toBe('v1');
+    // Remaining three must be non-empty hex
+    for (const part of parts.slice(1)) {
       expect(part).toMatch(/^[0-9a-f]+$/);
     }
+  });
+
+  it('emits a version prefix ("v1:") on every new ciphertext', () => {
+    const ciphertext = encrypt('hello');
+    expect(ciphertext.startsWith('v1:')).toBe(true);
+  });
+});
+
+describe('decrypt — back-compat with legacy v0 (no prefix) format', () => {
+  /**
+   * Builds a v0-format (legacy, pre-versioning) ciphertext for the given
+   * plaintext using the same PII_ENCRYPTION_KEY the module reads. Mirrors the
+   * exact format emitted by the pre-versioning implementation:
+   *   `<iv_hex>:<authTag_hex>:<ciphertext_hex>`
+   */
+  function encryptLegacyV0(plaintext: string): string {
+    const keyHex = process.env.PII_ENCRYPTION_KEY!;
+    const key = Buffer.from(keyHex, 'hex');
+    const iv = randomBytes(12);
+    const cipher = createCipheriv('aes-256-gcm', key, iv);
+    const ct = Buffer.concat([
+      cipher.update(plaintext, 'utf8'),
+      cipher.final(),
+    ]);
+    const tag = cipher.getAuthTag();
+    return [iv.toString('hex'), tag.toString('hex'), ct.toString('hex')].join(':');
+  }
+
+  it('decrypts a legacy 3-part ciphertext (no version prefix)', () => {
+    const plaintext = 'legacy birth data payload';
+    const legacy = encryptLegacyV0(plaintext);
+    expect(legacy.split(':')).toHaveLength(3);
+    expect(decrypt(legacy)).toBe(plaintext);
+  });
+
+  it('decrypts a v1 ciphertext round-trip', () => {
+    const plaintext = 'new birth data payload';
+    const v1 = encrypt(plaintext);
+    expect(v1.startsWith('v1:')).toBe(true);
+    expect(decrypt(v1)).toBe(plaintext);
+  });
+
+  it('rejects unknown version prefixes', () => {
+    const v1 = encrypt('test');
+    const parts = v1.split(':');
+    const fake = ['v99', parts[1], parts[2], parts[3]].join(':');
+    expect(() => decrypt(fake)).toThrow('Unknown key version');
   });
 });
 
@@ -58,17 +107,20 @@ describe('encrypt / decrypt — error handling', () => {
   it('throws on tampered ciphertext (authTag mismatch)', () => {
     const ciphertext = encrypt('secret data');
     const parts = ciphertext.split(':');
-    // Flip the last byte of the ciphertext hex to corrupt it
-    const corrupted = parts[2].slice(0, -2) + (parts[2].slice(-2) === 'ff' ? '00' : 'ff');
-    const tampered = [parts[0], parts[1], corrupted].join(':');
+    // v1:<iv>:<authTag>:<ciphertext> — index 3 is ciphertext
+    const ctHex = parts[3];
+    const corrupted = ctHex.slice(0, -2) + (ctHex.slice(-2) === 'ff' ? '00' : 'ff');
+    const tampered = [parts[0], parts[1], parts[2], corrupted].join(':');
     expect(() => decrypt(tampered)).toThrow();
   });
 
   it('throws on tampered authTag', () => {
     const ciphertext = encrypt('secret data');
     const parts = ciphertext.split(':');
-    const tamperedTag = parts[1].slice(0, -2) + (parts[1].slice(-2) === 'ff' ? '00' : 'ff');
-    const tampered = [parts[0], tamperedTag, parts[2]].join(':');
+    // v1:<iv>:<authTag>:<ciphertext> — index 2 is authTag
+    const tagHex = parts[2];
+    const tamperedTag = tagHex.slice(0, -2) + (tagHex.slice(-2) === 'ff' ? '00' : 'ff');
+    const tampered = [parts[0], parts[1], tamperedTag, parts[3]].join(':');
     expect(() => decrypt(tampered)).toThrow();
   });
 
@@ -134,7 +186,8 @@ describe('encryptBirthData / decryptBirthData round-trip', () => {
   it('throws on corrupted encrypted birth data', () => {
     const encrypted = encryptBirthData(fullData);
     const parts = encrypted.split(':');
-    const tampered = [parts[0], parts[1], 'deadbeef'].join(':');
+    // v1:<iv>:<authTag>:<ciphertext> — replace ciphertext with nonsense hex
+    const tampered = [parts[0], parts[1], parts[2], 'deadbeef'].join(':');
     expect(() => decryptBirthData(tampered)).toThrow();
   });
 });

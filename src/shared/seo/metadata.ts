@@ -37,6 +37,11 @@ export interface CreateMetadataOptions {
   modifiedTime?: string;
   /** Meta keywords. Low SEO weight but helps topic signals. */
   keywords?: string[];
+  /**
+   * Active locale for og:locale and hreflang. Defaults to 'en'.
+   * Pass the result of getLocale() from next-intl/server in server components.
+   */
+  locale?: 'en' | 'es';
 }
 
 /**
@@ -95,6 +100,7 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
     publishedTime,
     modifiedTime,
     keywords,
+    locale = 'en',
   } = options;
 
   const canonicalUrl = toAbsoluteUrl(path);
@@ -102,12 +108,25 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
   const pageDescription = truncate(description, MAX_DESCRIPTION_LENGTH);
   const imageUrl = ogImage ?? DEFAULT_OG_IMAGE;
 
+  // Cookie-based locale: both hreflang entries point to the same canonical URL.
+  // Google accepts this pattern for cookie/JS-based locale switching.
+  // x-default points to the EN (default) version.
+  const hreflangLanguages: Record<string, string> = {
+    'en-US': canonicalUrl,
+    'es': canonicalUrl,
+    'x-default': canonicalUrl,
+  };
+
+  const ogLocale = locale === 'es' ? 'es' : 'en_US';
+  const ogLocaleAlternate = locale === 'es' ? 'en_US' : 'es';
+
   const metadata: Metadata = {
     title: pageTitle,
     description: pageDescription,
     ...(keywords && keywords.length > 0 ? { keywords } : {}),
     alternates: {
       canonical: canonicalUrl,
+      languages: hreflangLanguages,
     },
     openGraph: {
       title: pageTitle,
@@ -115,6 +134,8 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
       url: canonicalUrl,
       siteName: SITE_NAME,
       type: type === 'article' ? 'article' : 'website',
+      locale: ogLocale,
+      alternateLocale: [ogLocaleAlternate],
       images: [
         {
           url: imageUrl,
