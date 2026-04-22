@@ -11,7 +11,7 @@
  * The 12/24 toggle never loses data — it's a pure display re-projection.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { TimeInput } from './TimeInput';
 import {
@@ -50,15 +50,12 @@ export function TimePickerField({
     () => defaultFormat ?? detectFormatFromLocale(),
   );
 
-  const [meridiem, setMeridiem] = useState<Meridiem>(() => {
-    const parsed = to12h(value);
-    return parsed?.meridiem ?? 'AM';
-  });
-
-  useEffect(() => {
-    const parsed = to12h(value);
-    if (parsed) setMeridiem(parsed.meridiem);
-  }, [value]);
+  // Derive meridiem from `value` when a value is present; otherwise use the
+  // user's most recent click (or 'AM' on first render). This avoids a
+  // useEffect+setState sync that would flag react-hooks/set-state-in-effect.
+  const [meridiemOverride, setMeridiemOverride] = useState<Meridiem>('AM');
+  const derivedMeridiem = to12h(value)?.meridiem;
+  const meridiem = derivedMeridiem ?? meridiemOverride;
 
   const innerValue = format === '12h' && value
     ? (() => {
@@ -97,7 +94,7 @@ export function TimePickerField({
 
   const handleMeridiemChange = useCallback(
     (next: Meridiem) => {
-      setMeridiem(next);
+      setMeridiemOverride(next);
       if (format === '12h' && innerValue) {
         emit(innerValue, next);
       }
@@ -109,7 +106,6 @@ export function TimePickerField({
     setFormat(next);
   }, []);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
       const text = e.clipboardData.getData('text');
@@ -120,7 +116,7 @@ export function TimePickerField({
 
       if (parsed.meridiem) {
         setFormat('12h');
-        setMeridiem(parsed.meridiem);
+        setMeridiemOverride(parsed.meridiem);
         const h = parseInt(parsed.hh, 10);
         const m = parseInt(parsed.mm, 10);
         onChange(to24h(h, m, parsed.meridiem));
@@ -145,7 +141,7 @@ export function TimePickerField({
   const maxHour = format === '12h' ? 12 : 23;
 
   return (
-    <div ref={containerRef} onPaste={handlePaste} className="space-y-1.5">
+    <div onPaste={handlePaste} className="space-y-1.5">
       <div className="flex items-center gap-2">
         <TimeInput
           id={id}
