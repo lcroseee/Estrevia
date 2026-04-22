@@ -376,9 +376,10 @@ export function HeroCalculator() {
               type="button"
               role="switch"
               aria-checked={form.knowsBirthTime}
-              onClick={() =>
-                setForm((f) => ({ ...f, knowsBirthTime: !f.knowsBirthTime }))
-              }
+              onClick={() => {
+                setForm((f) => ({ ...f, knowsBirthTime: !f.knowsBirthTime }));
+                setErrors((prev) => ({ ...prev, time: undefined }));
+              }}
               className={[
                 'relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent',
                 'transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-white/20',
