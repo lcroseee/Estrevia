@@ -28,29 +28,35 @@ const ContentSecurityPolicy = [
 
   // Scripts: self + Next.js inline scripts + Clerk + Stripe + PostHog + Sentry + Vercel
   // 'unsafe-eval' is required in dev mode only (React debugging callstacks)
-  // Clerk dev instances live at *.accounts.dev (not only *.clerk.accounts.dev)
-  // eu-assets.i.posthog.com serves the PostHog toolbar + array.js loader
-  `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://js.stripe.com https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu-assets.i.posthog.com https://*.sentry.io https://vercel.live https://*.vercel-scripts.com`,
+  // Clerk dev instances live at *.accounts.dev; the production instance lives
+  // at clerk.estrevia.app (derived from the pk_live_ publishable key). Both
+  // clerk-js and clerk-ui bundles load from /npm on that host — without this
+  // the <SignUp /> / <SignIn /> / <ClerkProvider> flows render a blank page.
+  // cdn.clerk.com is kept as a fallback for any legacy loaders.
+  `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://js.stripe.com https://clerk.estrevia.app https://cdn.clerk.com https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu-assets.i.posthog.com https://*.sentry.io https://vercel.live https://*.vercel-scripts.com`,
 
   // Styles: self + unsafe-inline (required by shadcn/ui) + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 
   // Images: self + data URIs + blob URIs (OG image generation) + Stripe + Clerk + PostHog assets + Vercel
   // eu-assets.i.posthog.com serves PostHog tracking pixels and UI assets
-  "img-src 'self' data: blob: https://*.stripe.com https://img.clerk.com https://*.clerk.com https://eu-assets.i.posthog.com",
+  // clerk.estrevia.app serves Clerk's UI sprites and OAuth provider icons
+  "img-src 'self' data: blob: https://*.stripe.com https://img.clerk.com https://*.clerk.com https://clerk.estrevia.app https://eu-assets.i.posthog.com",
 
   // Fonts: self + Google Fonts static host
   "font-src 'self' https://fonts.gstatic.com",
 
   // Connect (XHR/fetch/WebSocket): self + API services
-  // *.accounts.dev covers Clerk development instances
+  // *.accounts.dev covers Clerk development instances; clerk.estrevia.app is
+  // the Frontend API (FAPI) for the production Clerk instance — required for
+  // environment fetch, session refresh, sign-in/up flows.
   // PostHog EU uses a dedicated ingest subdomain `eu.i.posthog.com` and asset
   // subdomain `eu-assets.i.posthog.com` — wildcard `*.posthog.com` does NOT
   // cover the `i.posthog.com` third-level hosts, they must be listed explicitly
-  "connect-src 'self' https://api.clerk.com https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://*.ingest.sentry.io https://*.sentry.io https://api.stripe.com https://vitals.vercel-insights.com https://vercel.live wss://vercel.live",
+  "connect-src 'self' https://api.clerk.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://*.ingest.sentry.io https://*.sentry.io https://api.stripe.com https://vitals.vercel-insights.com https://vercel.live wss://vercel.live",
 
-  // Frames: only Stripe and Clerk (for 3D Secure / auth modals)
-  "frame-src https://js.stripe.com https://*.stripe.com https://*.clerk.accounts.dev https://*.accounts.dev https://vercel.live",
+  // Frames: Stripe (3D Secure) + Clerk (OAuth callbacks, dev modal) + production Clerk instance
+  "frame-src https://js.stripe.com https://*.stripe.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://vercel.live",
 
   // Workers: self + blob (Next.js service worker / PWA)
   "worker-src 'self' blob:",
