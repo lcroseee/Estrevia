@@ -44,7 +44,20 @@
       "Water": "Agua"
     },
     "seeFullChart": "Ver tu carta natal completa",
-    "tryAnother": "Probar otra fecha"
+    "tryAnother": "Probar otra fecha",
+    "knowsBirthTimeLabel": "Conozco mi hora de nacimiento",
+    "timeHelper": "La hora nos permite calcular tu Ascendente y casas.",
+    "errTimeRequired": "Ingresa tu hora de nacimiento o desactiva la opción"
+  },
+  "timePicker": {
+    "hourLabel": "Hora",
+    "minuteLabel": "Minutos",
+    "meridiemLabel": "AM o PM",
+    "amLabel": "AM",
+    "pmLabel": "PM",
+    "format12h": "12h",
+    "format24h": "24h",
+    "switchFormatAria": "Cambiar entre formato de 12 y 24 horas"
   },
   "chartDisplay": {
     "h1": "Tu Carta Natal",

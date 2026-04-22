@@ -44,7 +44,20 @@
       "Water": "Water"
     },
     "seeFullChart": "See your full natal chart",
-    "tryAnother": "Try another date"
+    "tryAnother": "Try another date",
+    "knowsBirthTimeLabel": "I know my birth time",
+    "timeHelper": "Time lets us compute your Ascendant and houses.",
+    "errTimeRequired": "Please enter your birth time or turn off the toggle"
+  },
+  "timePicker": {
+    "hourLabel": "Hour",
+    "minuteLabel": "Minute",
+    "meridiemLabel": "AM or PM",
+    "amLabel": "AM",
+    "pmLabel": "PM",
+    "format12h": "12h",
+    "format24h": "24h",
+    "switchFormatAria": "Switch between 12-hour and 24-hour time format"
   },
   "chartDisplay": {
     "h1": "Your Natal Chart",
