@@ -7,7 +7,7 @@ import type { ChartResult, CitySearchResult, HouseSystem } from '@/shared/types'
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
-import { TimeInput } from './TimeInput';
+import { TimePickerField } from './TimePickerField';
 
 interface FormValues {
   date: string;
@@ -214,7 +214,7 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
             <label htmlFor={timeId} className="block text-sm font-medium text-white/70 mb-1.5">
               {t('timeLabel')}
             </label>
-            <TimeInput
+            <TimePickerField
               id={timeId}
               value={values.time}
               onChange={(v) => setValues((prev) => ({ ...prev, time: v }))}
