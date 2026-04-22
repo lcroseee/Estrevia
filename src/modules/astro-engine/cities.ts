@@ -1,9 +1,10 @@
 import type { CitySearchResult } from '@/shared/types/api';
-import citiesData from '../../../data/cities15000.json';
+import citiesData from '../../../data/cities5000.json';
 
 export interface City {
   name: string;
   asciiName: string;
+  admin1: string | null;
   country: string;
   countryCode: string;
   latitude: number;
@@ -45,6 +46,7 @@ export function searchCities(query: string, limit: number = 5): CitySearchResult
 
   return matches.slice(0, limit).map((city) => ({
     name: city.name,
+    admin1: city.admin1,
     country: city.country,
     countryCode: city.countryCode,
     latitude: city.latitude,

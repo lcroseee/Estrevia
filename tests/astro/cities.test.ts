@@ -87,4 +87,37 @@ describe('searchCities', () => {
     const results = searchCities('москва');
     expect(results.length).toBe(0);
   });
+
+  it('"Austin" returns Austin, Texas as top US result', () => {
+    const results = searchCities('Austin', 10);
+    const austin = results.find((r) => r.countryCode === 'US');
+    expect(austin).toBeDefined();
+    expect(austin?.admin1).toBe('Texas');
+  });
+
+  it('"Lyon" returns Lyon with its French region in admin1', () => {
+    const results = searchCities('Lyon', 5);
+    const lyon = results.find((r) => r.countryCode === 'FR');
+    expect(lyon).toBeDefined();
+    expect(lyon?.admin1).toBeTruthy();
+    // GeoNames uses the pre-2016 "Rhone-Alpes" region code; post-consolidation
+    // regional name "Auvergne-Rhone-Alpes" may appear if GeoNames updates later.
+    expect(lyon?.admin1).toMatch(/Rhone|Auvergne/i);
+  });
+
+  it('"Monaco" returns Monaco with admin1 = null (city-state)', () => {
+    const results = searchCities('Monaco', 5);
+    const monaco = results.find((r) => r.countryCode === 'MC');
+    expect(monaco).toBeDefined();
+    expect(monaco?.admin1).toBeNull();
+  });
+
+  it('admin1 field is present on every result (string or null)', () => {
+    const results = searchCities('Berlin', 5);
+    expect(results.length).toBeGreaterThan(0);
+    for (const r of results) {
+      expect(r).toHaveProperty('admin1');
+      expect(r.admin1 === null || typeof r.admin1 === 'string').toBe(true);
+    }
+  });
 });

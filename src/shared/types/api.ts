@@ -73,6 +73,8 @@ export interface PlanetaryHoursResponse {
 
 export interface CitySearchResult {
   name: string;
+  /** First-level administrative division (US state, French region, Russian oblast, etc.). Null for city-states or when GeoNames has no admin1 for the city. */
+  admin1: string | null;
   country: string;
   countryCode: string;
   latitude: number;

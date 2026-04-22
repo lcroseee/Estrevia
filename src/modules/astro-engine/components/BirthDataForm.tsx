@@ -72,7 +72,9 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
   const handleCitySelect = useCallback((city: CitySearchResult) => {
     setValues((v) => ({
       ...v,
-      cityLabel: `${city.name}, ${city.country}`,
+      cityLabel: city.admin1
+        ? `${city.name}, ${city.admin1}, ${city.country}`
+        : `${city.name}, ${city.country}`,
       latitude: city.latitude,
       longitude: city.longitude,
       timezone: city.timezone,

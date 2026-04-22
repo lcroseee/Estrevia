@@ -106,7 +106,9 @@ export function CityAutocomplete({
 
   const selectCity = useCallback(
     (city: CitySearchResult) => {
-      const label = `${city.name}, ${city.country}`;
+      const label = city.admin1
+        ? `${city.name}, ${city.admin1}, ${city.country}`
+        : `${city.name}, ${city.country}`;
       setQuery(label);
       onChange?.(label);
       setResults([]);
@@ -262,7 +264,7 @@ export function CityAutocomplete({
                 {city.name}
               </span>
               <span className="truncate text-xs text-white/40 leading-snug">
-                {city.country}
+                {city.admin1 ? `${city.admin1} · ${city.country}` : city.country}
                 {city.population > 0 && (
                   <span className="font-mono tabular-nums">
                     {'\u00A0\u00B7\u00A0'}{formatPopulation(city.population)}
