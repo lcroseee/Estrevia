@@ -15,6 +15,8 @@ interface TimeInputProps {
   'aria-required'?: boolean;
   className?: string;
   hasError?: boolean;
+  /** Maximum valid hour value (inclusive). Default 23 for 24-hour mode; pass 12 for 12-hour mode. */
+  maxHour?: number;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -41,6 +43,7 @@ export function TimeInput({
   id,
   className,
   hasError = false,
+  maxHour = 23,
   ...ariaProps
 }: TimeInputProps) {
   const parsed = parseTime(value);
@@ -73,26 +76,27 @@ export function TimeInput({
       const raw = e.target.value.replace(/\D/g, '').slice(0, 2);
       const num = parseInt(raw, 10);
 
-      // Reject invalid hour mid-entry only when 2 digits typed
-      if (raw.length === 2 && num > 23) return;
+      if (raw.length === 2 && num > maxHour) return;
 
       setHour(raw);
 
+      // Threshold: the largest single digit that could still be a valid tens digit.
+      // 24h (maxHour=23) -> floor(23/10)=2, so "3" auto-advances.
+      // 12h (maxHour=12) -> floor(12/10)=1, so "2" and above auto-advance.
+      const advanceThreshold = Math.floor(maxHour / 10);
+
       if (raw.length === 2) {
-        // Valid 2-digit hour — advance to minute
         minuteRef.current?.focus();
         minuteRef.current?.select();
         emitChange(raw, minute);
-      } else if (raw.length === 1 && num > 2) {
-        // Single digit > 2 can never be a valid first digit for 24h time,
-        // so auto-advance immediately (e.g. "9" → "09", jump to minute)
+      } else if (raw.length === 1 && num > advanceThreshold) {
         minuteRef.current?.focus();
         minuteRef.current?.select();
         emitChange(raw.padStart(2, '0'), minute);
         setHour(raw.padStart(2, '0'));
       }
     },
-    [minute, emitChange],
+    [minute, emitChange, maxHour],
   );
 
   const handleMinuteChange = useCallback(
