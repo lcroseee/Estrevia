@@ -2,17 +2,34 @@
 
 import type { MoonPhaseResponse } from '@/shared/types';
 import { MoonPhaseSVG } from './MoonPhaseSVG';
+import { ZodiacGlyph } from '@/shared/components/ZodiacGlyph';
 
 interface CurrentPhaseCardProps {
   data: MoonPhaseResponse;
 }
 
-export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
-  const nextNew = new Date(data.nextNewMoon);
-  const nextFull = new Date(data.nextFullMoon);
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
 
-  const formatDate = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function formatExitTime(iso: string): string {
+  const d = new Date(iso);
+  // Locale-aware "Apr 24, 15:32" — weekday stripped to keep the line short
+  return d.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
+  const hasSign = Boolean(data.moonSign);
+  const hasExit = Boolean(data.signExitTime);
 
   return (
     <div
@@ -41,7 +58,7 @@ export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
         </h2>
 
         {/* Illumination bar */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-3">
           <div
             className="flex-1 h-1.5 rounded-full overflow-hidden"
             style={{ background: 'rgba(255,255,255,0.1)' }}
@@ -67,23 +84,41 @@ export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
           </span>
         </div>
 
+        {/* Moon sign line — "Moon in ♋ Cancer · until Apr 24, 15:32" */}
+        {hasSign && (
+          <p
+            aria-live="polite"
+            className="text-sm mb-3 flex items-center justify-center sm:justify-start gap-1.5 flex-wrap"
+            style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
+          >
+            <span style={{ color: 'rgba(255,255,255,0.35)' }}>Moon in</span>
+            <ZodiacGlyph sign={data.moonSign} size={15} className="text-[#F0D080]" />
+            <span style={{ color: '#E8E0D0' }}>{data.moonSign}</span>
+            {hasExit && (
+              <>
+                <span aria-hidden="true" style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
+                <span style={{ color: 'rgba(255,255,255,0.35)' }}>until</span>
+                <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: 'rgba(255,255,255,0.55)' }}>
+                  {formatExitTime(data.signExitTime as string)}
+                </span>
+              </>
+            )}
+          </p>
+        )}
+
         {/* Next events */}
         <div className="flex flex-col sm:flex-row gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
           <span>
             <span style={{ color: 'rgba(255,255,255,0.3)' }}>Next New Moon: </span>
-            <span
-              style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: 'rgba(255,255,255,0.65)' }}
-            >
-              {formatDate(nextNew)}
+            <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: 'rgba(255,255,255,0.65)' }}>
+              {formatShortDate(data.nextNewMoon)}
             </span>
           </span>
           <span className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
           <span>
             <span style={{ color: 'rgba(255,255,255,0.3)' }}>Next Full Moon: </span>
-            <span
-              style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: '#F0D080' }}
-            >
-              {formatDate(nextFull)}
+            <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: '#F0D080' }}>
+              {formatShortDate(data.nextFullMoon)}
             </span>
           </span>
         </div>
