@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getCurrentMoonPhase } from '../../src/modules/astro-engine/moon-phase';
+import { getCurrentMoonPhase, getMoonSign, getMoonTransitTimes } from '../../src/modules/astro-engine/moon-phase';
+import { dateToJulianDay } from '../../src/modules/astro-engine/julian-day';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -291,5 +292,43 @@ describe('Output shape', () => {
     const result = getCurrentMoonPhase(utcNoon('2024-06-01'));
     expect(isNaN(result.nextNewMoon.getTime())).toBe(false);
     expect(isNaN(result.nextFullMoon.getTime())).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Illumination at specific UTC times (anti-regression for the 27% vs 33% bug)
+// Reference values from timeanddate.com for New York; we verify only the *delta*
+// between two times on the same day, which is location-independent.
+// ---------------------------------------------------------------------------
+
+describe('Illumination responds to time-of-day', () => {
+  it('2026-04-23: 20:00 UTC illumination differs from 00:00 UTC by ≥0.5%', () => {
+    const midnight = getCurrentMoonPhase(new Date('2026-04-23T00:00:00Z'));
+    const evening = getCurrentMoonPhase(new Date('2026-04-23T20:00:00Z'));
+    expect(Math.abs(evening.illumination - midnight.illumination)).toBeGreaterThanOrEqual(0.5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Moon sign + transit — internal consistency
+// ---------------------------------------------------------------------------
+
+describe('Moon sign transit', () => {
+  it('entry < now < exit', async () => {
+    const now = new Date('2026-04-23T12:00:00Z');
+    const jd = dateToJulianDay(now);
+    const sign = getMoonSign(jd);
+    const transit = getMoonTransitTimes(jd);
+    expect(transit.currentSign).toBe(sign.siderealSign);
+    expect(transit.signEntryTime.getTime()).toBeLessThan(now.getTime());
+    expect(transit.signExitTime.getTime()).toBeGreaterThan(now.getTime());
+  });
+
+  it('sign exit-entry delta is between 2.0 and 2.7 days', () => {
+    const jd = dateToJulianDay(new Date('2026-04-23T12:00:00Z'));
+    const transit = getMoonTransitTimes(jd);
+    const deltaDays = (transit.signExitTime.getTime() - transit.signEntryTime.getTime()) / 86_400_000;
+    expect(deltaDays).toBeGreaterThan(2.0);
+    expect(deltaDays).toBeLessThan(2.7);
   });
 });
