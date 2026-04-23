@@ -432,6 +432,13 @@
     "voidOfCourse": "Void of Course",
     "moonrise": "Moonrise",
     "moonset": "Moonset",
+    "moonInLabel": "Moon in",
+    "untilLabel": "until",
+    "moonSignLabel": "Moon sign",
+    "vocYes": "Moon is void of course for part of this day.",
+    "vocNo": "Moon is not void of course today.",
+    "vocUnknown": "Void of course data not available for this month.",
+    "signAvailableSoon": "—",
     "phases": {
       "newMoon": "New Moon",
       "waxingCrescent": "Waxing Crescent",
