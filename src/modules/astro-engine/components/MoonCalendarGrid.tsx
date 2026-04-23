@@ -1,6 +1,7 @@
 'use client';
 
 import { MoonPhaseSVG } from './MoonPhaseSVG';
+import { ZodiacGlyph } from '@/shared/components/ZodiacGlyph';
 import {
   daysInMonth,
   firstWeekdayOfMonth,
@@ -71,7 +72,12 @@ export function MoonCalendarGrid({ year, month, days, today, onDaySelect }: Moon
               type="button"
               role="gridcell"
               onClick={() => onDaySelect(cell)}
-              aria-label={`${MONTH_NAMES[month - 1]} ${cell.day}: ${cell.phaseName}, ${Math.round(cell.illumination)}% illuminated`}
+              aria-label={[
+                `${MONTH_NAMES[month - 1]} ${cell.day}`,
+                `${cell.phaseName}`,
+                `${Math.round(cell.illumination)}% illuminated`,
+                cell.moonSign ? `Moon in ${cell.moonSign}` : null,
+              ].filter(Boolean).join(', ')}
               className="flex flex-col items-center justify-center rounded-xl py-2 px-1 transition-colors duration-200 hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 cursor-pointer"
               style={{
                 background: today_
@@ -117,6 +123,15 @@ export function MoonCalendarGrid({ year, month, days, today, onDaySelect }: Moon
               >
                 {Math.round(cell.illumination)}%
               </span>
+
+              {/* Sidereal sign glyph (absent on free-tier future months until agent 5 wires calendar API) */}
+              {cell.moonSign && (
+                <ZodiacGlyph
+                  sign={cell.moonSign}
+                  size={11}
+                  className="mt-0.5"
+                />
+              )}
             </button>
           );
         })}
