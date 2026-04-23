@@ -68,7 +68,7 @@ function PassportSection({ chartId }: PassportSectionProps) {
             {t('rarityDisplay', { percent: passport.rarityPercent })}
           </span>
         </div>
-        <PassportCard passport={passport} passportId={passport.id} />
+        <PassportCard passport={passport} />
         <ShareButton passportId={passport.id} passport={passport} />
       </section>
     );

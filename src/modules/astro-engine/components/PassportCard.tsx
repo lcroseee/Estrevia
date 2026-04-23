@@ -7,18 +7,10 @@
  * when imported from a server tree (`/s/[id]/page.tsx`) and as a
  * client component when imported from a client tree (`ChartDisplay`,
  * which is `'use client'`).
- *
- * The interactive QR code piece lives in `PassportCardQR` — a tiny
- * client leaf that lazy-loads the `qrcode` library only when the
- * card is actually rendered. Splitting it out of this component
- * eliminates the hydration cost of the static visual on the viral
- * share page (the single most important journey for growth).
  */
 
-import { SITE_URL } from '@/shared/seo/constants';
 import type { PassportResponse } from '@/shared/types/api';
 import { getRarityTier } from '@/modules/astro-engine/rarity';
-import { PassportCardQR } from './PassportCardQR';
 
 // Planetary colors matching the design system
 const PLANET_COLORS: Record<string, string> = {
@@ -133,7 +125,6 @@ function SignRow({ glyph, label, signName, color }: SignRowProps) {
 
 interface PassportCardProps {
   passport: PassportResponse;
-  passportId?: string;
 }
 
 /**
@@ -141,7 +132,7 @@ interface PassportCardProps {
  * Aspect ratio ~3:2 (physical ID card feel).
  * No PII — only sign results, element, rarity.
  */
-export function PassportCard({ passport, passportId }: PassportCardProps) {
+export function PassportCard({ passport }: PassportCardProps) {
   const {
     sunSign,
     moonSign,
@@ -330,10 +321,6 @@ export function PassportCard({ passport, passportId }: PassportCardProps) {
         }}
         aria-hidden="true"
       />
-
-      {/* QR code — bottom-right corner. Rendered by a tiny client leaf
-          that lazy-loads the `qrcode` library only when needed. */}
-      {passportId && <PassportCardQR passportId={passportId} siteUrl={SITE_URL} />}
     </article>
   );
 }
