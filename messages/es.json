@@ -432,6 +432,13 @@
     "voidOfCourse": "Void of Course",
     "moonrise": "Salida de la Luna",
     "moonset": "Puesta de la Luna",
+    "moonInLabel": "Luna en",
+    "untilLabel": "hasta",
+    "moonSignLabel": "Signo lunar",
+    "vocYes": "La Luna está vacía de curso durante parte de este día.",
+    "vocNo": "La Luna no está vacía de curso hoy.",
+    "vocUnknown": "Datos de vacío de curso no disponibles para este mes.",
+    "signAvailableSoon": "—",
     "phases": {
       "newMoon": "Luna Nueva",
       "waxingCrescent": "Luna Creciente",
