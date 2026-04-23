@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { MoonPhaseResponse, ApiResponse } from '@/shared/types';
+import type { MoonPhaseResponse, ApiResponse, MoonCalendarDay, MoonCalendarResponse } from '@/shared/types';
 import { CurrentPhaseCard } from './CurrentPhaseCard';
 import { MoonCalendarGrid } from './MoonCalendarGrid';
 import { DayDetailPanel } from './DayDetailPanel';
@@ -71,13 +71,24 @@ export function MoonCalendar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // Fetch today's moon phase once
+  // ---------------------------------------------------------------------------
+  // Data loading
+  // ---------------------------------------------------------------------------
+  // - /api/v1/moon/current   → hero card phase (live for user's moment)
+  // - /api/v1/moon/calendar  → per-day data for the grid (authoritative, cached 24h)
+  // Free-tier users can only fetch the current month; we fall back to client
+  // approximation when the calendar endpoint refuses (HTTP 403).
+
+  const [calendarDays, setCalendarDays] = useState<MoonCalendarDay[] | null>(null);
+
+  // Hero card — live for current moment
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(false);
 
-    fetch('/api/v1/moon/current')
+    const clientT = encodeURIComponent(new Date().toISOString());
+    fetch(`/api/v1/moon/current?t=${clientT}`)
       .then((res) => {
         if (!res.ok) throw new Error('fetch failed');
         return res.json() as Promise<ApiResponse<MoonPhaseResponse>>;
@@ -98,12 +109,35 @@ export function MoonCalendar() {
         if (!cancelled) setLoading(false);
       });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  // Recompute day offset whenever viewed month changes
+  // Calendar grid — per-day server data for the viewed month
+  useEffect(() => {
+    let cancelled = false;
+    setCalendarDays(null);
+
+    fetch(`/api/v1/moon/calendar/${viewYear}/${viewMonth}`)
+      .then(async (res) => {
+        if (res.status === 403) {
+          // Paywalled future/past month — keep client approximation
+          return null;
+        }
+        if (!res.ok) return null;
+        const json = (await res.json()) as ApiResponse<MoonCalendarResponse>;
+        return json.success && json.data ? json.data.days : null;
+      })
+      .then((days) => {
+        if (!cancelled) setCalendarDays(days);
+      })
+      .catch(() => {
+        if (!cancelled) setCalendarDays(null);
+      });
+
+    return () => { cancelled = true; };
+  }, [viewYear, viewMonth]);
+
+  // Recompute day offset whenever viewed month changes (used by the fallback approximation)
   useEffect(() => {
     if (referenceAngle === null) return;
     const todayMs = Date.UTC(todayRef.year, todayRef.month - 1, todayRef.day);
@@ -139,9 +173,34 @@ export function MoonCalendar() {
     setViewMonth(todayRef.month);
   }, [todayRef.year, todayRef.month]);
 
-  // Build day data for the viewed month (client approximation — replaced by agent 5)
+  // Build day data for the viewed month.
+  // Prefer server calendar data (authoritative, includes moonSign). Fall back
+  // to client linear approximation when the endpoint is paywalled.
   const days: DayData[] = [];
-  if (referenceAngle !== null) {
+  if (calendarDays && calendarDays.length > 0) {
+    for (const d of calendarDays) {
+      const dayNum = parseInt(d.date.slice(-2), 10);
+      // Recover the Sun-Moon angle from illumination for the SVG:
+      // illum = (1-cos θ)/2 → θ = acos(1 - 2·illum)
+      // That gives the magnitude [0°,180°]. We can't recover the 0-360 hemisphere
+      // from illumination alone, so the approximation's sign info gives us the
+      // waxing/waning direction when possible; otherwise we default to waxing.
+      const illum01 = Math.max(0, Math.min(1, d.illumination / 100));
+      const mag = (Math.acos(1 - 2 * illum01) * 180) / Math.PI;
+      const waningByName = /Waning|Last Quarter/.test(d.phase);
+      const angle = waningByName ? 360 - mag : mag;
+      days.push({
+        day: dayNum,
+        angle,
+        illumination: d.illumination,
+        emoji: d.emoji,
+        phaseName: d.phase,
+        moonSign: d.moonSign,
+        moonDegree: d.moonDegree,
+        isVoidOfCourse: d.isVoidOfCourse,
+      });
+    }
+  } else if (referenceAngle !== null) {
     const count = daysInMonth(viewYear, viewMonth);
     for (let d = 1; d <= count; d++) {
       const dayOffset = referenceOffset + (d - 1);
@@ -245,7 +304,7 @@ export function MoonCalendar() {
         </div>
       )}
 
-      {!loading && !error && referenceAngle !== null && (
+      {!loading && !error && (calendarDays !== null || referenceAngle !== null) && (
         <MoonCalendarGrid
           year={viewYear}
           month={viewMonth}
