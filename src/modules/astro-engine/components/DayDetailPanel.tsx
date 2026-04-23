@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { MoonPhaseSVG } from './MoonPhaseSVG';
+import { ZodiacGlyph } from '@/shared/components/ZodiacGlyph';
 import type { DayData } from './moon-types';
 
 interface DayDetailPanelProps {
@@ -149,22 +150,48 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
               value={`${Math.round(day.illumination)}%`}
               mono
             />
-            <DetailItem
-              label="Moon sign"
-              value="Available soon"
-              muted
-            />
+            {day.moonSign ? (
+              <div
+                className="px-3 py-2.5 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+              >
+                <p
+                  className="text-[10px] uppercase tracking-widest mb-1"
+                  style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
+                >
+                  Moon sign
+                </p>
+                <p
+                  className="text-sm flex items-center gap-2"
+                  style={{ fontFamily: 'var(--font-geist-sans, sans-serif)', color: 'rgba(255,255,255,0.7)' }}
+                >
+                  <ZodiacGlyph sign={day.moonSign} size={16} className="text-[#F0D080]" />
+                  <span>
+                    {typeof day.moonDegree === 'number'
+                      ? `${Math.floor(day.moonDegree % 30)}° ${day.moonSign}`
+                      : day.moonSign}
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <DetailItem label="Moon sign" value="—" muted />
+            )}
           </div>
 
-          {/* VOC placeholder */}
+          {/* Void of Course */}
           <div
-            className="mt-4 px-4 py-3 rounded-xl border border-white/6 text-xs text-white/25"
+            className="mt-4 px-4 py-3 rounded-xl border text-xs"
             style={{
-              background: 'rgba(255,255,255,0.02)',
+              background: day.isVoidOfCourse ? 'rgba(240, 208, 128, 0.06)' : 'rgba(255,255,255,0.02)',
+              borderColor: day.isVoidOfCourse ? 'rgba(240, 208, 128, 0.18)' : 'rgba(255,255,255,0.06)',
+              color: day.isVoidOfCourse ? 'rgba(240,208,128,0.8)' : 'rgba(255,255,255,0.35)',
               fontFamily: 'var(--font-geist-sans, sans-serif)',
             }}
           >
-            Void of Course data will be available when the API is ready.
+            {day.isVoidOfCourse === true && 'Moon is void of course for part of this day.'}
+            {day.isVoidOfCourse === false && 'Moon is not void of course today.'}
+            {day.isVoidOfCourse === null && 'Void of course data not available for this month.'}
+            {day.isVoidOfCourse === undefined && 'Void of course data not available for this month.'}
           </div>
         </div>
       </div>
