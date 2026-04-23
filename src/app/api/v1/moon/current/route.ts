@@ -24,16 +24,20 @@ export async function GET(request: Request): Promise<NextResponse<ApiResponse<Mo
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Parse query params
+  // 2. Parse query params — t (preferred, live moment) or date (historical day)
   // ---------------------------------------------------------------------------
   const { searchParams } = new URL(request.url);
+  const tParam = searchParams.get('t');
   const dateParam = searchParams.get('date');
   const latParam = searchParams.get('lat');
   const lonParam = searchParams.get('lon');
 
   let targetDate: Date;
 
-  if (dateParam) {
+  if (tParam) {
+    const parsed = new Date(tParam);
+    targetDate = isNaN(parsed.getTime()) ? new Date() : parsed;
+  } else if (dateParam) {
     const parsed = new Date(dateParam);
     if (isNaN(parsed.getTime())) {
       return NextResponse.json(
@@ -41,16 +45,13 @@ export async function GET(request: Request): Promise<NextResponse<ApiResponse<Mo
         { status: 400 },
       );
     }
-    // Normalise to UTC midnight so a plain YYYY-MM-DD string works correctly
+    // Explicit historical day: snap to UTC midnight of that day
     targetDate = new Date(
       Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate()),
     );
   } else {
-    // Default to current UTC moment
-    const now = new Date();
-    targetDate = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-    );
+    // Default: live — the current moment, not a nominal midnight
+    targetDate = new Date();
   }
 
   // Parse optional lat/lon for moonrise/moonset
@@ -114,8 +115,8 @@ export async function GET(request: Request): Promise<NextResponse<ApiResponse<Mo
       {
         status: 200,
         headers: {
-          // Cache for 10 minutes on CDN — moon phase changes slowly
-          'Cache-Control': 's-maxage=600, stale-while-revalidate=3600',
+          // Live phase: short TTL so edge refreshes every minute but bursts share
+          'Cache-Control': 's-maxage=60, stale-while-revalidate=300',
         },
       },
     );
