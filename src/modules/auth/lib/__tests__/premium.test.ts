@@ -53,6 +53,24 @@ describe('computeIsPremium', () => {
   it('returns false for null tier and null status', () => {
     expect(computeIsPremium(null, null, null)).toBe(false);
   });
+
+  // --- previously-divergent states that the client /api/v1/user/subscription
+  // used to report as "not pro" even though server guards allowed access.
+  // These cover the "paywall flashes for a paying user" regression fixed in
+  // the unified isPro path. See src/app/api/v1/user/subscription/route.ts.
+
+  it('returns true for "incomplete" status with premium tier and future expiry', () => {
+    // Transient state immediately after checkout before payment confirms.
+    // Server webhook writes tier='premium' + status='incomplete' briefly.
+    expect(computeIsPremium('premium', 'incomplete', FUTURE)).toBe(true);
+  });
+
+  it('returns true for canceled subscription still in paid period', () => {
+    // User cancels via Customer Portal; Stripe keeps it active until period end.
+    // status transitions to 'canceled' only after customer.subscription.deleted
+    // fires at period end — until then tier stays premium and expiry is in future.
+    expect(computeIsPremium('premium', 'canceled', FUTURE)).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------

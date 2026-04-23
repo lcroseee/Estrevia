@@ -54,6 +54,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SubscriptionState>(DEFAULT_STATE);
   const lastFetchRef = useRef<number>(0);
   const inflightRef = useRef<boolean>(false);
+  const hasLoadedRef = useRef<boolean>(false);
 
   const fetchSubscription = useCallback(async () => {
     if (inflightRef.current) return;
@@ -68,21 +69,36 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
       const contentType = res.headers.get('content-type') ?? '';
       const clerkAuthStatus = res.headers.get('x-clerk-auth-status');
+      const isJson = contentType.includes('application/json');
 
-      // Treat as anonymous/unauthorized when:
-      //   - HTTP 401 (future middleware fix returns this)
+      // Anonymous / unauthorized paths — safe to demote to free.
+      //   - HTTP 401 (middleware emits this for protected API routes)
       //   - Clerk header signals signed-out
-      //   - Body is not JSON (covers current Clerk v6 HTML-404 rewrite and
-      //     any CDN error page that slips through)
+      //   - 2xx HTML response — Clerk v6 rewrite-to-/_not-found for signed-out
+      //     users on protected routes (current behavior at the time of writing)
       const isAuthFailure =
         res.status === 401 ||
         clerkAuthStatus === 'signed-out' ||
-        !contentType.includes('application/json');
+        (res.ok && !isJson);
 
-      if (!res.ok || isAuthFailure) {
-        // Anonymous viewer on a public page — fall back to free-tier defaults.
+      if (isAuthFailure) {
         setState({ ...DEFAULT_STATE, isLoading: false });
+        hasLoadedRef.current = true;
         lastFetchRef.current = Date.now();
+        return;
+      }
+
+      // Transient server / CDN error (5xx, 429, HTML error page on non-2xx).
+      // Previously we demoted paying users to "free" here, briefly showing the
+      // paywall to subscribers whenever the API hiccuped. Instead, keep the
+      // last known state on revalidation and only fall back to free on the
+      // first-ever load (where we have no prior state to preserve).
+      if (!res.ok || !isJson) {
+        setState((prev) =>
+          hasLoadedRef.current
+            ? { ...prev, isLoading: false }
+            : { ...DEFAULT_STATE, isLoading: false },
+        );
         return;
       }
 
@@ -90,9 +106,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       try {
         data = await res.json();
       } catch {
-        // Malformed JSON — treat the same as auth failure so the provider
-        // doesn't stay stuck in isLoading: true.
-        setState({ ...DEFAULT_STATE, isLoading: false });
+        // Malformed JSON — treat like a transient error: keep last known state
+        // if we have one, otherwise fall back to free defaults.
+        setState((prev) =>
+          hasLoadedRef.current
+            ? { ...prev, isLoading: false }
+            : { ...DEFAULT_STATE, isLoading: false },
+        );
         return;
       }
 
@@ -105,9 +125,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         isTrialing: data.isTrialing,
         isLoading: false,
       });
+      hasLoadedRef.current = true;
       lastFetchRef.current = Date.now();
     } catch {
-      setState((prev) => ({ ...prev, isLoading: false }));
+      // Network error (fetch itself threw). Preserve last known state so a
+      // wifi blip doesn't revoke premium UI. On first load, surface as
+      // non-loading free (same conservative default as before).
+      setState((prev) =>
+        hasLoadedRef.current
+          ? { ...prev, isLoading: false }
+          : { ...DEFAULT_STATE, isLoading: false },
+      );
     } finally {
       inflightRef.current = false;
     }

@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAuth } from '@/modules/auth/lib/helpers';
+import { computeIsPremium } from '@/modules/auth/lib/premium';
 import { getDb } from '@/shared/lib/db';
 import { users } from '@/shared/lib/schema';
 import { getStripe } from '@/shared/lib/stripe';
@@ -88,23 +89,59 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estrevia.app';
 
   // ---------------------------------------------------------------------------
-  // 5. Look up existing Stripe customer ID (idempotency guard)
+  // 5. Look up existing Stripe customer + subscription state.
+  //
+  // Two purposes:
+  //   a) idempotency guard — reuse stripeCustomerId so Stripe doesn't create
+  //      a duplicate customer on retries.
+  //   b) already-subscribed short-circuit — if the caller is already premium,
+  //      creating a new Checkout Session would produce a duplicate subscription
+  //      (and charge them again, since returning customers skip the trial).
+  //      Instead, bounce them to /settings where Customer Portal manages billing.
   // ---------------------------------------------------------------------------
   let stripeCustomerId: string | null = null;
+  let isAlreadyPremium = false;
   try {
     const db = getDb();
     const rows = await db
-      .select({ stripeCustomerId: users.stripeCustomerId })
+      .select({
+        stripeCustomerId: users.stripeCustomerId,
+        subscriptionTier: users.subscriptionTier,
+        subscriptionStatus: users.subscriptionStatus,
+        subscriptionExpiresAt: users.subscriptionExpiresAt,
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
 
-    stripeCustomerId = rows[0]?.stripeCustomerId ?? null;
+    const row = rows[0];
+    stripeCustomerId = row?.stripeCustomerId ?? null;
+    if (row) {
+      isAlreadyPremium = computeIsPremium(
+        row.subscriptionTier,
+        row.subscriptionStatus,
+        row.subscriptionExpiresAt,
+      );
+    }
   } catch (err) {
     console.error('[stripe/checkout] db lookup failed', { userId, err });
     return NextResponse.json(
       { success: false, data: null, error: 'DATABASE_ERROR' },
       { status: 500 },
+    );
+  }
+
+  if (isAlreadyPremium) {
+    // Paying user clicked the trial CTA (usually because the paywall wrongly
+    // flashed for them). Redirect to /settings so the Customer Portal can
+    // handle any plan changes; never create a duplicate subscription.
+    return NextResponse.json(
+      {
+        success: true,
+        data: { url: `${appUrl}/settings?already_subscribed=1` },
+        error: null,
+      },
+      { status: 200 },
     );
   }
 

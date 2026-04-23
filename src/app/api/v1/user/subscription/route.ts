@@ -3,11 +3,17 @@
  *
  * Returns the current user's subscription details (plan, status, trial info).
  * Auth required.
+ *
+ * isPro MUST be computed via computeIsPremium() — the same function used by
+ * requirePremium() guards and the /settings server page. Reimplementing the
+ * check here has caused drift bugs where paying users saw the paywall because
+ * one field (plan, status) was out of sync with the others.
  */
 
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { requireAuth } from '@/modules/auth/lib/helpers';
+import { computeIsPremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { users } from '@/shared/lib/schema';
@@ -38,6 +44,7 @@ export async function GET() {
       plan: users.plan,
       subscriptionTier: users.subscriptionTier,
       subscriptionStatus: users.subscriptionStatus,
+      subscriptionExpiresAt: users.subscriptionExpiresAt,
       trialEnd: users.trialEnd,
       currentPeriodEnd: users.currentPeriodEnd,
     })
@@ -57,10 +64,11 @@ export async function GET() {
   }
 
   const row = rows[0];
-  // Double-check with subscriptionTier to prevent isPro bypass from partial webhook writes
-  const isPro = row.subscriptionTier === 'premium' &&
-    row.plan !== 'free' &&
-    (row.subscriptionStatus === 'active' || row.subscriptionStatus === 'trialing' || row.subscriptionStatus === 'past_due');
+  const isPro = computeIsPremium(
+    row.subscriptionTier,
+    row.subscriptionStatus,
+    row.subscriptionExpiresAt,
+  );
   const isTrialing = row.subscriptionStatus === 'trialing';
 
   return NextResponse.json({
