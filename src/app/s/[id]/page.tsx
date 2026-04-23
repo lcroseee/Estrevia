@@ -205,7 +205,7 @@ export default async function SharePage({ params }: Props) {
 
         {/* Passport card — the shareable visual artifact */}
         <div className="w-full">
-          <PassportCard passport={passport} passportId={id} />
+          <PassportCard passport={passport} />
         </div>
 
         {/* Rarity callout — qualitative tier, not a statistical frequency claim */}
