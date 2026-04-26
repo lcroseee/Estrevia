@@ -1,2 +1,2 @@
-// TODO: Implementation in stream 4 (creative-gen-upload)
-export const ADVERTISING_CREATIVE_GEN_UPLOAD_STUB = true as const;
+export { uploadApprovedCreative, buildTrackingParams } from './meta-upload';
+export type { UploadDeps, MetaApiClient, DbUpdateClient, TrackingParams } from './meta-upload';
