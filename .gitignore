@@ -31,6 +31,13 @@ npm-debug.log*
 
 # claude code local state
 .claude/scheduled_tasks.lock
+.claude/worktrees/
+
+# playwright MCP local artifacts
+.playwright-mcp/
+
+# local debug screenshots (root-only)
+/tree-of-life-*.png
 
 # vercel
 .vercel
