@@ -11,6 +11,26 @@
     {
       "path": "/api/cron/cleanup-temp-charts",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/advertising/triage-hourly",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/advertising/triage-daily",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/advertising/retro-weekly",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/advertising/audience-refresh",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/advertising/account-health-weekly",
+      "schedule": "0 10 * * 1"
     }
   ]
 }
