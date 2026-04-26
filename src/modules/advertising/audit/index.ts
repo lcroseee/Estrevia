@@ -1,2 +1,5 @@
-// TODO: Implementation in stream 8 (audit)
-export const ADVERTISING_AUDIT_STUB = true as const;
+export { logDecision, getDecisionsForAd } from './decision-log';
+export type { DecisionLogDb, DecisionDbRow } from './decision-log';
+
+export { logCreativeEvent, getCreativeAudit } from './creative-log';
+export type { CreativeLogDb, CreativeDbRow, CreativeEvent, CreativeActor } from './creative-log';
