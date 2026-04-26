@@ -42,9 +42,11 @@ export function MoonPhaseSVG({
     const top = { x: cx, y: cy - r };
     const bot = { x: cx, y: cy + r };
     const litSweep = isWaxing ? 1 : 0;
-    const terminatorSweep = isGibbous
-      ? (isWaxing ? 0 : 1)
-      : (isWaxing ? 1 : 0);
+    // Terminator must bulge into the DARK side for gibbous (>50% lit) and into
+    // the LIT side for crescent (<50%) — otherwise the visible area inverts and
+    // a 70% gibbous renders as a 30% crescent. SVG sweep=1 from bottom→top
+    // bulges left, sweep=0 bulges right.
+    const terminatorSweep = isGibbous === isWaxing ? 1 : 0;
     litPath = [
       `M ${top.x} ${top.y}`,
       `A ${r} ${r} 0 0 ${litSweep} ${bot.x} ${bot.y}`,
