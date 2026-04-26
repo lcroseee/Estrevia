@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import type { MoonPhaseResponse, ApiResponse, MoonCalendarDay, MoonCalendarResponse } from '@/shared/types';
 import { CurrentPhaseCard } from './CurrentPhaseCard';
 import { MoonCalendarGrid } from './MoonCalendarGrid';
 import { DayDetailPanel } from './DayDetailPanel';
 import { MoonPhaseSVG } from './MoonPhaseSVG';
 import { useSubscription } from '@/shared/hooks/useSubscription';
-import { daysInMonth, MONTH_NAMES, type DayData } from './moon-types';
+import { daysInMonth, type DayData } from './moon-types';
 
 // ---------------------------------------------------------------------------
 // Client-side approximation (fallback while per-day calendar fetch is pending)
@@ -53,6 +54,7 @@ function phaseNameFromAngle(angle: number): string {
 // ---------------------------------------------------------------------------
 
 export function MoonCalendar() {
+  const t = useTranslations('moonPage');
   const today = new Date();
   const todayRef = {
     year: today.getFullYear(),
@@ -219,7 +221,7 @@ export function MoonCalendar() {
     viewYear === todayRef.year && viewMonth === todayRef.month;
 
   return (
-    <section aria-label="Moon Calendar" className="w-full max-w-2xl mx-auto">
+    <section aria-label={t('calendar.ariaLabel')} className="w-full max-w-2xl mx-auto">
       {/* Current phase card — only shown when viewing current month */}
       {currentPhase && isCurrentMonth && (
         <CurrentPhaseCard data={currentPhase} />
@@ -232,7 +234,7 @@ export function MoonCalendar() {
           disabled={!isPro && !subLoading}
           className="flex items-center justify-center w-9 h-9 rounded-lg transition-colors hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ color: 'rgba(255,255,255,0.5)' }}
-          aria-label={!isPro && !subLoading ? 'Previous month (Pro only)' : 'Previous month'}
+          aria-label={!isPro && !subLoading ? t('calendar.prevMonthPro') : t('calendar.prevMonth')}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -241,10 +243,10 @@ export function MoonCalendar() {
 
         <div className="flex items-center gap-3">
           <h2
-            className="text-lg font-medium"
+            className="text-lg font-medium first-letter:capitalize"
             style={{ fontFamily: 'var(--font-crimson-pro, serif)', color: '#E8E0D0' }}
           >
-            {MONTH_NAMES[viewMonth - 1]} {viewYear}
+            {t('calendar.monthHeader', { month: t(`months.long.${viewMonth}`), year: viewYear })}
           </h2>
           {!isCurrentMonth && (
             <button
@@ -256,7 +258,7 @@ export function MoonCalendar() {
                 border: '1px solid rgba(255,255,255,0.12)',
               }}
             >
-              Today
+              {t('calendar.today')}
             </button>
           )}
         </div>
@@ -266,7 +268,7 @@ export function MoonCalendar() {
           disabled={!isPro && !subLoading}
           className="flex items-center justify-center w-9 h-9 rounded-lg transition-colors hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-30 disabled:cursor-not-allowed"
           style={{ color: 'rgba(255,255,255,0.5)' }}
-          aria-label={!isPro && !subLoading ? 'Next month (Pro only)' : 'Next month'}
+          aria-label={!isPro && !subLoading ? t('calendar.nextMonthPro') : t('calendar.nextMonth')}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -277,16 +279,16 @@ export function MoonCalendar() {
       {/* Paywall hint for free users */}
       {!isPro && !subLoading && (
         <p className="text-[10px] text-center text-white/60 mb-4 -mt-2">
-          Free plan: current month only.{' '}
+          {t('freeMonthOnly')}{' '}
           <a href="/pricing" className="text-[#FFD700]/60 hover:text-[#FFD700]/80 underline">
-            Unlock full calendar
+            {t('unlockFullCalendar')}
           </a>
         </p>
       )}
 
       {/* Calendar body */}
       {loading && (
-        <div className="flex items-center justify-center py-16" aria-busy="true" aria-label="Loading moon phases">
+        <div className="flex items-center justify-center py-16" aria-busy="true" aria-label={t('calendar.loadingAria')}>
           <span
             className="inline-block w-5 h-5 rounded-full border border-white/20 border-t-white/60 animate-spin"
             aria-hidden="true"
@@ -300,7 +302,7 @@ export function MoonCalendar() {
           role="alert"
           style={{ color: 'rgba(255,255,255,0.35)' }}
         >
-          Could not load moon data. Please try again later.
+          {t('calendar.loadError')}
         </div>
       )}
 
@@ -327,17 +329,17 @@ export function MoonCalendar() {
         <div
           className="mt-6 flex flex-wrap gap-x-5 gap-y-2 justify-center text-xs"
           style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
-          aria-label="Moon phase legend"
+          aria-label={t('calendar.legendAria')}
         >
           {[
-            { angle: 0, illum: 0, label: 'New' },
-            { angle: 90, illum: 0.5, label: 'First Quarter' },
-            { angle: 180, illum: 1, label: 'Full' },
-            { angle: 270, illum: 0.5, label: 'Last Quarter' },
-          ].map(({ angle, illum, label }) => (
-            <span key={label} className="flex items-center gap-1.5">
+            { angle: 0, illum: 0, key: 'legendNew' },
+            { angle: 90, illum: 0.5, key: 'legendFirstQuarter' },
+            { angle: 180, illum: 1, key: 'legendFull' },
+            { angle: 270, illum: 0.5, key: 'legendLastQuarter' },
+          ].map(({ angle, illum, key }) => (
+            <span key={key} className="flex items-center gap-1.5">
               <MoonPhaseSVG illumination={illum} phaseAngle={angle} size={16} />
-              <span>{label}</span>
+              <span>{t(`calendar.${key}`)}</span>
             </span>
           ))}
         </div>

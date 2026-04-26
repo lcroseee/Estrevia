@@ -1,13 +1,20 @@
 import { SignIn, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import { createMetadata } from '@/shared/seo';
 
 // Clerk catch-all route. Handles /sign-in as well as deep paths Clerk uses
 // for multi-step flows (SSO callback, factor verification, etc).
 // Reads ?redirect_url= from the URL automatically.
-export const metadata: Metadata = {
-  title: 'Sign In — Estrevia',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.signIn');
+  return createMetadata({
+    title: tMeta('title'),
+    description: tMeta('description'),
+    path: '/sign-in',
+    noIndex: true,
+  });
+}
 
 export default function SignInPage() {
   return (

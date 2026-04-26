@@ -2,6 +2,8 @@
 
 import { memo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import { useLocale, useTranslations } from 'next-intl';
+import { getCardName } from './tarotLocalize';
 
 // Suit colors matching Thoth tradition
 const SUIT_COLORS: Record<string, string> = {
@@ -26,10 +28,10 @@ export interface TarotCardData {
   name: { en: string; es?: string };
   suit: string;
   keywords?: {
-    upright?: { en: string[] };
-    reversed?: { en: string[] };
+    upright?: { en: string[]; es?: string[] };
+    reversed?: { en: string[]; es?: string[] };
   };
-  description?: { en: string };
+  description?: { en: string; es?: string };
   hebrewLetter?: string;
   treeOfLifePath?: number;
 }
@@ -62,10 +64,15 @@ export const TarotCard = memo(function TarotCard({
   interactive = true,
 }: TarotCardProps) {
   const prefersReduced = useReducedMotion();
+  const locale = useLocale();
+  const tPage = useTranslations('tarotPage');
   const color = SUIT_COLORS[card.suit] ?? SUIT_COLORS.major;
   const symbol = SUIT_SYMBOLS[card.suit] ?? SUIT_SYMBOLS.major;
   const fonts = FONT_SIZES[size];
   const displayNumber = card.suit === 'major' ? toRoman(card.number) : String(card.number);
+  const localizedName = getCardName(card, locale);
+  const reversedAria = tPage('reversedAriaShort');
+  const reversedLabel = tPage('detail.reversed');
 
   return (
     <motion.button
@@ -83,7 +90,7 @@ export const TarotCard = memo(function TarotCard({
         transform: reversed ? 'rotate(180deg)' : undefined,
       }}
       whileHover={interactive && !prefersReduced ? { y: -4 } : undefined}
-      aria-label={`${card.name.en}${reversed ? ' (reversed)' : ''}`}
+      aria-label={`${localizedName}${reversed ? ` (${reversedAria})` : ''}`}
       disabled={!interactive}
     >
       {/* Top number */}
@@ -111,7 +118,7 @@ export const TarotCard = memo(function TarotCard({
           fontFamily: 'var(--font-geist-sans, sans-serif)',
         }}
       >
-        {card.name.en}
+        {localizedName}
       </span>
 
       {/* Reversed indicator */}
@@ -119,7 +126,7 @@ export const TarotCard = memo(function TarotCard({
         <div
           className="absolute top-1 right-1 w-2 h-2 rounded-full"
           style={{ backgroundColor: '#F87171' }}
-          aria-label="Reversed"
+          aria-label={reversedLabel}
         />
       )}
     </motion.button>

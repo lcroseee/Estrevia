@@ -7,10 +7,10 @@ import { ChartDisplay } from '@/modules/astro-engine/components/ChartDisplay';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.chart');
   return createMetadata({
-    title: 'Natal Chart Calculator — Sidereal Astrology',
-    description:
-      'Calculate your sidereal natal chart using Swiss Ephemeris. Discover your true zodiac sign, planetary positions, house cusps, and aspects.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/chart',
     keywords: [
       'sidereal natal chart',

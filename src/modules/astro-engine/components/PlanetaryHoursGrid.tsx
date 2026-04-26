@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
 import { Planet } from '@/shared/types';
 import type { PlanetaryHour, PlanetaryHoursResponse, ApiResponse, CitySearchResult } from '@/shared/types';
 import { PLANET_COLORS } from './PlanetGlyph';
@@ -20,15 +21,21 @@ const PLANET_GLYPHS: Partial<Record<Planet, string>> = {
   Saturn: '♄',
 };
 
-const PLANET_NAMES: Partial<Record<Planet, string>> = {
-  Sun: 'Sun',
-  Moon: 'Moon',
-  Mercury: 'Mercury',
-  Venus: 'Venus',
-  Mars: 'Mars',
-  Jupiter: 'Jupiter',
-  Saturn: 'Saturn',
-};
+// The seven Chaldean planets used in planetary-hour calculations.
+// These are the only keys we look up under `hoursPage.planets` in i18n.
+const CHALDEAN_PLANETS: readonly Planet[] = [
+  Planet.Sun,
+  Planet.Moon,
+  Planet.Mercury,
+  Planet.Venus,
+  Planet.Mars,
+  Planet.Jupiter,
+  Planet.Saturn,
+];
+
+function isChaldeanPlanet(p: Planet): boolean {
+  return CHALDEAN_PLANETS.includes(p);
+}
 
 function toDateInputValue(date: Date): string {
   const y = date.getFullYear();
@@ -70,6 +77,7 @@ interface HoursData {
 }
 
 export function PlanetaryHoursGrid() {
+  const t = useTranslations('hoursPage');
   const [geoState, setGeoState] = useState<GeolocationState>({ status: 'idle' });
   const [selectedDate, setSelectedDate] = useState<string>(
     toDateInputValue(new Date()),
@@ -101,7 +109,7 @@ export function PlanetaryHoursGrid() {
         });
         const res = await fetch(`/api/v1/hours?${params.toString()}`);
         if (!res.ok) {
-          setFetchError('Could not load planetary hours. Please try again.');
+          setFetchError(t('fetchErrorGeneric'));
           return;
         }
         const json: ApiResponse<PlanetaryHoursResponse> = await res.json();
@@ -113,13 +121,13 @@ export function PlanetaryHoursGrid() {
             sunset: json.data.sunset,
           });
         } else {
-          setFetchError(json.error ?? 'Unknown error');
+          setFetchError(json.error ?? t('fetchErrorUnknown'));
         }
       } catch {
-        setFetchError('Network error. Check your connection and retry.');
+        setFetchError(t('fetchErrorNetwork'));
       }
     },
-    [],
+    [t],
   );
 
   // Try to load saved location from localStorage, then fall back to geolocation
@@ -211,20 +219,20 @@ export function PlanetaryHoursGrid() {
   if (geoState.status === 'denied') {
     return (
       <section
-        aria-label="Planetary hours — select location"
+        aria-label={t('selectLocationAria')}
         className="flex flex-col items-center justify-center py-12 text-center gap-4 max-w-sm mx-auto"
       >
         <span className="text-4xl" aria-hidden="true">🔒</span>
-        <h2 className="text-lg font-medium text-white/80">Location required</h2>
+        <h2 className="text-lg font-medium text-white/80">{t('locationRequiredH2')}</h2>
         <p className="text-sm text-white/50 max-w-xs leading-relaxed mb-2">
-          Planetary hours are calculated for your location. Search for your city below.
+          {t('locationRequiredBody')}
         </p>
         <div className="w-full">
           <CityAutocomplete
             value={cityQuery}
             onChange={setCityQuery}
             onCitySelect={handleCitySelect}
-            placeholder="Search city for planetary hours..."
+            placeholder={t('searchCityPlaceholder')}
           />
         </div>
       </section>
@@ -235,19 +243,19 @@ export function PlanetaryHoursGrid() {
   if (geoState.status === 'error') {
     return (
       <section
-        aria-label="Location error — select city"
+        aria-label={t('locationErrorAria')}
         className="flex flex-col items-center justify-center py-12 text-center gap-4 max-w-sm mx-auto"
       >
         <span className="text-4xl" aria-hidden="true">⚠</span>
         <p className="text-sm text-white/50 max-w-xs mb-2">
-          Could not determine your location. Search for your city instead.
+          {t('locationErrorBody')}
         </p>
         <div className="w-full">
           <CityAutocomplete
             value={cityQuery}
             onChange={setCityQuery}
             onCitySelect={handleCitySelect}
-            placeholder="Search city..."
+            placeholder={t('searchCityShortPlaceholder')}
           />
         </div>
       </section>
@@ -258,7 +266,7 @@ export function PlanetaryHoursGrid() {
   if (geoState.status === 'loading' || geoState.status === 'idle') {
     return (
       <section
-        aria-label="Loading planetary hours"
+        aria-label={t('loadingScheduleAria')}
         aria-busy="true"
         className="flex flex-col items-center justify-center py-16 gap-4"
       >
@@ -266,7 +274,7 @@ export function PlanetaryHoursGrid() {
           className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/70 animate-spin"
           aria-hidden="true"
         />
-        <p className="text-sm text-white/40">Detecting location…</p>
+        <p className="text-sm text-white/40">{t('detectingLocation')}</p>
       </section>
     );
   }
@@ -275,35 +283,37 @@ export function PlanetaryHoursGrid() {
   const isToday = selectedDate === toDateInputValue(now);
 
   return (
-    <section aria-label="Planetary hours schedule">
+    <section aria-label={t('scheduleAria')}>
       {/* ── Header & date picker ── */}
       <div className="flex items-center justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-base font-medium text-white/90 font-[var(--font-geist-sans)]">
-            Planetary Hours
-          </h2>
+          {/*
+            Sunrise/sunset summary is the visible heading-level info here.
+            We intentionally do NOT render a redundant "Planetary Hours" H2
+            since the page already has H1 with the same text.
+          */}
           {hoursData && (
-            <p className="text-xs text-white/40 font-[var(--font-geist-mono)] mt-0.5">
-              Sunrise {formatTime(hoursData.sunrise)} · Sunset {formatTime(hoursData.sunset)}
+            <p className="text-xs text-white/50 font-[var(--font-geist-mono)]">
+              {t('sunrise')} {formatTime(hoursData.sunrise)} · {t('sunset')} {formatTime(hoursData.sunset)}
             </p>
           )}
         </div>
         <label className="flex flex-col gap-0.5">
-          <span className="sr-only">Select date</span>
+          <span className="sr-only">{t('selectDate')}</span>
           <input
             type="date"
             value={selectedDate}
             onChange={handleDateChange}
             max={toDateInputValue(new Date(now.getFullYear() + 1, 11, 31))}
             disabled={!isPro && !subLoading}
-            aria-label={!isPro ? 'Date (Pro only — free locked to today)' : 'Select date for planetary hours'}
+            aria-label={!isPro ? t('dateAriaLocked') : t('dateAriaUnlocked')}
             className="bg-white/5 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white/80 font-[var(--font-geist-mono)] focus:outline-none focus:ring-2 focus:ring-white/20 cursor-pointer transition-colors hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
           />
           {!isPro && !subLoading && (
             <p className="mt-1 text-[10px] text-white/35">
-              Free plan: today only.{' '}
+              {t('freeTodayOnly')}{' '}
               <a href="/pricing" className="text-[#FFD700]/60 hover:text-[#FFD700]/80 underline">
-                Unlock any date
+                {t('unlockAnyDate')}
               </a>
             </p>
           )}
@@ -324,7 +334,7 @@ export function PlanetaryHoursGrid() {
       {(isPending || (!hoursData && !fetchError)) && (
         <div
           aria-busy="true"
-          aria-label="Loading hours"
+          aria-label={t('loadingHoursAria')}
           className="flex flex-col gap-2"
         >
           {Array.from({ length: 12 }).map((_, i) => (
@@ -341,11 +351,11 @@ export function PlanetaryHoursGrid() {
       {hoursData && !isPending && (
         <div
           role="list"
-          aria-label="24 planetary hours"
+          aria-label={t('hours24Aria')}
           className="flex flex-col gap-1.5"
         >
           {/* Sunrise marker */}
-          <SunriseMarker time={hoursData.sunrise} label="Sunrise" />
+          <SunriseMarker time={hoursData.sunrise} label={t('sunrise')} />
 
           {hoursData.hours.map((hour, index) => {
             const isCurrent =
@@ -361,7 +371,7 @@ export function PlanetaryHoursGrid() {
             return (
               <div key={`${hour.planet}-${hour.startTime}`}>
                 {showSunset && (
-                  <SunsetMarker time={hoursData.sunset} label="Sunset" />
+                  <SunsetMarker time={hoursData.sunset} label={t('sunset')} />
                 )}
                 <HourRow hour={hour} isCurrent={isCurrent} />
               </div>
@@ -382,10 +392,14 @@ function HourRow({
   hour: PlanetaryHour;
   isCurrent: boolean;
 }) {
+  const t = useTranslations('hoursPage');
   const planet = hour.planet;
   const color = PLANET_COLORS[planet] ?? '#FFFFFF';
   const glyph = PLANET_GLYPHS[planet] ?? '★';
-  const name = PLANET_NAMES[planet] ?? planet;
+  // Localized planet name from `hoursPage.planets`. If the body is somehow
+  // not one of the seven Chaldean planets (shouldn't happen), fall back to
+  // the raw English name to avoid throwing on a missing key.
+  const name = isChaldeanPlanet(planet) ? t(`planets.${planet}`) : planet;
   const duration = formatDuration(hour.startTime, hour.endTime);
 
   // Progress for current hour
@@ -428,7 +442,12 @@ function HourRow({
             }
           : undefined
       }
-      aria-label={`${name} hour — ${formatTime(hour.startTime)} to ${formatTime(hour.endTime)}, ${duration}${isCurrent ? ', current hour' : ''}`}
+      aria-label={t(isCurrent ? 'hourAriaCurrent' : 'hourAria', {
+        name,
+        start: formatTime(hour.startTime),
+        end: formatTime(hour.endTime),
+        duration,
+      })}
     >
       <div className="flex items-center gap-3 px-4 py-3">
         {/* Current hour glow strip */}
@@ -478,7 +497,7 @@ function HourRow({
         <span
           className="text-[11px] w-4 text-center text-white/25"
           aria-hidden="true"
-          title={hour.isDay ? 'Day hour' : 'Night hour'}
+          title={hour.isDay ? t('dayHourTitle') : t('nightHourTitle')}
         >
           {hour.isDay ? '☀' : '☾'}
         </span>
@@ -493,7 +512,7 @@ function HourRow({
           aria-valuenow={Math.round(progress * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label={`${Math.round(progress * 100)}% of current hour elapsed`}
+          aria-label={t('progressAria', { percent: Math.round(progress * 100) })}
         >
           <div
             className="h-full transition-[width] duration-1000 ease-linear"
@@ -509,10 +528,11 @@ function HourRow({
 }
 
 function SunriseMarker({ time, label }: { time: string; label: string }) {
+  const t = useTranslations('hoursPage');
   return (
     <div
       className="flex items-center gap-2 py-1 my-1"
-      aria-label={`${label} at ${formatTime(time)}`}
+      aria-label={t('markerAria', { label, time: formatTime(time) })}
       role="separator"
     >
       <div className="flex-1 h-px bg-amber-500/20" />
@@ -525,10 +545,11 @@ function SunriseMarker({ time, label }: { time: string; label: string }) {
 }
 
 function SunsetMarker({ time, label }: { time: string; label: string }) {
+  const t = useTranslations('hoursPage');
   return (
     <div
       className="flex items-center gap-2 py-1 my-1"
-      aria-label={`${label} at ${formatTime(time)}`}
+      aria-label={t('markerAria', { label, time: formatTime(time) })}
       role="separator"
     >
       <div className="flex-1 h-px bg-indigo-500/20" />

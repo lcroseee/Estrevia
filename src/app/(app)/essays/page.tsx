@@ -7,7 +7,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { PLANETS, SIGNS } from '@/shared/seo/internal-links';
@@ -129,6 +129,7 @@ function SignCard({ essay, planet, sign, signLabel, cardAria, fallbackDesc }: Si
 
 export default async function EssaysIndexPage() {
   const t = await getTranslations('essaysPage');
+  const locale = await getLocale();
 
   const essaysBreadcrumb = breadcrumbSchema([
     { name: 'Estrevia', url: SITE_URL },
@@ -137,7 +138,7 @@ export default async function EssaysIndexPage() {
 
   // getAllEssays() returns only essays that exist as MDX files.
   // Build a lookup map so sign cards can show real descriptions when available.
-  const allEssays = getAllEssays();
+  const allEssays = getAllEssays(locale);
   const essayMap = new Map<string, EssayMeta>();
   for (const essay of allEssays) {
     essayMap.set(essay.slug, essay);

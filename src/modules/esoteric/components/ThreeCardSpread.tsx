@@ -2,13 +2,14 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 import { postJson } from '@/shared/lib/apiFetch';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
 import Link from 'next/link';
+import { getCardName, getCardDescription, getCardKeywords } from './tarotLocalize';
 
 interface DrawnCard {
   cardId: string;
@@ -20,14 +21,16 @@ interface ThreeCardSpreadProps {
   allCards: TarotCardData[];
 }
 
-const POSITIONS = [
-  { id: 1, label: 'Past' },
-  { id: 2, label: 'Present' },
-  { id: 3, label: 'Future' },
+const POSITIONS: { id: number; key: 'pastPosition' | 'presentPosition' | 'futurePosition' }[] = [
+  { id: 1, key: 'pastPosition' },
+  { id: 2, key: 'presentPosition' },
+  { id: 3, key: 'futurePosition' },
 ];
 
 export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
   const t = useTranslations('tarot');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const prefersReduced = useReducedMotion();
   const { isPro, isLoading: subLoading } = useSubscription();
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
@@ -89,7 +92,9 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
       {
         spreadType: 'three_card',
         cards: drawnCards.map((dc) => ({
-          position: POSITIONS.find((p) => p.id === dc.positionId)?.label,
+          // Position sent to API stays English ("Past"/"Present"/"Future") so
+          // the AI prompt is locale-stable. UI labels are localised via t() below.
+          position: ['Past', 'Present', 'Future'][dc.positionId - 1],
           cardId: dc.cardId,
           cardName: allCards.find((c) => c.id === dc.cardId)?.name.en,
           reversed: dc.reversed,
@@ -180,7 +185,7 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
                 )}
               </AnimatePresence>
               <span className="text-[10px] text-white/30 uppercase tracking-wider">
-                {pos.label}
+                {t(pos.key)}
               </span>
             </div>
           );
@@ -235,7 +240,7 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
           style={{ background: 'rgba(167,139,250,0.05)' }}
         >
           <h4 className="text-xs text-[#A78BFA]/70 uppercase tracking-wider font-medium">
-            AI Interpretation
+            {t('interpretation')}
           </h4>
           <p
             className="text-sm text-white/70 leading-relaxed whitespace-pre-line"
@@ -274,17 +279,18 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
                   <TarotCard card={cardData} size="sm" reversed={selectedCard.reversed} interactive={false} />
                   <div className="space-y-1 flex-1">
                     <p className="text-xs text-white/40 uppercase tracking-wider">
-                      {position?.label}
+                      {position ? t(position.key) : null}
                     </p>
                     <h3 className="text-lg font-semibold text-white/90">
-                      {cardData.name.en}
+                      {getCardName(cardData, locale)}
                       {selectedCard.reversed && <span className="text-xs text-red-400/70 ml-1.5">R</span>}
                     </h3>
                     <div className="flex flex-wrap gap-1">
-                      {(selectedCard.reversed
-                        ? cardData.keywords?.reversed?.en
-                        : cardData.keywords?.upright?.en
-                      )?.map((kw) => (
+                      {getCardKeywords(
+                        cardData,
+                        selectedCard.reversed ? 'reversed' : 'upright',
+                        locale,
+                      ).map((kw) => (
                         <span key={kw} className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 text-white/50">
                           {kw}
                         </span>
@@ -297,7 +303,7 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
                     className="text-sm text-white/60 leading-relaxed"
                     style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}
                   >
-                    {cardData.description.en}
+                    {getCardDescription(cardData, locale)}
                   </p>
                 )}
                 <button
@@ -305,7 +311,7 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
                   onClick={() => setSelectedCard(null)}
                   className="w-full py-2 rounded-lg text-sm text-white/40 hover:text-white/60 border border-white/8 hover:border-white/15 transition-colors"
                 >
-                  Close
+                  {tCommon('close')}
                 </button>
               </motion.div>
             </motion.div>

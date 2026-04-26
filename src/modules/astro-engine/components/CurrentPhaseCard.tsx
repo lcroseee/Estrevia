@@ -1,33 +1,57 @@
 'use client';
 
+import { useLocale, useTranslations } from 'next-intl';
 import type { MoonPhaseResponse } from '@/shared/types';
 import { MoonPhaseSVG } from './MoonPhaseSVG';
 import { ZodiacGlyph } from '@/shared/components/ZodiacGlyph';
+import { phaseIdFromName } from './moon-types';
 
 interface CurrentPhaseCardProps {
   data: MoonPhaseResponse;
 }
 
-function formatShortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+/**
+ * Format ISO date as "Apr 27, 2026" (en) or "27 abr 2026" (es).
+ * Uses translated short month names so we don't depend on browser ICU
+ * data for Spanish (which would yield "27 abr 2026" with a period).
+ */
+function formatShortDate(iso: string, locale: string, monthShort: (m: number) => string): string {
+  const d = new Date(iso);
+  const day = d.getDate();
+  const month = monthShort(d.getMonth() + 1);
+  const year = d.getFullYear();
+  if (locale === 'es') return `${day} ${month} ${year}`;
+  return `${month} ${day}, ${year}`;
 }
 
-function formatExitTime(iso: string): string {
+/**
+ * Format ISO timestamp as "Apr 27, 06:06 PM" (en) or "27 abr, 18:06" (es).
+ * 24h for Spanish (LATAM convention), 12h for English.
+ */
+function formatExitTime(iso: string, locale: string, monthShort: (m: number) => string): string {
   const d = new Date(iso);
-  // Locale-aware "Apr 24, 15:32" — weekday stripped to keep the line short
-  return d.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const day = d.getDate();
+  const month = monthShort(d.getMonth() + 1);
+  if (locale === 'es') {
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${day} ${month}, ${hh}:${mm}`;
+  }
+  // English: 12h with AM/PM
+  let h = d.getHours();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const hh = String(h).padStart(2, '0');
+  return `${month} ${day}, ${hh}:${mm} ${ampm}`;
 }
 
 export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
+  const t = useTranslations('moonPage');
+  const locale = useLocale();
+  const monthShort = (m: number) => t(`months.short.${m}`);
+  const phaseLocalized = t(`phases.${phaseIdFromName(data.phase)}`);
   const hasSign = Boolean(data.moonSign);
   const hasExit = Boolean(data.signExitTime);
 
@@ -54,7 +78,7 @@ export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
           className="text-2xl font-medium mb-1"
           style={{ fontFamily: 'var(--font-crimson-pro, serif)', color: '#E8E0D0' }}
         >
-          {data.phase}
+          {phaseLocalized}
         </h2>
 
         {/* Illumination bar */}
@@ -66,7 +90,7 @@ export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
             aria-valuenow={Math.round(data.illumination)}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label={`Illumination ${Math.round(data.illumination)}%`}
+            aria-label={t('current.illuminationAria', { percent: Math.round(data.illumination) })}
           >
             <div
               className="h-full rounded-full transition-all duration-500"
@@ -91,15 +115,15 @@ export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
             className="text-sm mb-3 flex items-center justify-center sm:justify-start gap-1.5 flex-wrap"
             style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
           >
-            <span style={{ color: 'rgba(255,255,255,0.35)' }}>Moon in</span>
+            <span style={{ color: 'rgba(255,255,255,0.35)' }}>{t('current.moonIn')}</span>
             <ZodiacGlyph sign={data.moonSign} size={15} className="text-[#F0D080]" />
             <span style={{ color: '#E8E0D0' }}>{data.moonSign}</span>
             {hasExit && (
               <>
                 <span aria-hidden="true" style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
-                <span style={{ color: 'rgba(255,255,255,0.35)' }}>until</span>
+                <span style={{ color: 'rgba(255,255,255,0.35)' }}>{t('current.until')}</span>
                 <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: 'rgba(255,255,255,0.55)' }}>
-                  {formatExitTime(data.signExitTime as string)}
+                  {formatExitTime(data.signExitTime as string, locale, monthShort)}
                 </span>
               </>
             )}
@@ -109,16 +133,16 @@ export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
         {/* Next events */}
         <div className="flex flex-col sm:flex-row gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
           <span>
-            <span style={{ color: 'rgba(255,255,255,0.3)' }}>Next New Moon: </span>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>{t('current.nextNewMoon')} </span>
             <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: 'rgba(255,255,255,0.65)' }}>
-              {formatShortDate(data.nextNewMoon)}
+              {formatShortDate(data.nextNewMoon, locale, monthShort)}
             </span>
           </span>
           <span className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
           <span>
-            <span style={{ color: 'rgba(255,255,255,0.3)' }}>Next Full Moon: </span>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>{t('current.nextFullMoon')} </span>
             <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: '#F0D080' }}>
-              {formatShortDate(data.nextFullMoon)}
+              {formatShortDate(data.nextFullMoon, locale, monthShort)}
             </span>
           </span>
         </div>

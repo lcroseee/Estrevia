@@ -1,11 +1,15 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { CheckoutStartClient } from './CheckoutStartClient';
 
-export const metadata: Metadata = {
-  title: 'Preparing checkout — Estrevia',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('pricingPage');
+  return {
+    title: t('checkout.metaTitle'),
+    robots: { index: false, follow: false },
+  };
+}
 
 // Force dynamic rendering because the client reads ?plan and ?return from
 // the URL at request time; static rendering would bake in the wrong values.

@@ -2,15 +2,14 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo';
 
-// R10: force-static + hourly revalidate. Legal copy rarely changes.
-export const dynamic = 'force-static';
-export const revalidate = 3600;
+// Dynamic rendering required so the NEXT_LOCALE cookie is honored.
+export const dynamic = 'force-dynamic';
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.terms');
   return createMetadata({
-    title: 'Terms of Service',
-    description:
-      'Terms of Service for Estrevia — sidereal astrology platform. Read about acceptable use, license, and astrology disclaimer.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/terms',
   });
 }

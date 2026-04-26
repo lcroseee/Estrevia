@@ -1,12 +1,13 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { MoonPhaseSVG } from './MoonPhaseSVG';
 import { ZodiacGlyph } from '@/shared/components/ZodiacGlyph';
 import {
   daysInMonth,
   firstWeekdayOfMonth,
-  MONTH_NAMES,
-  WEEKDAY_LABELS,
+  phaseIdFromName,
+  WEEKDAY_KEYS,
   type DayData,
   type TodayRef,
 } from './moon-types';
@@ -20,8 +21,10 @@ interface MoonCalendarGridProps {
 }
 
 export function MoonCalendarGrid({ year, month, days, today, onDaySelect }: MoonCalendarGridProps) {
+  const t = useTranslations('moonPage');
   const firstWeekday = firstWeekdayOfMonth(year, month);
   const totalDays = daysInMonth(year, month);
+  const monthLong = t(`months.long.${month}`);
 
   // Build cell array: leading empty cells + day cells
   const cells: (DayData | null)[] = [
@@ -36,12 +39,12 @@ export function MoonCalendarGrid({ year, month, days, today, onDaySelect }: Moon
     today.year === year && today.month === month && today.day === d.day;
 
   return (
-    <div role="grid" aria-label={`Moon phases for ${MONTH_NAMES[month - 1]} ${year}`}>
+    <div role="grid" aria-label={t('calendar.monthAria', { month: monthLong, year })}>
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-2" role="row">
-        {WEEKDAY_LABELS.map((label) => (
+        {WEEKDAY_KEYS.map((key) => (
           <div
-            key={label}
+            key={key}
             role="columnheader"
             className="text-center text-xs py-1"
             style={{
@@ -50,7 +53,7 @@ export function MoonCalendarGrid({ year, month, days, today, onDaySelect }: Moon
               letterSpacing: '0.05em',
             }}
           >
-            {label}
+            {t(`weekdays.${key}`)}
           </div>
         ))}
       </div>
@@ -65,6 +68,22 @@ export function MoonCalendarGrid({ year, month, days, today, onDaySelect }: Moon
           const today_ = isToday(cell);
           const isMajorPhase =
             cell.phaseName === 'New Moon' || cell.phaseName === 'Full Moon';
+          const phaseLocalized = t(`phases.${phaseIdFromName(cell.phaseName)}`);
+          const percent = Math.round(cell.illumination);
+          const cellAria = cell.moonSign
+            ? t('calendar.cellAriaWithSign', {
+                month: monthLong,
+                day: cell.day,
+                phase: phaseLocalized,
+                percent,
+                sign: cell.moonSign,
+              })
+            : t('calendar.cellAria', {
+                month: monthLong,
+                day: cell.day,
+                phase: phaseLocalized,
+                percent,
+              });
 
           return (
             <button
@@ -72,12 +91,7 @@ export function MoonCalendarGrid({ year, month, days, today, onDaySelect }: Moon
               type="button"
               role="gridcell"
               onClick={() => onDaySelect(cell)}
-              aria-label={[
-                `${MONTH_NAMES[month - 1]} ${cell.day}`,
-                `${cell.phaseName}`,
-                `${Math.round(cell.illumination)}% illuminated`,
-                cell.moonSign ? `Moon in ${cell.moonSign}` : null,
-              ].filter(Boolean).join(', ')}
+              aria-label={cellAria}
               className="flex flex-col items-center justify-center rounded-xl py-2 px-1 transition-colors duration-200 hover:bg-white/8 active:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 cursor-pointer"
               style={{
                 background: today_
@@ -139,7 +153,7 @@ export function MoonCalendarGrid({ year, month, days, today, onDaySelect }: Moon
 
       {/* Accessible: total cells announced as range */}
       <div className="sr-only">
-        Showing moon phases for {totalDays} days in {MONTH_NAMES[month - 1]} {year}.
+        {t('calendar.summary', { totalDays, month: monthLong, year })}
       </div>
     </div>
   );

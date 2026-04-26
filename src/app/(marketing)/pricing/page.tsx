@@ -12,16 +12,14 @@ import { createMetadata, JsonLdScript, faqSchema, breadcrumbSchema, productSchem
 import { SITE_URL } from '@/shared/seo/constants';
 import { PricingToggle } from './PricingToggle';
 
-// R10: force-static + hourly revalidate. Pricing copy rarely changes;
-// Stripe Checkout is invoked from the client island, not on page render.
-export const dynamic = 'force-static';
-export const revalidate = 3600;
+// Dynamic rendering required so the NEXT_LOCALE cookie is honored.
+export const dynamic = 'force-dynamic';
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.pricing');
   return createMetadata({
-    title: 'Pricing — Free & Premium Plans',
-    description:
-      'Estrevia is free to use. Upgrade to Premium for unlimited saved charts, detailed aspects, future transits, and priority support.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/pricing',
     keywords: ['estrevia pricing', 'sidereal astrology premium', 'natal chart unlimited'],
   });

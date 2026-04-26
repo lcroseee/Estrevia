@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 const LOCALES = [
   { code: 'en', label: 'EN' },
@@ -14,6 +14,7 @@ const LOCALES = [
  */
 export function LanguageSwitcher() {
   const locale = useLocale();
+  const t = useTranslations('appShell');
   const [isPending, startTransition] = useTransition();
 
   function handleChange(newLocale: string) {
@@ -31,7 +32,7 @@ export function LanguageSwitcher() {
       className="flex items-center gap-0.5 rounded-lg p-0.5"
       style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
       role="radiogroup"
-      aria-label="Language"
+      aria-label={t('languageAriaLabel')}
     >
       {LOCALES.map(({ code, label }) => (
         <button

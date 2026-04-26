@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { MoonPhaseSVG } from './MoonPhaseSVG';
 import { ZodiacGlyph } from '@/shared/components/ZodiacGlyph';
-import type { DayData } from './moon-types';
+import { phaseIdFromName, WEEKDAY_KEYS, type DayData } from './moon-types';
 
 interface DayDetailPanelProps {
   day: DayData | null;
@@ -13,6 +14,8 @@ interface DayDetailPanelProps {
 }
 
 export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProps) {
+  const t = useTranslations('moonPage');
+  const locale = useLocale();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -40,12 +43,14 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
 
   if (!day) return null;
 
-  const dateStr = new Date(year, month - 1, day.day).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  // Locale-specific full date: "Sunday, April 26, 2026" or "domingo, 26 de abril de 2026".
+  const dateObj = new Date(year, month - 1, day.day);
+  const weekdayLong = t(`weekdaysLong.${WEEKDAY_KEYS[dateObj.getDay()]}`);
+  const monthLong = t(`months.long.${month}`);
+  const dateStr = locale === 'es'
+    ? `${weekdayLong}, ${day.day} de ${monthLong} de ${year}`
+    : `${weekdayLong}, ${monthLong} ${day.day}, ${year}`;
+  const phaseLocalized = t(`phases.${phaseIdFromName(day.phaseName)}`);
 
   return (
     <>
@@ -61,7 +66,7 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`Moon details for ${dateStr}`}
+        aria-label={t('dayDetail.ariaLabel', { dateLong: dateStr })}
         className="fixed bottom-0 inset-x-0 z-50 bg-[#0F0F17] border-t border-white/8 rounded-t-2xl shadow-2xl shadow-black/60 max-h-[60vh] overflow-y-auto"
       >
         {/* Handle bar */}
@@ -77,7 +82,7 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
                 className="text-lg font-medium text-white/90"
                 style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
               >
-                {day.phaseName}
+                {phaseLocalized}
               </h3>
               <p
                 className="text-xs text-white/60 mt-0.5"
@@ -90,7 +95,7 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
               ref={closeButtonRef}
               onClick={onClose}
               className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-              aria-label="Close"
+              aria-label={t('dayDetail.close')}
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
                 <path d="M5 5l8 8M13 5l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -114,7 +119,7 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
                   aria-valuenow={Math.round(day.illumination)}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label={`Illumination ${Math.round(day.illumination)}%`}
+                  aria-label={t('current.illuminationAria', { percent: Math.round(day.illumination) })}
                 >
                   <div
                     className="h-full rounded-full"
@@ -132,21 +137,21 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
                 </span>
               </div>
               <p className="text-xs text-white/35" style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}>
-                Illumination
+                {t('dayDetail.illumination')}
               </p>
             </div>
           </div>
 
           {/* Details grid */}
           <div className="grid grid-cols-2 gap-3">
-            <DetailItem label="Phase" value={day.phaseName} />
+            <DetailItem label={t('dayDetail.phase')} value={phaseLocalized} />
             <DetailItem
-              label="Phase angle"
+              label={t('dayDetail.phaseAngle')}
               value={`${Math.round(day.angle)}°`}
               mono
             />
             <DetailItem
-              label="Illumination"
+              label={t('dayDetail.illumination')}
               value={`${Math.round(day.illumination)}%`}
               mono
             />
@@ -159,7 +164,7 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
                   className="text-[10px] uppercase tracking-widest mb-1"
                   style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
                 >
-                  Moon sign
+                  {t('dayDetail.moonSign')}
                 </p>
                 <p
                   className="text-sm flex items-center gap-2"
@@ -174,7 +179,7 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
                 </p>
               </div>
             ) : (
-              <DetailItem label="Moon sign" value="—" muted />
+              <DetailItem label={t('dayDetail.moonSign')} value="—" muted />
             )}
           </div>
 
@@ -188,10 +193,10 @@ export function DayDetailPanel({ day, year, month, onClose }: DayDetailPanelProp
               fontFamily: 'var(--font-geist-sans, sans-serif)',
             }}
           >
-            {day.isVoidOfCourse === true && 'Moon is void of course for part of this day.'}
-            {day.isVoidOfCourse === false && 'Moon is not void of course today.'}
-            {day.isVoidOfCourse === null && 'Void of course data not available for this month.'}
-            {day.isVoidOfCourse === undefined && 'Void of course data not available for this month.'}
+            {day.isVoidOfCourse === true && t('dayDetail.vocYes')}
+            {day.isVoidOfCourse === false && t('dayDetail.vocNo')}
+            {day.isVoidOfCourse === null && t('dayDetail.vocUnknown')}
+            {day.isVoidOfCourse === undefined && t('dayDetail.vocUnknown')}
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -242,6 +243,7 @@ export default function PrecessionDiagram() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-60px' });
   const prefersReducedMotion = useReducedMotion();
+  const t = useTranslations('whySiderealPage');
 
   const shouldAnimate = isInView && !prefersReducedMotion;
 
@@ -281,13 +283,13 @@ export default function PrecessionDiagram() {
               className="text-[11px] uppercase tracking-[0.18em] font-medium"
               style={{ color: COLOR_TEXT_MUTED, fontFamily: 'var(--font-geist-sans)' }}
             >
-              Precession of the Equinoxes
+              {t('diagramHeaderTitle')}
             </span>
             <span
               className="text-[11px] tracking-wide tabular-nums"
               style={{ color: 'rgba(255,215,0,0.5)', fontFamily: 'var(--font-geist-mono)' }}
             >
-              ~25,772 yr cycle
+              {t('diagramHeaderCycle')}
             </span>
           </div>
 
@@ -295,14 +297,7 @@ export default function PrecessionDiagram() {
           <svg
             viewBox="0 0 400 340"
             role="img"
-            aria-label={
-              'Diagram showing Earth\'s axial precession cycle of approximately 25,772 years. ' +
-              'Earth sits at the center with its axis tilted at 23.4 degrees. ' +
-              'The axis tip traces an oval precession orbit over time. ' +
-              'A gold arc marks the approximately 24 degree drift (current Lahiri ayanamsa) ' +
-              'between the reference epoch (around 0 AD, when tropical and sidereal zodiacs aligned) ' +
-              'and today\'s position. This drift explains why sidereal zodiac signs differ from tropical signs.'
-            }
+            aria-label={t('diagramSvgAriaLabel')}
             className="w-full"
             style={{ maxHeight: '340px' }}
           >
@@ -394,7 +389,7 @@ export default function PrecessionDiagram() {
               animate={isInView ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.4, delay: prefersReducedMotion ? 0 : 0.2 }}
             >
-              Earth
+              {t('diagramLabelEarth')}
             </motion.text>
 
             {/* Axis label */}
@@ -410,7 +405,7 @@ export default function PrecessionDiagram() {
               animate={isInView ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.4, delay: prefersReducedMotion ? 0 : 0.25 }}
             >
-              axis 23.4°
+              {t('diagramLabelAxis')}
             </motion.text>
 
             {/* Reference epoch label */}
@@ -437,7 +432,7 @@ export default function PrecessionDiagram() {
                 fill={COLOR_TEXT_MUTED}
                 fontFamily="var(--font-geist-sans)"
               >
-                ~0 AD · tropical = sidereal
+                {t('diagramLabelReference')}
               </text>
             </motion.g>
 
@@ -466,7 +461,7 @@ export default function PrecessionDiagram() {
                 fill={COLOR_CURRENT_MARKER}
                 fontFamily="var(--font-geist-sans)"
               >
-                Today
+                {t('diagramLabelToday')}
               </text>
               <text
                 x={currentPos.x + 17}
@@ -476,7 +471,7 @@ export default function PrecessionDiagram() {
                 fill={COLOR_TEXT_MUTED}
                 fontFamily="var(--font-geist-sans)"
               >
-                ayanamsa ~24°07′
+                {t('diagramLabelAyanamsa')}
               </text>
             </motion.g>
 
@@ -499,7 +494,7 @@ export default function PrecessionDiagram() {
                     fill={COLOR_DRIFT_ARC}
                     fontFamily="var(--font-geist-mono)"
                   >
-                    24° drift
+                    {t('diagramLabelDrift')}
                   </text>
                 );
               })()}
@@ -518,7 +513,7 @@ export default function PrecessionDiagram() {
               animate={isInView ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.5, delay: prefersReducedMotion ? 0 : 0.9 }}
             >
-              Full precession cycle ≈ 25,772 years
+              {t('diagramLabelFullCycle')}
             </motion.text>
           </svg>
 
@@ -530,9 +525,7 @@ export default function PrecessionDiagram() {
             animate={isInView ? { opacity: 1 } : { opacity: 0 }}
             transition={{ duration: 0.5, delay: prefersReducedMotion ? 0 : 1.0 }}
           >
-            Earth&apos;s axis tip traces this orbit over 25,772 years. The gold arc shows
-            the ~24° drift since tropical and sidereal zodiacs last aligned (~0 AD) —
-            this is the Lahiri ayanamsa correction applied to every planetary position.
+            {t('diagramCaption')}
           </motion.p>
         </div>
       </motion.div>

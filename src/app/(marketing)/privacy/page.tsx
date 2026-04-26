@@ -2,15 +2,14 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo';
 
-// R10: force-static + hourly revalidate. Legal copy rarely changes.
-export const dynamic = 'force-static';
-export const revalidate = 3600;
+// Dynamic rendering required so the NEXT_LOCALE cookie is honored.
+export const dynamic = 'force-dynamic';
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.privacy');
   return createMetadata({
-    title: 'Privacy Policy',
-    description:
-      'How Estrevia collects, uses, and protects your data. Birth data encrypted with AES-256-GCM. GDPR rights: access, rectification, deletion, export.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/privacy',
   });
 }

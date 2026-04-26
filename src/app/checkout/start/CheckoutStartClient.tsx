@@ -18,6 +18,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { postJson } from '@/shared/lib/apiFetch';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
@@ -32,6 +33,7 @@ interface CheckoutResponse {
 export function CheckoutStartClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('pricingPage.checkout');
 
   const planRaw = searchParams.get('plan');
   const plan: Plan = planRaw === 'pro_monthly' ? 'pro_monthly' : 'pro_annual';
@@ -61,7 +63,7 @@ export function CheckoutStartClient() {
             window.location.href = result.data.data.url;
           } else {
             setPhase('error');
-            setErrorMessage('Unable to create a checkout session. Please try again.');
+            setErrorMessage(t('errSession'));
             trackEvent(AnalyticsEvent.CHECKOUT_ERROR, {
               plan,
               reason: result.data.error ?? 'unknown',
@@ -78,7 +80,7 @@ export function CheckoutStartClient() {
         }
         case 'error': {
           setPhase('error');
-          setErrorMessage(result.message || 'Something went wrong.');
+          setErrorMessage(result.message || t('errGeneric'));
           trackEvent(AnalyticsEvent.CHECKOUT_ERROR, {
             plan,
             status: result.status,
@@ -88,7 +90,7 @@ export function CheckoutStartClient() {
         }
         case 'network-error': {
           setPhase('error');
-          setErrorMessage('Network error. Please check your connection and try again.');
+          setErrorMessage(t('errNetwork'));
           trackEvent(AnalyticsEvent.CHECKOUT_ERROR, { plan, reason: 'network' });
           break;
         }
@@ -99,7 +101,7 @@ export function CheckoutStartClient() {
       cancelled = true;
     };
     // attempt drives retries; plan/returnUrl come from URL and don't change mid-session.
-  }, [plan, returnUrl, attempt]);
+  }, [plan, returnUrl, attempt, t]);
 
   function retry() {
     setPhase('preparing');
@@ -116,27 +118,27 @@ export function CheckoutStartClient() {
       <div className="text-center max-w-sm">
         {phase === 'preparing' && (
           <>
-            <Spinner />
+            <Spinner label={t('loadingAria')} />
             <h1
               className="text-lg font-light text-white mt-5"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
             >
-              Preparing your checkout
+              {t('preparing')}
             </h1>
             <p className="text-sm text-white/50 mt-1.5">
-              Taking you to secure payment…
+              {t('takingTo')}
             </p>
           </>
         )}
 
         {phase === 'redirecting' && (
           <>
-            <Spinner />
+            <Spinner label={t('loadingAria')} />
             <h1
               className="text-lg font-light text-white mt-5"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
             >
-              Redirecting to Stripe
+              {t('redirecting')}
             </h1>
           </>
         )}
@@ -147,7 +149,7 @@ export function CheckoutStartClient() {
               className="text-lg font-light text-white mb-3"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
             >
-              Something went wrong
+              {t('somethingWrong')}
             </h1>
             <p className="text-sm text-white/60 mb-6">{errorMessage}</p>
             <div className="flex flex-col gap-3 items-stretch">
@@ -160,14 +162,14 @@ export function CheckoutStartClient() {
                   color: '#0A0A0F',
                 }}
               >
-                Try again
+                {t('tryAgain')}
               </button>
               <button
                 type="button"
                 onClick={goBack}
                 className="text-xs text-white/45 hover:text-white/70 py-2"
               >
-                Go back
+                {t('goBack')}
               </button>
             </div>
           </>
@@ -177,12 +179,12 @@ export function CheckoutStartClient() {
   );
 }
 
-function Spinner() {
+function Spinner({ label }: { label: string }) {
   return (
     <div
       className="inline-block w-8 h-8 border-2 border-[#FFD700]/30 border-t-[#FFD700] rounded-full animate-spin"
       role="status"
-      aria-label="Loading"
+      aria-label={label}
     />
   );
 }

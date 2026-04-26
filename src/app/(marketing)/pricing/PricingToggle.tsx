@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { PricingUpgradeButton } from './PricingUpgradeButton';
 
 const FREE_FEATURE_KEYS = [
@@ -31,6 +31,8 @@ const PRO_FEATURE_KEYS = [
 
 export function PricingToggle() {
   const t = useTranslations('pricing');
+  const tPage = useTranslations('pricingPage');
+  const locale = useLocale();
   const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
 
   const plan = billing === 'monthly' ? 'pro_monthly' : 'pro_annual';
@@ -38,7 +40,7 @@ export function PricingToggle() {
   function formatTrialEndDate(): string {
     const d = new Date();
     d.setDate(d.getDate() + 3);
-    return d.toLocaleDateString('en-US', {
+    return d.toLocaleDateString(locale === 'es' ? 'es' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -51,7 +53,7 @@ export function PricingToggle() {
       <div
         className="flex items-center justify-center gap-1 p-1 bg-white/5 rounded-xl mb-3 border border-white/10 max-w-xs mx-auto"
         role="radiogroup"
-        aria-label="Billing period"
+        aria-label={tPage('billingPeriodAria')}
       >
         <button
           type="button"
@@ -110,12 +112,11 @@ export function PricingToggle() {
               <span className="text-sm text-white/35 mb-2">/ {t('freeForever')}</span>
             </div>
             <p className="text-sm text-white/45 leading-relaxed">
-              Full chart calculation and core tools. No account required for
-              calculation.
+              {tPage('freeDescription')}
             </p>
           </div>
 
-          <ul className="space-y-3 flex-1 mb-8" role="list" aria-label="Free plan features">
+          <ul className="space-y-3 flex-1 mb-8" role="list" aria-label={tPage('freePlanFeaturesAria')}>
             {FREE_FEATURE_KEYS.map((key) => (
               <li key={key} className="flex items-start gap-3">
                 <span className="text-white/30 mt-0.5 flex-shrink-0" aria-hidden="true">
@@ -128,7 +129,7 @@ export function PricingToggle() {
 
           <div
             className="w-full py-3 px-6 rounded-xl border border-white/10 text-sm text-white/40 text-center"
-            aria-label="Current plan"
+            aria-label={tPage('currentPlanAria')}
           >
             {t('currentPlan')}
           </div>
@@ -172,15 +173,14 @@ export function PricingToggle() {
               </p>
             )}
             <p className="text-sm text-white/45 leading-relaxed">
-              For serious practitioners. Unlimited access, deep analysis,
-              and early access to every new feature.
+              {tPage('proDescription')}
             </p>
           </div>
 
           <ul
             className="space-y-3 flex-1 mb-8"
             role="list"
-            aria-label="Pro plan features"
+            aria-label={tPage('proPlanFeaturesAria')}
           >
             {PRO_FEATURE_KEYS.map((key) => (
               <li key={key} className="flex items-start gap-3">

@@ -1,20 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { TarotCard } from './TarotCard';
 import { DailyCard } from './DailyCard';
 import type { TarotCardData } from './TarotCard';
+import { getCardName } from './tarotLocalize';
 
 const SUITS = ['major', 'wands', 'cups', 'swords', 'disks'] as const;
-const SUIT_LABELS: Record<string, string> = {
-  major: 'Major Arcana',
-  wands: 'Wands',
-  cups: 'Cups',
-  swords: 'Swords',
-  disks: 'Disks',
-};
 
 interface TarotCatalogClientProps {
   cards: TarotCardData[];
@@ -22,6 +16,8 @@ interface TarotCatalogClientProps {
 
 export function TarotCatalogClient({ cards }: TarotCatalogClientProps) {
   const t = useTranslations('tarot');
+  const tPage = useTranslations('tarotPage');
+  const locale = useLocale();
   const [activeSuit, setActiveSuit] = useState<string>('major');
 
   const filteredCards = useMemo(
@@ -46,7 +42,7 @@ export function TarotCatalogClient({ cards }: TarotCatalogClientProps) {
       <div>
         <nav
           className="flex gap-1 overflow-x-auto pb-2 scrollbar-none"
-          aria-label="Card suits"
+          aria-label={tPage('cardSuitsAriaLabel')}
         >
           {SUITS.map((suit) => (
             <button
@@ -61,7 +57,7 @@ export function TarotCatalogClient({ cards }: TarotCatalogClientProps) {
               ].join(' ')}
               aria-current={activeSuit === suit ? 'true' : undefined}
             >
-              {SUIT_LABELS[suit]}
+              {tPage(`suits.${suit}`)}
             </button>
           ))}
         </nav>
@@ -74,7 +70,7 @@ export function TarotCatalogClient({ cards }: TarotCatalogClientProps) {
             key={card.id}
             href={`/tarot/${card.id}`}
             className="block"
-            aria-label={`View ${card.name.en}`}
+            aria-label={tPage('viewCardAriaLabel', { name: getCardName(card, locale) })}
           >
             <TarotCard card={card} size="sm" interactive={false} />
           </Link>
@@ -83,7 +79,7 @@ export function TarotCatalogClient({ cards }: TarotCatalogClientProps) {
 
       {filteredCards.length === 0 && (
         <p className="text-sm text-white/30 text-center py-8">
-          No cards found in this suit.
+          {tPage('noCardsFound')}
         </p>
       )}
     </div>

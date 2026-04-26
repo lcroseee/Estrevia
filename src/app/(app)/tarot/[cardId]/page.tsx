@@ -3,8 +3,14 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
+import {
+  getCardName,
+  getCardDescription,
+  getCardKeywords,
+} from '@/modules/esoteric/components/tarotLocalize';
 
 // NOTE: cards.json no longer contains an `image` field.
 // Tarot imagery by Frieda Harris is copyright until 2064 per CLAUDE.md.
@@ -17,15 +23,15 @@ interface CardData {
   name: { en: string; es?: string };
   suit: string;
   keywords: {
-    upright: { en: string[] };
-    reversed: { en: string[] };
+    upright: { en: string[]; es?: string[] };
+    reversed: { en: string[]; es?: string[] };
   };
   astrology: string;
   hebrewLetter: string;
   treeOfLifePath: number;
   treeOfLifeConnects: number[];
   liber777Column: string;
-  description: { en: string };
+  description: { en: string; es?: string };
 }
 
 async function loadCard(cardId: string): Promise<CardData | null> {
@@ -91,8 +97,17 @@ export default async function CardDetailPage({ params }: Props) {
     notFound();
   }
 
-  const color = SUIT_COLORS[card.suit] ?? SUIT_COLORS.major;
+  const locale = await getLocale();
+  const tPage = await getTranslations('tarotPage');
 
+  const color = SUIT_COLORS[card.suit] ?? SUIT_COLORS.major;
+  const localizedName = getCardName(card, locale);
+  const localizedDescription = getCardDescription(card, locale);
+  const upright = getCardKeywords(card, 'upright', locale);
+  const reversed = getCardKeywords(card, 'reversed', locale);
+
+  // Breadcrumb / structured data uses canonical English name to keep
+  // a stable identifier for crawlers across locales.
   const cardBreadcrumb = breadcrumbSchema([
     { name: 'Estrevia', url: SITE_URL },
     { name: 'Thoth Tarot', url: `${SITE_URL}/tarot` },
@@ -112,7 +127,7 @@ export default async function CardDetailPage({ params }: Props) {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            All cards
+            {tPage('detail.back')}
           </Link>
 
           {/* Card header */}
@@ -138,7 +153,7 @@ export default async function CardDetailPage({ params }: Props) {
                 className="text-[10px] text-center leading-tight font-medium tracking-wide uppercase text-white/70"
                 style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
               >
-                {card.name.en}
+                {localizedName}
               </span>
             </div>
 
@@ -148,14 +163,14 @@ export default async function CardDetailPage({ params }: Props) {
                 className="text-2xl font-semibold text-white/90 tracking-tight"
                 style={{ fontFamily: 'var(--font-geist-sans)' }}
               >
-                {card.name.en}
+                {localizedName}
               </h1>
               <div className="flex flex-wrap gap-2">
                 <span
                   className="px-2 py-0.5 rounded text-xs font-medium"
                   style={{ backgroundColor: `${color}20`, color }}
                 >
-                  {card.suit === 'major' ? 'Major Arcana' : card.suit.charAt(0).toUpperCase() + card.suit.slice(1)}
+                  {tPage(`suits.${card.suit}` as 'suits.major' | 'suits.wands' | 'suits.cups' | 'suits.swords' | 'suits.disks')}
                 </span>
                 <span className="px-2 py-0.5 rounded text-xs bg-white/5 text-white/50">
                   {card.astrology}
@@ -169,15 +184,15 @@ export default async function CardDetailPage({ params }: Props) {
             className="text-base text-white/75 leading-relaxed"
             style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}
           >
-            {card.description.en}
+            {localizedDescription}
           </p>
 
           {/* Keywords */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-xl border border-white/8 p-4 space-y-2" style={{ background: 'rgba(255,255,255,0.025)' }}>
-              <h3 className="text-xs text-white/40 uppercase tracking-wider font-medium">Upright</h3>
+              <h3 className="text-xs text-white/40 uppercase tracking-wider font-medium">{tPage('detail.upright')}</h3>
               <div className="flex flex-wrap gap-1.5">
-                {card.keywords.upright.en.map((kw) => (
+                {upright.map((kw) => (
                   <span
                     key={kw}
                     className="px-2 py-0.5 rounded-md text-xs bg-green-500/10 text-green-300/80"
@@ -188,9 +203,9 @@ export default async function CardDetailPage({ params }: Props) {
               </div>
             </div>
             <div className="rounded-xl border border-white/8 p-4 space-y-2" style={{ background: 'rgba(255,255,255,0.025)' }}>
-              <h3 className="text-xs text-white/40 uppercase tracking-wider font-medium">Reversed</h3>
+              <h3 className="text-xs text-white/40 uppercase tracking-wider font-medium">{tPage('detail.reversed')}</h3>
               <div className="flex flex-wrap gap-1.5">
-                {card.keywords.reversed.en.map((kw) => (
+                {reversed.map((kw) => (
                   <span
                     key={kw}
                     className="px-2 py-0.5 rounded-md text-xs bg-red-500/10 text-red-300/80"
@@ -205,15 +220,15 @@ export default async function CardDetailPage({ params }: Props) {
           {/* 777 Correspondences */}
           <div className="rounded-xl border border-white/8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.025)' }}>
             <h3 className="px-5 py-3 text-xs text-white/40 uppercase tracking-wider font-medium border-b border-white/6">
-              777 Correspondences
+              {tPage('detail.correspondences')}
             </h3>
             <dl className="divide-y divide-white/6">
               {[
-                { label: 'Hebrew Letter', value: card.hebrewLetter },
-                { label: 'Tree of Life Path', value: String(card.treeOfLifePath) },
-                { label: 'Connects', value: card.treeOfLifeConnects.join(' \u2194 ') },
-                { label: 'Astrological', value: card.astrology },
-                { label: 'Liber 777 Column', value: card.liber777Column },
+                { label: tPage('detail.hebrewLetter'), value: card.hebrewLetter },
+                { label: tPage('detail.treeOfLifePath'), value: String(card.treeOfLifePath) },
+                { label: tPage('detail.connects'), value: card.treeOfLifeConnects.join(' \u2194 ') },
+                { label: tPage('detail.astrological'), value: card.astrology },
+                { label: tPage('detail.liber777Column'), value: card.liber777Column },
               ].map(({ label, value }) => (
                 <div key={label} className="grid grid-cols-[140px_1fr] px-5 py-2.5 hover:bg-white/3 transition-colors">
                   <dt className="text-xs text-white/40 uppercase tracking-wider self-center">{label}</dt>
@@ -227,7 +242,7 @@ export default async function CardDetailPage({ params }: Props) {
 
           {/* Disclaimer */}
           <p className="text-[11px] text-white/20">
-            Astrology is not medical, financial, or professional advice. For entertainment and self-reflection purposes only.
+            {tPage('detail.disclaimer')}
           </p>
         </div>
       </div>

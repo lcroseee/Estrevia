@@ -104,7 +104,103 @@
     "faq3A": "Dates are calculated with Swiss Ephemeris using the Moshier analytical ephemeris, accurate to ±0.01°. The event time is narrowed by binary search to within ±1 minute.",
     "breadcrumb": "Moon Phase",
     "freeMonthOnly": "Free plan: current month only.",
-    "unlockFullCalendar": "Unlock full calendar"
+    "unlockFullCalendar": "Unlock full calendar",
+    "phases": {
+      "newMoon": "New Moon",
+      "waxingCrescent": "Waxing Crescent",
+      "firstQuarter": "First Quarter",
+      "waxingGibbous": "Waxing Gibbous",
+      "fullMoon": "Full Moon",
+      "waningGibbous": "Waning Gibbous",
+      "lastQuarter": "Last Quarter",
+      "waningCrescent": "Waning Crescent"
+    },
+    "months": {
+      "long": {
+        "1": "January",
+        "2": "February",
+        "3": "March",
+        "4": "April",
+        "5": "May",
+        "6": "June",
+        "7": "July",
+        "8": "August",
+        "9": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December"
+      },
+      "short": {
+        "1": "Jan",
+        "2": "Feb",
+        "3": "Mar",
+        "4": "Apr",
+        "5": "May",
+        "6": "Jun",
+        "7": "Jul",
+        "8": "Aug",
+        "9": "Sep",
+        "10": "Oct",
+        "11": "Nov",
+        "12": "Dec"
+      }
+    },
+    "weekdays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "weekdaysLong": {
+      "sun": "Sunday",
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday"
+    },
+    "current": {
+      "moonIn": "Moon in",
+      "until": "until",
+      "nextNewMoon": "Next New Moon:",
+      "nextFullMoon": "Next Full Moon:",
+      "illuminationAria": "Illumination {percent}%"
+    },
+    "calendar": {
+      "ariaLabel": "Moon Calendar",
+      "monthAria": "Moon phases for {month} {year}",
+      "monthHeader": "{month} {year}",
+      "today": "Today",
+      "prevMonth": "Previous month",
+      "prevMonthPro": "Previous month (Pro only)",
+      "nextMonth": "Next month",
+      "nextMonthPro": "Next month (Pro only)",
+      "loadingAria": "Loading moon phases",
+      "loadError": "Could not load moon data. Please try again later.",
+      "legendAria": "Moon phase legend",
+      "legendNew": "New",
+      "legendFirstQuarter": "First Quarter",
+      "legendFull": "Full",
+      "legendLastQuarter": "Last Quarter",
+      "summary": "Showing moon phases for {totalDays} days in {month} {year}.",
+      "cellAria": "{month} {day}, {phase}, {percent}% illuminated",
+      "cellAriaWithSign": "{month} {day}, {phase}, {percent}% illuminated, Moon in {sign}"
+    },
+    "dayDetail": {
+      "ariaLabel": "Moon details for {dateLong}",
+      "close": "Close",
+      "illumination": "Illumination",
+      "phase": "Phase",
+      "phaseAngle": "Phase angle",
+      "moonSign": "Moon sign",
+      "vocYes": "Moon is void of course for part of this day.",
+      "vocNo": "Moon is not void of course today.",
+      "vocUnknown": "Void of course data not available for this month."
+    }
   },
   "hoursPage": {
     "eyebrow": "Chaldean Order",
@@ -121,7 +217,43 @@
     "faq3A": "Planetary hours are based on sunrise/sunset times, not zodiac positions, so they are identical in both sidereal and tropical astrology. The Chaldean sequence (Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon) is independent of ayanamsa.",
     "breadcrumb": "Planetary Hours",
     "freeTodayOnly": "Free plan: today only.",
-    "unlockAnyDate": "Unlock any date"
+    "unlockAnyDate": "Unlock any date",
+    "scheduleHeading": "Schedule",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "selectDate": "Select date",
+    "dateAriaLocked": "Date (Pro only — free locked to today)",
+    "dateAriaUnlocked": "Select date for planetary hours",
+    "locationRequiredH2": "Location required",
+    "locationRequiredBody": "Planetary hours are calculated for your location. Search for your city below.",
+    "searchCityPlaceholder": "Search city for planetary hours...",
+    "locationErrorBody": "Could not determine your location. Search for your city instead.",
+    "searchCityShortPlaceholder": "Search city...",
+    "detectingLocation": "Detecting location…",
+    "loadingHoursAria": "Loading hours",
+    "fetchErrorGeneric": "Could not load planetary hours. Please try again.",
+    "fetchErrorNetwork": "Network error. Check your connection and retry.",
+    "fetchErrorUnknown": "Unknown error",
+    "scheduleAria": "Planetary hours schedule",
+    "selectLocationAria": "Planetary hours — select location",
+    "locationErrorAria": "Location error — select city",
+    "loadingScheduleAria": "Loading planetary hours",
+    "hours24Aria": "24 planetary hours",
+    "dayHourTitle": "Day hour",
+    "nightHourTitle": "Night hour",
+    "hourAriaCurrent": "{name} hour — {start} to {end}, {duration}, current hour",
+    "hourAria": "{name} hour — {start} to {end}, {duration}",
+    "progressAria": "{percent}% of current hour elapsed",
+    "markerAria": "{label} at {time}",
+    "planets": {
+      "Sun": "Sun",
+      "Moon": "Moon",
+      "Mercury": "Mercury",
+      "Venus": "Venus",
+      "Mars": "Mars",
+      "Jupiter": "Jupiter",
+      "Saturn": "Saturn"
+    }
   },
   "essaysPage": {
     "h1": "Sidereal Astrology Essays",
@@ -144,7 +276,249 @@
       "pluto": "Pluto"
     }
   },
+  "signsPage": {
+    "h1": "Sidereal Zodiac Signs",
+    "intro": "Sidereal astrology aligns the zodiac with the actual constellations, shifted",
+    "introMid": "from tropical. Find your true sidereal sign below — dates reflect real sky positions using the",
+    "introAyanamsa": "Lahiri ayanamsa",
+    "shift": "~24°",
+    "all12": "All 12 Signs",
+    "gridAria": "Sidereal zodiac signs",
+    "cardAria": "{sign} — {dates}",
+    "dateRangeAria": "Date range: {dates}",
+    "ctaHeading": "Discover your sidereal placements",
+    "ctaText": "Calculate your full sidereal natal chart — Sun, Moon, Ascendant, and all 10 planetary positions using the Lahiri ayanamsa.",
+    "ctaButton": "Calculate your sidereal natal chart",
+    "related": "Related",
+    "relatedAria": "Related pages",
+    "linkWhySidereal": "Why sidereal astrology differs from tropical",
+    "linkChart": "Sidereal natal chart calculator",
+    "linkMoon": "Current moon phase",
+    "breadcrumbAria": "Breadcrumb",
+    "breadcrumbHome": "Home",
+    "breadcrumbCurrent": "Signs"
+  },
+  "signDetail": {
+    "h1": "Sidereal {sign}",
+    "glyphAria": "{sign} glyph",
+    "ruledBy": "Ruled by {ruler}",
+    "keyTraits": "Key Traits",
+    "overview": "Overview",
+    "correspondencesHeading": "Kabbalistic Correspondences (777)",
+    "hebrewLetter": "Hebrew Letter",
+    "tarotCard": "Tarot Card",
+    "treeOfLife": "Tree of Life",
+    "essaysHeading": "All Planets in Sidereal {sign}",
+    "essaysIntro": "Each placement describes how that planet expresses through sidereal {sign} energy ({dates}).",
+    "essayCardAria": "{planet} in sidereal {sign}",
+    "essayLink": "{planet} in sidereal {sign}",
+    "ctaHeading": "Do you have placements in sidereal {sign}?",
+    "ctaText": "Calculate your sidereal natal chart to discover your Sun, Moon, Ascendant, and all 10 planetary positions using the Lahiri ayanamsa.",
+    "ctaButton": "Calculate your sidereal natal chart",
+    "related": "Related",
+    "relatedAria": "Related pages",
+    "linkWhySidereal": "Why sidereal astrology differs from tropical",
+    "linkChart": "Sidereal natal chart calculator",
+    "linkMoon": "Current moon phase",
+    "breadcrumbAria": "Breadcrumb",
+    "breadcrumbHome": "Home",
+    "breadcrumbSigns": "Signs",
+    "elements": {
+      "Fire": "Fire",
+      "Earth": "Earth",
+      "Air": "Air",
+      "Water": "Water"
+    },
+    "modalities": {
+      "Cardinal": "Cardinal",
+      "Fixed": "Fixed",
+      "Mutable": "Mutable"
+    },
+    "planets": {
+      "sun": "Sun",
+      "moon": "Moon",
+      "mercury": "Mercury",
+      "venus": "Venus",
+      "mars": "Mars",
+      "jupiter": "Jupiter",
+      "saturn": "Saturn",
+      "uranus": "Uranus",
+      "neptune": "Neptune",
+      "pluto": "Pluto"
+    }
+  },
+  "pageMeta": {
+    "landing": {
+      "title": "Sidereal Astrology — True Natal Chart Calculator",
+      "description": "Calculate your sidereal natal chart. Discover your true zodiac sign with Swiss Ephemeris precision, planetary hours, and esoteric correspondences."
+    },
+    "pricing": {
+      "title": "Pricing — Free & Premium Plans",
+      "description": "Estrevia is free to use. Upgrade to Premium for unlimited saved charts, detailed aspects, future transits, and priority support."
+    },
+    "whySidereal": {
+      "title": "Why Sidereal Astrology Differs from Tropical",
+      "description": "Sidereal astrology tracks real constellations using the Lahiri ayanamsa. Most sun signs shift one sign earlier vs tropical. Calculate your true chart."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "How Estrevia collects, uses, and protects your data. Birth data encrypted with AES-256-GCM. GDPR rights: access, rectification, deletion, export."
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "description": "Terms of Service for Estrevia — sidereal astrology platform. Read about acceptable use, license, and astrology disclaimer."
+    },
+    "support": {
+      "title": "Support",
+      "description": "Get help with Estrevia. Pro members receive priority replies."
+    },
+    "chart": {
+      "title": "Natal Chart Calculator — Sidereal Astrology",
+      "description": "Calculate your sidereal natal chart using Swiss Ephemeris. Discover your true zodiac sign, planetary positions, house cusps, and aspects."
+    },
+    "moon": {
+      "title": "Moon Phase Today",
+      "description": "Current moon phase, illumination percentage, and monthly lunar calendar. Track new and full moons with Swiss Ephemeris precision."
+    },
+    "hours": {
+      "title": "Planetary Hours Today",
+      "description": "Current planetary hour and full daily schedule. Traditional Chaldean planetary hours calculated for your location."
+    },
+    "signs": {
+      "title": "Sidereal Zodiac Signs — True Dates & Meanings",
+      "description": "Explore all 12 sidereal zodiac signs with true astronomical dates, elements, ruling planets, and key traits. Find your real sign using the Lahiri ayanamsa."
+    },
+    "signsDetail": {
+      "title": "Sidereal {sign} — Traits, Dates & Meaning",
+      "description": "Sidereal {sign} ({dates}): {traits} — {element} {modality} ruled by {ruler}. Discover all 10 planetary placements."
+    },
+    "synastry": {
+      "title": "Synastry Calculator — Compatibility Analysis",
+      "description": "Calculate sidereal compatibility between two charts. Get scores for emotional connection, communication, passion, and long-term stability."
+    },
+    "tarot": {
+      "title": "Thoth Tarot — 78 Card Catalog & Daily Draw",
+      "description": "Explore the 78 cards of the Thoth Tarot deck. Draw your daily card, explore Major Arcana and four suits, and discover Kabbalistic correspondences."
+    },
+    "treeOfLife": {
+      "title": "Tree of Life — Kabbalistic Diagram",
+      "description": "Explore the interactive Tree of Life: 10 Sephiroth, hidden Daath, 22 paths, and Thoth Tarot correspondences. Overlay your natal planets."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your Estrevia account, subscription, and data."
+    },
+    "signIn": {
+      "title": "Sign In",
+      "description": "Sign in to your Estrevia account to access saved charts and Premium features."
+    },
+    "signUp": {
+      "title": "Sign Up",
+      "description": "Create your Estrevia account to save sidereal charts, draw daily tarot, and unlock Premium features."
+    }
+  },
+  "essayDetail": {
+    "breadcrumb": "Essays / {planet} / {sign}",
+    "tagSiderealLahiri": "Sidereal · Lahiri",
+    "essayAttributesAria": "Essay attributes",
+    "elements": {
+      "Fire": "Fire",
+      "Earth": "Earth",
+      "Air": "Air",
+      "Water": "Water"
+    },
+    "modalities": {
+      "Cardinal": "Cardinal",
+      "Fixed": "Fixed",
+      "Mutable": "Mutable"
+    },
+    "planets": {
+      "Sun": "Sun",
+      "Moon": "Moon",
+      "Mercury": "Mercury",
+      "Venus": "Venus",
+      "Mars": "Mars",
+      "Jupiter": "Jupiter",
+      "Saturn": "Saturn",
+      "Uranus": "Uranus",
+      "Neptune": "Neptune",
+      "Pluto": "Pluto"
+    },
+    "calc": {
+      "heading": "Is YOUR Sun in sidereal {sign}?",
+      "subheading": "Enter your birth date — we'll check your sidereal Sun sign instantly.",
+      "birthDateLabel": "Birth date",
+      "submit": "Check",
+      "calculating": "Calculating…",
+      "calculatingAria": "Calculating your Sun sign",
+      "matchHeading": "Yes — your sidereal Sun is in <strong>{sign}</strong>",
+      "matchSubtext": "Your full chart reveals Moon, Rising, and all 10 planets in sidereal.",
+      "matchCta": "Calculate full chart",
+      "tryAnother": "Try another date",
+      "noMatchHeading": "Your sidereal Sun is in <strong>{actualSign}</strong> — not {expectedSign}.",
+      "noMatchSubtext": "Many people discover their sidereal sign differs from their tropical sign by ~24°.",
+      "noMatchCta": "See your full chart",
+      "errService": "Service temporarily unavailable. Please try again.",
+      "errCalc": "Could not calculate your Sun sign. Please try again.",
+      "errGeneric": "Something went wrong."
+    },
+    "comparison": {
+      "heading": "Sidereal vs Tropical — {sign}",
+      "colSystem": "System",
+      "colSunInSign": "Sun in {sign}",
+      "colBasis": "Basis",
+      "rowSidereal": "Sidereal",
+      "rowTropical": "Tropical",
+      "basisSidereal": "Actual constellation (Lahiri)",
+      "basisTropical": "Vernal equinox point",
+      "callout": "The Lahiri ayanamsa is currently ~24°07′. Someone born in the tropical {sign} date range may be sidereal <strong>{prevSign}</strong> — {offset} separates the two systems.",
+      "offset": "~24 days later",
+      "noteNotSun": "Date ranges above show when the Sun is in {sign} as a reference period. {planet} moves at a different rate and its position must be calculated individually."
+    },
+    "correspondences": {
+      "heading": "777 Correspondences — Path {path}",
+      "rowTarot": "Tarot Trump",
+      "rowHebrewLetter": "Hebrew Letter",
+      "rowSymbol": "Symbol",
+      "rowMeaning": "Meaning",
+      "rowStone": "Stone",
+      "rowPerfume": "Perfume",
+      "rowPlant": "Plant",
+      "rowAnimal": "Animal",
+      "tarotKey": "Key {n}",
+      "colorScalesLabel": "Color Scales",
+      "scaleKing": "King Scale",
+      "scaleQueen": "Queen Scale",
+      "scalePrince": "Prince Scale",
+      "scalePrincess": "Princess Scale",
+      "attribution": "Attribution",
+      "source": "Source: Crowley, <em>777 and Other Qabalistic Writings</em> (pre-1929, public domain).",
+      "noData": "No 777 correspondences found for {sign}."
+    },
+    "ephemeris": {
+      "heading": "Ephemeris — {planet} in {sign}",
+      "colEnters": "Enters {sign}",
+      "colExits": "Leaves {sign}",
+      "tableAria": "{planet} in {sign} transit dates",
+      "footer": "Sidereal (Lahiri ayanamsa). Range: {start} – {end}. Dates vary ±1 day by year.",
+      "noPlanetData": "No ephemeris data available for {planet}.",
+      "noTransits": "No transits of {planet} through {sign} in this range ({start} – {end})."
+    },
+    "related": {
+      "heading": "Related Readings",
+      "anchorPlanetInSign": "{planet} in sidereal {sign}",
+      "anchorSignOverview": "sidereal {sign}",
+      "anchorWhySidereal": "sidereal vs tropical astrology",
+      "anchorChartCta": "calculate your sidereal natal chart"
+    },
+    "disclaimer": {
+      "label": "Content disclaimer",
+      "body": "Astrology is a symbolic system for self-reflection and cultural inquiry. Nothing on this page constitutes medical, psychological, financial, or legal advice. Interpretations describe archetypal tendencies — not guaranteed outcomes or fixed destiny. Consult qualified professionals for decisions affecting your health, finances, or legal standing."
+    }
+  },
   "appShell": {
+    "skipToContent": "Skip to main content",
+    "languageAriaLabel": "Language",
     "loadingCalculating": "Calculating…",
     "errorH1": "Something went wrong",
     "errorBody": "An unexpected error occurred. This has been logged and we'll look into it.",
@@ -153,6 +527,26 @@
     "notFoundBody": "The stars don't recognize this path. Let's get you back on course.",
     "notFoundCalcChart": "Calculate My Chart",
     "notFoundReturnHome": "Return Home"
+  },
+  "hourBar": {
+    "label": "Planetary hours",
+    "loadingAria": "Loading planetary hours",
+    "enableLocationAria": "Enable location for planetary hours",
+    "enableLocationTitle": "Enable location for planetary hours",
+    "ending": "ending",
+    "minutesLeft": "{count, plural, one {# min left} other {# min left}}",
+    "hoursLeft": "{hours}h {minutes}m left",
+    "ariaHour": "{planet} hour — {timeLeft}. Tap to view full schedule.",
+    "ariaProgress": "{percent}% elapsed",
+    "planets": {
+      "Sun": "Sun",
+      "Moon": "Moon",
+      "Mercury": "Mercury",
+      "Venus": "Venus",
+      "Mars": "Mars",
+      "Jupiter": "Jupiter",
+      "Saturn": "Saturn"
+    }
   },
   "whySidereal": {
     "breadcrumbHome": "Home",
@@ -266,6 +660,19 @@
     "sourceWiki": "Precession of the equinoxes — Wikipedia",
     "sourceIau": "IAU constellation boundaries — International Astronomical Union"
   },
+  "whySiderealPage": {
+    "diagramHeaderTitle": "Precession of the Equinoxes",
+    "diagramHeaderCycle": "~25,772 yr cycle",
+    "diagramSvgAriaLabel": "Diagram showing Earth's axial precession cycle of approximately 25,772 years. Earth sits at the center with its axis tilted at 23.4 degrees. The axis tip traces an oval precession orbit over time. A gold arc marks the approximately 24 degree drift (current Lahiri ayanamsa) between the reference epoch (around 0 AD, when tropical and sidereal zodiacs aligned) and today's position. This drift explains why sidereal zodiac signs differ from tropical signs.",
+    "diagramLabelEarth": "Earth",
+    "diagramLabelAxis": "axis 23.4°",
+    "diagramLabelReference": "~0 AD · tropical = sidereal",
+    "diagramLabelToday": "Today",
+    "diagramLabelAyanamsa": "ayanamsa ~24°07′",
+    "diagramLabelDrift": "24° drift",
+    "diagramLabelFullCycle": "Full precession cycle ≈ 25,772 years",
+    "diagramCaption": "Earth's axis tip traces this orbit over 25,772 years. The gold arc shows the ~24° drift since tropical and sidereal zodiacs last aligned (~0 AD) — this is the Lahiri ayanamsa correction applied to every planetary position."
+  },
   "nav": {
     "chart": "Chart",
     "moon": "Moon",
@@ -377,7 +784,11 @@
     "calcFailed": "Calculation failed. Please try again.",
     "submitting": "Calculating chart...",
     "submit": "Calculate Chart",
-    "footer": "Using Lahiri ayanamsa · Sidereal zodiac · Placidus houses"
+    "footer": "Using Lahiri ayanamsa · Sidereal zodiac · Placidus houses",
+    "nameLabel": "Name",
+    "nameOptional": "Optional",
+    "requiredAria": "(required)",
+    "locationSet": "Location set"
   },
   "chart": {
     "title": "Natal Chart",
@@ -524,6 +935,31 @@
     "faq3Q": "What payment methods are accepted?",
     "faq3A": "All major credit/debit cards via Stripe. Apple Pay and Google Pay available on supported devices."
   },
+  "pricingPage": {
+    "freeDescription": "Full chart calculation and core tools. No account required for calculation.",
+    "proDescription": "For serious practitioners. Unlimited access, deep analysis, and early access to every new feature.",
+    "billingPeriodAria": "Billing period",
+    "freePlanFeaturesAria": "Free plan features",
+    "currentPlanAria": "Current plan",
+    "proPlanFeaturesAria": "Pro plan features",
+    "redirecting": "Redirecting to checkout...",
+    "errUnexpected": "Unexpected response from server. Please try again.",
+    "errGeneric": "Something went wrong. Please try again.",
+    "errNetwork": "Network error. Please check your connection and try again.",
+    "checkout": {
+      "metaTitle": "Preparing checkout — Estrevia",
+      "preparing": "Preparing your checkout",
+      "takingTo": "Taking you to secure payment…",
+      "redirecting": "Redirecting to Stripe",
+      "somethingWrong": "Something went wrong",
+      "tryAgain": "Try again",
+      "goBack": "Go back",
+      "loadingAria": "Loading",
+      "errSession": "Unable to create a checkout session. Please try again.",
+      "errGeneric": "Something went wrong.",
+      "errNetwork": "Network error. Please check your connection and try again."
+    }
+  },
   "paywall": {
     "title": "Unlock Full Access",
     "subtitle": "Continue reading with Estrevia Pro",
@@ -623,7 +1059,19 @@
     "interpretError": "Interpretation failed. Please try again.",
     "interpretNetworkError": "Network error. Please check your connection.",
     "interpretProRequired": "An active Pro subscription is required for AI interpretation.",
-    "signInToSave": "Sign in to save your daily card"
+    "signInToSave": "Sign in to save your daily card",
+    "celticPositions": {
+      "present": "Present",
+      "challenge": "Challenge",
+      "foundation": "Foundation",
+      "recentPast": "Recent Past",
+      "crown": "Crown",
+      "nearFuture": "Near Future",
+      "self": "Self",
+      "environment": "Environment",
+      "hopesFears": "Hopes/Fears",
+      "outcome": "Outcome"
+    }
   },
   "treeOfLife": {
     "title": "Tree of Life",
@@ -644,6 +1092,54 @@
     "filter": "Filter",
     "search": "Search correspondences...",
     "upgradeToPro": "Upgrade to Pro"
+  },
+  "tarotPage": {
+    "h1": "Thoth Tarot",
+    "subtitle": "78 cards of the Thoth deck with Kabbalistic correspondences",
+    "openSpreads": "Open Spreads",
+    "tapToDraw": "Tap the card to draw",
+    "drawAriaLabel": "Draw your daily card",
+    "viewCardAriaLabel": "View {name}",
+    "noCardsFound": "No cards found in this suit.",
+    "cardSuitsAriaLabel": "Card suits",
+    "reversedShort": "(Reversed)",
+    "reversedAriaShort": "reversed",
+    "suits": {
+      "major": "Major Arcana",
+      "wands": "Wands",
+      "cups": "Cups",
+      "swords": "Swords",
+      "disks": "Disks"
+    },
+    "detail": {
+      "back": "All cards",
+      "upright": "Upright",
+      "reversed": "Reversed",
+      "correspondences": "777 Correspondences",
+      "hebrewLetter": "Hebrew Letter",
+      "treeOfLifePath": "Tree of Life Path",
+      "connects": "Connects",
+      "astrological": "Astrological",
+      "liber777Column": "Liber 777 Column",
+      "disclaimer": "Astrology is not medical, financial, or professional advice. For entertainment and self-reflection purposes only."
+    }
+  },
+  "treeOfLifePage": {
+    "h1": "Tree of Life",
+    "subtitle": "Interactive Kabbalistic diagram with Sephiroth, paths, and 777 correspondences",
+    "svgAriaLabel": "Tree of Life — Kabbalistic diagram with 10 Sephiroth, Daath, and 22 paths",
+    "pathsAriaLabel": "Paths",
+    "sephirothAriaLabel": "Sephiroth",
+    "yourPlanetsAriaLabel": "Your natal planets on the Tree",
+    "pathAriaLabel": "Path {n}: {letter}",
+    "closePanelAriaLabel": "Close info panel",
+    "close": "Close",
+    "pathHeading": "Path {n} — {letter}",
+    "divineName": "Divine Name",
+    "archangel": "Archangel",
+    "connects": "Connects",
+    "tarotCard": "Tarot Card",
+    "astrology": "Astrology"
   },
   "avatar": {
     "title": "AI Avatar",

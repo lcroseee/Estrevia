@@ -9,10 +9,10 @@ import { NewFeatureCards } from './NewFeatureCards';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.landing');
   return createMetadata({
-    title: 'Sidereal Astrology — True Natal Chart Calculator',
-    description:
-      'Calculate your sidereal natal chart. Discover your true zodiac sign with Swiss Ephemeris precision, planetary hours, and esoteric correspondences.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/',
     keywords: [
       'sidereal astrology',

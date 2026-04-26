@@ -13,30 +13,33 @@ import { SITE_URL } from '@/shared/seo/constants';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 import PrecessionDiagramLoader from '@/modules/esoteric/components/PrecessionDiagramLoader';
 
-// R10: force-static + hourly revalidate. Explainer copy rarely changes.
-export const dynamic = 'force-static';
-export const revalidate = 3600;
+// Locale-aware: must read cookies/headers per request, so we cannot use
+// `force-static`. We let next-intl render the correct language per visitor.
+// The page is still cacheable downstream via standard Next.js dynamic rendering.
+export const dynamic = 'force-dynamic';
 
 // ---------------------------------------------------------------------------
 // Metadata (kept English-only — SEO concern, not user-facing UI)
 // ---------------------------------------------------------------------------
 
-export const metadata: Metadata = createMetadata({
-  title: 'Why Sidereal Astrology Differs from Tropical',
-  description:
-    'Sidereal astrology tracks real constellations using the Lahiri ayanamsa. Most sun signs shift one sign earlier vs tropical. Calculate your true chart.',
-  path: '/why-sidereal',
-  type: 'article',
-  keywords: [
-    'sidereal astrology',
-    'sidereal vs tropical',
-    'what is sidereal astrology',
-    'lahiri ayanamsa',
-    'precession of equinoxes',
-    'sidereal zodiac',
-    'tropical astrology difference',
-  ],
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.whySidereal');
+  return createMetadata({
+    title: tMeta('title'),
+    description: tMeta('description'),
+    path: '/why-sidereal',
+    type: 'article',
+    keywords: [
+      'sidereal astrology',
+      'sidereal vs tropical',
+      'what is sidereal astrology',
+      'lahiri ayanamsa',
+      'precession of equinoxes',
+      'sidereal zodiac',
+      'tropical astrology difference',
+    ],
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Sign rows — sidereal/tropical date strings come from translations.

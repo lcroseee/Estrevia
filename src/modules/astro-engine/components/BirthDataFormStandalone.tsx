@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useId } from 'react';
+import { useTranslations } from 'next-intl';
 import type { CitySearchResult } from '@/shared/types';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
@@ -38,6 +39,7 @@ export function BirthDataFormStandalone({
   nameField = false,
 }: BirthDataFormStandaloneProps) {
   const formId = useId();
+  const t = useTranslations('birthDataForm');
 
   const update = useCallback(
     (patch: Partial<BirthDataValues>) => {
@@ -69,14 +71,14 @@ export function BirthDataFormStandalone({
       {nameField && (
         <div className="space-y-1.5">
           <label htmlFor={nameId} className="block text-sm font-medium text-white/70">
-            Name
+            {t('nameLabel')}
           </label>
           <input
             id={nameId}
             type="text"
             value={values.name}
             onChange={(e) => update({ name: e.target.value })}
-            placeholder="Optional"
+            placeholder={t('nameOptional')}
             disabled={disabled}
             className="w-full rounded-lg border border-white/12 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/10 transition-colors"
           />
@@ -86,8 +88,8 @@ export function BirthDataFormStandalone({
       {/* Date */}
       <div className="space-y-1.5">
         <label htmlFor={dateId} className="block text-sm font-medium text-white/70">
-          Date of birth <span className="text-red-400" aria-hidden="true">*</span>
-          <span className="sr-only">(required)</span>
+          {t('dateLabel')} <span className="text-red-400" aria-hidden="true">*</span>
+          <span className="sr-only">{t('requiredAria')}</span>
         </label>
         <DateInput
           id={dateId}
@@ -114,7 +116,7 @@ export function BirthDataFormStandalone({
               'transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-white/20',
               values.knowsBirthTime ? 'bg-[#FFD700]/70' : 'bg-white/15',
             ].join(' ')}
-            aria-label="I know the birth time"
+            aria-label={t('knowsBirthTimeLabel')}
           >
             <span
               className={[
@@ -125,7 +127,7 @@ export function BirthDataFormStandalone({
             />
           </button>
           <label htmlFor={timeToggleId} className="text-sm text-white/70 cursor-pointer">
-            I know the birth time
+            {t('knowsBirthTimeLabel')}
           </label>
         </div>
 
@@ -142,8 +144,8 @@ export function BirthDataFormStandalone({
       {/* City autocomplete */}
       <div className="space-y-1.5">
         <label className="block text-sm font-medium text-white/70">
-          Birth place <span className="text-red-400" aria-hidden="true">*</span>
-          <span className="sr-only">(required)</span>
+          {t('cityLabel')} <span className="text-red-400" aria-hidden="true">*</span>
+          <span className="sr-only">{t('requiredAria')}</span>
         </label>
         <CityAutocomplete
           value=""
@@ -154,12 +156,12 @@ export function BirthDataFormStandalone({
               update({ latitude: null, longitude: null, timezone: null });
             }
           }}
-          placeholder="Start typing city name..."
+          placeholder={t('cityPlaceholder')}
           disabled={disabled}
         />
         {values.latitude !== null && (
           <p className="text-xs text-white/30">
-            Location set ({values.latitude.toFixed(2)}, {values.longitude?.toFixed(2)})
+            {t('locationSet')} ({values.latitude.toFixed(2)}, {values.longitude?.toFixed(2)})
           </p>
         )}
       </div>

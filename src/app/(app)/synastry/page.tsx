@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { SynastryClient } from '@/modules/astro-engine/components/SynastryClient';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.synastry');
   return createMetadata({
-    title: 'Synastry Calculator — Compatibility Analysis',
-    description:
-      'Calculate astrological compatibility between two charts using sidereal astrology. Discover emotional connection, communication style, passion, and long-term stability scores.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/synastry',
     keywords: [
       'synastry calculator',

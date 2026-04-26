@@ -15,10 +15,11 @@ import { getTranslations } from 'next-intl/server';
 import { SettingsPortalButton } from './SettingsPortalButton';
 import { SettingsClientSections } from './SettingsClientSections';
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.settings');
   return createMetadata({
-    title: 'Settings',
-    description: 'Manage your Estrevia account, subscription, and data.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/settings',
     noIndex: true,
   });

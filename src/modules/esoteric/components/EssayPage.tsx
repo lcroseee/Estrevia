@@ -15,6 +15,7 @@
  */
 
 import ReactMarkdown from 'react-markdown';
+import { getLocale, getTranslations } from 'next-intl/server';
 import type { EssayMeta } from '@/modules/esoteric/lib/essays';
 import type { Sign } from '@/shared/types/astrology';
 import { CorrespondencesTable } from './CorrespondencesTable';
@@ -161,9 +162,20 @@ interface EssayPageProps {
   content: string;
 }
 
-export function EssayPage({ meta, content }: EssayPageProps) {
+export async function EssayPage({ meta, content }: EssayPageProps) {
   const glyph = PLANET_GLYPHS[meta.planet];
   const elementColor = ELEMENT_COLORS[meta.element] ?? 'text-white/50 border-white/10 bg-white/5';
+  const t = await getTranslations('essayDetail');
+  const tPlanet = await getTranslations('essayDetail.planets');
+  const tElement = await getTranslations('essayDetail.elements');
+  const tModality = await getTranslations('essayDetail.modalities');
+  const locale = await getLocale();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const planetLocalized = tPlanet(meta.planet as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const elementLocalized = tElement(meta.element as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const modalityLocalized = tModality(meta.modality as any);
 
   return (
     <article
@@ -177,7 +189,7 @@ export function EssayPage({ meta, content }: EssayPageProps) {
           className="text-xs text-white/30 font-[var(--font-geist-sans)] uppercase tracking-widest mb-3"
           aria-hidden="true"
         >
-          Essays / {meta.planet} / {meta.sign}
+          {t('breadcrumb', { planet: planetLocalized, sign: meta.sign })}
         </p>
 
         {/* Title */}
@@ -203,30 +215,30 @@ export function EssayPage({ meta, content }: EssayPageProps) {
         </p>
 
         {/* Meta badges */}
-        <div className="flex flex-wrap gap-2" role="list" aria-label="Essay attributes">
+        <div className="flex flex-wrap gap-2" role="list" aria-label={t('essayAttributesAria')}>
           <span
             role="listitem"
             className={`text-xs font-medium px-2.5 py-1 rounded-full border font-[var(--font-geist-sans)] ${elementColor}`}
           >
-            {meta.element}
+            {elementLocalized}
           </span>
           <span
             role="listitem"
             className="text-xs font-medium px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-white/50 font-[var(--font-geist-sans)]"
           >
-            {meta.modality}
+            {modalityLocalized}
           </span>
           <span
             role="listitem"
             className="text-xs font-medium px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-white/50 font-[var(--font-geist-sans)]"
           >
-            Sidereal · Lahiri
+            {t('tagSiderealLahiri')}
           </span>
           <time
             dateTime={meta.publishedAt}
             className="text-xs text-white/25 font-[var(--font-geist-sans)] self-center ml-auto"
           >
-            {formatPublishDate(meta.publishedAt)}
+            {formatPublishDate(meta.publishedAt, locale)}
           </time>
         </div>
       </header>
@@ -265,10 +277,10 @@ export function EssayPage({ meta, content }: EssayPageProps) {
 // Helper
 // ---------------------------------------------------------------------------
 
-function formatPublishDate(iso: string): string {
+function formatPublishDate(iso: string, locale: string): string {
   if (!iso) return '';
   try {
-    return new Date(iso).toLocaleDateString('en-US', {
+    return new Date(iso).toLocaleDateString(locale === 'es' ? 'es' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

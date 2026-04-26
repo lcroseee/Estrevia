@@ -7,11 +7,11 @@ import { SITE_URL } from '@/shared/seo/constants';
 import { MoonCalendar } from '@/modules/astro-engine/components/MoonCalendar';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.moon');
   return createMetadata({
-    title: 'Moon Phase Today',
-    description:
-      'Current moon phase, illumination percentage, and monthly lunar calendar. Track new and full moons with Swiss Ephemeris precision.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/moon',
     keywords: [
       'moon phase today',

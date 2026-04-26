@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { apiFetch, postJson } from '@/shared/lib/apiFetch';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
+import { getCardName, getCardKeywords } from './tarotLocalize';
 
 interface DailyCardProps {
   allCards: TarotCardData[];
@@ -19,6 +20,8 @@ interface DailyCardState {
 export function DailyCard({ allCards }: DailyCardProps) {
   const prefersReduced = useReducedMotion();
   const t = useTranslations('tarot');
+  const tPage = useTranslations('tarotPage');
+  const locale = useLocale();
   const [dailyCard, setDailyCard] = useState<DailyCardState | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,7 +123,7 @@ export function DailyCard({ allCards }: DailyCardProps) {
                 style={{
                   background: 'linear-gradient(135deg, #1A1030 0%, #0A0A1F 50%, #1A0A30 100%)',
                 }}
-                aria-label="Draw your daily card"
+                aria-label={tPage('drawAriaLabel')}
               >
                 <span className="text-4xl text-[#A78BFA]/40" aria-hidden="true">
                   &#x2726;
@@ -155,16 +158,18 @@ export function DailyCard({ allCards }: DailyCardProps) {
           transition={prefersReduced ? { duration: 0 } : { delay: 0.3, duration: 0.4 }}
         >
           <p className="text-sm font-medium text-white/80">
-            {cardData.name.en}
+            {getCardName(cardData, locale)}
             {dailyCard?.reversed && (
-              <span className="ml-1.5 text-xs text-red-400/70">(Reversed)</span>
+              <span className="ml-1.5 text-xs text-red-400/70">{tPage('reversedShort')}</span>
             )}
           </p>
           {cardData.keywords && (
             <p className="text-xs text-white/40">
-              {dailyCard?.reversed
-                ? cardData.keywords.reversed?.en.join(' \u00B7 ')
-                : cardData.keywords.upright?.en.join(' \u00B7 ')}
+              {getCardKeywords(
+                cardData,
+                dailyCard?.reversed ? 'reversed' : 'upright',
+                locale,
+              ).join(' · ')}
             </p>
           )}
         </motion.div>
@@ -175,7 +180,7 @@ export function DailyCard({ allCards }: DailyCardProps) {
       )}
 
       {!isFlipped && !isDrawing && (
-        <p className="text-xs text-white/30">Tap the card to draw</p>
+        <p className="text-xs text-white/30">{tPage('tapToDraw')}</p>
       )}
     </div>
   );

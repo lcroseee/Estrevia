@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { TarotCatalogClient } from '@/modules/esoteric/components/TarotCatalogClient';
@@ -10,10 +11,10 @@ import { TarotCatalogClient } from '@/modules/esoteric/components/TarotCatalogCl
 export const revalidate = 86400;
 
 export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.tarot');
   return createMetadata({
-    title: 'Thoth Tarot — 78 Card Catalog & Daily Draw',
-    description:
-      'Explore the 78 cards of the Thoth Tarot deck. Draw your daily card, explore Major Arcana and four suits, and discover Kabbalistic correspondences.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/tarot',
     keywords: [
       'thoth tarot',
@@ -53,6 +54,7 @@ const tarotBreadcrumb = breadcrumbSchema([
 
 export default async function TarotPage() {
   const cards = await loadCards();
+  const t = await getTranslations('tarotPage');
 
   return (
     <>
@@ -66,17 +68,17 @@ export default async function TarotPage() {
                 className="text-2xl font-semibold text-white/90 tracking-tight"
                 style={{ fontFamily: 'var(--font-geist-sans)' }}
               >
-                Thoth Tarot
+                {t('h1')}
               </h1>
               <p className="text-sm text-white/40">
-                78 cards of the Thoth deck with Kabbalistic correspondences
+                {t('subtitle')}
               </p>
             </div>
             <Link
               href="/tarot/spread"
               className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium bg-gradient-to-br from-[#FFD700]/90 to-[#FF8C00]/80 text-black hover:shadow-lg hover:shadow-[#FFD700]/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
             >
-              Open Spreads
+              {t('openSpreads')}
             </Link>
           </div>
 

@@ -55,15 +55,12 @@ function getEssaysDir(locale?: string): string {
   return ESSAYS_BASE_DIR;
 }
 
-// Keep backward compat alias
-const ESSAYS_DIR = ESSAYS_BASE_DIR;
-
 function parseSlugFromFilename(filename: string): string {
   return filename.replace(/\.mdx?$/, '');
 }
 
-function loadEssayFile(filename: string): Essay | null {
-  const fullPath = path.join(ESSAYS_DIR, filename);
+function loadEssayFile(filename: string, dir: string): Essay | null {
+  const fullPath = path.join(dir, filename);
   let raw: string;
   try {
     raw = fs.readFileSync(fullPath, 'utf8');
@@ -156,7 +153,7 @@ export function getAllEssays(locale?: string): EssayMeta[] {
     .filter((f) => f.endsWith('.mdx') || f.endsWith('.md'))
     .sort()
     .map((filename) => {
-      const essay = loadEssayFile(filename);
+      const essay = loadEssayFile(filename, dir);
       return essay ? essay.meta : null;
     })
     .filter((meta): meta is EssayMeta => meta !== null);

@@ -156,7 +156,7 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
       <div className="space-y-1.5">
         <label htmlFor={dateId} className="block text-sm font-medium text-white/70">
           {t('dateLabel')} <span className="text-red-400" aria-hidden="true">*</span>
-          <span className="sr-only">(required)</span>
+          <span className="sr-only">{t('requiredAria')}</span>
         </label>
         <DateInput
           id={dateId}
@@ -230,7 +230,7 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
       <div className="space-y-1.5">
         <label className="block text-sm font-medium text-white/70">
           {t('cityLabel')} <span className="text-red-400" aria-hidden="true">*</span>
-          <span className="sr-only">(required)</span>
+          <span className="sr-only">{t('requiredAria')}</span>
         </label>
         <CityAutocomplete
           value={values.cityLabel}

@@ -1,11 +1,18 @@
 import { SignUp, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import { createMetadata } from '@/shared/seo';
 
 // Clerk catch-all route for sign-up. Symmetrical to /sign-in.
-export const metadata: Metadata = {
-  title: 'Sign Up — Estrevia',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.signUp');
+  return createMetadata({
+    title: tMeta('title'),
+    description: tMeta('description'),
+    path: '/sign-up',
+    noIndex: true,
+  });
+}
 
 export default function SignUpPage() {
   return (

@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { TreeOfLifeClient } from '@/modules/esoteric/components/TreeOfLife';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.treeOfLife');
   return createMetadata({
-    title: 'Tree of Life — Kabbalistic Diagram',
-    description:
-      'Explore the interactive Tree of Life with 10 Sephiroth plus the hidden Daath, 22 paths, and Thoth Tarot correspondences. Overlay your natal chart planets on the Kabbalistic Tree.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/tree-of-life',
     keywords: [
       'tree of life',
@@ -45,7 +46,7 @@ interface PathData {
   tarotCard: string;
   astrology: string;
   color: string;
-  description: { en: string };
+  description: { en: string; es?: string };
 }
 
 async function loadTreeData() {
@@ -67,6 +68,7 @@ const treeBreadcrumb = breadcrumbSchema([
 
 export default async function TreeOfLifePage() {
   const { sephiroth, paths } = await loadTreeData();
+  const t = await getTranslations('treeOfLifePage');
 
   return (
     <>
@@ -78,10 +80,10 @@ export default async function TreeOfLifePage() {
               className="text-2xl font-semibold text-white/90 tracking-tight"
               style={{ fontFamily: 'var(--font-geist-sans)' }}
             >
-              Tree of Life
+              {t('h1')}
             </h1>
             <p className="text-sm text-white/40">
-              Interactive Kabbalistic diagram with Sephiroth, paths, and 777 correspondences
+              {t('subtitle')}
             </p>
           </div>
 

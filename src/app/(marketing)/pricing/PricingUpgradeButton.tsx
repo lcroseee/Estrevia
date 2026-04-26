@@ -15,6 +15,7 @@ export function PricingUpgradeButton({
   plan?: 'pro_monthly' | 'pro_annual';
 }) {
   const t = useTranslations('pricing');
+  const tPage = useTranslations('pricingPage');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,12 +53,12 @@ export function PricingUpgradeButton({
       try {
         data = await res.json();
       } catch {
-        setError('Unexpected response from server. Please try again.');
+        setError(tPage('errUnexpected'));
         return;
       }
 
       if (!data.success || !data.data?.url) {
-        setError('Something went wrong. Please try again.');
+        setError(tPage('errGeneric'));
         return;
       }
 
@@ -65,7 +66,7 @@ export function PricingUpgradeButton({
       trackEvent(AnalyticsEvent.CHECKOUT_STRIPE_REDIRECTED, { plan, source: 'pricing' });
       window.location.href = data.data.url;
     } catch {
-      setError('Network error. Please check your connection and try again.');
+      setError(tPage('errNetwork'));
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ export function PricingUpgradeButton({
         }}
         aria-busy={loading}
       >
-        {loading ? 'Redirecting to checkout...' : t('startTrial')}
+        {loading ? tPage('redirecting') : t('startTrial')}
       </button>
       {error && (
         <p className="text-xs text-red-400 text-center" role="alert">

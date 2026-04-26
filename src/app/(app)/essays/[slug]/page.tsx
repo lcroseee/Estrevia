@@ -7,6 +7,7 @@
 
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { getLocale } from 'next-intl/server';
 import {
   createMetadata,
   JsonLdScript,
@@ -41,7 +42,8 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await props.params;
-  const essay = getEssayBySlug(slug);
+  const locale = await getLocale();
+  const essay = getEssayBySlug(slug, locale);
 
   if (!essay) {
     return createMetadata({
@@ -72,7 +74,8 @@ export default async function EssaySlugPage(props: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await props.params;
-  const essay = getEssayBySlug(slug);
+  const locale = await getLocale();
+  const essay = getEssayBySlug(slug, locale);
 
   if (!essay) {
     notFound();

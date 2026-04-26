@@ -2,8 +2,14 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
+import {
+  getSephirahName,
+  getSephirahMeaning,
+  getSephirahDescription,
+  getPathDescription,
+} from './tarotLocalize';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,7 +35,7 @@ export interface PathData {
   tarotCard: string;
   astrology: string;
   color: string;
-  description: { en: string };
+  description: { en: string; es?: string };
 }
 
 interface ChartPlanetData {
@@ -79,6 +85,8 @@ export function TreeOfLifeClient({
   chartData,
 }: TreeOfLifeClientProps) {
   const t = useTranslations('treeOfLife');
+  const tPage = useTranslations('treeOfLifePage');
+  const locale = useLocale();
   const prefersReduced = useReducedMotion();
   const { isPro } = useSubscription();
 
@@ -150,15 +158,15 @@ export function TreeOfLifeClient({
           className="w-full max-w-md"
           style={{ aspectRatio: '1 / 1' }}
           role="img"
-          aria-label="Tree of Life — Kabbalistic diagram with 10 Sephiroth, Daath, and 22 paths"
+          aria-label={tPage('svgAriaLabel')}
         >
-          <title>Tree of Life</title>
+          <title>{tPage('h1')}</title>
 
           {/* Background */}
           <rect x="0" y="0" width="100" height="100" fill="transparent" />
 
           {/* Paths (lines between sephiroth) */}
-          <g aria-label="Paths">
+          <g aria-label={tPage('pathsAriaLabel')}>
             {paths.map((path) => {
               const from = sephiraPositions.get(path.connects[0]);
               const to = sephiraPositions.get(path.connects[1]);
@@ -181,7 +189,7 @@ export function TreeOfLifeClient({
                   className="cursor-pointer transition-all duration-300 focus:outline-none focus-visible:outline-none"
                   onClick={() => handlePathClick(path)}
                   role="button"
-                  aria-label={`Path ${path.number}: ${path.hebrewLetter}`}
+                  aria-label={tPage('pathAriaLabel', { n: path.number, letter: path.hebrewLetter })}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') handlePathClick(path);
@@ -223,7 +231,7 @@ export function TreeOfLifeClient({
           </g>
 
           {/* Sephiroth (circles) */}
-          <g aria-label="Sephiroth">
+          <g aria-label={tPage('sephirothAriaLabel')}>
             {sephiroth.map((s) => {
               const isSelected = selectedSephira?.number === s.number;
               const isDaath = s.hidden === true;
@@ -237,7 +245,7 @@ export function TreeOfLifeClient({
                   className="cursor-pointer focus:outline-none focus-visible:outline-none"
                   onClick={() => handleSephiraClick(s)}
                   role="button"
-                  aria-label={`${s.name.en} — ${s.meaning.en}`}
+                  aria-label={`${getSephirahName(s, locale)} — ${getSephirahMeaning(s, locale)}`}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') handleSephiraClick(s);
@@ -299,7 +307,7 @@ export function TreeOfLifeClient({
                     className="pointer-events-none"
                     style={{ fontFamily: 'sans-serif' }}
                   >
-                    {s.name.en}
+                    {getSephirahName(s, locale)}
                   </text>
 
                   {/* Number / anchor dot below */}
@@ -322,7 +330,7 @@ export function TreeOfLifeClient({
 
           {/* Planet glyphs overlay (G4) */}
           {planetPlacements.length > 0 && (
-            <g aria-label="Your natal planets on the Tree">
+            <g aria-label={tPage('yourPlanetsAriaLabel')}>
               {planetPlacements.map((pp) => {
                 const sPos = sephiraPositions.get(pp.sephira);
                 if (!sPos) return null;
@@ -374,7 +382,7 @@ export function TreeOfLifeClient({
               type="button"
               onClick={closePanel}
               className="absolute top-3 right-3 text-white/30 hover:text-white/60 transition-colors lg:block hidden"
-              aria-label="Close info panel"
+              aria-label={tPage('closePanelAriaLabel')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -390,10 +398,10 @@ export function TreeOfLifeClient({
                       style={{ backgroundColor: selectedSephira.colorQueenScale }}
                     />
                     <h3 className="text-lg font-semibold text-white/90">
-                      {selectedSephira.number}. {selectedSephira.name.en}
+                      {selectedSephira.number}. {getSephirahName(selectedSephira, locale)}
                     </h3>
                   </div>
-                  <p className="text-sm text-white/50">{selectedSephira.meaning.en}</p>
+                  <p className="text-sm text-white/50">{getSephirahMeaning(selectedSephira, locale)}</p>
                   <p className="text-xs text-white/30">{selectedSephira.name.hebrew}</p>
                 </div>
 
@@ -401,15 +409,15 @@ export function TreeOfLifeClient({
                   className="text-sm text-white/65 leading-relaxed"
                   style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}
                 >
-                  {selectedSephira.description.en}
+                  {getSephirahDescription(selectedSephira, locale)}
                 </p>
 
                 <dl className="divide-y divide-white/6 text-sm">
                   {[
                     { label: t('sphere'), value: selectedSephira.sphere },
                     { label: t('planet'), value: selectedSephira.planet },
-                    { label: 'Divine Name', value: selectedSephira.divineName },
-                    { label: 'Archangel', value: selectedSephira.archangel },
+                    { label: tPage('divineName'), value: selectedSephira.divineName },
+                    { label: tPage('archangel'), value: selectedSephira.archangel },
                   ].filter((r) => r.value).map(({ label, value }) => (
                     <div key={label} className="flex justify-between py-2">
                       <dt className="text-white/40">{label}</dt>
@@ -429,7 +437,7 @@ export function TreeOfLifeClient({
                       style={{ backgroundColor: selectedPath.color }}
                     />
                     <h3 className="text-lg font-semibold text-white/90">
-                      Path {selectedPath.number} — {selectedPath.hebrewLetter}
+                      {tPage('pathHeading', { n: selectedPath.number, letter: selectedPath.hebrewLetter })}
                     </h3>
                   </div>
                   <p className="text-2xl" style={{ color: selectedPath.color }}>
@@ -441,14 +449,14 @@ export function TreeOfLifeClient({
                   className="text-sm text-white/65 leading-relaxed"
                   style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}
                 >
-                  {selectedPath.description.en}
+                  {getPathDescription(selectedPath, locale)}
                 </p>
 
                 <dl className="divide-y divide-white/6 text-sm">
                   {[
-                    { label: 'Connects', value: `${selectedPath.connects[0]} \u2194 ${selectedPath.connects[1]}` },
-                    { label: 'Tarot Card', value: selectedPath.tarotCard.replace(/-/g, ' ') },
-                    { label: 'Astrology', value: selectedPath.astrology },
+                    { label: tPage('connects'), value: `${selectedPath.connects[0]} \u2194 ${selectedPath.connects[1]}` },
+                    { label: tPage('tarotCard'), value: selectedPath.tarotCard.replace(/-/g, ' ') },
+                    { label: tPage('astrology'), value: selectedPath.astrology },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex justify-between py-2">
                       <dt className="text-white/40">{label}</dt>
@@ -465,7 +473,7 @@ export function TreeOfLifeClient({
               onClick={closePanel}
               className="w-full py-2 rounded-lg text-sm text-white/40 border border-white/8 hover:border-white/15 transition-colors lg:hidden"
             >
-              Close
+              {tPage('close')}
             </button>
           </motion.div>
         )}

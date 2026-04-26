@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { Disclaimer } from '@/shared/components/Disclaimer';
-import descriptionsData from '../../../../content/signs/descriptions.json';
+import descriptionsEn from '../../../../content/signs/descriptions.json';
+import descriptionsEs from '../../../../content/signs/descriptions.es.json';
 
 // ISR: rebuild the signs index daily. R10 CWV win.
 export const revalidate = 86400;
@@ -28,11 +30,11 @@ interface SignDescription {
 // Metadata
 // ---------------------------------------------------------------------------
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.signs');
   return createMetadata({
-    title: 'Sidereal Zodiac Signs — True Dates & Meanings',
-    description:
-      'Explore all 12 sidereal zodiac signs with true astronomical dates, elements, ruling planets, and key traits. Find your real sign using the Lahiri ayanamsa.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/signs',
     keywords: [
       'sidereal zodiac signs',
@@ -48,11 +50,6 @@ export function generateMetadata(): Metadata {
 // ---------------------------------------------------------------------------
 // JSON-LD
 // ---------------------------------------------------------------------------
-
-const breadcrumbLd = breadcrumbSchema([
-  { name: 'Home', url: SITE_URL },
-  { name: 'Signs', url: `${SITE_URL}/signs` },
-]);
 
 // ItemList schema — schema.org type for a curated collection of linked pages.
 // @shared/seo does not export a collectionPageSchema, so we build it inline.
@@ -99,8 +96,18 @@ const ELEMENT_GLOW: Record<string, string> = {
 // Page component
 // ---------------------------------------------------------------------------
 
-export default function SignsIndexPage() {
-  const signs = descriptionsData as SignDescription[];
+export default async function SignsIndexPage() {
+  const locale = await getLocale();
+  const t = await getTranslations('signsPage');
+  const tDetail = await getTranslations('signDetail');
+
+  const signs = (locale === 'es' ? descriptionsEs : descriptionsEn) as SignDescription[];
+
+  const breadcrumbLd = breadcrumbSchema([
+    { name: t('breadcrumbHome'), url: SITE_URL },
+    { name: t('breadcrumbCurrent'), url: `${SITE_URL}/signs` },
+  ]);
+
   const itemList = itemListSchema(signs);
 
   return (
@@ -111,15 +118,15 @@ export default function SignsIndexPage() {
       <div className="max-w-3xl mx-auto px-4 py-8 md:py-12">
 
         {/* ── Breadcrumb ─────────────────────────────────────────────── */}
-        <nav aria-label="Breadcrumb" className="mb-6 text-sm text-white/40">
+        <nav aria-label={t('breadcrumbAria')} className="mb-6 text-sm text-white/40">
           <ol className="flex items-center gap-2">
             <li>
               <Link href="/" className="hover:text-white/70 transition-colors">
-                Home
+                {t('breadcrumbHome')}
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="text-white/60" aria-current="page">Signs</li>
+            <li className="text-white/60" aria-current="page">{t('breadcrumbCurrent')}</li>
           </ol>
         </nav>
 
@@ -129,16 +136,16 @@ export default function SignsIndexPage() {
             className="text-3xl md:text-4xl font-light leading-tight mb-4"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
           >
-            Sidereal Zodiac Signs
+            {t('h1')}
           </h1>
           <p
             className="text-white/65 leading-relaxed max-w-xl"
             style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
           >
-            Sidereal astrology aligns the zodiac with the actual constellations, shifted{' '}
-            <span className="text-white/85">~24°</span> from tropical. Find your true sidereal sign
-            below — dates reflect real sky positions using the{' '}
-            <span className="text-white/85">Lahiri ayanamsa</span>.
+            {t('intro')}{' '}
+            <span className="text-white/85">{t('shift')}</span>{' '}
+            {t('introMid')}{' '}
+            <span className="text-white/85">{t('introAyanamsa')}</span>.
           </p>
         </header>
 
@@ -148,18 +155,20 @@ export default function SignsIndexPage() {
             id="signs-grid-heading"
             className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-5"
           >
-            All 12 Signs
+            {t('all12')}
           </h2>
 
           <ul
             className="grid grid-cols-1 sm:grid-cols-2 gap-3"
             role="list"
-            aria-label="Sidereal zodiac signs"
+            aria-label={t('gridAria')}
           >
             {signs.map((sign) => {
               const elementColour =
                 ELEMENT_COLOUR[sign.element] ?? 'bg-white/10 text-white/70';
               const elementGlow = ELEMENT_GLOW[sign.element] ?? '';
+              const elementLabel = tDetail(`elements.${sign.element}` as 'elements.Fire');
+              const modalityLabel = tDetail(`modalities.${sign.modality}` as 'modalities.Cardinal');
 
               return (
                 <li key={sign.slug}>
@@ -172,7 +181,7 @@ export default function SignsIndexPage() {
                       'transition-all duration-200 group',
                       elementGlow,
                     ].join(' ')}
-                    aria-label={`${sign.sign} — ${sign.siderealDates}`}
+                    aria-label={t('cardAria', { sign: sign.sign, dates: sign.siderealDates })}
                   >
                     {/* Glyph */}
                     <span
@@ -200,7 +209,7 @@ export default function SignsIndexPage() {
                         <span
                           className="text-white/35 text-[11px] shrink-0 tabular-nums"
                           style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
-                          aria-label={`Date range: ${sign.siderealDates}`}
+                          aria-label={t('dateRangeAria', { dates: sign.siderealDates })}
                         >
                           {sign.siderealDates}
                         </span>
@@ -211,10 +220,10 @@ export default function SignsIndexPage() {
                         <span
                           className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${elementColour}`}
                         >
-                          {sign.element}
+                          {elementLabel}
                         </span>
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/8 text-white/55 border border-white/10">
-                          {sign.modality}
+                          {modalityLabel}
                         </span>
                         <span className="px-2 py-0.5 rounded-full text-[11px] bg-amber-500/10 text-amber-300/80 border border-amber-500/20">
                           {sign.ruler}
@@ -254,11 +263,10 @@ export default function SignsIndexPage() {
             className="text-xl font-light mb-2"
             style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', color: '#F0EAD6' }}
           >
-            Discover your sidereal placements
+            {t('ctaHeading')}
           </h2>
           <p className="text-white/55 text-sm mb-5 leading-relaxed max-w-md mx-auto">
-            Calculate your full sidereal natal chart — Sun, Moon, Ascendant, and all 10
-            planetary positions using the Lahiri ayanamsa.
+            {t('ctaText')}
           </p>
           <Link
             href="/chart"
@@ -270,14 +278,14 @@ export default function SignsIndexPage() {
             }}
           >
             <span aria-hidden="true">☉</span>
-            Calculate your sidereal natal chart
+            {t('ctaButton')}
           </Link>
         </section>
 
         {/* ── Related nav ────────────────────────────────────────────── */}
-        <nav aria-label="Related pages" className="mt-10 pt-8 border-t border-white/10">
+        <nav aria-label={t('relatedAria')} className="mt-10 pt-8 border-t border-white/10">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">
-            Related
+            {t('related')}
           </h2>
           <ul className="flex flex-wrap gap-3 text-sm" role="list">
             <li>
@@ -285,7 +293,7 @@ export default function SignsIndexPage() {
                 href="/why-sidereal"
                 className="text-white/50 hover:text-white/80 transition-colors underline underline-offset-4"
               >
-                Why sidereal astrology differs from tropical
+                {t('linkWhySidereal')}
               </Link>
             </li>
             <li>
@@ -293,7 +301,7 @@ export default function SignsIndexPage() {
                 href="/chart"
                 className="text-white/50 hover:text-white/80 transition-colors underline underline-offset-4"
               >
-                Sidereal natal chart calculator
+                {t('linkChart')}
               </Link>
             </li>
             <li>
@@ -301,7 +309,7 @@ export default function SignsIndexPage() {
                 href="/moon"
                 className="text-white/50 hover:text-white/80 transition-colors underline underline-offset-4"
               >
-                Current moon phase
+                {t('linkMoon')}
               </Link>
             </li>
           </ul>

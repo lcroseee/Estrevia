@@ -3,15 +3,14 @@ import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo/metadata';
 import { SupportForm } from './SupportForm';
 
-// R10: force-static + hourly revalidate. Support page shell is static;
-// the form itself is a client island that POSTs to /api/v1/support at runtime.
-export const dynamic = 'force-static';
-export const revalidate = 3600;
+// Dynamic rendering required so the NEXT_LOCALE cookie is honored.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.support');
   return createMetadata({
-    title: 'Support',
-    description: 'Get help with Estrevia. Pro members receive priority replies.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/support',
     keywords: ['estrevia support', 'contact', 'help'],
   });

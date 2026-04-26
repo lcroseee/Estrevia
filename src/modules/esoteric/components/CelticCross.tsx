@@ -2,11 +2,12 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
 import Link from 'next/link';
+import { getCardName, getCardDescription, getCardKeywords } from './tarotLocalize';
 
 interface DrawnCard {
   cardId: string;
@@ -18,17 +19,29 @@ interface CelticCrossProps {
   allCards: TarotCardData[];
 }
 
-const POSITIONS = [
-  { id: 1, label: 'Present' },
-  { id: 2, label: 'Challenge' },
-  { id: 3, label: 'Foundation' },
-  { id: 4, label: 'Recent Past' },
-  { id: 5, label: 'Crown' },
-  { id: 6, label: 'Near Future' },
-  { id: 7, label: 'Self' },
-  { id: 8, label: 'Environment' },
-  { id: 9, label: 'Hopes/Fears' },
-  { id: 10, label: 'Outcome' },
+type CelticPositionKey =
+  | 'present'
+  | 'challenge'
+  | 'foundation'
+  | 'recentPast'
+  | 'crown'
+  | 'nearFuture'
+  | 'self'
+  | 'environment'
+  | 'hopesFears'
+  | 'outcome';
+
+const POSITIONS: { id: number; key: CelticPositionKey }[] = [
+  { id: 1, key: 'present' },
+  { id: 2, key: 'challenge' },
+  { id: 3, key: 'foundation' },
+  { id: 4, key: 'recentPast' },
+  { id: 5, key: 'crown' },
+  { id: 6, key: 'nearFuture' },
+  { id: 7, key: 'self' },
+  { id: 8, key: 'environment' },
+  { id: 9, key: 'hopesFears' },
+  { id: 10, key: 'outcome' },
 ];
 
 // Grid position mapping for CSS Grid layout (row/col)
@@ -48,6 +61,8 @@ const GRID_POSITIONS: Record<number, { gridColumn: string; gridRow: string; rota
 
 export function CelticCross({ allCards }: CelticCrossProps) {
   const t = useTranslations('tarot');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const prefersReduced = useReducedMotion();
   const { isPro, isLoading: subLoading } = useSubscription();
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
@@ -167,7 +182,7 @@ export function CelticCross({ allCards }: CelticCrossProps) {
               </AnimatePresence>
               {!gridPos.rotate && (
                 <span className="text-[8px] text-white/20 uppercase tracking-wider absolute -bottom-1">
-                  {pos.label}
+                  {t(`celticPositions.${pos.key}`)}
                 </span>
               )}
             </div>
@@ -225,17 +240,18 @@ export function CelticCross({ allCards }: CelticCrossProps) {
                   <TarotCard card={cardData} size="sm" reversed={selectedCard.reversed} interactive={false} />
                   <div className="space-y-1 flex-1">
                     <p className="text-xs text-white/40 uppercase tracking-wider">
-                      {position?.label}
+                      {position ? t(`celticPositions.${position.key}`) : null}
                     </p>
                     <h3 className="text-lg font-semibold text-white/90">
-                      {cardData.name.en}
+                      {getCardName(cardData, locale)}
                       {selectedCard.reversed && <span className="text-xs text-red-400/70 ml-1.5">R</span>}
                     </h3>
                     <div className="flex flex-wrap gap-1">
-                      {(selectedCard.reversed
-                        ? cardData.keywords?.reversed?.en
-                        : cardData.keywords?.upright?.en
-                      )?.map((kw) => (
+                      {getCardKeywords(
+                        cardData,
+                        selectedCard.reversed ? 'reversed' : 'upright',
+                        locale,
+                      ).map((kw) => (
                         <span key={kw} className="px-1.5 py-0.5 rounded text-[10px] bg-white/5 text-white/50">
                           {kw}
                         </span>
@@ -245,7 +261,7 @@ export function CelticCross({ allCards }: CelticCrossProps) {
                 </div>
                 {cardData.description && (
                   <p className="text-sm text-white/60 leading-relaxed" style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}>
-                    {cardData.description.en}
+                    {getCardDescription(cardData, locale)}
                   </p>
                 )}
                 <button
@@ -253,7 +269,7 @@ export function CelticCross({ allCards }: CelticCrossProps) {
                   onClick={() => setSelectedCard(null)}
                   className="w-full py-2 rounded-lg text-sm text-white/40 hover:text-white/60 border border-white/8 hover:border-white/15 transition-colors"
                 >
-                  Close
+                  {tCommon('close')}
                 </button>
               </motion.div>
             </motion.div>

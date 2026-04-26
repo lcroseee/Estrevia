@@ -5,6 +5,37 @@
 
 import type { MoonCalendarDay } from '@/shared/types';
 
+export type MoonPhaseId =
+  | 'newMoon'
+  | 'waxingCrescent'
+  | 'firstQuarter'
+  | 'waxingGibbous'
+  | 'fullMoon'
+  | 'waningGibbous'
+  | 'lastQuarter'
+  | 'waningCrescent';
+
+/**
+ * Map an English phase name (returned by server / fallback approximation)
+ * to a stable, locale-independent phase id used as a translation key.
+ */
+export function phaseIdFromName(name: string | null | undefined): MoonPhaseId {
+  switch (name) {
+    case 'New Moon': return 'newMoon';
+    case 'Waxing Crescent': return 'waxingCrescent';
+    case 'First Quarter': return 'firstQuarter';
+    case 'Waxing Gibbous': return 'waxingGibbous';
+    case 'Full Moon': return 'fullMoon';
+    case 'Waning Gibbous': return 'waningGibbous';
+    case 'Last Quarter': return 'lastQuarter';
+    case 'Waning Crescent': return 'waningCrescent';
+    default: return 'newMoon';
+  }
+}
+
+export const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+export type WeekdayKey = (typeof WEEKDAY_KEYS)[number];
+
 export interface DayData {
   day: number;
   angle: number;

@@ -7,11 +7,11 @@ import { SITE_URL } from '@/shared/seo/constants';
 import { PlanetaryHoursGrid } from '@/modules/astro-engine/components/PlanetaryHoursGrid';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const tMeta = await getTranslations('pageMeta.hours');
   return createMetadata({
-    title: 'Planetary Hours Today',
-    description:
-      'Current planetary hour and full daily schedule. Traditional Chaldean planetary hours calculated for your location.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/hours',
     keywords: [
       'planetary hours',

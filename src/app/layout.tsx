@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Crimson_Pro } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { enUS, esES } from "@clerk/localizations";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { PostHogProvider } from "@/shared/components/PostHogProvider";
 import { CookieConsent } from "@/shared/components/CookieConsent";
 import { AnalyticsIdentifier } from "@/shared/components/AnalyticsIdentifier";
@@ -56,6 +56,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const tAppShell = await getTranslations('appShell');
 
   return (
     <ClerkProvider localization={locale === 'es' ? esES : enUS}>
@@ -78,7 +79,7 @@ export default async function RootLayout({
             href="#main-content"
             className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-[#0A0A0F] focus:font-medium focus:text-sm"
           >
-            Skip to main content
+            {tAppShell('skipToContent')}
           </a>
           <NextIntlClientProvider messages={messages}>
             <PostHogProvider>

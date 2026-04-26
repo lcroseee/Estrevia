@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import type { PlanetaryHour } from '@/shared/types';
 import type { PlanetaryHoursResponse, ApiResponse } from '@/shared/types';
 import { PLANET_COLORS } from './PlanetGlyph';
@@ -17,23 +18,6 @@ const PLANET_GLYPHS: Partial<Record<Planet, string>> = {
   Jupiter: '♃',
   Saturn: '♄',
 };
-
-function formatTimeRemaining(endTime: string): string {
-  const end = new Date(endTime).getTime();
-  const now = Date.now();
-  const diffMs = end - now;
-
-  if (diffMs <= 0) return 'ending';
-
-  const totalMinutes = Math.floor(diffMs / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m left`;
-  }
-  return `${minutes} min left`;
-}
 
 function formatTime(isoString: string): string {
   return new Date(isoString).toLocaleTimeString('en-US', {
@@ -52,9 +36,30 @@ type GeolocationState =
 
 export function PlanetaryHourBar() {
   const router = useRouter();
+  const t = useTranslations('hourBar');
   const [geoState, setGeoState] = useState<GeolocationState>({ status: 'idle' });
   const [currentHour, setCurrentHour] = useState<PlanetaryHour | null>(null);
   const [, setTick] = useState(0);
+
+  const formatTimeRemaining = useCallback(
+    (endTime: string): string => {
+      const end = new Date(endTime).getTime();
+      const now = Date.now();
+      const diffMs = end - now;
+
+      if (diffMs <= 0) return t('ending');
+
+      const totalMinutes = Math.floor(diffMs / 60000);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      if (hours > 0) {
+        return t('hoursLeft', { hours, minutes });
+      }
+      return t('minutesLeft', { count: minutes });
+    },
+    [t],
+  );
 
   const fetchHours = useCallback(
     async (latitude: number, longitude: number, timezone: string) => {
@@ -172,8 +177,8 @@ export function PlanetaryHourBar() {
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-white/40 hover:text-white/60 transition-colors cursor-pointer"
-        aria-label="Enable location for planetary hours"
-        title="Enable location for planetary hours"
+        aria-label={t('enableLocationAria')}
+        title={t('enableLocationTitle')}
       >
         {/* Clock icon — visible on all viewports */}
         <svg
@@ -194,7 +199,7 @@ export function PlanetaryHourBar() {
         </svg>
         {/* Label hidden on mobile, visible on sm+ */}
         <span className="hidden sm:inline font-[var(--font-geist-sans)] tracking-wide whitespace-nowrap">
-          Planetary hours
+          {t('label')}
         </span>
         {/* Tiny hint dot visible only on mobile so the button reads as interactive */}
         <span className="sm:hidden text-white/25 text-[10px] leading-none" aria-hidden="true">
@@ -210,14 +215,14 @@ export function PlanetaryHourBar() {
       <div
         className="flex items-center gap-2 px-3 py-1.5 rounded-md"
         aria-busy="true"
-        aria-label="Loading planetary hours"
+        aria-label={t('loadingAria')}
       >
         <span
           className="inline-block w-3.5 h-3.5 rounded-full border border-white/20 border-t-white/60 animate-spin"
           aria-hidden="true"
         />
         <span className="text-xs text-white/30 font-[var(--font-geist-sans)] tracking-wide">
-          Planetary hours
+          {t('label')}
         </span>
       </div>
     );
@@ -229,6 +234,7 @@ export function PlanetaryHourBar() {
   const timeLeft = formatTimeRemaining(currentHour.endTime);
   const startFmt = formatTime(currentHour.startTime);
   const endFmt = formatTime(currentHour.endTime);
+  const planetName = t(`planets.${planet}` as 'planets.Sun');
 
   return (
     <button
@@ -239,7 +245,7 @@ export function PlanetaryHourBar() {
         background: `${color}1A`, // 10% opacity background
         border: `1px solid ${color}33`,
       }}
-      aria-label={`${planet} hour — ${timeLeft}. Tap to view full schedule.`}
+      aria-label={t('ariaHour', { planet: planetName, timeLeft })}
     >
       <div className="flex items-center gap-2 px-3 py-1.5">
         {/* Planet glyph with subtle pulse on active hour */}
@@ -257,7 +263,7 @@ export function PlanetaryHourBar() {
             className="text-xs font-medium font-[var(--font-geist-sans)] tracking-wide shrink-0"
             style={{ color }}
           >
-            {planet}
+            {planetName}
           </span>
           {/* Time-range: hidden on mobile to save space */}
           <span className="hidden sm:inline text-xs text-white/50 font-[var(--font-geist-mono)] whitespace-nowrap">
@@ -296,7 +302,7 @@ export function PlanetaryHourBar() {
         aria-valuenow={Math.round(progress * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`${Math.round(progress * 100)}% elapsed`}
+        aria-label={t('ariaProgress', { percent: Math.round(progress * 100) })}
       >
         <div
           className="h-full transition-[width] duration-1000 ease-linear"
