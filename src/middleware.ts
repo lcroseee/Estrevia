@@ -21,6 +21,9 @@ const isProtectedRoute = createRouteMatcher([
   '/api/v1/push(.*)',
   '/api/v1/tarot(.*)',
   '/api/v1/support(.*)',
+  // Admin — all routes require Clerk auth (allowlist check happens inside handlers)
+  '/admin(.*)',
+  '/api/admin(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -57,6 +60,9 @@ export const config = {
   // config.matcher controls WHETHER middleware runs; createRouteMatcher controls
   // WHETHER the auth check fires. Both must be kept in sync.
   matcher: [
+    // Admin pages and API routes — Clerk auth required; allowlist checked inside handlers
+    '/admin/:path*',
+    '/api/admin/:path*',
     // Protected app pages
     '/charts/:path*',
     '/settings/:path*',
