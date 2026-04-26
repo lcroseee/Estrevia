@@ -80,6 +80,72 @@
 
 ---
 
+## Месячный Burn Rate по фазам
+
+> Реалистичные числа. Cumulative personal runway needed для 6 месяцев = ~$4,000-5,000.
+
+### Phase 0 — Pre-launch (недели 1-8)
+
+| Статья | Стоимость |
+|--------|-----------|
+| Vercel Pro | $20 |
+| Neon, Upstash, Sentry, PostHog, Resend (free tiers) | $0 |
+| Domain renewal (spread) | $2 |
+| Claude API (development + content) | $50 |
+| Gemini Imagen + Veo (creative gen) | $10 |
+| **Phase 0 monthly burn** | **~$82** |
+
+### Phase 1 — Validation (недели 9-12, $500 ad budget)
+
+| Статья | Стоимость |
+|--------|-----------|
+| Phase 0 baseline | $82 |
+| Meta Ads (avg of $500/4 weeks) | $125 |
+| Trademark application (one-time, spread) | $50 |
+| Stripe fees (negligible at <$100 MRR) | $5 |
+| **Phase 1 monthly burn** | **~$262** |
+
+### Phase 2 — Scaling (мес 4-9, $1,500/мес ads)
+
+| Статья | Стоимость |
+|--------|-----------|
+| Vercel Pro | $20 |
+| Neon (paid, scaled) | $19 |
+| Upstash (paid) | $10 |
+| Resend ($500-1K emails/mo) | $20 |
+| Sentry (paid если >5K errors) | $0-26 |
+| PostHog (free до 1M events) | $0 |
+| Claude API (production agent) | $100 |
+| Gemini (creative iteration) | $15 |
+| Meta Ads | $1,500 |
+| Stripe fees (~3% of MRR) | $15-75 |
+| **Phase 2 monthly burn** | **~$1,700-1,800** |
+
+### Phase 3 — Growth (мес 10+, $5K+/мес ads)
+
+Phase 2 baseline + ad budget scale. Burn $5,500-6,500/мес. Должна перекрываться MRR.
+
+### Break-even math (при $9.99 Star tier)
+
+```
+Phase 1: $262/мес  →   27 платящих = break-even
+Phase 2: $1,800/мес → 180 платящих = break-even
+Phase 3: $5,500/мес → 550 платящих = break-even
+```
+
+Annual subscriptions ($79.99) сдвигают expected revenue вверх ~33%.
+
+### Cumulative burn checkpoints
+
+| Месяц | Cumulative burn | MRR target | Если ниже |
+|-------|----------------|------------|-----------|
+| 3 | ~$750 | $100 | Iterate, holding pattern |
+| 6 | ~$4,000 | $500 | Pause Meta, focus organic |
+| 9 | ~$9,000 | $2,000 | Critical decision: continue/pivot/freeze |
+| 12 | ~$12,000 | $5,000 | Если ниже — kill criteria triggered (см. `risks.md`) |
+
+---
+
 ## Дополнительные источники дохода (будущее)
 
 | Источник | Фаза | Описание |

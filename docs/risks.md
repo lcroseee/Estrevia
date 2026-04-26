@@ -71,3 +71,44 @@
 | Churn rate | PostHog cohorts | > 15% monthly |
 | CAC | PostHog + Meta Ads Manager | > LTV/3 |
 | Burn rate | Spreadsheet | > 2× MRR |
+
+---
+
+## Bandwidth протокол: что выкидываем при перегрузе
+
+> Соло-фаундер имеет 40-60 продуктивных часов/неделю. Полный backlog (продукт + контент + agent build + content marketing + customer ops) превышает это. Когда bandwidth crunch — следующий приоритет:
+
+### Priority order (top → cut last)
+
+1. **Продукт MVP** — без него нет бизнеса
+2. **Customer support** — без него churn убьёт всё
+3. **Advertising agent (build phase)** — 2 недели один раз, потом autonomous
+4. **120 эссе (контент)** — Claude-assisted, batch-able
+5. **Founder ops** (legal, finance) — batch monthly, 1 day/мес
+6. **Reddit engagement** — 1 hr/нед минимум
+7. **Influencer outreach** — batch 1 утро/нед
+8. **TikTok organic** (1/день per `marketing.md`) — **первое на сокращение** до 3/нед
+9. **Twitter/X** — на паузу до Phase 2
+
+### Triggers сокращения
+
+| Симптом | Что выкидываем |
+|---------|---------------|
+| Sleep < 6 hr/ночь стабильно | TikTok → 1/нед, Reddit → 1/2 нед |
+| Не успеваем код-ревью продукта | Influencer outreach на паузу |
+| Customer support backlog > 24h | TikTok stop, agent работает на pre-rolled креативах |
+| Burnout signals (irritability, brain fog) | Forced 2-day break, no exceptions |
+
+### Что НЕ сокращаем никогда
+
+- Customer support response (даже если 24h delay — отвечать)
+- Sleep < 6 hrs (неустойчиво на горизонте недель)
+- Health (exercise, food)
+
+### Recovery math
+
+- 1 burnout-driven crash = 7-14 days lost
+- 1 preventive break (Sunday-Monday off) = 2 days но prevents crash
+- Prevention wins математически
+
+См. также Risk #4 «Бурн-аут фаундера» и Risk #7 «Solo-разработчик: burnout» выше — этот протокол их operational митигация.

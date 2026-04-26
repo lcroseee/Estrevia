@@ -247,6 +247,65 @@ Meta Ad → Отдельный лендинг «Узнай свой настоя
 
 ---
 
+## Cold Start: первые 48 часов без данных
+
+> **Проблема:** Meta Pixel «обучается» через ~50 conversion events. PostHog funnel пуст. Stripe attribution не имеет cohort. Bayesian prior advertising agent'а не калиброван. Запуск Meta Ads с этим = 5-7 дней «слепого» learning phase, бюджет тратится без полезной optimization.
+
+**Pre-warming sequence (за 7 дней до Meta launch):**
+
+| Day | Действие | Цель |
+|-----|----------|------|
+| -7 | Soft launch: Reddit (r/astrology) + Telegram + 50 знакомых | 100-200 chart calculations через лендинг |
+| -7..-3 | Бета-юзеры проходят полную воронку (calc → register → soft paywall view) | ≥30 conversion events для Pixel |
+| -5 | CAPI events firing проверены через Meta Events Manager | Event Match Quality > 6.0 |
+| -3 | PostHog funnel populated — видны drop-off точки | Реальный baseline conversion rates |
+| -1 | Контрольный прогон: 10 человек (новые) проходят воронку end-to-end | Воронка не сломалась |
+| 0 | Meta Ads ON: $20/day, learning phase ожидаемо ~3 дня | Pixel optimization быстрее на seeded данных |
+
+**Жёсткие правила:**
+- ❌ НЕ отправлять synthetic/fake CAPI events — Meta detects + наказывает throttling
+- ✅ Реальные люди должны пройти реальную воронку
+- ✅ 50 знакомых готовится **до** запуска — это отдельный pre-launch checklist item
+
+**Если pre-warming пропущен:**
+Pixel блуждает 5-7 дней. CPC выше базового на 50-100%. Bayesian engine агента в shadow дольше (~5K imp/creative). Retargeting недоступен. Ожидаемая «потеря» $50-100 первой недели — плата за skipped pre-warming.
+
+---
+
+## Параллельная Spanish-кампания (с дня 1)
+
+> **У нас есть продукт на ES** (полная локализация уже сделана). LATAM CPC в astrology niche **в 3-5× дешевле** US/UK при сравнимом conversion rate. Не использовать = упущенная exposure при том же бюджете.
+
+### Структура (один ad-account, две campaign)
+
+| Campaign | Бюджет | Гео | Локаль | Lander |
+|----------|--------|-----|--------|--------|
+| Estrevia Launch — EN Tier 1 | 70% ($14/день) | US, UK, CA, AU | EN | `/calc-launch` |
+| Estrevia Launch — ES LATAM | 30% ($6/день) | MX, AR, CO, CL, PE | ES | `/es/calcular` |
+
+### Креативы для ES
+
+- Те же hook frameworks (Identity Reveal / Authority / Rarity)
+- **НЕ** Google Translate — Claude переводит с учётом español neutro LATAM, tú form (см. `feedback_spanish_style` memory)
+- Sign names не переводим (Aries, Tauro — узнаваемо в обоих языках)
+- Planet names переводим (Mercurio, Venus, Marte)
+- Hook example: «La mayoría de apps usan zodíaco tropical. Las estrellas dicen otra cosa.» (third-person, без personal claim)
+
+### Ребалансировка через 14 дней
+
+- ES CAC < 70% от EN → перебалансируем 50/50 или 40/60 в пользу ES
+- ES CAC 70-120% от EN → удерживаем 70/30
+- ES CAC > 120% от EN → откат к EN-only до Phase 2
+
+### Почему параллельно, не последовательно
+
+- Diversification против высокого US CPC (страховка)
+- Pixel обучается на двух locale параллельно
+- Ad account развивается с дня 1
+- ES воронка тестируется без отдельной фазы (которая иначе никогда не наступит)
+
+---
+
 ## Метрики успеха
 
 | Метрика | MVP (3 мес.) | Stretch | Цель (12 мес.) |
@@ -318,3 +377,34 @@ Meta Ad → Отдельный лендинг «Узнай свой настоя
 | Уважительный | «Традиция сидерической астрологии» | «Тропическая система неправильная» |
 | Современный | «Космическая карта в реальном времени» | «Звёзды предсказывают...» |
 | Без манипуляций | «Исследуй свою карту» | «Узнай свою судьбу» |
+
+---
+
+## Brand Voice Drift Detection
+
+> Автономная оптимизация по CTR **гарантированно** дрейфует к clickbait через 2-3 месяца. Tone становится агрессивнее, predictive language возвращается, бренд размывается. Это не риск — это закономерность ML-систем без стилистических ограничений.
+
+### Weekly audit (понедельник утро)
+
+Advertising agent отправляет в Telegram brand voice audit:
+
+1. Берёт топ 10 креативов **по spend** за последние 7 дней
+2. Claude оценивает каждый по таблице бренд-голоса:
+   - Глубокий vs манипулятивный (1-10)
+   - Научный vs sensational (1-10)
+   - Уважительный vs дисмиссивный (1-10)
+   - Без манипуляций (бинарно: yes/no)
+3. Average score по 10 = weekly brand health score
+4. **Threshold:** average < 7.5/10 ИЛИ ≥1 креатив с score < 6 → `manual_review_required` alert
+
+### Locked elements (никогда не меняются автономно)
+
+- Disclaimer «Astrology, not advice» обязательно присутствует
+- Никаких predictive фраз ("you will...", "your future...", «вас ждёт...»)
+- Никакого fortune-telling framing («узнай судьбу», «discover your fate»)
+- Personal claims о viewer'е («you're not [sign]») — **third-person reframe only** под Meta policies
+- NASA / Swiss Ephemeris claims без cite — запрещены
+
+### Founder quarterly review
+
+Раз в 3 месяца — топ 5 highest-spend креативов вручную проверяются на бренд-соответствие. Если drift замечен — обновляем system prompt в `src/modules/advertising/creative-gen/templates/`. 30 минут/квартал — защита от тихого размывания.
