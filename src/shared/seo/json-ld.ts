@@ -49,7 +49,7 @@ export function organizationSchema(): WithContext<Organization> {
       width: '512',
       height: '512',
     },
-    sameAs: ['https://twitter.com/estrevia_app'],
+    sameAs: ['https://x.com/estrevia_app'],
   };
 }
 

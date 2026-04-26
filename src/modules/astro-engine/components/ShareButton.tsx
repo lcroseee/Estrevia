@@ -98,8 +98,8 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
     }
   }, [passportId, downloadFormat]);
 
-  // Twitter/X share intent
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  // X (formerly Twitter) share intent — using legacy /intent/tweet path for mobile-app reliability
+  const twitterUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
 
   // Telegram share URL
   const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
@@ -182,11 +182,11 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
             color: 'rgba(255,255,255,0.6)',
             textDecoration: 'none',
           }}
-          aria-label="Share on Twitter / X"
+          aria-label="Share on X"
           onClick={() => trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'twitter', passport_id: passportId })}
         >
           <XIcon size={14} />
-          X / Twitter
+          X
         </a>
 
         {/* Telegram */}

@@ -124,7 +124,7 @@ export default async function MarketingLayout({ children }: { children: ReactNod
                 {tMarketing('footerPrivacy')}
               </Link>
               <a
-                href="https://twitter.com/estrevia_app"
+                href="https://x.com/estrevia_app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`text-xs text-white/65 hover:text-white/90 transition-colors ${focusRing}`}
