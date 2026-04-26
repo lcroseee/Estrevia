@@ -1,2 +1,2 @@
-// TODO: Implementation in stream 4 (creative-gen-batch)
-export const ADVERTISING_CREATIVE_GEN_BATCH_STUB = true as const;
+export { generateLaunchBatch } from './generate-launch-set';
+export type { BatchDeps, BatchOptions, BatchSummary, DbClient } from './generate-launch-set';
