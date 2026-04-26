@@ -9,13 +9,15 @@ import { useSubscription } from '@/shared/hooks/useSubscription';
 
 export interface SephirahData {
   number: number;
-  name: { hebrew: string; en: string };
-  meaning: { en: string };
-  planet: string;
+  hidden?: boolean;
+  name: { hebrew: string; en: string; es: string };
+  meaning: { en: string; es: string };
+  sphere: string | null;
+  planet: string | null;
   colorQueenScale: string;
   divineName: string;
   archangel: string;
-  description: { en: string };
+  description: { en: string; es: string };
   position: { x: number; y: number };
 }
 
@@ -51,6 +53,9 @@ const PLANET_SEPHIRA_MAP: Record<string, number> = {
   Mars: 5,     // Geburah
   Jupiter: 4,  // Chesed
   Saturn: 3,   // Binah
+  Uranus: 11,  // Daath
+  Neptune: 2,  // Chokmah
+  Pluto: 1,    // Kether
 };
 
 const PLANET_GLYPHS: Record<string, string> = {
@@ -61,6 +66,9 @@ const PLANET_GLYPHS: Record<string, string> = {
   Mars: '\u2642',
   Jupiter: '\u2643',
   Saturn: '\u2644',
+  Uranus: '\u2645',
+  Neptune: '\u2646',
+  Pluto: '\u2647',
 };
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -142,7 +150,7 @@ export function TreeOfLifeClient({
           className="w-full max-w-md"
           style={{ aspectRatio: '1 / 1' }}
           role="img"
-          aria-label="Tree of Life — Kabbalistic diagram with 10 Sephiroth and 22 paths"
+          aria-label="Tree of Life — Kabbalistic diagram with 10 Sephiroth, Daath, and 22 paths"
         >
           <title>Tree of Life</title>
 
@@ -170,7 +178,7 @@ export function TreeOfLifeClient({
                   y2={to.y}
                   stroke={isSelected || isHighlighted ? path.color : 'rgba(255,255,255,0.12)'}
                   strokeWidth={isSelected ? 0.8 : 0.4}
-                  className="cursor-pointer transition-all duration-300"
+                  className="cursor-pointer transition-all duration-300 focus:outline-none focus-visible:outline-none"
                   onClick={() => handlePathClick(path)}
                   role="button"
                   aria-label={`Path ${path.number}: ${path.hebrewLetter}`}
@@ -190,7 +198,10 @@ export function TreeOfLifeClient({
               const to = sephiraPositions.get(path.connects[1]);
               if (!from || !to) return null;
 
-              const mx = (from.x + to.x) / 2;
+              // Shift letter horizontally when path is vertical to avoid colliding
+              // with Daath (number 13, connects Kether [1] and Tiphareth [6], midpoint ~50,27)
+              const rawMx = (from.x + to.x) / 2;
+              const mx = path.number === 13 ? rawMx + 3 : rawMx;
               const my = (from.y + to.y) / 2;
               const isSelected = selectedPath?.number === path.number;
 
@@ -215,12 +226,15 @@ export function TreeOfLifeClient({
           <g aria-label="Sephiroth">
             {sephiroth.map((s) => {
               const isSelected = selectedSephira?.number === s.number;
-              const radius = isSelected ? 4.5 : 3.5;
+              const isDaath = s.hidden === true;
+              const radius = isDaath
+                ? (isSelected ? 4 : 2.5)
+                : (isSelected ? 4.5 : 3.5);
 
               return (
                 <g
                   key={s.number}
-                  className="cursor-pointer"
+                  className="cursor-pointer focus:outline-none focus-visible:outline-none"
                   onClick={() => handleSephiraClick(s)}
                   role="button"
                   aria-label={`${s.name.en} — ${s.meaning.en}`}
@@ -234,7 +248,7 @@ export function TreeOfLifeClient({
                     <circle
                       cx={s.position.x}
                       cy={s.position.y}
-                      r={radius + 2}
+                      r={isDaath ? radius + 1.2 : radius + 2}
                       fill="none"
                       stroke={s.colorQueenScale}
                       strokeWidth="0.5"
@@ -242,7 +256,11 @@ export function TreeOfLifeClient({
                     >
                       <animate
                         attributeName="r"
-                        values={`${radius + 1};${radius + 3};${radius + 1}`}
+                        values={
+                          isDaath
+                            ? `${radius + 0.7};${radius + 1.7};${radius + 0.7}`
+                            : `${radius + 1};${radius + 3};${radius + 1}`
+                        }
                         dur="2s"
                         repeatCount="indefinite"
                       />
@@ -259,28 +277,32 @@ export function TreeOfLifeClient({
                   <circle
                     cx={s.position.x}
                     cy={s.position.y}
-                    r={radius}
-                    fill={`${s.colorQueenScale}20`}
+                    r={isDaath ? (isSelected ? 4 : 2.5) : radius}
+                    fill={isDaath ? `${s.colorQueenScale}10` : `${s.colorQueenScale}20`}
                     stroke={s.colorQueenScale}
                     strokeWidth={isSelected ? 0.6 : 0.3}
+                    strokeDasharray={isDaath ? '0.6 0.4' : undefined}
                     className="transition-all duration-300"
                   />
 
-                  {/* Name */}
+                  {/* Name — inside the circle. For hidden Sephira, paint a dark stroke behind the text so it stays readable across the dashed border. */}
                   <text
                     x={s.position.x}
                     y={s.position.y - 0.3}
                     textAnchor="middle"
                     dominantBaseline="central"
                     fontSize="2.2"
-                    fill="rgba(255,255,255,0.8)"
+                    fill={isDaath ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.8)'}
+                    stroke={isDaath ? 'rgba(10,10,15,0.9)' : undefined}
+                    strokeWidth={isDaath ? 0.5 : undefined}
+                    paintOrder={isDaath ? 'stroke fill' : undefined}
                     className="pointer-events-none"
                     style={{ fontFamily: 'sans-serif' }}
                   >
                     {s.name.en}
                   </text>
 
-                  {/* Number below */}
+                  {/* Number / anchor dot below */}
                   <text
                     x={s.position.x}
                     y={s.position.y + 2}
@@ -291,7 +313,7 @@ export function TreeOfLifeClient({
                     className="pointer-events-none"
                     style={{ fontFamily: 'monospace' }}
                   >
-                    {s.number}
+                    {isDaath ? '·' : s.number}
                   </text>
                 </g>
               );
@@ -384,10 +406,11 @@ export function TreeOfLifeClient({
 
                 <dl className="divide-y divide-white/6 text-sm">
                   {[
-                    { label: 'Planet', value: selectedSephira.planet },
+                    { label: t('sphere'), value: selectedSephira.sphere },
+                    { label: t('planet'), value: selectedSephira.planet },
                     { label: 'Divine Name', value: selectedSephira.divineName },
                     { label: 'Archangel', value: selectedSephira.archangel },
-                  ].map(({ label, value }) => (
+                  ].filter((r) => r.value).map(({ label, value }) => (
                     <div key={label} className="flex justify-between py-2">
                       <dt className="text-white/40">{label}</dt>
                       <dd className="text-white/75">{value}</dd>

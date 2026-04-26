@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return createMetadata({
     title: 'Tree of Life — Kabbalistic Diagram',
     description:
-      'Explore the interactive Tree of Life with 10 Sephiroth, 22 paths, and Thoth Tarot correspondences. Overlay your natal chart planets on the Kabbalistic Tree.',
+      'Explore the interactive Tree of Life with 10 Sephiroth plus the hidden Daath, 22 paths, and Thoth Tarot correspondences. Overlay your natal chart planets on the Kabbalistic Tree.',
     path: '/tree-of-life',
     keywords: [
       'tree of life',
@@ -25,13 +25,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
 interface SephirahData {
   number: number;
-  name: { hebrew: string; en: string };
-  meaning: { en: string };
-  planet: string;
+  hidden?: boolean;
+  name: { hebrew: string; en: string; es: string };
+  meaning: { en: string; es: string };
+  sphere: string | null;
+  planet: string | null;
   colorQueenScale: string;
   divineName: string;
   archangel: string;
-  description: { en: string };
+  description: { en: string; es: string };
   position: { x: number; y: number };
 }
 
