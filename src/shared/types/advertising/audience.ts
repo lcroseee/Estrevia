@@ -11,10 +11,17 @@ export interface CustomAudience {
   active_in_campaigns: string[];
 }
 
-export interface AudienceMember {
+type AudienceMemberBase = {
   email_hash?: string; // SHA-256
   fbp?: string;
   fbc?: string;
   ip_hash?: string;
   external_id_hash?: string;
-}
+};
+
+export type AudienceMember =
+  | (AudienceMemberBase & { email_hash: string })
+  | (AudienceMemberBase & { fbp: string })
+  | (AudienceMemberBase & { fbc: string })
+  | (AudienceMemberBase & { ip_hash: string })
+  | (AudienceMemberBase & { external_id_hash: string });
