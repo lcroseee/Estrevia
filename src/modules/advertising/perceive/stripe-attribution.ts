@@ -29,7 +29,7 @@ export async function fetchStripeAttribution(
 ): Promise<StripeAttribution[]> {
   const { apiClient, windowStart, windowEnd, adId } = opts;
 
-  const records = await apiClient.listSubscriptionsCreatedBetween({
+  const records: StripeAttribution[] = await apiClient.listSubscriptionsCreatedBetween({
     created_gte: windowStart,
     created_lt: windowEnd,
   });
