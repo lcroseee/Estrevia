@@ -1,4 +1,4 @@
-import { pgTable, text, serial, real, jsonb, timestamp, boolean, date, unique, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, real, jsonb, timestamp, boolean, date, unique, integer, index } from 'drizzle-orm/pg-core';
 import type { ChartResult } from '@/shared/types/astrology';
 
 // ---------------------------------------------------------------------------
@@ -178,6 +178,113 @@ export const processedStripeEvents = pgTable('processed_stripe_events', {
 });
 
 // ---------------------------------------------------------------------------
+// advertising_decisions  — append-only audit log of every agent decision
+// ---------------------------------------------------------------------------
+export const advertisingDecisions = pgTable('advertising_decisions', {
+  id: text('id').primaryKey(), // nanoid
+  timestamp: timestamp('timestamp', { withTimezone: true }).notNull().defaultNow(),
+  adId: text('ad_id').notNull(),
+  action: text('action', {
+    enum: ['pause', 'scale_up', 'scale_down', 'maintain', 'duplicate', 'hold'],
+  }).notNull(),
+  deltaBudgetUsd: real('delta_budget_usd'),
+  reason: text('reason').notNull(),
+  reasoningTier: text('reasoning_tier', {
+    enum: ['tier_1_rules', 'tier_2_bayesian', 'tier_3_anomaly'],
+  }).notNull(),
+  confidence: real('confidence').notNull(),
+  metricsSnapshot: jsonb('metrics_snapshot').notNull(),
+  applied: boolean('applied').notNull().default(false),
+  appliedAt: timestamp('applied_at', { withTimezone: true }),
+  applyError: text('apply_error'),
+  metaResponse: jsonb('meta_response'),
+}, (table) => [
+  index('adv_decisions_timestamp_idx').on(table.timestamp),
+  index('adv_decisions_ad_id_idx').on(table.adId),
+]);
+
+// ---------------------------------------------------------------------------
+// advertising_creatives  — generated creative bundles awaiting review/upload
+// ---------------------------------------------------------------------------
+export const advertisingCreatives = pgTable('advertising_creatives', {
+  id: text('id').primaryKey(), // nanoid
+  hookTemplateId: text('hook_template_id').notNull(),
+  assetUrl: text('asset_url').notNull(),
+  assetKind: text('asset_kind', { enum: ['image', 'video'] }).notNull(),
+  generator: text('generator').notNull(),
+  costUsd: real('cost_usd').notNull(),
+  copy: text('copy').notNull(),
+  cta: text('cta').notNull(),
+  locale: text('locale', { enum: ['en', 'es'] }).notNull(),
+  status: text('status', {
+    enum: ['pending_review', 'approved', 'rejected', 'uploaded', 'live', 'paused'],
+  }).notNull().default('pending_review'),
+  safetyChecks: jsonb('safety_checks').notNull().default([]),
+  metaAdId: text('meta_ad_id'),
+  approvedBy: text('approved_by'),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('adv_creatives_status_idx').on(table.status),
+  index('adv_creatives_meta_ad_id_idx').on(table.metaAdId),
+]);
+
+// ---------------------------------------------------------------------------
+// advertising_feature_gates  — runtime feature-gate state per agent component
+// ---------------------------------------------------------------------------
+export const advertisingFeatureGates = pgTable('advertising_feature_gates', {
+  featureId: text('feature_id').primaryKey(),
+  mode: text('mode', {
+    enum: ['off', 'shadow', 'active_proposal', 'active_auto', 'stub'],
+  }).notNull(),
+  activationCriteria: jsonb('activation_criteria').notNull(),
+  currentState: jsonb('current_state').notNull().default({}),
+  activatedAt: timestamp('activated_at', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// advertising_spend_daily  — daily spend tracking for hard cap enforcement
+// ---------------------------------------------------------------------------
+export const advertisingSpendDaily = pgTable('advertising_spend_daily', {
+  date: text('date').primaryKey(), // YYYY-MM-DD UTC
+  spentUsd: real('spent_usd').notNull().default(0),
+  capUsd: real('cap_usd').notNull(),
+  triggeredHalt: boolean('triggered_halt').notNull().default(false),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// advertising_audiences  — Meta Custom Audiences managed by the agent
+// ---------------------------------------------------------------------------
+export const advertisingAudiences = pgTable('advertising_audiences', {
+  id: text('id').primaryKey(), // nanoid
+  kind: text('kind', {
+    enum: ['exclusion', 'retargeting_calc_no_register', 'retargeting_register_no_paid', 'lookalike_seed'],
+  }).notNull(),
+  metaAudienceId: text('meta_audience_id'),
+  size: integer('size').notNull().default(0),
+  lastRefreshedAt: timestamp('last_refreshed_at', { withTimezone: true }).notNull().defaultNow(),
+  sourceQuery: text('source_query').notNull(),
+  activeInCampaigns: jsonb('active_in_campaigns').notNull().default([]),
+});
+
+// ---------------------------------------------------------------------------
+// advertising_shadow_comparisons  — shadow-mode vs active decision comparison
+// ---------------------------------------------------------------------------
+export const advertisingShadowComparisons = pgTable('advertising_shadow_comparisons', {
+  id: text('id').primaryKey(), // nanoid
+  date: text('date').notNull(),
+  adId: text('ad_id').notNull(),
+  activeDecision: text('active_decision').notNull(),
+  shadowDecision: text('shadow_decision').notNull(),
+  agreement: boolean('agreement').notNull(),
+  outcomeBetter: text('outcome_better', { enum: ['active', 'shadow', 'tie', 'unknown'] }),
+  shadowComponent: text('shadow_component').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
 // Type aliases
 // ---------------------------------------------------------------------------
 export type User = typeof users.$inferSelect;
@@ -190,3 +297,9 @@ export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
 export type UsageCounter = typeof usageCounters.$inferSelect;
 export type ProcessedStripeEvent = typeof processedStripeEvents.$inferSelect;
+export type AdvertisingDecision = typeof advertisingDecisions.$inferSelect;
+export type AdvertisingCreative = typeof advertisingCreatives.$inferSelect;
+export type AdvertisingFeatureGate = typeof advertisingFeatureGates.$inferSelect;
+export type AdvertisingSpendDaily = typeof advertisingSpendDaily.$inferSelect;
+export type AdvertisingAudience = typeof advertisingAudiences.$inferSelect;
+export type AdvertisingShadowComparison = typeof advertisingShadowComparisons.$inferSelect;
