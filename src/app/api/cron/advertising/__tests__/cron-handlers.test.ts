@@ -8,7 +8,7 @@
  * - 500 returned on internal errors
  *
  * Route handlers are imported and called directly with a mocked Request.
- * All external dependencies (Telegram, orchestrator) are stubbed.
+ * All external dependencies (Telegram, orchestrator, Meta, PostHog, etc.) are stubbed.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -21,16 +21,185 @@ vi.mock('@sentry/nextjs', () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Mock the advertising alerts module for account-health-weekly
+// Mock shared DB — routes call require('@/shared/lib/db') lazily in factories
+// ---------------------------------------------------------------------------
+vi.mock('@/shared/lib/db', () => ({
+  db: {
+    insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) }),
+    select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }) }),
+    update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
+  },
+}));
+
+// ---------------------------------------------------------------------------
+// Mock the advertising alerts module (account-health-weekly + telegram)
 // ---------------------------------------------------------------------------
 vi.mock('@/modules/advertising/alerts', () => ({
   createTelegramBot: vi.fn(() => ({
     sendAlert: vi.fn().mockResolvedValue({ message_id: 1, text: 'ok' }),
+    sendDailyDigest: vi.fn().mockResolvedValue({ message_id: 2, text: 'ok' }),
+    sendMessage: vi.fn().mockResolvedValue({ message_id: 3, text: 'ok' }),
   })),
   sendWeeklyAccountHealthReminder: vi.fn().mockResolvedValue({
     sent: true,
     message_id: 1,
     sent_at: '2026-04-26T10:00:00.000Z',
+  }),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock Telegram bot used directly in route handlers
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/alerts/telegram-bot', () => {
+  const mockBot = {
+    sendAlert: vi.fn().mockResolvedValue({ message_id: 1, text: 'ok' }),
+    sendDailyDigest: vi.fn().mockResolvedValue({ message_id: 2, text: 'ok' }),
+    sendMessage: vi.fn().mockResolvedValue({ message_id: 3, text: 'ok' }),
+    requestApproval: vi.fn().mockResolvedValue({ approved: true }),
+  };
+  return {
+    TelegramBot: vi.fn().mockImplementation(function () {
+      return mockBot;
+    }),
+    createTelegramBot: vi.fn(() => mockBot),
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Mock Meta insights fetch
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/perceive/meta-insights', () => ({
+  fetchMetaInsights: vi.fn().mockResolvedValue([
+    {
+      ad_id: 'ad_001',
+      adset_id: 'adset_001',
+      campaign_id: 'campaign_001',
+      date: '2026-04-26',
+      impressions: 1000,
+      clicks: 20,
+      spend_usd: 5.0,
+      ctr: 0.02,
+      cpc: 0.25,
+      cpm: 5.0,
+      frequency: 1.2,
+      reach: 900,
+      days_running: 5,
+      status: 'ACTIVE',
+    },
+  ]),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock perceive: PostHog funnel + Stripe attribution + reconciler
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/perceive/posthog-funnel', () => ({
+  fetchFunnelSnapshot: vi.fn().mockResolvedValue({
+    window_start: new Date('2026-04-25T00:00:00Z'),
+    window_end: new Date('2026-04-26T00:00:00Z'),
+    steps: [
+      { event_name: 'landing_view', count: 20, unique_users: 20, conversion_from_previous: 1.0 },
+      { event_name: 'chart_calculated', count: 10, unique_users: 10, conversion_from_previous: 0.5 },
+    ],
+  }),
+}));
+
+vi.mock('@/modules/advertising/perceive/stripe-attribution', () => ({
+  fetchStripeAttribution: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('@/modules/advertising/perceive/reconciler', () => ({
+  reconcile: vi.fn().mockResolvedValue({
+    meta_clicks: 20,
+    posthog_landings: 20,
+    delta_pct: 0.0,
+    status: 'match',
+    threshold_minor: 0.1,
+    threshold_critical: 0.25,
+  }),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock orchestrator decide
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/decide/orchestrator', () => ({
+  decide: vi.fn().mockResolvedValue({
+    decisions: [
+      {
+        ad_id: 'ad_001',
+        action: 'maintain',
+        reason: 'within_tier_1_thresholds',
+        reasoning_tier: 'tier_1_rules',
+        confidence: 1.0,
+        metrics_snapshot: {},
+      },
+    ],
+    shadowLog: [],
+  }),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock act layer (pause/scale/duplicate)
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/act/pause', () => ({
+  pause: vi.fn().mockResolvedValue({ id: 'rec_001', applied: true }),
+}));
+
+vi.mock('@/modules/advertising/act/scale', () => ({
+  scale: vi.fn().mockResolvedValue({ id: 'rec_002', applied: true }),
+}));
+
+vi.mock('@/modules/advertising/act/duplicate', () => ({
+  duplicate: vi.fn().mockResolvedValue({ id: 'rec_003', applied: true }),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock kill-switch (isDryRun)
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/safety/kill-switch', () => ({
+  assertKillSwitchOff: vi.fn(),
+  isKillSwitchEngaged: vi.fn().mockReturnValue(false),
+  isDryRun: vi.fn().mockReturnValue(false),
+  getStatus: vi.fn().mockReturnValue({ enabled: true, dryRun: false }),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock brand-voice audit + drop-off monitor + feature gates
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/decide/brand-voice-audit', () => ({
+  auditTopCreatives: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('@/modules/advertising/alerts/drop-off-monitor', () => {
+  class MockInMemoryDropOffStore {
+    appendSnapshot = vi.fn().mockResolvedValue(undefined);
+    listSnapshots = vi.fn().mockResolvedValue([]);
+  }
+  return {
+    runDailyDropOffCheck: vi.fn().mockResolvedValue({
+      status: 'collecting_baseline',
+      baseline_sample_count: 0,
+      alerts: [],
+    }),
+    InMemoryDropOffStore: MockInMemoryDropOffStore,
+  };
+});
+
+vi.mock('@/modules/advertising/decide/feature-gates', () => ({
+  evaluateGates: vi.fn().mockResolvedValue([]),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock audiences refresh cycle
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/audiences/refresh-cycle', () => ({
+  runDailyAudienceRefresh: vi.fn().mockResolvedValue({
+    ran_at: new Date('2026-04-26T06:00:00Z'),
+    outcomes: [
+      { kind: 'exclusion', result: { skipped: true, reason: 'below minimum size' } },
+      { kind: 'retargeting', result: { calc_no_register: { audience_id: 'aud_001', size: 0, activated_in_meta: false }, register_no_paid: { audience_id: 'aud_002', size: 0, activated_in_meta: false } } },
+    ],
+    total_audiences: 2,
+    failed_audiences: 0,
   }),
 }));
 
@@ -199,5 +368,59 @@ describe('account-health-weekly — specific behaviour', () => {
 
   function handler(req: Request) {
     return accountHealthWeeklyGET(req);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Tests: triage-daily specific — checks summary shape
+// ---------------------------------------------------------------------------
+
+describe('triage-daily — specific behaviour', () => {
+  it('summary includes metrics_pulled, decisions_made, and audit_records_written', async () => {
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await handler(req);
+    const body = await res.json() as {
+      success: boolean;
+      summary: {
+        metrics_pulled: number;
+        decisions_made: number;
+        audit_records_written: number;
+      };
+    };
+
+    expect(body.success).toBe(true);
+    expect(typeof body.summary.metrics_pulled).toBe('number');
+    expect(typeof body.summary.decisions_made).toBe('number');
+    expect(typeof body.summary.audit_records_written).toBe('number');
+  });
+
+  function handler(req: Request) {
+    return triageDailyGET(req);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Tests: audience-refresh specific — checks summary shape
+// ---------------------------------------------------------------------------
+
+describe('audience-refresh — specific behaviour', () => {
+  it('summary includes total_audiences and failed_audiences', async () => {
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await handler(req);
+    const body = await res.json() as {
+      success: boolean;
+      summary: {
+        total_audiences: number;
+        failed_audiences: number;
+      };
+    };
+
+    expect(body.success).toBe(true);
+    expect(typeof body.summary.total_audiences).toBe('number');
+    expect(typeof body.summary.failed_audiences).toBe('number');
+  });
+
+  function handler(req: Request) {
+    return audienceRefreshGET(req);
   }
 });
