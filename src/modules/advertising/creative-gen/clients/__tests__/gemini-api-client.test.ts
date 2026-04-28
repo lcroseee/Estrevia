@@ -153,4 +153,24 @@ describe('GeminiApiClient.generateImage', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(blobPutMock).not.toHaveBeenCalled();
   });
+
+  it('throws GEMINI_NO_IMAGE when predictions array is empty (safety filter)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ predictions: [] }), { status: 200 }),
+    );
+    const blobPutMock = vi.fn();
+
+    const client = new GeminiApiClient({
+      geminiApiKey: 'k',
+      blobToken: 't',
+      fetch: fetchMock as unknown as typeof fetch,
+      blobPut: blobPutMock,
+    });
+
+    await expect(
+      client.generateImage({ prompt: 'p', model: 'imagen-4-fast', aspect: '9:16' }),
+    ).rejects.toThrow(/GEMINI_NO_IMAGE/);
+
+    expect(blobPutMock).not.toHaveBeenCalled();
+  });
 });
