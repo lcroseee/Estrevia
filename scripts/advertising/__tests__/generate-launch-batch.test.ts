@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { validateEnv, stripDurationFromHooks } from '../generate-launch-batch';
+import { validateEnv, stripDurationFromHooks, runBatch } from '../generate-launch-batch';
 import type { HookTemplate } from '@/shared/types/advertising';
+import { vi } from 'vitest';
 
 describe('validateEnv', () => {
   const originalEnv = { ...process.env };
@@ -61,5 +62,65 @@ describe('stripDurationFromHooks', () => {
     expect(output[0].duration_sec).toBeUndefined();
     expect(output[1].duration_sec).toBeUndefined();
     expect(input[0].duration_sec).toBe(15);
+  });
+});
+
+describe('runBatch', () => {
+  const baseEnv = {
+    GEMINI_API_KEY: 'g',
+    BLOB_READ_WRITE_TOKEN: 'b',
+    ANTHROPIC_API_KEY: 'a',
+    DATABASE_URL: 'd',
+  };
+
+  beforeEach(() => {
+    Object.assign(process.env, baseEnv);
+  });
+
+  it('generates 1 creative per slot, persists to DB, returns aggregate summary', async () => {
+    const inserts: Array<{ values: unknown }> = [];
+    const dbMock = {
+      insert: () => ({
+        values: (row: unknown) => {
+          inserts.push({ values: row });
+          return Promise.resolve();
+        },
+      }),
+    };
+
+    const imageGenMock = {
+      name: 'imagen-4-fast' as const,
+      cost_per_image_usd: 0.02,
+      generate: vi.fn().mockResolvedValue({
+        id: 'asset-1',
+        kind: 'image' as const,
+        generator: 'imagen-4-fast' as const,
+        prompt_used: 'p',
+        url: 'https://blob/x.png',
+        width: 1080,
+        height: 1920,
+        cost_usd: 0.02,
+        created_at: new Date(),
+      }),
+    };
+
+    const claudeMock = {
+      moderationCheck: vi.fn().mockResolvedValue({ passed: true }),
+    };
+
+    const summary = await runBatch({
+      countPerLocale: 1,
+      locales: ['en'],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      db: dbMock as any,
+      imageGen: imageGenMock,
+      claudeClient: claudeMock,
+    });
+
+    expect(summary.generated).toBe(1);
+    expect(summary.rejected).toBe(0);
+    expect(summary.total_cost_usd).toBe(0.02);
+    expect(summary.failures).toEqual([]);
+    expect(inserts).toHaveLength(1);
   });
 });
