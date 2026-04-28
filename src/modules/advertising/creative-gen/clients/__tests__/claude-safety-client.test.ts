@@ -32,4 +32,32 @@ describe('ClaudeSafetyClient.moderationCheck', () => {
     expect(body.model).toBe('claude-haiku-4-5');
     expect(body.messages[0].content).toContain('Calculate your sidereal sun.');
   });
+
+  it('returns fail-safe block on non-JSON output', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      makeClaudeOkResponse('I cannot determine without more context'),
+    );
+    const client = new ClaudeSafetyClient({
+      anthropicApiKey: 'k',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+
+    const result = await client.moderationCheck('any input');
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe('INVALID_LLM_RESPONSE');
+  });
+
+  it('returns fail-safe block when "passed" is missing from JSON', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      makeClaudeOkResponse('{"reason": "no idea"}'),
+    );
+    const client = new ClaudeSafetyClient({
+      anthropicApiKey: 'k',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+
+    const result = await client.moderationCheck('any input');
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe('INVALID_LLM_RESPONSE');
+  });
 });
