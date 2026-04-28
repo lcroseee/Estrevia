@@ -105,4 +105,52 @@ describe('GeminiApiClient.generateImage', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(blobPutMock).not.toHaveBeenCalled();
   });
+
+  it('retries 3 times on 503 then succeeds', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('upstream', { status: 503 }))
+      .mockResolvedValueOnce(new Response('upstream', { status: 503 }))
+      .mockResolvedValueOnce(makeOkResponse('aGk='));
+    const blobPutMock = vi.fn().mockResolvedValue({
+      url: 'https://test.public.blob.vercel-storage.com/x.png',
+      pathname: 'x.png',
+    });
+
+    const client = new GeminiApiClient({
+      geminiApiKey: 'k',
+      blobToken: 't',
+      fetch: fetchMock as unknown as typeof fetch,
+      blobPut: blobPutMock,
+      sleepMs: () => Promise.resolve(),
+    });
+
+    const result = await client.generateImage({
+      prompt: 'p',
+      model: 'imagen-4-fast',
+      aspect: '9:16',
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(result.url).toBe('https://test.public.blob.vercel-storage.com/x.png');
+  });
+
+  it('throws after 3 failed retries on 503', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('upstream', { status: 503 }));
+    const blobPutMock = vi.fn();
+
+    const client = new GeminiApiClient({
+      geminiApiKey: 'k',
+      blobToken: 't',
+      fetch: fetchMock as unknown as typeof fetch,
+      blobPut: blobPutMock,
+      sleepMs: () => Promise.resolve(),
+    });
+
+    await expect(
+      client.generateImage({ prompt: 'p', model: 'imagen-4-fast', aspect: '9:16' }),
+    ).rejects.toThrow(/GEMINI_5XX/);
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(blobPutMock).not.toHaveBeenCalled();
+  });
 });
