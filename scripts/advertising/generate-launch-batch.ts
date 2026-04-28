@@ -4,6 +4,9 @@ import { allHooks } from '@/modules/advertising/creative-gen/templates';
 import { generateLaunchBatch } from '@/modules/advertising/creative-gen/batch';
 import type { BatchDeps, DbClient } from '@/modules/advertising/creative-gen/batch';
 import type { ClaudeClient } from '@/modules/advertising/creative-gen/safety/checks';
+import { GeminiApiClient, ClaudeSafetyClient } from '@/modules/advertising/creative-gen/clients';
+import { ImagenFast } from '@/modules/advertising/creative-gen/generators';
+import { getDb } from '@/shared/lib/db';
 
 const REQUIRED_ENV_VARS = [
   'GEMINI_API_KEY',
@@ -106,4 +109,73 @@ export async function runBatch(opts: RunBatchOpts): Promise<RunBatchSummary> {
   }
 
   return aggregate;
+}
+
+// ---------------------------------------------------------------------------
+// CLI entry: main + printSummary
+// ---------------------------------------------------------------------------
+
+export function printSummary(summary: RunBatchSummary): void {
+  console.log('');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log(`  Generated:   ${summary.generated}`);
+  console.log(`  Rejected:    ${summary.rejected}`);
+  console.log(`  Failed:      ${summary.failures.length}`);
+  console.log(`  Total cost:  $${summary.total_cost_usd.toFixed(2)}`);
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('');
+  if (summary.creatives.length > 0) {
+    console.log('Creatives:');
+    for (const c of summary.creatives) {
+      console.log(`  [${c.locale}/${c.templateId}] ${c.status}: ${c.url}`);
+    }
+    console.log('');
+  }
+  if (summary.failures.length > 0) {
+    console.log('Failures:');
+    for (const f of summary.failures) {
+      console.log(`  [${f.locale} slot ${f.slot}] ${f.error}`);
+    }
+    console.log('');
+  }
+  console.log('Review pending creatives at /admin/advertising/creatives/review (after deploy).');
+}
+
+async function main(): Promise<void> {
+  const envCheck = validateEnv();
+  if (!envCheck.ok) {
+    console.error(`Missing required env vars: ${envCheck.missing.join(', ')}`);
+    process.exit(1);
+  }
+
+  const geminiClient = new GeminiApiClient({
+    geminiApiKey: process.env.GEMINI_API_KEY!,
+    blobToken: process.env.BLOB_READ_WRITE_TOKEN!,
+  });
+
+  const claudeClient = new ClaudeSafetyClient({
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY!,
+  });
+
+  const imageGen = new ImagenFast({ apiClient: geminiClient });
+
+  const summary = await runBatch({
+    countPerLocale: 3,
+    locales: ['en', 'es'],
+    // Drizzle's insert(...).values(...) resolves with a query result, but the
+    // DbClient interface (creative-gen/batch) declares Promise<void>. The
+    // resolved value is unused — the cast bridges the variance.
+    db: getDb() as unknown as DbClient,
+    imageGen,
+    claudeClient,
+  });
+
+  printSummary(summary);
+}
+
+if (process.argv[1]?.endsWith('generate-launch-batch.ts')) {
+  main().catch((err) => {
+    console.error('FATAL:', err);
+    process.exit(1);
+  });
 }
