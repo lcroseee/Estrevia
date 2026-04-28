@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { validateEnv, stripDurationFromHooks, runBatch } from '../generate-launch-batch';
 import type { HookTemplate } from '@/shared/types/advertising';
-import { vi } from 'vitest';
 
 describe('validateEnv', () => {
   const originalEnv = { ...process.env };
@@ -66,6 +65,7 @@ describe('stripDurationFromHooks', () => {
 });
 
 describe('runBatch', () => {
+  const originalEnv = { ...process.env };
   const baseEnv = {
     GEMINI_API_KEY: 'g',
     BLOB_READ_WRITE_TOKEN: 'b',
@@ -75,6 +75,10 @@ describe('runBatch', () => {
 
   beforeEach(() => {
     Object.assign(process.env, baseEnv);
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
   });
 
   it('generates 1 creative per slot, persists to DB, returns aggregate summary', async () => {
