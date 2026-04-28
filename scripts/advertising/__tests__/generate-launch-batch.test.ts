@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { validateEnv } from '../generate-launch-batch';
+import { validateEnv, stripDurationFromHooks } from '../generate-launch-batch';
+import type { HookTemplate } from '@/shared/types/advertising';
 
 describe('validateEnv', () => {
   const originalEnv = { ...process.env };
@@ -47,5 +48,18 @@ describe('validateEnv', () => {
     if (!result.ok) {
       expect(result.missing).toEqual(['BLOB_READ_WRITE_TOKEN', 'DATABASE_URL']);
     }
+  });
+});
+
+describe('stripDurationFromHooks', () => {
+  it('clears duration_sec on every template', () => {
+    const input: HookTemplate[] = [
+      { id: 'a', name: 'A', archetype: 'identity_reveal', copy_template: 'c', visual_mood: 'm', duration_sec: 15, aspect_ratios: ['9:16'], locale: 'en', policy_constraints: [] },
+      { id: 'b', name: 'B', archetype: 'authority', copy_template: 'c', visual_mood: 'm', duration_sec: 20, aspect_ratios: ['9:16'], locale: 'en', policy_constraints: [] },
+    ];
+    const output = stripDurationFromHooks(input);
+    expect(output[0].duration_sec).toBeUndefined();
+    expect(output[1].duration_sec).toBeUndefined();
+    expect(input[0].duration_sec).toBe(15);
   });
 });

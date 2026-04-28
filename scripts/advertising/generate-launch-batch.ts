@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import type { HookTemplate } from '@/shared/types/advertising';
 
 const REQUIRED_ENV_VARS = [
   'GEMINI_API_KEY',
@@ -17,4 +18,8 @@ export function validateEnv(): ValidateEnvResult {
     return { ok: false, missing };
   }
   return { ok: true };
+}
+
+export function stripDurationFromHooks(hooks: HookTemplate[]): HookTemplate[] {
+  return hooks.map((hook) => ({ ...hook, duration_sec: undefined }));
 }
