@@ -174,3 +174,24 @@ describe('GeminiApiClient.generateImage', () => {
     expect(blobPutMock).not.toHaveBeenCalled();
   });
 });
+
+describe('GeminiApiClient.generateVideo', () => {
+  it('throws VIDEO_NOT_IMPLEMENTED — first batch is image-only', async () => {
+    const client = new GeminiApiClient({
+      geminiApiKey: 'k',
+      blobToken: 't',
+      fetch: vi.fn() as unknown as typeof fetch,
+      blobPut: vi.fn(),
+    });
+
+    await expect(
+      client.generateVideo({
+        prompt: 'p',
+        model: 'veo-3-1-lite',
+        aspect: '9:16',
+        duration_sec: 15,
+        resolution: '720p',
+      }),
+    ).rejects.toThrow(/VIDEO_NOT_IMPLEMENTED/);
+  });
+});
