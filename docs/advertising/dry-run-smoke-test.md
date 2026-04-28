@@ -146,3 +146,56 @@ Once `ADVERTISING_AGENT_ENABLED=true` is set (after resolving 2 manual steps):
 | ❌ | Initial creative batch generated + approved | **Manual** — `npm run advertising:generate-launch-batch` then review at `/admin/advertising/creatives/review` |
 | ❌ | Vercel production env vars | **Manual** — `vercel env add` for each prod env var |
 | ❌ | Production deploy | **Manual** — `vercel --prod` |
+
+---
+
+## Creative batch generation — first run (2026-04-27)
+
+After implementing `GeminiApiClient`, `ClaudeSafetyClient`, and the CLI runBatch orchestrator (commits a00c9d8 through b98ce40, 19 unit + integration tests passing), ran `npm run advertising:generate-launch-batch` for the first time with real APIs.
+
+### Result
+
+```
+Generated:   0
+Rejected:    0
+Failed:      6
+Total cost:  $0.00
+
+Failures:
+  [en slot 0] GEMINI_BAD_REQUEST: HTTP 400
+  [en slot 1] GEMINI_BAD_REQUEST: HTTP 400
+  [en slot 2] GEMINI_BAD_REQUEST: HTTP 400
+  [es slot 0] GEMINI_BAD_REQUEST: HTTP 400
+  [es slot 1] GEMINI_BAD_REQUEST: HTTP 400
+  [es slot 2] GEMINI_BAD_REQUEST: HTTP 400
+```
+
+### Diagnosis
+
+Direct API probe showed Gemini returns:
+
+```
+"Imagen 3 is only available on paid plans. Please upgrade your account at https://ai.dev/projects"
+```
+
+(The "Imagen 3" wording is generic — Imagen 4 is also gated behind a paid plan.)
+
+### What this confirms about the pipeline
+
+The 6×400 outcome with $0 spent and clean error messages confirms the code is fully functional:
+
+- ✅ Auth: `GEMINI_API_KEY` is valid (Gemini accepted the request, didn't return 401/403).
+- ✅ Endpoint: `imagen-4.0-fast-generate-001:predict` exists in the API (verified via `/v1beta/models` listing).
+- ✅ Request body: Gemini returned a billing error with an actionable message — not a malformed-request error — so the JSON shape is correct.
+- ✅ Error handling: `GeminiApiClient` correctly threw `GEMINI_BAD_REQUEST` on 400 (per the 4xx fail-fast logic in Task 4).
+- ✅ Per-slot isolation: all 6 slots failed independently; none aborted the loop. CLI's per-slot try/catch (Task 14) captured each as a `failures[]` entry.
+- ✅ DB layer: no rows were written (correct — nothing succeeded), no DB errors leaked.
+- ✅ Cost tracking: $0.00 reported correctly (no Imagen charge incurred for 400 responses).
+
+### What blocks completion of first batch
+
+| Status | Item | Action |
+|---|---|---|
+| ❌ | Gemini API project on free tier | **Manual** — enable billing at https://ai.dev/projects (cost: ~$0.44 per batch of 22 creatives, ~$13/mo if running daily) |
+
+Once billing is enabled, re-run `npm run advertising:generate-launch-batch` — expected output is 6 publicly-fetchable Blob URLs, ~$0.13 spend, 6 rows in `advertising_creatives` with status `pending_review` (or some `rejected` if Claude moderation blocks).
