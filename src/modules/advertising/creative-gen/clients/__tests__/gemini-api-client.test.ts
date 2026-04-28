@@ -84,4 +84,25 @@ describe('GeminiApiClient.generateImage', () => {
     expect(result.width).toBe(1024);
     expect(result.height).toBe(1024);
   });
+
+  it('throws on 401 without retrying', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response('{"error":{"code":401,"message":"unauth"}}', { status: 401 }),
+    );
+    const blobPutMock = vi.fn();
+
+    const client = new GeminiApiClient({
+      geminiApiKey: 'bad',
+      blobToken: 't',
+      fetch: fetchMock as unknown as typeof fetch,
+      blobPut: blobPutMock,
+    });
+
+    await expect(
+      client.generateImage({ prompt: 'p', model: 'imagen-4-fast', aspect: '9:16' }),
+    ).rejects.toThrow(/GEMINI_AUTH/);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(blobPutMock).not.toHaveBeenCalled();
+  });
 });
