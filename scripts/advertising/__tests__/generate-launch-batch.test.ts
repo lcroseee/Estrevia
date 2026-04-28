@@ -123,4 +123,52 @@ describe('runBatch', () => {
     expect(summary.failures).toEqual([]);
     expect(inserts).toHaveLength(1);
   });
+
+  it('isolates failures per slot — one bad slot does not abort the rest', async () => {
+    const dbMock = {
+      insert: () => ({ values: () => Promise.resolve() }),
+    };
+
+    let callCount = 0;
+    const imageGenMock = {
+      name: 'imagen-4-fast' as const,
+      cost_per_image_usd: 0.02,
+      generate: vi.fn().mockImplementation(() => {
+        callCount++;
+        if (callCount === 2) {
+          return Promise.reject(new Error('GEMINI_NO_IMAGE'));
+        }
+        return Promise.resolve({
+          id: `asset-${callCount}`,
+          kind: 'image' as const,
+          generator: 'imagen-4-fast' as const,
+          prompt_used: 'p',
+          url: `https://blob/${callCount}.png`,
+          width: 1080,
+          height: 1920,
+          cost_usd: 0.02,
+          created_at: new Date(),
+        });
+      }),
+    };
+
+    const claudeMock = { moderationCheck: vi.fn().mockResolvedValue({ passed: true }) };
+
+    const summary = await runBatch({
+      countPerLocale: 3,
+      locales: ['en'],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      db: dbMock as any,
+      imageGen: imageGenMock,
+      claudeClient: claudeMock,
+    });
+
+    expect(summary.generated).toBe(2);
+    expect(summary.failures).toHaveLength(1);
+    expect(summary.failures[0]).toEqual({
+      locale: 'en',
+      slot: 1,
+      error: expect.stringContaining('GEMINI_NO_IMAGE'),
+    });
+  });
 });
