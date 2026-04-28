@@ -60,4 +60,30 @@ describe('ClaudeSafetyClient.moderationCheck', () => {
     expect(result.passed).toBe(false);
     expect(result.reason).toBe('INVALID_LLM_RESPONSE');
   });
+
+  it('returns fail-safe block on 503 response', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response('upstream', { status: 503 }),
+    );
+    const client = new ClaudeSafetyClient({
+      anthropicApiKey: 'k',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+
+    const result = await client.moderationCheck('any');
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe('INVALID_LLM_RESPONSE');
+  });
+
+  it('returns fail-safe block when fetch throws (network/timeout)', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('ETIMEDOUT'));
+    const client = new ClaudeSafetyClient({
+      anthropicApiKey: 'k',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+
+    const result = await client.moderationCheck('any');
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe('INVALID_LLM_RESPONSE');
+  });
 });
