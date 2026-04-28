@@ -171,4 +171,53 @@ describe('runBatch', () => {
       error: expect.stringContaining('GEMINI_NO_IMAGE'),
     });
   });
+
+  it('persists rejected creatives when safety check blocks', async () => {
+    const inserts: Array<{ status: string }> = [];
+    const dbMock = {
+      insert: () => ({
+        values: (row: { status: string }) => {
+          inserts.push({ status: row.status });
+          return Promise.resolve();
+        },
+      }),
+    };
+
+    const imageGenMock = {
+      name: 'imagen-4-fast' as const,
+      cost_per_image_usd: 0.02,
+      generate: vi.fn().mockResolvedValue({
+        id: 'asset-1',
+        kind: 'image' as const,
+        generator: 'imagen-4-fast' as const,
+        prompt_used: 'p',
+        url: 'https://blob/x.png',
+        width: 1080,
+        height: 1920,
+        cost_usd: 0.02,
+        created_at: new Date(),
+      }),
+    };
+
+    const claudeMock = {
+      moderationCheck: vi.fn().mockResolvedValue({
+        passed: false,
+        reason: 'fortune-telling language detected',
+      }),
+    };
+
+    const summary = await runBatch({
+      countPerLocale: 1,
+      locales: ['en'],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      db: dbMock as any,
+      imageGen: imageGenMock,
+      claudeClient: claudeMock,
+    });
+
+    expect(summary.generated).toBe(0);
+    expect(summary.rejected).toBe(1);
+    expect(inserts).toHaveLength(1);
+    expect(inserts[0].status).toBe('rejected');
+  });
 });
