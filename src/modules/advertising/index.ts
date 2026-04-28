@@ -1,5 +1,6 @@
 // Advertising module public API
 export * as perceive from './perceive';
+export * as creativeGenClients from './creative-gen/clients';
 export * as creativeGenGenerators from './creative-gen/generators';
 export * as creativeGenTemplates from './creative-gen/templates';
 export * as creativeGenComposition from './creative-gen/composition';
