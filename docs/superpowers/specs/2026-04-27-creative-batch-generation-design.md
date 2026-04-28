@@ -253,7 +253,7 @@ See "Section 3" of brainstorming — captured here as the canonical table:
 | CLI bootstrap | Missing env var | Print error, exit 1, before any API call. |
 | Gemini 401/403/429 | auth/quota | Throw, no retry. |
 | Gemini 5xx | server error | Retry 3× with backoff (1s, 2s, 4s). |
-| Gemini timeout (>60s) | hung | One retry, then throw `GEMINI_TIMEOUT`. |
+| Gemini hang (no response) | indefinite | **Deferred**: AbortController-based 60s timeout enforcement is out-of-scope for this iteration (CLI is run interactively, ctrl+C is acceptable mitigation). Add in production hardening pass. |
 | Gemini empty response | safety filter | Throw `GEMINI_NO_IMAGE`. CLI catches per-slot, continues. |
 | Blob upload fail | API error | One retry, then throw. |
 | Claude 4xx/5xx, non-JSON, timeout | any failure | Fail-safe: return `{passed: false, reason: 'INVALID_LLM_RESPONSE'}`. Creative gets `status: 'rejected'`. |
@@ -264,17 +264,15 @@ See "Section 3" of brainstorming — captured here as the canonical table:
 
 ### Unit tests
 
-**`gemini-api-client.test.ts`** — 9 cases:
+**`gemini-api-client.test.ts`** — 7 cases (timeout deferred — see Out-of-scope):
 
-1. Builds correct Imagen 4 Fast endpoint URL with API key in query string.
-2. Sends `prompt` + `aspectRatio` in POST body.
-3. Decodes `bytesBase64Encoded` → calls `put()` with correct args → returns Blob URL.
-4. Returns `cost_usd: 0.02` for `imagen-4-fast`.
-5. Returns `cost_usd: 0.06` for `imagen-4-ultra`.
-6. Throws on 401 without retry.
-7. Retries 3× on 503 with exponential backoff.
-8. Throws `GEMINI_NO_IMAGE` on empty `predictions`.
-9. Throws `GEMINI_TIMEOUT` after 60s of no response.
+1. Calls Imagen 4 Fast endpoint with API key in query string + correct POST body + base64 → Blob upload → return shape (single happy-path test covering all four).
+2. Returns `cost_usd: 0.06` and uses ultra endpoint for `imagen-4-ultra`.
+3. Throws `GEMINI_AUTH` on 401 without retry.
+4. Retries 3× on 503 with exponential backoff (success on attempt 3).
+5. Throws `GEMINI_5XX` after 3 failed retries.
+6. Throws `GEMINI_NO_IMAGE` on empty `predictions`.
+7. `generateVideo()` throws `VIDEO_NOT_IMPLEMENTED` (first batch is image-only).
 
 **`claude-safety-client.test.ts`** — 5 cases:
 
@@ -336,6 +334,7 @@ Expected output:
 | Per-iteration error handling inside `generateLaunchBatch` library | CLI workaround acceptable for first batch | Phase 2 production hardening |
 | CLI argv parsing (yargs) | Hardcoded params for first run | When second use case requires different counts |
 | Sentry instrumentation | CLI runs locally, terminal output is enough | Production cron jobs |
+| Gemini hang/timeout enforcement (AbortController + fake-timers tests) | Interactive CLI, ctrl+C is acceptable mitigation | Production cron jobs (where unattended hang = silent failure) |
 
 ## Acceptance
 
