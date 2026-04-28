@@ -57,4 +57,31 @@ describe('GeminiApiClient.generateImage', () => {
     expect(result.width).toBe(1080);
     expect(result.height).toBe(1920);
   });
+
+  it('returns cost 0.06 for imagen-4-ultra and uses ultra endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeOkResponse('aGVsbG8='));
+    const blobPutMock = vi.fn().mockResolvedValue({
+      url: 'https://test.public.blob.vercel-storage.com/creatives/launch/u.png',
+      pathname: 'creatives/launch/u.png',
+    });
+
+    const client = new GeminiApiClient({
+      geminiApiKey: 'k',
+      blobToken: 't',
+      fetch: fetchMock as unknown as typeof fetch,
+      blobPut: blobPutMock,
+    });
+
+    const result = await client.generateImage({
+      prompt: 'p',
+      model: 'imagen-4-ultra',
+      aspect: '1:1',
+    });
+
+    const [url] = fetchMock.mock.calls[0];
+    expect(url).toContain('imagen-4.0-ultra-generate-001:predict');
+    expect(result.cost_usd).toBe(0.06);
+    expect(result.width).toBe(1024);
+    expect(result.height).toBe(1024);
+  });
 });
