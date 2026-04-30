@@ -41,7 +41,7 @@ const ContentSecurityPolicy = [
   // Images: self + data URIs + blob URIs (OG image generation) + Stripe + Clerk + PostHog assets + Vercel
   // eu-assets.i.posthog.com serves PostHog tracking pixels and UI assets
   // clerk.estrevia.app serves Clerk's UI sprites and OAuth provider icons
-  "img-src 'self' data: blob: https://*.stripe.com https://img.clerk.com https://*.clerk.com https://clerk.estrevia.app https://eu-assets.i.posthog.com",
+  "img-src 'self' data: blob: https://*.stripe.com https://img.clerk.com https://*.clerk.com https://clerk.estrevia.app https://eu-assets.i.posthog.com https://*.public.blob.vercel-storage.com",
 
   // Fonts: self + Google Fonts static host
   "font-src 'self' https://fonts.gstatic.com",

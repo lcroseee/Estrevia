@@ -23,7 +23,7 @@ export const hooksEn: HookTemplate[] = [
     name: 'Identity Reveal — Tropical vs Sidereal',
     archetype: 'identity_reveal',
     copy_template:
-      'Most apps show the tropical sign. The actual stars say something different.',
+      "Earth's axial precession has shifted the celestial sphere ~24° since the tropical zodiac was codified ~2,000 years ago.",
     visual_mood: 'shock-then-revelation, dark cosmic gradient with subtle star animation',
     duration_sec: 15,
     aspect_ratios: ['9:16', '1:1', '4:5'],
@@ -57,7 +57,8 @@ export const hooksEn: HookTemplate[] = [
     archetype: 'identity_reveal',
     copy_template:
       'Sidereal astrology calculates positions from where the planets actually appear in the sky tonight.',
-    visual_mood: 'night sky time-lapse with planetary overlays, clean and factual tone',
+    visual_mood:
+      'Photorealistic deep night sky astronomical photograph. Three bright bluish-white stars aligned in a perfectly straight row near the center of the frame, evenly spaced, isolated as discrete points of light against empty dark sky — surrounded by negative space, with no other bright stars adjacent. Two visually distinct real planets in the upper third: Saturn with prominent pale-gold ring system tilted slightly to one side, and Neptune as a smaller deep ice-blue smooth sphere — both clearly different in color, size, and position, not overlapping. A subtle Milky Way band runs across the upper area. Dark navy-to-black gradient background with sparse scattered faint stars throughout. Cinematic depth, atmospheric clarity, observatory-grade resolution. Empty negative space at the bottom of the frame for text overlay. Vertical 9:16 composition. NO text, NO words, NO labels, NO names, NO captions, NO UI elements, NO planetarium interface, NO connecting lines, NO diagram lines, NO constellation outlines, NO asterism shapes, NO callout boxes, NO icons, NO arrows, NO grids.',
     duration_sec: 15,
     aspect_ratios: ['9:16', '1:1'],
     locale: 'en',
@@ -127,7 +128,8 @@ export const hooksEn: HookTemplate[] = [
     archetype: 'authority',
     copy_template:
       'Estrevia calculates planetary positions using Swiss Ephemeris — the same data set used by professional astronomers.',
-    visual_mood: 'credibility-building, clean data visualization, observatory imagery',
+    visual_mood:
+      'Photorealistic professional astronomical observatory at twilight. A large reflecting telescope inside an open dome aimed toward a deep starfield with the Milky Way arching overhead. Mountain horizon silhouette below. Cool navy and steel-blue palette, crisp atmospheric clarity. Empty negative space at the bottom of the frame for text overlay. Vertical 9:16 composition. NO screens, NO graphs, NO charts, NO dashboards, NO data visualizations, NO people or human figures, NO scientific UI, NO control rooms, NO maps, NO text labels.',
     duration_sec: 18,
     aspect_ratios: ['9:16', '1:1', '4:5'],
     locale: 'en',
@@ -228,8 +230,9 @@ export const hooksEn: HookTemplate[] = [
     name: 'Rarity — Sun-Moon-Rising Combo',
     archetype: 'rarity',
     copy_template:
-      'See how rare the Sun-Moon-Rising combination is — calculated from real planetary positions.',
-    visual_mood: 'premium, badge-of-honor, Cosmic Passport card prominent',
+      '12 sun signs × 12 moon signs × 12 ascendants = 1,728 distinct configurations. Each occurs in roughly 0.06% of natal charts.',
+    visual_mood:
+      'Photorealistic celestial diagram. A luminous circular astrological chart wheel rendered in fine pale-gold and white linework, suspended at the center of a deep cosmic black-to-navy gradient background. The wheel is divided into twelve equal pie-slice sectors by thin radial lines, with two or three concentric rings forming inner and outer borders. Simple curved abstract symbolic forms (no letters, no characters, no readable script) sit centered in each sector. A few small bright golden dots placed at varying positions across the inner rings suggest planetary placements. Subtle gold-on-dark contrast, jewel-like crispness, mathematical precision. Soft luminous halo around the wheel. Sparse faint scattered stars in the cosmic background. Empty negative space at the bottom of the frame for text overlay. Vertical 9:16 composition. NO text, NO words, NO letters, NO characters, NO labels, NO names, NO numbers, NO digits, NO captions, NO UI elements, NO callout boxes, NO icons, NO modern interface, NO arrows, NO data dashboards, NO logos, NO faces, NO people.',
     duration_sec: 12,
     aspect_ratios: ['9:16', '1:1', '4:5'],
     locale: 'en',

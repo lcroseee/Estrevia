@@ -27,7 +27,7 @@ export const hooksEs: HookTemplate[] = [
     name: 'Identity Reveal — Zodíaco tropical vs sidéreo (ES)',
     archetype: 'identity_reveal',
     copy_template:
-      'La mayoría de apps usan el zodíaco tropical. Las posiciones reales de las estrellas cuentan otra historia.',
+      'La precesión axial de la Tierra ha desplazado la esfera celeste ~24° desde que se codificó el zodíaco tropical hace ~2.000 años.',
     visual_mood: 'revelación cósmica, gradiente oscuro con animación de estrellas',
     duration_sec: 15,
     aspect_ratios: ['9:16', '1:1', '4:5'],
@@ -61,7 +61,8 @@ export const hooksEs: HookTemplate[] = [
     archetype: 'identity_reveal',
     copy_template:
       'La astrología sidérea calcula las posiciones de los planetas según donde aparecen realmente en el cielo esta noche.',
-    visual_mood: 'time-lapse de cielo nocturno con superposición de planetas, tono factual',
+    visual_mood:
+      'Fotografía astronómica realista del cielo nocturno profundo. Tres estrellas brillantes blanco-azuladas alineadas en una fila perfectamente recta cerca del centro del encuadre, espaciadas uniformemente, aisladas como puntos discretos de luz contra un cielo oscuro vacío — rodeadas de espacio negativo, sin otras estrellas brillantes adyacentes. Dos planetas reales visualmente distintos en el tercio superior: Saturno con un sistema de anillos pálidos dorados prominentes ligeramente inclinado hacia un lado, y Neptuno como una esfera más pequeña de azul hielo lisa — claramente diferentes en color, tamaño y posición, sin superponerse. Una banda sutil de la Vía Láctea atraviesa la zona superior. Fondo con gradiente azul marino a negro y estrellas tenues dispersas. Profundidad cinematográfica, claridad atmosférica, resolución de observatorio. Espacio negativo vacío en la parte inferior del encuadre para superposición de texto. Composición vertical 9:16. SIN texto, SIN palabras, SIN etiquetas, SIN nombres, SIN títulos, SIN elementos de UI, SIN interfaz de planetario, SIN líneas de conexión, SIN líneas de diagrama, SIN contornos de constelaciones, SIN formas de asterismos, SIN cuadros explicativos, SIN iconos, SIN flechas, SIN cuadrículas.',
     duration_sec: 15,
     aspect_ratios: ['9:16', '1:1'],
     locale: 'es',
@@ -129,7 +130,8 @@ export const hooksEs: HookTemplate[] = [
     archetype: 'authority',
     copy_template:
       'Estrevia calcula posiciones planetarias con Swiss Ephemeris — el mismo conjunto de datos que usan los astrónomos profesionales.',
-    visual_mood: 'construcción de credibilidad, visualización de datos limpia, imágenes de observatorio',
+    visual_mood:
+      'Fotografía realista de un observatorio astronómico profesional al anochecer. Un gran telescopio reflector dentro de una cúpula abierta apuntando hacia un campo estelar profundo con la Vía Láctea atravesando el cielo. Silueta de horizonte montañoso debajo. Paleta azul marino y azul acero, claridad atmosférica nítida. Espacio negativo vacío en la parte inferior del encuadre para superposición de texto. Composición vertical 9:16. SIN pantallas, SIN gráficos, SIN cuadros, SIN dashboards, SIN visualizaciones de datos, SIN personas ni figuras humanas, SIN UI científica, SIN salas de control, SIN mapas, SIN etiquetas de texto.',
     duration_sec: 18,
     aspect_ratios: ['9:16', '1:1', '4:5'],
     locale: 'es',
@@ -227,8 +229,9 @@ export const hooksEs: HookTemplate[] = [
     name: 'Rarity — Combinación Sol-Luna-Ascendente (ES)',
     archetype: 'rarity',
     copy_template:
-      'Descubre qué tan poco común es la combinación Sol-Luna-Ascendente — calculada a partir de posiciones planetarias reales.',
-    visual_mood: 'premium, insignia de honor, tarjeta Pasaporte Cósmico destacada',
+      '12 signos solares × 12 signos lunares × 12 ascendentes = 1.728 configuraciones distintas. Cada una ocurre en aproximadamente el 0,06% de las cartas natales.',
+    visual_mood:
+      'Diagrama celeste fotorrealista. Una rueda astrológica circular luminosa renderizada con líneas finas de oro pálido y blanco, suspendida en el centro de un fondo con gradiente cósmico de negro a azul marino profundo. La rueda está dividida en doce sectores iguales en forma de porción de pastel mediante líneas radiales finas, con dos o tres anillos concéntricos formando bordes interior y exterior. Formas simbólicas abstractas curvas y simples (sin letras, sin caracteres, sin escritura legible) en el centro de cada sector. Algunos puntos dorados brillantes pequeños en posiciones variables sobre los anillos interiores sugieren posiciones planetarias. Contraste sutil oro-sobre-oscuro, nitidez de joya, precisión matemática. Halo luminoso suave alrededor de la rueda. Estrellas tenues dispersas en el fondo cósmico. Espacio negativo vacío en la parte inferior del encuadre para superposición de texto. Composición vertical 9:16. SIN texto, SIN palabras, SIN letras, SIN caracteres, SIN etiquetas, SIN nombres, SIN números, SIN dígitos, SIN títulos, SIN elementos de UI, SIN cuadros explicativos, SIN iconos, SIN interfaz moderna, SIN flechas, SIN dashboards de datos, SIN logos, SIN caras, SIN personas.',
     duration_sec: 12,
     aspect_ratios: ['9:16', '1:1', '4:5'],
     locale: 'es',
