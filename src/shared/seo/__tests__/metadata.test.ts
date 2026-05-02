@@ -180,3 +180,48 @@ describe('createMetadata', () => {
     });
   });
 });
+
+describe('createMetadata locale-aware behaviour', () => {
+  it('emits EN canonical at root for default locale', () => {
+    const m = createMetadata({ title: 'Chart', description: 'd', path: '/chart', locale: 'en' });
+    expect(m.alternates?.canonical).toBe('https://estrevia.app/chart');
+    expect(m.alternates?.languages).toMatchObject({
+      'en-US': 'https://estrevia.app/chart',
+      'es': 'https://estrevia.app/es/chart',
+      'x-default': 'https://estrevia.app/chart',
+    });
+  });
+
+  it('emits ES canonical under /es for spanish locale', () => {
+    const m = createMetadata({ title: 'Chart', description: 'd', path: '/chart', locale: 'es' });
+    expect(m.alternates?.canonical).toBe('https://estrevia.app/es/chart');
+    expect(m.alternates?.languages).toMatchObject({
+      'en-US': 'https://estrevia.app/chart',
+      'es': 'https://estrevia.app/es/chart',
+      'x-default': 'https://estrevia.app/chart',
+    });
+  });
+
+  it('does not double-prefix /es when path already starts with /es', () => {
+    const m = createMetadata({ title: 'Chart', description: 'd', path: '/es/chart', locale: 'es' });
+    expect(m.alternates?.canonical).toBe('https://estrevia.app/es/chart');
+  });
+
+  it('emits og:locale=es_ES and alternateLocale=en_US for spanish', () => {
+    const m = createMetadata({ title: 't', description: 'd', path: '/chart', locale: 'es' });
+    expect(m.openGraph?.locale).toBe('es_ES');
+    expect(m.openGraph?.alternateLocale).toEqual(['en_US']);
+  });
+
+  it('emits og:locale=en_US and alternateLocale=es_ES for english', () => {
+    const m = createMetadata({ title: 't', description: 'd', path: '/chart', locale: 'en' });
+    expect(m.openGraph?.locale).toBe('en_US');
+    expect(m.openGraph?.alternateLocale).toEqual(['es_ES']);
+  });
+
+  it('handles root path correctly for EN', () => {
+    const m = createMetadata({ title: 'Home', description: 'd', path: '/', locale: 'en' });
+    expect(m.alternates?.canonical).toBe('https://estrevia.app/');
+    expect((m.alternates?.languages as Record<string, string>)?.['es']).toBe('https://estrevia.app/es/');
+  });
+});

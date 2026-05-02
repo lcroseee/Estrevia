@@ -21,8 +21,9 @@ export interface CreateMetadataOptions {
    */
   description: string;
   /**
-   * Canonical path — absolute URL (https://estrevia.app/...).
-   * Pass the full URL or just the path (will be prefixed with SITE_URL).
+   * Canonical path — absolute URL (https://estrevia.app/...) or relative path.
+   * Do NOT include the /es prefix — the function adds it based on `locale`.
+   * If the path already starts with /es it is stripped and re-added correctly.
    */
   path: string;
   /** OG image URL (1200×630). Falls back to DEFAULT_OG_IMAGE. */
@@ -38,7 +39,7 @@ export interface CreateMetadataOptions {
   /** Meta keywords. Low SEO weight but helps topic signals. */
   keywords?: string[];
   /**
-   * Active locale for og:locale and hreflang. Defaults to 'en'.
+   * Active locale for canonical URL, og:locale and hreflang. Defaults to 'en'.
    * Pass the result of getLocale() from next-intl/server in server components.
    */
   locale?: 'en' | 'es';
@@ -49,21 +50,39 @@ export interface CreateMetadataOptions {
  */
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
-  return value.slice(0, maxLength - 1) + '\u2026';
+  return value.slice(0, maxLength - 1) + '…';
 }
 
 /**
- * Ensures a path is an absolute URL.
- * If the path already starts with 'http', it is returned as-is.
- * Otherwise, it is prefixed with SITE_URL.
+ * Builds a locale-specific absolute URL for a given path.
+ *
+ * Rules:
+ *  - Strips any existing /es prefix from `path` to keep the contract idempotent.
+ *  - EN → SITE_URL + path (no prefix)
+ *  - ES → SITE_URL + /es + path
+ *  - Root path "/" is preserved with its trailing slash; all other paths have
+ *    trailing slash stripped.
  */
-function toAbsoluteUrl(path: string): string {
+function buildLocaleUrl(path: string, locale: 'en' | 'es'): string {
+  const base = SITE_URL.replace(/\/$/, '');
+
+  // Accept absolute URLs that are already fully qualified — return as-is.
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  const base = SITE_URL.replace(/\/$/, '');
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${normalizedPath}`;
+
+  // Strip any incoming /es prefix so the function is idempotent.
+  const cleanPath = path.replace(/^\/es(?=\/|$)/, '') || '/';
+  const normalized = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+  const localePrefix = locale === 'es' ? '/es' : '';
+
+  // Root path: keep trailing slash for canonical consistency.
+  if (normalized === '/') {
+    return `${base}${localePrefix}/`;
+  }
+
+  // All other paths: strip trailing slash.
+  return `${base}${localePrefix}${normalized}`.replace(/\/$/, '');
 }
 
 /**
@@ -81,11 +100,13 @@ function buildTitle(title: string): string {
  *
  * @example
  * export async function generateMetadata(): Promise<Metadata> {
+ *   const locale = await getLocale();
  *   return createMetadata({
  *     title: 'Sun in Aries — Sidereal',
  *     description: 'In sidereal astrology, Sun enters Aries on 14 April...',
  *     path: '/essays/sun-in-aries',
  *     type: 'article',
+ *     locale: locale as 'en' | 'es',
  *   });
  * }
  */
@@ -103,22 +124,24 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
     locale = 'en',
   } = options;
 
-  const canonicalUrl = toAbsoluteUrl(path);
+  const canonicalUrl = buildLocaleUrl(path, locale);
+  const enUrl = buildLocaleUrl(path, 'en');
+  const esUrl = buildLocaleUrl(path, 'es');
+
   const pageTitle = buildTitle(title);
   const pageDescription = truncate(description, MAX_DESCRIPTION_LENGTH);
   const imageUrl = ogImage ?? DEFAULT_OG_IMAGE;
 
-  // Cookie-based locale: both hreflang entries point to the same canonical URL.
-  // Google accepts this pattern for cookie/JS-based locale switching.
+  // Locale-specific hreflang map: each locale gets its own URL.
   // x-default points to the EN (default) version.
   const hreflangLanguages: Record<string, string> = {
-    'en-US': canonicalUrl,
-    'es': canonicalUrl,
-    'x-default': canonicalUrl,
+    'en-US': enUrl,
+    'es': esUrl,
+    'x-default': enUrl,
   };
 
-  const ogLocale = locale === 'es' ? 'es' : 'en_US';
-  const ogLocaleAlternate = locale === 'es' ? 'en_US' : 'es';
+  const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
+  const ogLocaleAlternate = locale === 'es' ? 'en_US' : 'es_ES';
 
   const metadata: Metadata = {
     title: pageTitle,
