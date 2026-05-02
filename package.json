@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "generate:ephemeris": "npx tsx scripts/generate-ephemeris-tables.ts",
     "advertising:pre-launch-check": "tsx scripts/advertising/pre-launch-check.ts",
-    "advertising:generate-launch-batch": "tsx scripts/advertising/generate-launch-batch.ts"
+    "advertising:generate-launch-batch": "tsx scripts/advertising/generate-launch-batch.ts",
+    "advertising:publish-approved": "tsx scripts/advertising/publish-approved.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
