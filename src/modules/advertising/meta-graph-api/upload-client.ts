@@ -37,7 +37,17 @@ export class MetaUploadClient extends MetaGraphApiBase implements MetaApiClient 
       throw new Error('Meta /adimages returned no hash');
     }
 
-    // Step 2: Create AdCreative
+    // Step 2: Create AdCreative.
+    // `object_story_spec.page_id` is required by Meta — every ad must be
+    // attached to a Facebook Page that "represents the business". Without
+    // it /adcreatives returns 100/1443121 "Facebook Page is Missing".
+    const pageId = process.env.META_PAGE_ID;
+    if (!pageId) {
+      throw new Error(
+        'Required env var META_PAGE_ID is not set. Pick a Page from the Business that owns the Ad Account ' +
+          `(GET /<business_id>/owned_pages) and set META_PAGE_ID=<page_id> in Vercel env vars.`,
+      );
+    }
     const linkUrl = this.buildLinkUrl(opts.tracking);
     const creativeRes = await this.request<MetaIdResponse>(
       'POST',
@@ -45,6 +55,7 @@ export class MetaUploadClient extends MetaGraphApiBase implements MetaApiClient 
       {
         name: `creative_${opts.tracking.utm_content}`,
         object_story_spec: {
+          page_id: pageId,
           link_data: {
             image_hash: imageHash,
             message: opts.copy,
