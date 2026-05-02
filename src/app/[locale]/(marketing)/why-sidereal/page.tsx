@@ -7,7 +7,6 @@ import {
   articleSchema,
   faqSchema,
   breadcrumbSchema,
-  organizationSchema,
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { Disclaimer } from '@/shared/components/Disclaimer';
@@ -104,8 +103,6 @@ export default async function WhySiderealPage() {
     { name: t('breadcrumbCurrent'), url: pageUrl },
   ]);
 
-  const orgLd = organizationSchema();
-
   const articleLd = articleSchema({
     title: t('h1'),
     description: t('leadParagraph'),
@@ -128,7 +125,6 @@ export default async function WhySiderealPage() {
       <JsonLdScript schema={articleLd} />
       <JsonLdScript schema={faqLd} />
       <JsonLdScript schema={breadcrumbLd} />
-      <JsonLdScript schema={orgLd} />
 
       <div className="max-w-3xl mx-auto px-4 py-10 md:py-16">
 

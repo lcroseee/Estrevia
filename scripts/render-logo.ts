@@ -132,7 +132,35 @@ async function main() {
     .png({ compressionLevel: 9 })
     .toFile('estrevia-icon.png');
 
-  console.log('Wrote: estrevia-logo.png (1024×1024 — wordmark) & estrevia-icon.png (1024×1024 — icon-only)');
+  // Fallback formats for Meta App icon upload — Meta's uploader sometimes
+  // chokes on RGBA PNGs. Provide a flat RGB JPG and a smaller 512×512 PNG.
+  await sharp(Buffer.from(iconOnlyBg), { density: 300 })
+    .resize(1024, 1024)
+    .flatten({ background: BG })
+    .jpeg({ quality: 92, mozjpeg: true })
+    .toFile('estrevia-icon-1024.jpg');
+
+  await sharp(Buffer.from(iconOnlyBg), { density: 300 })
+    .resize(512, 512)
+    .flatten({ background: BG })
+    .png({ compressionLevel: 9 })
+    .toFile('estrevia-icon-512.png');
+
+  // Maximum-compatibility "vanilla" JPG — explicit sRGB profile, baseline (not
+  // progressive), no metadata. Last-resort if Meta uploader rejects the others.
+  await sharp(Buffer.from(iconOnlyBg), { density: 300 })
+    .resize(1024, 1024)
+    .flatten({ background: BG })
+    .toColorspace('srgb')
+    .withMetadata({ density: 72 })
+    .jpeg({ quality: 90, progressive: false, chromaSubsampling: '4:4:4' })
+    .toFile('estrevia-icon-vanilla.jpg');
+
+  console.log('Wrote variants:');
+  console.log('  estrevia-logo.png       (1024×1024, RGBA, wordmark)');
+  console.log('  estrevia-icon.png       (1024×1024, RGBA, icon-only)');
+  console.log('  estrevia-icon-1024.jpg  (1024×1024, RGB JPG — Meta App fallback)');
+  console.log('  estrevia-icon-512.png   (512×512,   RGB PNG — smaller fallback)');
   console.log('SVG sources: estrevia-logo.svg, estrevia-icon.svg');
 }
 
