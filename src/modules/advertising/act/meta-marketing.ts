@@ -31,4 +31,32 @@ export interface MetaAdClient {
 
   /** Returns the overall account status and disapproval rate. */
   getAccountStatus(): Promise<{ status: string; disapproval_rate: number }>;
+
+  /** Creates a new campaign and returns its ID. */
+  createCampaign(opts: CreateCampaignOpts): Promise<{ campaign_id: string }>;
+
+  /** Creates a new ad set inside a campaign and returns its ID. */
+  createAdSet(opts: CreateAdSetOpts): Promise<{ adset_id: string }>;
+}
+
+export interface CreateCampaignOpts {
+  name: string;
+  objective: 'OUTCOME_TRAFFIC' | 'OUTCOME_AWARENESS';
+  status: 'PAUSED';
+}
+
+export interface CreateAdSetOpts {
+  campaignId: string;
+  name: string;
+  locale: 'en' | 'es';
+  dailyBudgetCents: number;
+  targeting: {
+    countries: string[];
+    ageMin: number;
+    ageMax: number;
+    interests?: string[];
+  };
+  optimizationGoal: 'LINK_CLICKS' | 'LANDING_PAGE_VIEWS';
+  billingEvent: 'IMPRESSIONS' | 'LINK_CLICKS';
+  status: 'PAUSED';
 }

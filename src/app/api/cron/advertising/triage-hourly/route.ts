@@ -158,6 +158,12 @@ function buildMetaApiClient(): MetaInsightsApi & MetaAdClient {
           `account=${adAccountId} token=${accessToken ? '[set]' : '[missing]'}`,
       );
     },
+    createCampaign: async () => {
+      throw new Error(`[triage-hourly] MetaMarketingClient.createCampaign not yet implemented.`);
+    },
+    createAdSet: async () => {
+      throw new Error(`[triage-hourly] MetaMarketingClient.createAdSet not yet implemented.`);
+    },
   };
 }
 

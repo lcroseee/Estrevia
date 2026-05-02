@@ -244,6 +244,12 @@ function buildMetaApiClient(): MetaInsightsApi & MetaAdClient {
     getAccountStatus: async () => {
       throw new Error(`[triage-daily] MetaMarketingClient.getAccountStatus not yet implemented.`);
     },
+    createCampaign: async () => {
+      throw new Error(`[triage-daily] MetaMarketingClient.createCampaign not yet implemented.`);
+    },
+    createAdSet: async () => {
+      throw new Error(`[triage-daily] MetaMarketingClient.createAdSet not yet implemented.`);
+    },
   };
 }
 
