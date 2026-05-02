@@ -102,6 +102,10 @@
     "faq2A": "No. La fase lunar es la diferencia angular entre el Sol y la Luna — idéntica en ambos sistemas. El desplazamiento de ~24° del ayanamsa Lahiri cambia el signo zodiacal de la Luna pero no su ángulo de fase.",
     "faq3Q": "¿Qué tan precisas son las fechas de luna nueva y llena?",
     "faq3A": "Las fechas se calculan con Swiss Ephemeris usando la efeméride analítica de Moshier, con precisión de ±0,01°. El momento del evento se acota por búsqueda binaria con ±1 minuto de precisión.",
+    "faq4Q": "¿Qué es la Luna vacía de curso?",
+    "faq4A": "La Luna está vacía de curso (VOC) desde su último aspecto mayor en un signo hasta que ingresa al siguiente. Esta ventana puede durar minutos o varias horas. La práctica tradicional considera los períodos VOC poco favorables para iniciar asuntos importantes — las decisiones tomadas en ese lapso suelen requerir revisión. La Luna cambia de signo aproximadamente cada 2,3 días, por lo que las ventanas VOC ocurren con frecuencia durante el mes.",
+    "faq5Q": "¿El signo zodiacal de la Luna afecta la energía de su fase?",
+    "faq5A": "El signo colorea la calidad de la fase más que su intensidad. Una Luna Llena en Escorpión sideral concentra la intensidad emocional de forma muy diferente a una Luna Llena en Tauro sideral, aunque ambas representen el mismo punto de máxima iluminación. La fase establece el volumen; el signo moldea la textura de esa energía.",
     "breadcrumb": "Fase Lunar",
     "freeMonthOnly": "Plan gratis: solo el mes actual.",
     "unlockFullCalendar": "Desbloquear calendario completo",
@@ -215,6 +219,10 @@
     "faq2A": "El día se divide en 12 partes iguales entre el amanecer y el atardecer (horas diurnas) y 12 partes iguales entre el atardecer y el siguiente amanecer (horas nocturnas). La duración varía según la estación y la latitud. La primera hora de cada día está regida por el planeta del día de la semana — Sol el domingo, Luna el lunes, Marte el martes, Mercurio el miércoles, Júpiter el jueves, Venus el viernes, Saturno el sábado.",
     "faq3Q": "Sideral vs tropical — ¿importa la diferencia?",
     "faq3A": "Las horas planetarias se basan en los horarios de amanecer/atardecer, no en posiciones zodiacales, por lo que son idénticas en astrología sideral y tropical. La secuencia caldea (Saturno, Júpiter, Marte, Sol, Venus, Mercurio, Luna) es independiente del ayanamsa.",
+    "faq4Q": "¿Qué hora planetaria es mejor para el trabajo creativo?",
+    "faq4A": "Las horas de Venus favorecen el trabajo creativo, los proyectos artísticos y las conversaciones de relaciones — cualquier contexto donde la armonía y la belleza sirvan al resultado. Las horas del Sol se adaptan a los actos creativos de cara al público donde la confianza y la visibilidad importan. Las horas de Mercurio son mejores para el lado analítico del trabajo creativo: editar, estructurar y comunicar ideas con claridad.",
+    "faq5Q": "¿Puedo usar las horas planetarias sin conocer mi carta natal?",
+    "faq5A": "Sí. Las horas planetarias son un sistema de temporización universal — dependen del amanecer y el atardecer en tu ubicación, no de tu fecha de nacimiento. Conocer tu carta natal añade otra capa (por ejemplo, podrías priorizar las horas regidas por el regente de tu carta), pero la práctica básica de selección de horas solo requiere tu ubicación actual y la hora.",
     "breadcrumb": "Horas Planetarias",
     "freeTodayOnly": "Plan gratuito: solo hoy.",
     "unlockAnyDate": "Desbloquear cualquier fecha",
@@ -1376,5 +1384,56 @@
   "disclaimer": {
     "text": "La astrología es para reflexión personal y entretenimiento. Nada en este sitio constituye consejo médico, financiero, legal o psicológico. Siempre consulta a un profesional calificado para decisiones que afecten tu salud, finanzas o bienestar.",
     "ariaLabel": "Aviso legal"
+  },
+  "share": {
+    "passport": {
+      "copy": {
+        "x": "Resulta que soy un blueprint cósmico de 1 entre {rarity} 👀 {url}",
+        "telegram": "Acabo de calcular mi pasaporte cósmico sideral — Sol en {sun}, Luna en {moon}, Ascendente en {rising}. {url}",
+        "whatsapp": "Mira lo que me salió 👇 {url}",
+        "stories_caption": "Blueprint cósmico desbloqueado 🌌",
+        "native_share": "Pasaporte Cósmico de {name} — {url}"
+      }
+    }
+  },
+  "educational": {
+    "hours": {
+      "sectionAria": "Contenido educativo sobre horas planetarias",
+      "whatAreThey": {
+        "heading": "¿Qué Son las Horas Planetarias?",
+        "body": "El sistema caldeo de horas planetarias tiene su origen en la astrología helenística del siglo II a. C., formalizado por astrónomos griegos que asignaron los siete planetas clásicos a cada hora del día y la noche. Cada día se divide en 24 segmentos desiguales — 12 desde el amanecer hasta el atardecer (horas diurnas) y 12 desde el atardecer hasta el siguiente amanecer (horas nocturnas). La secuencia cicla continuamente en orden caldeo: Saturno, Júpiter, Marte, Sol, Venus, Mercurio, Luna — y luego se repite. No es un patrón abstracto; codifica un modelo cosmológico específico donde las esferas planetarias se anidan concéntricamente, cada una gobernando un paso del ciclo. La primera hora de cada día siempre está regida por el planeta del día de la semana: Saturno gobierna la primera hora del sábado, dando nombre al día en la mayoría de los idiomas europeos (Samedi en francés, Sábado en español, Samstag en alemán). Cuando esa hora termina, el siguiente planeta en la secuencia caldea toma el relevo, ciclando a través de las 24 horas. El resultado es un sistema de temporización que ha impulsado la práctica mágica y astrológica durante más de dos mil años — aún utilizado hoy sin ninguna modificación a la secuencia original."
+      },
+      "howToUse": {
+        "heading": "Cómo Usar las Horas Planetarias",
+        "body": "Elige el planeta cuyas cualidades coincidan con tu acción prevista, luego planifica esa acción para su hora regente. Las horas de Venus favorecen el trabajo creativo, las conversaciones de relaciones y los proyectos artísticos — cualquier contexto donde la armonía sirva al resultado. Las horas de Mercurio agudizan la comunicación: escribe propuestas, firma contratos o abre negociaciones durante la ventana de Mercurio. Las horas de Saturno recompensan el esfuerzo estructurado — estudio, planificación a largo plazo, trabajo técnico o cualquier tarea que requiera concentración sostenida. Las horas de Marte se adaptan a la actividad física, las situaciones competitivas o la acción decisiva donde el impulso importa. Las horas de Júpiter se abren bien a la expansión: lanzar ideas, comenzar proyectos que necesitan buena voluntad o cualquier movimiento que se beneficie de la energía de optimismo y crecimiento. Las horas del Sol llevan autoridad — ideales para acciones de cara al público o momentos donde la confianza y la visibilidad importan. Las horas de la Luna son receptivas, buenas para conversaciones emocionales, absorción creativa o cualquier cosa que se beneficie de la flexibilidad en lugar de la fuerza. Estas correspondencias planeta-acción se alinean con la misma tabla 777 que mapea planetas con colores, piedras y deidades — el sistema de horas es una expresión de un marco simbólico mucho más amplio."
+      },
+      "dayRuler": {
+        "heading": "Regente del Día vs. Regente de la Hora",
+        "body": "Cada día lleva dos gobernantes planetarios: el regente del día y el regente de la hora actual — y no siempre son el mismo planeta. El regente del día es el planeta que posee todo el día calendario. El Sol rige el domingo, la Luna el lunes, Marte el martes (visible en francés mardi e italiano martedì), Mercurio el miércoles (mercredi, miércoles), Júpiter el jueves (jeudi, jueves), Venus el viernes (vendredi, viernes), Saturno el sábado. Esta convención de nomenclatura, presente en las lenguas indoeuropeas, deriva directamente del sistema de horas planetarias: el planeta que rige la primera hora del día da nombre a ese día. El regente de la hora cambia cada hora a lo largo del día, ciclando a través de los siete planetas en orden caldeo. Durante un domingo regido por el Sol, las primeras horas de la mañana pueden caer bajo Marte o Júpiter — el regente de la hora es distinto del carácter solar del día. Los practicantes suelen leer ambas capas juntas: una hora de Júpiter en un jueves (día de Júpiter) intensifica las cualidades jovianas; la misma hora de Júpiter en un día de Saturno introduce una tensión productiva entre la expansión y la limitación."
+      },
+      "whySidereal": {
+        "heading": "Por Qué Esto Importa en Astrología Sideral",
+        "body": "Las horas planetarias no son un sistema zodiacal. Dependen enteramente de los horarios de amanecer y atardecer en tu ubicación específica — el ciclo caldeo reinicia desde el amanecer cada día, anclado al horizonte solar real. Esto significa que el cálculo de las horas planetarias es idéntico ya sea que practiques astrología sideral o tropical. El ayanamsa Lahiri de ~24° que desplaza cada planeta natal en tu carta aproximadamente un signo no afecta en absoluto los límites de las horas planetarias. Las horas cambian cuando el Sol cruza tu horizonte local; no les importa si ese grado es Piscis sideral o Aries tropical. Esto hace de las horas planetarias una de las pocas herramientas de temporización clásicas que se integra limpiamente en ambos marcos zodiacales — un practicante sideral y un practicante tropical parados en la misma ciudad al mismo momento están en exactamente la misma hora planetaria."
+      }
+    },
+    "moon": {
+      "sectionAria": "Contenido educativo sobre fases lunares",
+      "phases": {
+        "heading": "Las Ocho Fases Lunares",
+        "body": "El ciclo lunar dura 29,53 días — un mes sinódico — de Luna Nueva a Luna Nueva. Dentro de ese ciclo, ocho fases marcan momentos distintos en la relación angular Sol–Luna. Luna Nueva (0°): la Luna se alinea con el Sol; su cara iluminada apunta hacia el espacio. El cielo está oscuro, y en muchas tradiciones este es el momento para establecer intenciones. Creciente (0°–90°): una delgada línea aparece al oeste después del atardecer. La Luna gana luz; el impulso crece. Cuarto Creciente (90°): la Luna está 90° adelante del Sol, medio iluminada. Nombrada por estar a un cuarto del ciclo, esta fase se asocia con la decisión y la acción. Gibosa Creciente (90°–180°): más de la mitad iluminada, la Luna sale antes del atardecer y se pone bien después de la medianoche. El ciclo se aproxima a su cúspide. Luna Llena (180°): iluminación máxima. La Luna sale al atardecer y se pone al amanecer, visible toda la noche. La intensidad emocional y energética alcanza su pico en muchos relatos tradicionales. Gibosa Menguante (180°–270°): la luz comienza a retroceder. Esta fase — también llamada Diseminadora — se asocia con compartir lo ganado cerca de la Luna Llena. Cuarto Menguante (270°): espejando el Cuarto Creciente, la Luna está de nuevo medio iluminada pero ahora menguante, saliendo alrededor de la medianoche. El ciclo entra en su consolidación final. Menguante (270°–360°): la Luna adelgaza hasta ser una creciente visible en el este antes del amanecer, asociada con la liberación y el descanso antes de la próxima Luna Nueva."
+      },
+      "magic": {
+        "heading": "Magia Lunar en la Tradición",
+        "body": "Los Papiros Griegos Mágicos (siglos I–V d. C.), conservados en colecciones de templos egipcios, contienen instrucciones detalladas para sincronizar rituales con las fases lunares. La Luna creciente favorecía los trabajos de aumento — atracción, crecimiento, vinculación. La Luna menguante favorecía los trabajos de disminución — destierro, corte, limpieza. La Luna Llena era el pico para cualquier trabajo que requiriera máxima fuerza. Este marco aparece en la escritura agrícola romana (Plinio el Viejo recomienda la Luna creciente para plantar cultivos que fructifican sobre el suelo, la Luna menguante para cultivos de raíz), en manuales medievales de recolección de hierbas y en la práctica wicca del siglo XX — todos derivados del mismo principio subyacente: la luz visible de la Luna sigue un ciclo energético que aumenta o disminuye la fuerza detrás de una acción."
+      },
+      "siderealMoon": {
+        "heading": "Luna Sideral vs. Luna Tropical",
+        "body": "La fase de la Luna — su porcentaje de iluminación y posición en el ciclo — es idéntica en astrología sideral y tropical. La fase depende del ángulo de elongación Sol–Luna, que es el mismo independientemente del ayanamsa. Lo que cambia es el signo zodiacal que ocupa la Luna. En astrología sideral con ayanamsa Lahiri, la Luna se sitúa aproximadamente 24° antes en el zodíaco que en los sistemas tropicales. Un astrólogo tropical y un astrólogo sideral que observan la misma Luna Llena pueden coincidir completamente en su fase y temporización mientras la ubican en diferentes signos — y extraen conclusiones interpretativas diferentes sobre su calidad."
+      },
+      "calculation": {
+        "heading": "Cómo Estrevia Calcula la Fase Lunar",
+        "body": "Estrevia usa Swiss Ephemeris (efeméride analítica de Moshier) para calcular la longitud eclíptica de la Luna y del Sol en cualquier momento dado. El ángulo de elongación (Luna menos Sol) determina tanto el porcentaje de iluminación como la fase nombrada. Los momentos exactos de Luna Nueva y Luna Llena se ubican por búsqueda binaria con ±1 minuto de precisión. Todos los cálculos se ejecutan del lado del servidor — sin fórmulas aproximadas, sin tablas de búsqueda."
+      }
+    }
   }
 }

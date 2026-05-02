@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo/metadata';
 import { JsonLdScript, breadcrumbSchema, faqSchema } from '@/shared/seo/json-ld';
 import { SITE_URL } from '@/shared/seo/constants';
@@ -8,11 +8,13 @@ import { MoonCalendar } from '@/modules/astro-engine/components/MoonCalendar';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.moon');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/moon',
+    locale: locale as 'en' | 'es',
     keywords: [
       'moon phase today',
       'current moon phase',
@@ -31,6 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function MoonPage() {
   const t = await getTranslations('moonPage');
+  const tEdu = await getTranslations('educational.moon');
 
   const breadcrumb = breadcrumbSchema([
     { name: 'Estrevia', url: SITE_URL },
@@ -41,6 +44,8 @@ export default async function MoonPage() {
     { qKey: 'faq1Q', aKey: 'faq1A' },
     { qKey: 'faq2Q', aKey: 'faq2A' },
     { qKey: 'faq3Q', aKey: 'faq3A' },
+    { qKey: 'faq4Q', aKey: 'faq4A' },
+    { qKey: 'faq5Q', aKey: 'faq5A' },
   ] as const;
 
   const faq = faqSchema(
@@ -163,6 +168,26 @@ export default async function MoonPage() {
                 {t(aKey)}
               </p>
             </details>
+          ))}
+        </section>
+
+        {/* Educational sections — >600 words, AEO-optimized */}
+        <section aria-label={tEdu('sectionAria')} className="mt-16 space-y-10">
+          {(['phases', 'magic', 'siderealMoon', 'calculation'] as const).map((key) => (
+            <div key={key}>
+              <h2
+                className="text-xl font-light mb-3 leading-snug"
+                style={{ color: '#E8E0D0', fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
+              >
+                {tEdu(`${key}.heading`)}
+              </h2>
+              <p
+                className="leading-relaxed"
+                style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-crimson-pro, Georgia, serif)', fontSize: '0.9375rem' }}
+              >
+                {tEdu(`${key}.body`)}
+              </p>
+            </div>
           ))}
         </section>
 
