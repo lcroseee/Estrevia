@@ -68,6 +68,21 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
 
     const { default: posthog } = await import('posthog-js');
 
+    // PII guard: strip birth-data query params from any URL property before
+    // PostHog ships it to the server. bd/bt/lat/lon/place/tz/ktb must never
+    // appear in analytics events (spec §PII, verified in chart-state.spec.ts).
+    const PII_PARAMS = ['bd', 'bt', 'ktb', 'lat', 'lon', 'place', 'tz'];
+    function stripPiiFromUrl(raw: unknown): unknown {
+      if (typeof raw !== 'string' || !raw) return raw;
+      try {
+        const u = new URL(raw);
+        PII_PARAMS.forEach((p) => u.searchParams.delete(p));
+        return u.toString();
+      } catch {
+        return raw;
+      }
+    }
+
     posthog.init(apiKey, {
       api_host: host,
       capture_pageview: true,
@@ -75,6 +90,12 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
       persistence: 'localStorage',
       autocapture: false,
       bootstrap: {},
+      sanitize_properties: (properties: Record<string, unknown>) => ({
+        ...properties,
+        $current_url: stripPiiFromUrl(properties.$current_url),
+        $referrer: stripPiiFromUrl(properties.$referrer),
+        $initial_referrer: stripPiiFromUrl(properties.$initial_referrer),
+      }),
     });
 
     (window as unknown as Record<string, unknown>).posthog = posthog;

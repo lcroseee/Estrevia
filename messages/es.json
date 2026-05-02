@@ -1023,7 +1023,19 @@
     "limitReached": "Los usuarios gratuitos pueden calcular 1 sinastría por día",
     "upgradeCta": "Mejora para sinartrías ilimitadas",
     "analyzing": "Analizando compatibilidad...",
-    "analysisError": "No se pudo generar el análisis. Por favor intenta de nuevo."
+    "analysisError": "No se pudo generar el análisis. Por favor intenta de nuevo.",
+    "aboutAria": "Sobre la sinastría y la astrología relacional",
+    "aboutHeading": "Sobre la Sinastría",
+    "faq1Q": "¿Cuál es el aspecto más importante en sinastría?",
+    "faq1A": "El eje Sol–Luna es tradicionalmente el indicador más fuerte. Refleja si la identidad central de una persona resuena con la base emocional de la otra. Los aspectos Sol–Luna estrechos — especialmente conjunción y trígono — aparecen con mayor frecuencia en las asociaciones a largo plazo que cualquier otro tipo de interaspecto. Los contactos Saturno–planeta personal siguen en importancia, aportando el factor de seriedad y longevidad.",
+    "faq2Q": "¿Puede la sinastría predecir si una relación durará?",
+    "faq2A": "Ninguna lectura de sinastría predice los resultados con certeza. La sinastría mapea el terreno energético — dónde fluye naturalmente la resonancia y dónde la fricción es estructural. Una pareja con contactos fuertes de Saturno y aspectos lunares desafiantes puede construir una relación duradera y consciente. Una pareja con todo trígonos y sin contactos de Saturno podría carecer de la estructura para el compromiso duradero.",
+    "faq3Q": "¿Qué es un doble impacto en sinastría?",
+    "faq3A": "Un doble impacto ocurre cuando dos planetas se forman aspecto entre sí recíprocamente en ambas cartas — por ejemplo, el Sol de la persona A conjunciona la Luna de la persona B, y el Sol de la persona B forma trígono con la Luna de la persona A. Esta activación mutua intensifica esa dinámica particular en ambas direcciones, convirtiéndola en uno de los temas más prominentes de la relación.",
+    "faq4Q": "¿Las superposiciones de casas importan tanto como los aspectos en sinastría?",
+    "faq4A": "Las superposiciones de casas muestran dónde caen los planetas de una persona en las casas de la otra, revelando qué áreas de vida activa la relación. El Venus de tu pareja en tu casa 7 activa tu sentido de la asociación; en tu casa 2, toca tus recursos y valores. Las superposiciones añaden textura y contexto; los interaspectos siguen siendo el indicador principal de la calidad energética de la relación.",
+    "faq5Q": "¿En qué se diferencia la sinastría sideral de la tropical?",
+    "faq5A": "El desplazamiento de ~23° del ayanamsa Lahiri puede cambiar las posiciones de signo y, en algunos casos, convertir un tipo de aspecto en otro. Un planeta a 28° de Scorpio tropical se convierte en aproximadamente 5° de Scorpio sideral — el signo se mantiene, pero por poco. En tropical 27° o antes, el desplazamiento cruza un límite de signo hacia Libra sideral, alterando toda la interpretación a nivel de signo en sinastría."
   },
   "tarot": {
     "title": "Tarot Thoth",
@@ -1147,7 +1159,19 @@
     "archangel": "Arcángel",
     "connects": "Conecta",
     "tarotCard": "Carta de Tarot",
-    "astrology": "Astrología"
+    "astrology": "Astrología",
+    "aboutAria": "Sobre el Árbol de la Vida Cabalístico",
+    "aboutHeading": "Sobre el Árbol de la Vida",
+    "faq1Q": "¿Cuál es la diferencia entre Qabalah, Kabbalah y Cabala?",
+    "faq1A": "Las tres se refieren a la misma tradición mística a través de diferentes linajes de transmisión. Kabbalah (hebreo: קַבָּלָה) es la tradición mística judía que data de la España medieval y antes. Cabala se refiere a la adaptación cristiana hermética del Renacimiento. Qabalah designa la adaptación hermética adicional sistematizada por la Aurora Dorada en la década de 1890 y extendida por Crowley — el sistema que usa el Árbol de la Vida de Estrevia. Las obras anteriores a 1929 de Crowley (777, Equinox Vol I, Liber AL) son las fuentes primarias.",
+    "faq2Q": "¿Qué significa que Da'ath no es una sefirah verdadera?",
+    "faq2A": "Las diez sefirot representan aspectos completos e independientes de la emanación divina. Da'ath (Conocimiento) aparece entre Binah y Chesed en algunas tradiciones, pero representa un punto de cruce — el Gran Abismo donde la conciencia individual se disuelve antes de poder ascender al Triángulo Supernal. Cruzarlo en el sentido iniciático significa la disolución del yo personal. Se numera 11 informalmente en algunos sistemas pero nunca se cuenta entre las diez.",
+    "faq3Q": "¿Por qué las sefirot tienen correspondencias planetarias?",
+    "faq3A": "Los siete planetas clásicos (Saturno, Júpiter, Marte, Sol, Venus, Mercurio, Luna) están asignados a las sefirot 3 a 9 en el sistema de la Aurora Dorada. Los planetas exteriores (Urano, Neptuno, Plutón) están asignados a Kether, Chokmah y el Da'ath oculto en extensiones posteriores. Estas correspondencias se alinean con el orden caldeo usado en las horas planetarias — las mismas siete fuerzas planetarias operan en ambos sistemas.",
+    "faq4Q": "¿Cómo se relacionan los tres pilares con los signos astrológicos?",
+    "faq4A": "El Pilar de la Misericordia corresponde a los principios activos de fuego y aire; el Pilar de la Severidad corresponde a los principios pasivos de agua y tierra. El Pilar del Equilibrio sostiene la esfera solar (Tiphareth) y la esfera lunar (Yesod) en su centro — los dos luminares que anclan la carta astrológica. Los pilares mapean las mismas polaridades que la tradición astrológica expresa como pares activo/receptivo.",
+    "faq5Q": "¿Se puede aprender el Árbol de la Vida sin conocer el Tarot?",
+    "faq5A": "Sí, pero el Tarot acelera considerablemente la comprensión. Cada uno de los veintidós senderos corresponde a un Triunfo. Meditar en el Loco da acceso intuitivo directo al sendero 11 (Kether a Chokmah) de una manera que la descripción abstracta sola no puede. A la inversa, conocer el Árbol da a las lecturas de Tarot mucha más profundidad — cada carta se convierte en una ubicación precisa en un mapa de la conciencia en lugar de un símbolo general."
   },
   "avatar": {
     "title": "Avatar IA",
@@ -1433,6 +1457,57 @@
       "calculation": {
         "heading": "Cómo calcula Estrevia la fase lunar",
         "body": "Estrevia calcula la fase lunar usando Swiss Ephemeris con la efeméride analítica de Moshier, con precisión de ±0,01°. El ángulo de fase es la diferencia angular entre las longitudes eclípticas de la Luna y el Sol. Los momentos exactos de luna nueva y llena se localizan por búsqueda binaria, acotando a ±1 minuto. El signo de la Luna usa el ayanamsa Lahiri (sideral) por defecto; en la página de la carta está disponible una opción de cambio a tropical."
+      }
+    },
+    "synastry": {
+      "sectionAria": "Contenido educativo sobre sinastría y astrología relacional",
+      "whatIs": {
+        "heading": "¿Qué es la sinastría?",
+        "body": "La sinastría es la práctica de comparar dos cartas natales para comprender cómo interactúan entre sí las posiciones planetarias de dos personas. Con raíces en la astrología helenística y refinada a través de las tradiciones medievales y renacentistas, la sinastría examina las relaciones angulares — conjunciones, trígonos, cuadraturas, oposiciones, sextiles — entre los planetas de una persona y los de otra. Cuando tu Marte está a 14° de Scorpio y el Venus de tu pareja está a 16° de Scorpio, esa conjunción casi exacta describe una interacción energética específica: tu impulso y deseo activan sus valores y sentido de la belleza. La sinastría también examina las superposiciones de casas — dónde caen tus planetas en las casas de la otra persona, indicando qué áreas de vida se afectan mutuamente. Estrevia calcula la sinastría usando el ayanamsa Lahiri, ubicando los planetas en sus posiciones siderales verificadas astronómicamente."
+      },
+      "keyAspectsHeading": "Aspectos clave en sinastría",
+      "sunMoon": {
+        "heading": "Sol–Luna: El vínculo central",
+        "body": "Cuando el Sol de una persona y la Luna de otra forman un aspecto estrecho — especialmente una conjunción o trígono — la relación tiene una calidad de reconocimiento instintivo. La persona del Sol se siente energizada y con propósito junto a la persona de la Luna; la persona de la Luna se siente emocionalmente segura y vista. En una conjunción Sol–Luna entre dos cartas, la identidad de la persona del Sol y las necesidades emocionales de la persona de la Luna están naturalmente sincronizadas. Las cuadraturas y oposiciones introducen tensión creativa: la necesidad de dirección del Sol puede chocar con la necesidad de respuesta emocional de la Luna. Con el tiempo, esta fricción puede generar crecimiento o desafinación crónica, dependiendo de cuán conscientemente ambas personas la naveguen."
+      },
+      "venusMars": {
+        "heading": "Venus–Marte: Atracción y deseo",
+        "body": "Venus y Marte en dos cartas mapean la química de la atracción. Venus describe lo que una persona encuentra bello y cómo atrae a otros; Marte describe cómo persigue y qué desea. Cuando el Venus de la persona A forma aspecto con el Marte de la persona B — particularmente en conjunción, trígono o sextil — existe una atracción magnética inmediata. La persona de Venus se siente atraída; la persona de Marte persigue con una energía que la persona de Venus encuentra bienvenida. Las cuadraturas y oposiciones crean atracción complicada por la fricción: el deseo está presente pero los estilos de persecución pueden chocar, produciendo relaciones que se sienten simultáneamente atractivas y agotadoras."
+      },
+      "saturnContacts": {
+        "heading": "Contactos de Saturno: Compromiso y desafío",
+        "body": "Los aspectos de Saturno en sinastría tienen el mayor peso a largo plazo. Cuando el Saturno de la persona A forma conjunción, cuadratura u oposición con el Sol, la Luna, Venus o el Ascendente de la persona B, entra una asimetría en la relación: la persona de Saturno adopta inconscientemente un rol estructurador o restrictivo; la otra puede sentirse tanto estabilizada como limitada. Los contactos duros de Saturno (cuadraturas, oposiciones) aparecen consistentemente en asociaciones a largo plazo junto con las dinámicas más difíciles — crítica crónica, sensación de ser juzgado, o sentir que el crecimiento está bloqueado. Los trígonos y sextiles de Saturno ofrecen la calidad vinculante de Saturno sin todo su peso: la relación tiene permanencia y seriedad, y ambas personas sienten que la otra es confiable."
+      },
+      "moonMoon": {
+        "heading": "Luna–Luna: Resonancia emocional",
+        "body": "Cuando dos personas comparten el mismo signo lunar — o cuyos signos lunares forman un trígono (signos del mismo elemento) — sus ritmos emocionales se sincronizan sin esfuerzo. Atraviesan los estados de ánimo en paralelo, encuentran comodidad en arreglos domésticos similares y rara vez necesitan explicar sus respuestas emocionales porque ambos ya comprenden el registro. En astrología sideral, un signo lunar compartido tiene un peso particular: ambas personas nacieron cuando la Luna ocupaba realmente esa constelación. Las cuadraturas y oposiciones Luna–Luna describen una falta de coincidencia fundamental en el estilo emocional — uno se retira cuando se siente abrumado, el otro escala. Sin conciencia de esta discrepancia, la fricción se acumula silenciosamente con el tiempo."
+      },
+      "scoreInterpretation": {
+        "heading": "Cómo interpretar la puntuación de compatibilidad",
+        "body": "La puntuación de compatibilidad de Estrevia pondera los aspectos por categoría y orbe. Los contactos Sol–Luna, Luna–Luna y Saturno–planeta personal representan el 60% del peso total, reflejando su rol histórico como indicadores primarios de resonancia y desafío a largo plazo. Los aspectos Venus–Marte contribuyen con el 25%, reflejando su rol en la atracción física y estética. Los interaspectos restantes componen el 15% final. Las puntuaciones superiores a 75 indican una fuerte resonancia multidimensional. Las puntuaciones entre 45 y 75 describen compatibilidad selectiva: áreas de profundidad genuina junto a áreas que requieren navegación deliberada. Por debajo de 45 refleja diferencias fundamentales en el estilo emocional u orientación de vida. La puntuación mapea el terreno, no el destino."
+      },
+      "siderealVsTropical": {
+        "heading": "Sinastría sideral vs tropical",
+        "body": "El desplazamiento de aproximadamente 23° del ayanamsa Lahiri puede cambiar el carácter de los aspectos clave de sinastría. Un trígono Venus–Marte en sinastría tropical podría convertirse en una cuadratura en sideral — o una conjunción Sol–Luna podría separarse en dos signos diferentes. Las posiciones de signo también cambian: si el Sol de tu pareja está a 28° de Aries tropical, cae aproximadamente a 5° de Aries sideral. Un grado más y la posición sideral cruza hacia Piscis tardío, cambiando completamente la interpretación a nivel de signo. Para una explicación completa de por qué Estrevia usa posiciones siderales, consulta la página Por qué sideral."
+      }
+    },
+    "treeOfLife": {
+      "sectionAria": "Contenido educativo sobre el Árbol de la Vida Cabalístico",
+      "sefirot": {
+        "heading": "Las diez sefirot",
+        "body": "El Árbol de la Vida es el diagrama central de la Qábala Hermética — diez esferas (sefirot, singular: sefirah) dispuestas en tres pilares verticales, conectadas por veintidós senderos. Cada sefirah representa un aspecto distinto de la emanación divina, desde la abstracción más elevada hasta la existencia material densa.\n\nKether (Corona) es la primera emanación — ser puro antes de la diferenciación. Su nombre divino es Eheieh (\"Yo Soy\") y su arcángel es Metatrón.\n\nChokmah (Sabiduría) es el primer movimiento desde la unidad — fuerza primordial, energía masculina arquetípica, impulso creativo bruto sin aún ninguna forma que lo reciba. Corresponde al Zodíaco y a Neptuno.\n\nBinah (Entendimiento) es el gran principio receptivo — la madre arquetípica que da forma a la fuerza bruta de Chokmah. La limitación y la estructura surgen aquí, al igual que el tiempo y Saturno, la correspondencia planetaria de Binah.\n\nChesed (Misericordia) es la primera sefirah debajo del Abismo — la esfera de la autoridad benevolente, la expansión y el amor organizado. Su planeta es Júpiter; construye y sostiene lo que existe.\n\nGeburah (Severidad) es Marte — el principio de la destrucción controlada, la disciplina y la poda. Donde Chesed expande, Geburah elimina lo que se ha vuelto excesivo. Ambas son necesarias; ninguna funciona sin la otra.\n\nTiphareth (Belleza) es el corazón del Árbol — la esfera solar, el punto de equilibrio y la sede del yo integrado. Es donde la aspiración espiritual se encuentra con la personalidad individual. Las figuras de redención solar — Cristo, Osiris, Dioniso — se le atribuyen aquí.\n\nNetzach (Victoria) es Venus — la esfera del instinto, la emoción, la naturaleza y el deseo bruto antes de que el pensamiento lo refine. Los artistas y amantes que sienten profundamente antes de pensar tienen naturaleza de Netzach.\n\nHod (Esplendor) es Mercurio — el intelecto, el lenguaje, la asignación de formas y la magia de nombrar. Donde Netzach siente, Hod articula. Juntas equilibran el sentimiento y el pensamiento.\n\nYesod (Fundamento) es la Luna — el gran reservorio astral, la esfera de los sueños y el inconsciente. Recoge la luz de todas las sefirot superiores y la refleja en Malkuth. El ritual, la imaginación y la memoria operan aquí.\n\nMalkuth (Reino) es la Tierra — el mundo material, el cuerpo, el reino donde todas las fuerzas espirituales finalmente se manifiestan. Su nombre divino es Adonai (Señor). Una nota sobre Da'ath: algunas tradiciones ubican un undécimo punto, Da'ath (Conocimiento), en el pilar central entre Binah y Chesed, marcando el Gran Abismo — no una sefirah verdadera sino un punto de cruce donde la identidad individual se disuelve antes del ascenso al Triángulo Supernal."
+      },
+      "paths": {
+        "heading": "Los veintidós senderos",
+        "body": "Veintidós senderos conectan las diez sefirot, cada uno atribuido a una letra del alfabeto hebreo y un Triunfo del Tarot Mayor. Las atribuciones siguen el sistema codificado por la Orden Hermética de la Aurora Dorada en la década de 1890 — el mismo sistema adoptado por el mazo Thoth. El sendero 11 (Aleph, Aire) conecta Kether con Chokmah: el Loco. El sendero 12 (Beth, Mercurio) conecta Kether con Binah: el Mago. El sendero 13 (Gimel, Luna) va de Kether a Tiphareth — el sendero más largo del Árbol, cruzando el Abismo: la Sacerdotisa. El sendero 14 (Daleth, Venus) conecta Chokmah con Binah: la Emperatriz. El sendero 15 (Heh, Aries) conecta Chokmah con Tiphareth: el Emperador. Los senderos 16 al 22 llevan los Triunfos desde el Hierofante hasta el Ajuste a través del centro del Árbol. Los senderos 23 al 32 conectan las sefirot inferiores, llevando los Triunfos desde el Colgado hasta el Universo. Cada sendero es una transición específica entre dos estados de conciencia, y cada Triunfo del Tarot es la clave visual de esa transición."
+      },
+      "howToRead": {
+        "heading": "Cómo leer el diagrama",
+        "body": "El Árbol está organizado en tres pilares verticales. El Pilar de la Misericordia (Chokmah, Chesed, Netzach) a la derecha lleva la fuerza activa, expansiva y masculina. El Pilar de la Severidad (Binah, Geburah, Hod) a la izquierda lleva la fuerza pasiva, contrayente y femenina — estructura, limitación, forma. El Pilar Central del Equilibrio (Kether, Tiphareth, Yesod, Malkuth) es donde ambos principios se equilibran y fluye el descenso de la luz divina.\n\nEl descenso de la luz sigue el Rayo: Kether → Chokmah → Binah → Chesed → Geburah → Tiphareth → Netzach → Hod → Yesod → Malkuth. Este es el sendero de la creación fluyendo desde la unidad hacia la materia. El ascenso del alma invierte la dirección. En la práctica ceremonial, el trabajo ritual comienza en Malkuth (el cuerpo, la tierra) y apunta hacia Tiphareth (el yo solar) y eventualmente el Triángulo Supernal."
+      },
+      "treeAndTarot": {
+        "heading": "El Árbol y el Tarot",
+        "body": "Los veintidós Triunfos del Tarot se mapean directamente sobre los veintidós senderos, convirtiendo al Tarot en una clave visual para la estructura del Árbol. Para entender el Loco, mira el sendero 11 — el salto de Kether a Chokmah, el espíritu antes del pensamiento. Para entender el Universo, mira el sendero 32 — el paso final de Yesod a Malkuth, el circuito completo de manifestación.\n\nLa sección de Tarot de Estrevia incluye los veintidós Triunfos con sus atribuciones del mazo Thoth. Cada página de carta muestra su número de sendero correspondiente, letra hebrea y atribución astrológica. El Loco se conecta con el Mago, que se conecta con la Sacerdotisa — tres senderos descendiendo desde Kether, tres rostros del acto primordial de la creación. Leer las cartas con el Árbol en mente transforma el Tarot en un mapa de la conciencia con lógica interna precisa. Explora el Loco, el Mago, la Sacerdotisa y el Universo para seguir los polos del Árbol."
       }
     }
   }

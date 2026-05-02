@@ -9,7 +9,7 @@ import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
 import { TimePickerField } from './TimePickerField';
 
-interface FormValues {
+export interface FormValues {
   date: string;
   time: string;
   knowsBirthTime: boolean;
@@ -27,7 +27,7 @@ interface FormErrors {
 }
 
 interface BirthDataFormProps {
-  onChartCalculated: (chart: ChartResult, chartId: string) => void;
+  onChartCalculated: (chart: ChartResult, chartId: string, formValues: FormValues) => void;
 }
 
 // Get today's date in YYYY-MM-DD for the date input max attribute
@@ -119,7 +119,8 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
           throw new Error('Invalid response from server');
         }
 
-        onChartCalculated(data.data.chart, data.data.chartId);
+        // Pass form values so ChartDisplay can persist them in the URL
+        onChartCalculated(data.data.chart, data.data.chartId, values);
 
         // V08-1: fire chart_calculated — first event in the viral funnel.
         // NO PII: birth date / time / location are NOT included in the payload.
@@ -138,7 +139,7 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
         setIsLoading(false);
       }
     },
-    [values, validate, onChartCalculated]
+    [values, validate, onChartCalculated],
   );
 
   const dateId = `${formId}-date`;
