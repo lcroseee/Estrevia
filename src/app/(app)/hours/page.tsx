@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo/metadata';
 import { JsonLdScript, breadcrumbSchema, faqSchema } from '@/shared/seo/json-ld';
 import { SITE_URL } from '@/shared/seo/constants';
@@ -9,6 +9,7 @@ import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations('pageMeta.hours');
+  const locale = await getLocale();
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
@@ -20,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
       'planet of the hour',
       'sidereal planetary hours',
     ],
+  locale: locale as 'en' | 'es',
   });
 }
 
@@ -40,6 +42,7 @@ async function GridSkeleton() {
 
 export default async function HoursPage() {
   const t = await getTranslations('hoursPage');
+  const tEdu = await getTranslations('educational.hours');
 
   const breadcrumb = breadcrumbSchema([
     { name: 'Estrevia', url: SITE_URL },
@@ -50,6 +53,8 @@ export default async function HoursPage() {
     { qKey: 'faq1Q', aKey: 'faq1A' },
     { qKey: 'faq2Q', aKey: 'faq2A' },
     { qKey: 'faq3Q', aKey: 'faq3A' },
+    { qKey: 'faq4Q', aKey: 'faq4A' },
+    { qKey: 'faq5Q', aKey: 'faq5A' },
   ] as const;
 
   const hoursForq = faqSchema(
@@ -121,6 +126,33 @@ export default async function HoursPage() {
                 {t(aKey)}
               </p>
             </details>
+          ))}
+        </section>
+
+        {/* Educational sections — below widget for SEO depth */}
+        <section aria-label={tEdu('sectionAria')} className="mt-16 space-y-10">
+          {(
+            [
+              'whatAreThey',
+              'howToUse',
+              'dayRuler',
+              'whySidereal',
+            ] as const
+          ).map((key) => (
+            <div key={key}>
+              <h2
+                className="text-xl font-light mb-3 leading-snug"
+                style={{ color: '#E8E0D0', fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
+              >
+                {tEdu(`${key}.heading`)}
+              </h2>
+              <p
+                className="leading-relaxed text-white/55"
+                style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)', fontSize: '0.9375rem' }}
+              >
+                {tEdu(`${key}.body`)}
+              </p>
+            </div>
           ))}
         </section>
 
