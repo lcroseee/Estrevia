@@ -56,10 +56,15 @@ describe('factory', () => {
 });
 
 describe('integration: full upload flow through factory client', () => {
-  it('runs all 3 calls and returns ad_id', async () => {
+  it('runs all 4 calls (asset download + 3 Meta) and returns ad_id', async () => {
     const responses = [
-      new Response(JSON.stringify({ images: { x: { hash: 'H', url: 'u' } } })),
+      // 1. download asset bytes (any binary body works)
+      new Response(Uint8Array.from([0x89, 0x50, 0x4e, 0x47]), { status: 200 }),
+      // 2. /adimages
+      new Response(JSON.stringify({ images: { bytes: { hash: 'H', url: 'u' } } })),
+      // 3. /adcreatives
       new Response(JSON.stringify({ id: 'cr1' })),
+      // 4. /ads
       new Response(JSON.stringify({ id: 'ad1' })),
     ];
     const fetchImpl = vi.fn(async () => responses.shift()!);

@@ -21,11 +21,16 @@ export class MetaUploadClient extends MetaGraphApiBase implements MetaApiClient 
   }): Promise<{ creative_id: string; ad_id: string }> {
     const adsetId = this.getAdSetId(opts.locale);
 
-    // Step 1: Upload image (Meta fetches from public URL)
+    // Step 1: Upload image as base64 bytes.
+    // Meta's url-based upload (`{url}` param) requires App Review for an
+    // "image fetch via URL" capability the App lacks; bytes-based upload
+    // works with regular ads_management scope. We download from Vercel Blob
+    // ourselves and forward as base64.
+    const assetBase64 = await this.downloadAssetAsBase64(opts.asset_url);
     const imageRes = await this.request<MetaAdImagesResponse>(
       'POST',
       `/${this.adAccountId}/adimages`,
-      { url: opts.asset_url },
+      { bytes: assetBase64 },
     );
     const imageHash = Object.values(imageRes.images)[0]?.hash;
     if (!imageHash) {
@@ -67,6 +72,15 @@ export class MetaUploadClient extends MetaGraphApiBase implements MetaApiClient 
     );
 
     return { creative_id: creativeRes.id, ad_id: adRes.id };
+  }
+
+  private async downloadAssetAsBase64(url: string): Promise<string> {
+    const res = await this.fetchImpl(url);
+    if (!res.ok) {
+      throw new Error(`Failed to download asset ${url}: HTTP ${res.status}`);
+    }
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return buffer.toString('base64');
   }
 
   private getAdSetId(locale: string): string {

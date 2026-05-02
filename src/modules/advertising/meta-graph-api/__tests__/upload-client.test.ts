@@ -19,14 +19,25 @@ function chainedFetch(...responses: Response[]) {
   });
 }
 
+// Tiny PNG (1x1 transparent) — used as a stand-in asset bytes payload in tests.
+const ASSET_BYTES = Uint8Array.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+]);
+
+function assetResponse(): Response {
+  return new Response(ASSET_BYTES, { status: 200 });
+}
+
 describe('MetaUploadClient.uploadCreative', () => {
-  it('runs 3 sequential calls and returns ad_id', async () => {
+  it('runs 4 sequential calls (asset download + 3 Meta) and returns ad_id', async () => {
     const fetchImpl = chainedFetch(
-      // 1. /adimages
-      new Response(JSON.stringify({ images: { abc: { hash: 'IMGHASH', url: 'u' } } })),
-      // 2. /adcreatives
+      // 1. download asset bytes from Vercel Blob
+      assetResponse(),
+      // 2. /adimages
+      new Response(JSON.stringify({ images: { bytes: { hash: 'IMGHASH', url: 'u' } } })),
+      // 3. /adcreatives
       new Response(JSON.stringify({ id: 'creative_1' })),
-      // 3. /ads
+      // 4. /ads
       new Response(JSON.stringify({ id: 'ad_42' })),
     );
     const client = new MetaUploadClient({
@@ -45,11 +56,23 @@ describe('MetaUploadClient.uploadCreative', () => {
     });
 
     expect(result).toEqual({ creative_id: 'creative_1', ad_id: 'ad_42' });
-    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
 
-    // /ads call MUST set status=PAUSED
+    // First call is the asset download — to the Vercel Blob URL, NOT Meta.
+    const assetCall = fetchImpl.mock.calls[0] as unknown as [string, RequestInit | undefined];
+    expect(assetCall[0]).toBe('https://blob/x.png');
+
+    // /adimages (call 2) MUST send {bytes: <base64>}, NOT {url: ...}.
+    const adimagesBody = JSON.parse(
+      ((fetchImpl.mock.calls[1] as unknown as [string, RequestInit])[1]).body as string,
+    );
+    expect(adimagesBody.url).toBeUndefined();
+    expect(typeof adimagesBody.bytes).toBe('string');
+    expect(adimagesBody.bytes.length).toBeGreaterThan(0);
+
+    // /ads (call 4) MUST set status=PAUSED.
     const adsBody = JSON.parse(
-      ((fetchImpl.mock.calls[2] as unknown as [string, RequestInit])[1]).body as string,
+      ((fetchImpl.mock.calls[3] as unknown as [string, RequestInit])[1]).body as string,
     );
     expect(adsBody.status).toBe('PAUSED');
     expect(adsBody.adset_id).toBe(ADSET_EN);
@@ -58,7 +81,8 @@ describe('MetaUploadClient.uploadCreative', () => {
 
   it('uses ES adset id when locale=es', async () => {
     const fetchImpl = chainedFetch(
-      new Response(JSON.stringify({ images: { x: { hash: 'h', url: 'u' } } })),
+      assetResponse(),
+      new Response(JSON.stringify({ images: { bytes: { hash: 'h', url: 'u' } } })),
       new Response(JSON.stringify({ id: 'cr2' })),
       new Response(JSON.stringify({ id: 'ad_es' })),
     );
@@ -68,14 +92,15 @@ describe('MetaUploadClient.uploadCreative', () => {
       tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'estrevia_launch_es', utm_content: 'b', utm_term: 'authority' },
     });
     const adsBody = JSON.parse(
-      ((fetchImpl.mock.calls[2] as unknown as [string, RequestInit])[1]).body as string,
+      ((fetchImpl.mock.calls[3] as unknown as [string, RequestInit])[1]).body as string,
     );
     expect(adsBody.adset_id).toBe(ADSET_ES);
   });
 
   it('appends UTM params to link_url in adcreative', async () => {
     const fetchImpl = chainedFetch(
-      new Response(JSON.stringify({ images: { x: { hash: 'h', url: 'u' } } })),
+      assetResponse(),
+      new Response(JSON.stringify({ images: { bytes: { hash: 'h', url: 'u' } } })),
       new Response(JSON.stringify({ id: 'cr3' })),
       new Response(JSON.stringify({ id: 'ad3' })),
     );
@@ -85,7 +110,7 @@ describe('MetaUploadClient.uploadCreative', () => {
       tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'estrevia_launch_en', utm_content: 'cb', utm_term: 'rarity' },
     });
     const creativeBody = JSON.parse(
-      ((fetchImpl.mock.calls[1] as unknown as [string, RequestInit])[1]).body as string,
+      ((fetchImpl.mock.calls[2] as unknown as [string, RequestInit])[1]).body as string,
     );
     const linkData = creativeBody.object_story_spec.link_data;
     expect(linkData.link).toContain('utm_source=meta');
@@ -94,9 +119,12 @@ describe('MetaUploadClient.uploadCreative', () => {
   });
 
   it('propagates error if /adimages fails (no orphan)', async () => {
-    const fetchImpl = vi.fn(async () => new Response(
-      JSON.stringify({ error: { message: 'bad', code: 100 } }), { status: 400 },
-    ));
+    const fetchImpl = chainedFetch(
+      assetResponse(),
+      new Response(
+        JSON.stringify({ error: { message: 'bad', code: 100 } }), { status: 400 },
+      ),
+    );
     const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
     await expect(
       client.uploadCreative({
@@ -104,6 +132,20 @@ describe('MetaUploadClient.uploadCreative', () => {
         tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'cb', utm_term: 't' },
       }),
     ).rejects.toThrow();
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws if asset download fails (before any Meta call)', async () => {
+    const fetchImpl = chainedFetch(
+      new Response('not found', { status: 404 }),
+    );
+    const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+    await expect(
+      client.uploadCreative({
+        asset_url: 'https://blob/missing.png', copy: 'x', cta: 'y', locale: 'en',
+        tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'cb', utm_term: 't' },
+      }),
+    ).rejects.toThrow(/Failed to download asset/);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
