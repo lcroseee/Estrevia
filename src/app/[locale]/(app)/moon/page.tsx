@@ -10,7 +10,6 @@ import { Disclaimer } from '@/shared/components/Disclaimer';
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.moon');
-  const locale = await getLocale();
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
@@ -25,7 +24,6 @@ export async function generateMetadata(): Promise<Metadata> {
       'moon illumination',
       'sidereal moon phase',
     ],
-  locale: locale as 'en' | 'es',
   });
 }
 

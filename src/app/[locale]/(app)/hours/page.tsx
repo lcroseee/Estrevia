@@ -10,7 +10,6 @@ import { Disclaimer } from '@/shared/components/Disclaimer';
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.hours');
-  const locale = await getLocale();
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
@@ -23,7 +22,6 @@ export async function generateMetadata(): Promise<Metadata> {
       'planet of the hour',
       'sidereal planetary hours',
     ],
-  locale: locale as 'en' | 'es',
   });
 }
 
