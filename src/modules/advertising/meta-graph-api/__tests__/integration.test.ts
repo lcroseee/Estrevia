@@ -10,6 +10,7 @@ beforeEach(() => {
   process.env.META_AD_ACCOUNT_ID = 'act_1';
   process.env.META_LAUNCH_ADSET_ID_EN = 'as_en';
   process.env.META_LAUNCH_ADSET_ID_ES = 'as_es';
+  process.env.META_PAGE_ID = 'page_test';
   // Remove Vitest markers so guard doesn't trigger for tests that need factories to work
   delete process.env.VITEST;
   // Cast to mutable record to bypass TypeScript's readonly declaration on NODE_ENV

@@ -4,10 +4,12 @@ import { MetaUploadClient } from '../upload-client';
 
 const ADSET_EN = 'as_en_999';
 const ADSET_ES = 'as_es_888';
+const PAGE_ID = 'page_777';
 
 beforeEach(() => {
   process.env.META_LAUNCH_ADSET_ID_EN = ADSET_EN;
   process.env.META_LAUNCH_ADSET_ID_ES = ADSET_ES;
+  process.env.META_PAGE_ID = PAGE_ID;
 });
 
 function chainedFetch(...responses: Response[]) {
@@ -158,5 +160,38 @@ describe('MetaUploadClient.uploadCreative', () => {
         tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'b', utm_term: 't' },
       }),
     ).rejects.toThrow(/META_LAUNCH_ADSET_ID_EN/);
+  });
+
+  it('throws if META_PAGE_ID missing (caught after asset+adimages)', async () => {
+    delete process.env.META_PAGE_ID;
+    const fetchImpl = chainedFetch(
+      assetResponse(),
+      new Response(JSON.stringify({ images: { bytes: { hash: 'h', url: 'u' } } })),
+    );
+    const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+    await expect(
+      client.uploadCreative({
+        asset_url: 'https://blob/x.png', copy: 'c', cta: 'x', locale: 'en',
+        tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'b', utm_term: 't' },
+      }),
+    ).rejects.toThrow(/META_PAGE_ID/);
+  });
+
+  it('sends page_id in adcreative object_story_spec', async () => {
+    const fetchImpl = chainedFetch(
+      assetResponse(),
+      new Response(JSON.stringify({ images: { bytes: { hash: 'h', url: 'u' } } })),
+      new Response(JSON.stringify({ id: 'cr4' })),
+      new Response(JSON.stringify({ id: 'ad4' })),
+    );
+    const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+    await client.uploadCreative({
+      asset_url: 'https://blob/p.png', copy: 'x', cta: 'x', locale: 'en',
+      tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'cb', utm_term: 't' },
+    });
+    const creativeBody = JSON.parse(
+      ((fetchImpl.mock.calls[2] as unknown as [string, RequestInit])[1]).body as string,
+    );
+    expect(creativeBody.object_story_spec.page_id).toBe(PAGE_ID);
   });
 });
