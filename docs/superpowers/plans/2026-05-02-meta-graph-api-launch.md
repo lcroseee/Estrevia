@@ -2046,25 +2046,20 @@ adapter code."
 **Subagent type:** `meta-ads`
 **Depends on:** none
 
-- [ ] **8.1** — Verify the targeted batch CLI exists:
+- [ ] **8.1** — Verify the targeted batch CLI flags. Actual flags (per `parseCliArgs` in `scripts/advertising/generate-launch-batch.ts`):
+- `--templates=<comma-separated-ids>` (plural)
+- `--samples=<n>`
+- locale is inferred from template ID prefix (`en-` / `es-`)
+- optional `--model=fast|ultra` (default ultra @ $0.06/img)
+
+Template IDs in `hooks-{en,es}.ts` are prefixed: e.g. `en-identity-reveal-2`, `es-identity-reveal-2`.
+
+- [ ] **8.2** — Run a single batch (4 templates × 2 samples = 8 ads):
 
 ```bash
-grep -n "target\|identity-reveal-2" scripts/advertising/generate-launch-batch.ts
-```
-
-If the existing script does not support a `--template=<id>` flag, the agent must add it (the recent commit `240b6a7 feat(advertising/creative-gen): refine visual prompts + add targeted batch CLI` suggests it does).
-
-- [ ] **8.2** — Run the batch:
-
-```bash
 npx tsx scripts/advertising/generate-launch-batch.ts \
-  --template=identity-reveal-2 --locale=en --count=2
-npx tsx scripts/advertising/generate-launch-batch.ts \
-  --template=identity-reveal-2 --locale=es --count=2
-npx tsx scripts/advertising/generate-launch-batch.ts \
-  --template=identity-reveal-6 --locale=en --count=2
-npx tsx scripts/advertising/generate-launch-batch.ts \
-  --template=identity-reveal-6 --locale=es --count=2
+  --templates=en-identity-reveal-2,es-identity-reveal-2,en-identity-reveal-6,es-identity-reveal-6 \
+  --samples=2
 ```
 
 Expected: 8 rows in `advertising_creatives` with `status='pending_review'`. Total Gemini cost ~$0.48.
@@ -2110,15 +2105,12 @@ git commit -m "docs(advertising): batch A creative gen run (identity-reveal -2 -
 **Subagent type:** `meta-ads`
 **Depends on:** none
 
-- [ ] **9.1** — Run batch generation:
+- [ ] **9.1** — Run a single batch (6 templates × 2 samples = 12 ads). CLI flags as documented in Task 8.1.
 
 ```bash
-npx tsx scripts/advertising/generate-launch-batch.ts --template=authority-3 --locale=en --count=2
-npx tsx scripts/advertising/generate-launch-batch.ts --template=authority-3 --locale=es --count=2
-npx tsx scripts/advertising/generate-launch-batch.ts --template=rarity-3 --locale=en --count=2
-npx tsx scripts/advertising/generate-launch-batch.ts --template=rarity-3 --locale=es --count=2
-npx tsx scripts/advertising/generate-launch-batch.ts --template=rarity-5 --locale=en --count=2
-npx tsx scripts/advertising/generate-launch-batch.ts --template=rarity-5 --locale=es --count=2
+npx tsx scripts/advertising/generate-launch-batch.ts \
+  --templates=en-authority-3,es-authority-3,en-rarity-3,es-rarity-3,en-rarity-5,es-rarity-5 \
+  --samples=2
 ```
 
 Expected: 12 new rows pending_review. Cost ~$0.72.
