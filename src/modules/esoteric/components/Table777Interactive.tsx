@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 interface Correspondence {
   path: number;

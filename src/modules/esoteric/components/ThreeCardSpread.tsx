@@ -8,7 +8,7 @@ import { useSubscription } from '@/shared/hooks/useSubscription';
 import { postJson } from '@/shared/lib/apiFetch';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getCardName, getCardDescription, getCardKeywords } from './tarotLocalize';
 
 interface DrawnCard {

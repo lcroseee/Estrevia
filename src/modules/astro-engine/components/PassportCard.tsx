@@ -207,13 +207,13 @@ export function PassportCard({ passport }: PassportCardProps) {
             aria-label={`Rarity tier: ${getRarityTier(rarityPercent)}`}
           >
             <span
-              className="text-[9px] tracking-[0.15em] uppercase text-white/30"
+              className="text-[11px] tracking-[0.15em] uppercase text-white/30"
               style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
             >
               Rarity
             </span>
             <span
-              className="text-xs font-bold leading-none tracking-wide"
+              className="text-sm font-bold leading-none tracking-wide"
               style={{
                 color:
                   rarityPercent < 5

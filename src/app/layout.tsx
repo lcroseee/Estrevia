@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Crimson_Pro } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { enUS, esES } from "@clerk/localizations";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { PostHogProvider } from "@/shared/components/PostHogProvider";
 import { CookieConsent } from "@/shared/components/CookieConsent";
 import { AnalyticsIdentifier } from "@/shared/components/AnalyticsIdentifier";
@@ -55,7 +54,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
-  const messages = await getMessages();
   const tAppShell = await getTranslations('appShell');
 
   return (
@@ -81,13 +79,11 @@ export default async function RootLayout({
           >
             {tAppShell('skipToContent')}
           </a>
-          <NextIntlClientProvider messages={messages}>
-            <PostHogProvider>
-              <AnalyticsIdentifier />
-              {children}
-              <CookieConsent />
-            </PostHogProvider>
-          </NextIntlClientProvider>
+          <PostHogProvider>
+            <AnalyticsIdentifier />
+            {children}
+            <CookieConsent />
+          </PostHogProvider>
         </body>
       </html>
     </ClerkProvider>

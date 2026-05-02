@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { ChartResult } from '@/shared/types';
 import type { PassportResponse } from '@/shared/types/api';
 import { BirthDataForm } from './BirthDataForm';
+import type { FormValues } from './BirthDataForm';
 import { ChartWheel } from './ChartWheel';
 import { PositionTable } from './PositionTable';
 import { PassportCard } from './PassportCard';
@@ -129,30 +131,129 @@ function SpinnerIcon() {
 
 export function ChartDisplay() {
   const t = useTranslations('chartDisplay');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Capture URL params at mount time — we read once for auto-calculation.
+  // Storing in a ref keeps the useEffect dep array empty without eslint warnings.
+  const mountParamsRef = useRef({
+    bd: searchParams.get('bd'),
+    bt: searchParams.get('bt'),
+    ktb: searchParams.get('ktb'),
+    lat: searchParams.get('lat'),
+    lon: searchParams.get('lon'),
+    place: searchParams.get('place'),
+    tz: searchParams.get('tz'),
+  });
+
+  const hasInitialParams = !!(
+    mountParamsRef.current.bd &&
+    mountParamsRef.current.lat &&
+    mountParamsRef.current.lon &&
+    mountParamsRef.current.tz
+  );
+
   const [chart, setChart] = useState<ChartResult | null>(null);
   const [chartId, setChartId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('wheel');
   const [showAspects, setShowAspects] = useState(true);
   const [showHouses, setShowHouses] = useState(true);
+  // Start in loading state if URL params are present — avoids blank-form flash
+  const [isAutoCalculating, setIsAutoCalculating] = useState(hasInitialParams);
+  const [autoCalculateError, setAutoCalculateError] = useState<string | null>(null);
 
-  const handleChartCalculated = useCallback((result: ChartResult, id: string) => {
-    setChart(result);
-    setChartId(id);
-    setActiveTab('wheel');
-    // Scroll to chart on mobile
-    if (typeof window !== 'undefined') {
+  // Auto-calculate from URL params on mount (enables reload persistence + share links).
+  // Reads mountParamsRef so the effect dep array stays empty — intentionally mount-only.
+  useEffect(() => {
+    const { bd, bt, ktb, lat, lon, tz } = mountParamsRef.current;
+    if (!bd || !lat || !lon || !tz) return;
+
+    const knowsTime = ktb === '1' && !!bt;
+
+    fetch('/api/v1/chart/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: bd,
+        time: knowsTime ? bt : '12:00',
+        latitude: parseFloat(lat),
+        longitude: parseFloat(lon),
+        timezone: tz,
+        houseSystem: knowsTime ? 'Placidus' : null,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        return res.json() as Promise<{ success: boolean; data: { chartId: string; chart: ChartResult } }>;
+      })
+      .then((data) => {
+        if (!data.success || !data.data?.chart || !data.data?.chartId) {
+          throw new Error('Invalid response from server');
+        }
+        setChart(data.data.chart);
+        setChartId(data.data.chartId);
+        setActiveTab('wheel');
+      })
+      .catch(() => {
+        setAutoCalculateError('Could not calculate chart. Please try again.');
+      })
+      .finally(() => {
+        setIsAutoCalculating(false);
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleChartCalculated = useCallback(
+    (result: ChartResult, id: string, formValues: FormValues) => {
+      setChart(result);
+      setChartId(id);
+      setActiveTab('wheel');
+
+      // Persist chart inputs in URL so the result survives page reload.
+      // Also makes the chart shareable via URL (no PII in the database —
+      // the URL stays in browser history only, not sent to any server).
+      const params = new URLSearchParams();
+      params.set('bd', formValues.date);
+      if (formValues.knowsBirthTime && formValues.time) {
+        params.set('bt', formValues.time);
+        params.set('ktb', '1');
+      }
+      if (formValues.latitude !== null) params.set('lat', String(formValues.latitude));
+      if (formValues.longitude !== null) params.set('lon', String(formValues.longitude));
+      if (formValues.cityLabel) params.set('place', formValues.cityLabel);
+      if (formValues.timezone) params.set('tz', formValues.timezone);
+
+      router.replace(`/chart?${params.toString()}`, { scroll: false });
+
+      // Scroll to chart on mobile
       setTimeout(() => {
         document.getElementById('chart-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
-    }
-  }, []);
+    },
+    [router],
+  );
 
   const handleRecalculate = useCallback(() => {
     setChart(null);
     setChartId(null);
-  }, []);
+    setAutoCalculateError(null);
+    // Clear URL params so the form shows blank on next render
+    router.replace('/chart', { scroll: false });
+  }, [router]);
 
   if (!chart) {
+    // Show loading spinner while auto-calculating from URL params
+    if (isAutoCalculating) {
+      return (
+        <div
+          className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]"
+          aria-busy="true"
+          aria-label="Calculating chart…"
+        >
+          <SpinnerIcon />
+        </div>
+      );
+    }
+
     return (
       <section
         className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-10"
@@ -176,6 +277,14 @@ export function ChartDisplay() {
             {t('description')}
           </p>
         </div>
+        {autoCalculateError && (
+          <p
+            role="alert"
+            className="mb-4 text-sm text-red-400/80 text-center max-w-xs"
+          >
+            {autoCalculateError}
+          </p>
+        )}
         <BirthDataForm onChartCalculated={handleChartCalculated} />
       </section>
     );
@@ -189,6 +298,7 @@ export function ChartDisplay() {
   return (
     <section
       id="chart-result"
+      data-testid="natal-chart-result"
       className="max-w-2xl mx-auto px-4 py-6 space-y-6"
       aria-label={t('resultAria')}
     >
@@ -203,6 +313,7 @@ export function ChartDisplay() {
         </div>
         <button
           type="button"
+          data-testid="new-chart-btn"
           onClick={handleRecalculate}
           className="text-xs text-white/40 hover:text-white/70 transition-colors underline underline-offset-2"
         >
@@ -251,7 +362,7 @@ export function ChartDisplay() {
               type="checkbox"
               checked={showAspects}
               onChange={(e) => setShowAspects(e.target.checked)}
-              className="accent-[#FFD700] w-3.5 h-3.5 rounded"
+              className="accent-[#FFD700] w-3.5 h-3.5 rounded cursor-pointer opacity-40 checked:opacity-100"
             />
             {t('aspects')}
           </label>
@@ -261,7 +372,7 @@ export function ChartDisplay() {
                 type="checkbox"
                 checked={showHouses}
                 onChange={(e) => setShowHouses(e.target.checked)}
-                className="accent-[#FFD700] w-3.5 h-3.5 rounded"
+                className="accent-[#FFD700] w-3.5 h-3.5 rounded cursor-pointer opacity-40 checked:opacity-100"
               />
               {t('houses')}
             </label>

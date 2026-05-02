@@ -33,22 +33,42 @@ const TAROT_CARD_IDS = [
 ] as const;
 
 /**
- * Builds hreflang alternates for cookie-based locale switching.
- * Both EN and ES point to the same canonical URL (no URL prefix).
- * Google accepts this for cookie/JS-based locale switching.
+ * Builds the hreflang alternates object for a given canonical path.
+ * EN URL is at root; ES URL is under /es/.
+ * x-default points to EN (primary).
  */
-function hreflangAlternates(url: string): { languages: Record<string, string> } {
+function buildAlternates(canonicalPath: string): { languages: Record<string, string> } {
+  const base = SITE_URL.replace(/\/$/, '');
+  const en = `${base}${canonicalPath}`;
+  const es = `${base}/es${canonicalPath}`;
   return {
-    languages: {
-      'en-US': url,
-      'es': url,
-      'x-default': url,
-    },
+    languages: { 'en-US': en, 'es': es, 'x-default': en },
   };
 }
 
 /**
+ * Emits two sitemap entries for a canonical path: one for EN (root), one for ES (/es/).
+ * Both entries carry the full hreflang alternates map.
+ */
+function emitLocalized(
+  canonicalPath: string,
+  partial: Omit<MetadataRoute.Sitemap[number], 'url' | 'alternates'>,
+): MetadataRoute.Sitemap {
+  const base = SITE_URL.replace(/\/$/, '');
+  const enUrl = `${base}${canonicalPath}`;
+  const esUrl = `${base}/es${canonicalPath}`;
+  const alternates = buildAlternates(canonicalPath);
+  return [
+    { url: enUrl, ...partial, alternates },
+    { url: esUrl, ...partial, alternates },
+  ];
+}
+
+/**
  * Dynamic sitemap for Estrevia.
+ *
+ * Each canonical path emits TWO entries: EN at root, ES under /es/.
+ * Both share the same hreflang alternates map pointing to each other.
  *
  * Total URL count at launch:
  *   1  homepage
@@ -60,126 +80,59 @@ function hreflangAlternates(url: string): { languages: Record<string, string> } 
  *   120 essay pages (/essays/[planet]-in-[sign])
  *   12  sign pages (/signs/[sign])
  * ─────
- *   221 total
+ *   221 canonical paths × 2 locales = 442 total entries
  *
- * Note: /s/synastry/[id] share pages are noIndex and excluded from sitemap.
- * hreflang: EN + ES both map to the same URL (cookie-based locale, no URL prefix).
+ * Note: /s/[id] share pages are noIndex and excluded from sitemap.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
   // ── Static / marketing pages ──────────────────────────────────────────────
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: SITE_URL,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 1.0,
-      alternates: hreflangAlternates(SITE_URL),
-    },
-    {
-      url: `${SITE_URL}/why-sidereal`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.9,
-      alternates: hreflangAlternates(`${SITE_URL}/why-sidereal`),
-    },
-    {
-      url: `${SITE_URL}/pricing`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-      alternates: hreflangAlternates(`${SITE_URL}/pricing`),
-    },
+    ...emitLocalized('/', { lastModified: now, changeFrequency: 'weekly', priority: 1.0 }),
+    ...emitLocalized('/why-sidereal', { lastModified: now, changeFrequency: 'monthly', priority: 0.9 }),
+    ...emitLocalized('/pricing', { lastModified: now, changeFrequency: 'monthly', priority: 0.7 }),
     // Legal pages — low priority, indexed for trust signals
-    {
-      url: `${SITE_URL}/privacy`,
-      lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.3,
-      alternates: hreflangAlternates(`${SITE_URL}/privacy`),
-    },
-    {
-      url: `${SITE_URL}/terms`,
-      lastModified: now,
-      changeFrequency: 'yearly',
-      priority: 0.3,
-      alternates: hreflangAlternates(`${SITE_URL}/terms`),
-    },
+    ...emitLocalized('/privacy', { lastModified: now, changeFrequency: 'yearly', priority: 0.3 }),
+    ...emitLocalized('/terms', { lastModified: now, changeFrequency: 'yearly', priority: 0.3 }),
   ];
 
   // ── App pages ─────────────────────────────────────────────────────────────
   const appPages: MetadataRoute.Sitemap = [
-    {
-      url: `${SITE_URL}/chart`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-      alternates: hreflangAlternates(`${SITE_URL}/chart`),
-    },
-    {
-      url: `${SITE_URL}/moon`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.8,
-      alternates: hreflangAlternates(`${SITE_URL}/moon`),
-    },
-    {
-      url: `${SITE_URL}/hours`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.8,
-      alternates: hreflangAlternates(`${SITE_URL}/hours`),
-    },
-    {
-      url: `${SITE_URL}/synastry`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-      alternates: hreflangAlternates(`${SITE_URL}/synastry`),
-    },
-    {
-      url: `${SITE_URL}/tarot`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-      alternates: hreflangAlternates(`${SITE_URL}/tarot`),
-    },
-    {
-      url: `${SITE_URL}/tree-of-life`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-      alternates: hreflangAlternates(`${SITE_URL}/tree-of-life`),
-    },
+    ...emitLocalized('/chart', { lastModified: now, changeFrequency: 'weekly', priority: 0.9 }),
+    ...emitLocalized('/moon', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
+    ...emitLocalized('/hours', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
+    ...emitLocalized('/synastry', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
+    ...emitLocalized('/tarot', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
+    ...emitLocalized('/tree-of-life', { lastModified: now, changeFrequency: 'monthly', priority: 0.7 }),
   ];
 
   // ── Tarot card pages (78 total) ───────────────────────────────────────────
-  const tarotPages: MetadataRoute.Sitemap = TAROT_CARD_IDS.map((cardId) => ({
-    url: `${SITE_URL}/tarot/${cardId}`,
-    lastModified: now,
-    changeFrequency: 'monthly' as const,
-    priority: 0.6,
-    alternates: hreflangAlternates(`${SITE_URL}/tarot/${cardId}`),
-  }));
+  const tarotPages: MetadataRoute.Sitemap = TAROT_CARD_IDS.flatMap((cardId) =>
+    emitLocalized(`/tarot/${cardId}`, {
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    }),
+  );
 
   // ── Essay pages (120 total: 10 planets × 12 signs) ────────────────────────
-  const essayPages: MetadataRoute.Sitemap = getAllEssaySlugs().map((slug) => ({
-    url: `${SITE_URL}/essays/${slug}`,
-    lastModified: now,
-    changeFrequency: 'monthly' as const,
-    priority: 0.7,
-    alternates: hreflangAlternates(`${SITE_URL}/essays/${slug}`),
-  }));
+  const essayPages: MetadataRoute.Sitemap = getAllEssaySlugs().flatMap((slug) =>
+    emitLocalized(`/essays/${slug}`, {
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    }),
+  );
 
   // ── Sign overview pages (12 total) ────────────────────────────────────────
-  const signPages: MetadataRoute.Sitemap = getAllSignSlugs().map((sign) => ({
-    url: `${SITE_URL}/signs/${sign}`,
-    lastModified: now,
-    changeFrequency: 'monthly' as const,
-    priority: 0.75,
-    alternates: hreflangAlternates(`${SITE_URL}/signs/${sign}`),
-  }));
+  const signPages: MetadataRoute.Sitemap = getAllSignSlugs().flatMap((sign) =>
+    emitLocalized(`/signs/${sign}`, {
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.75,
+    }),
+  );
 
   return [...staticPages, ...appPages, ...tarotPages, ...essayPages, ...signPages];
 }

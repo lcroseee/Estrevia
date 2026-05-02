@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import type { Metadata } from 'next';
 import { headers, cookies } from 'next/headers';
 import { eq } from 'drizzle-orm';
@@ -43,6 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: 'Synastry Result Not Found',
       description: 'This compatibility result no longer exists. Calculate your own at Estrevia.',
       path: `/s/synastry/${id}`,
+      locale: 'en',
       noIndex: true,
     });
   }
@@ -51,6 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${Math.round(result.overallScore)}% Compatibility — Synastry`,
     description: `Astrological compatibility score: ${Math.round(result.overallScore)}%. Check your own sidereal synastry at Estrevia.`,
     path: `/s/synastry/${id}`,
+    locale: 'en',
     noIndex: true,
   });
 }

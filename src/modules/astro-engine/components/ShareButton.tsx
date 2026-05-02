@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import type { PassportResponse } from '@/shared/types/api';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { buildShareUrl, type ShareChannel } from '@/shared/lib/share';
 
 interface ShareButtonProps {
   passportId: string;
@@ -12,13 +14,8 @@ interface ShareButtonProps {
 type ShareState = 'idle' | 'copied' | 'downloading';
 type DownloadFormat = 'stories' | 'square';
 
-// Build share text
-function buildShareText(passport: PassportResponse): string {
-  const asc = passport.ascendantSign ? ` | ↑ ASC in ${passport.ascendantSign}` : '';
-  return `My Cosmic Passport: ☉ Sun in ${passport.sunSign} | ☽ Moon in ${passport.moonSign}${asc} — 1 of ${passport.rarityPercent}% Get yours at estrevia.app`;
-}
-
-function buildShareUrl(passportId: string): string {
+/** Build the canonical public URL for this passport share page. */
+function getPassportUrl(passportId: string): string {
   if (typeof window !== 'undefined') {
     return `${window.location.origin}/s/${passportId}`;
   }
@@ -26,55 +23,80 @@ function buildShareUrl(passportId: string): string {
 }
 
 /**
- * Multi-channel share widget.
- * Primary: Web Share API (mobile native sheet).
- * Fallbacks: Copy link, Twitter/X intent, Telegram URL.
- * Download: fetches OG image from /api/og/passport/[id] as downloadable PNG.
+ * Interpolate named placeholders in a copy template string.
+ * Template syntax: {key} → value.
+ */
+function interpolate(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`);
+}
+
+/**
+ * Multi-channel share widget for the Cosmic Passport.
+ *
+ * - Primary: Web Share API (native sheet on mobile)
+ * - Fallbacks: Copy link, X/Twitter intent, Telegram URL, WhatsApp
+ * - Download: fetches OG image from /api/og/passport/[id] as PNG
+ * - All outbound URLs carry UTM params via buildShareUrl()
+ * - Per-channel copy text from messages/share.passport.copy.*
  */
 export function ShareButton({ passportId, passport }: ShareButtonProps) {
+  const t = useTranslations('share.passport.copy');
   const [shareState, setShareState] = useState<ShareState>('idle');
   const [downloadFormat, setDownloadFormat] = useState<DownloadFormat>('stories');
 
-  const shareUrl = buildShareUrl(passportId);
-  const shareText = buildShareText(passport);
+  const rawUrl = getPassportUrl(passportId);
+
+  // Shared interpolation vars (sign names are not translated in ES per memory rule)
+  const copyVars: Record<string, string> = {
+    sun:    passport.sunSign,
+    moon:   passport.moonSign,
+    rising: passport.ascendantSign ?? '',
+    rarity: passport.rarityPercent.toFixed(1),
+    name:   'My',  // No PII — no user name available on share page
+    url:    buildShareUrl(rawUrl, 'copy'),
+  };
+
+  // Per-channel copy text
+  const xCopy        = interpolate(t('x'),            { ...copyVars, url: buildShareUrl(rawUrl, 'x') });
+  const telegramCopy = interpolate(t('telegram'),      { ...copyVars, url: buildShareUrl(rawUrl, 'telegram') });
+  const whatsappCopy = interpolate(t('whatsapp'),      { ...copyVars, url: buildShareUrl(rawUrl, 'whatsapp') });
+  const nativeCopy   = interpolate(t('native_share'),  { ...copyVars, url: buildShareUrl(rawUrl, 'native') });
 
   // Native share sheet (mobile)
   const handleNativeShare = useCallback(async () => {
     if (!navigator.share) return;
     try {
       await navigator.share({
-        title: 'My Cosmic Passport',
-        text: shareText,
-        url: shareUrl,
+        title: "My Cosmic Passport",
+        text: nativeCopy,
+        url: buildShareUrl(rawUrl, 'native'),
       });
       trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'native', passport_id: passportId });
     } catch {
-      // User dismissed share sheet — not an error
+      // User dismissed the share sheet — not an error
     }
-  }, [shareUrl, shareText, passportId]);
+  }, [rawUrl, nativeCopy, passportId]);
 
   // Copy link to clipboard
   const handleCopyLink = useCallback(async () => {
+    const tagged = buildShareUrl(rawUrl, 'copy');
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      setShareState('copied');
-      trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'copy_link', passport_id: passportId });
-      setTimeout(() => setShareState('idle'), 2000);
+      await navigator.clipboard.writeText(tagged);
     } catch {
       // Fallback for older browsers
       const el = document.createElement('input');
-      el.value = shareUrl;
+      el.value = tagged;
       document.body.appendChild(el);
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-      setShareState('copied');
-      trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'copy_link', passport_id: passportId });
-      setTimeout(() => setShareState('idle'), 2000);
     }
-  }, [shareUrl, passportId]);
+    setShareState('copied');
+    trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'copy_link', passport_id: passportId });
+    setTimeout(() => setShareState('idle'), 2000);
+  }, [rawUrl, passportId]);
 
-  // Download PNG — links to OG image endpoint with selected format
+  // Download PNG — fetches OG image endpoint
   const handleDownloadPng = useCallback(async () => {
     setShareState('downloading');
     try {
@@ -92,17 +114,16 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
       URL.revokeObjectURL(objectUrl);
       trackEvent(AnalyticsEvent.PASSPORT_DOWNLOADED, { passport_id: passportId, format: downloadFormat });
     } catch {
-      // Silent fail — user sees no broken state
+      // Silent fail — no broken visual state shown to user
     } finally {
       setShareState('idle');
     }
   }, [passportId, downloadFormat]);
 
-  // X (formerly Twitter) share intent — using legacy /intent/tweet path for mobile-app reliability
-  const twitterUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-
-  // Telegram share URL
-  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+  // Pre-built intent URLs with UTM params
+  const xUrl        = `https://x.com/intent/tweet?text=${encodeURIComponent(xCopy)}`;
+  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(buildShareUrl(rawUrl, 'telegram'))}&text=${encodeURIComponent(telegramCopy)}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappCopy)}`;
 
   const canNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
@@ -111,7 +132,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
       className="flex flex-col gap-3 w-full"
       aria-label="Share your Cosmic Passport"
     >
-      {/* Primary action: native share on mobile, fallback to copy on desktop */}
+      {/* Primary action: native share on mobile, copy on desktop */}
       {canNativeShare ? (
         <button
           type="button"
@@ -151,7 +172,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
 
       {/* Secondary actions row */}
       <div className="flex gap-2">
-        {/* Copy link (secondary on mobile when native share is available) */}
+        {/* Copy link (secondary on mobile when native share is primary) */}
         {canNativeShare && (
           <button
             type="button"
@@ -170,9 +191,9 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
           </button>
         )}
 
-        {/* Twitter/X */}
+        {/* X / Twitter */}
         <a
-          href={twitterUrl}
+          href={xUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
@@ -210,7 +231,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
 
         {/* WhatsApp */}
         <a
-          href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl)}`}
+          href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]"
