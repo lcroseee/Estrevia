@@ -1023,7 +1023,19 @@
     "limitReached": "Free users can calculate 1 synastry per day",
     "upgradeCta": "Upgrade for unlimited synastry",
     "analyzing": "Analyzing compatibility...",
-    "analysisError": "Could not generate analysis. Please try again."
+    "analysisError": "Could not generate analysis. Please try again.",
+    "aboutAria": "About synastry and relationship astrology",
+    "aboutHeading": "About Synastry",
+    "faq1Q": "What is the most important aspect in synastry?",
+    "faq1A": "The Sun–Moon axis is traditionally the strongest single indicator. It reflects whether one person's core identity resonates with the other's emotional baseline. Close Sun–Moon aspects — especially conjunction and trine — appear far more frequently in long-term partnerships than any other type of interaspect. Saturn–personal planet contacts rank second in importance, contributing the seriousness and longevity factor.",
+    "faq2Q": "Can synastry predict whether a relationship will last?",
+    "faq2A": "No synastry reading predicts outcomes with certainty. Synastry maps the energetic terrain — where resonance flows naturally and where friction is structural. A couple with strong Saturn contacts and challenging lunar aspects can build a lasting, conscious relationship. A couple with all trines and no Saturn contacts may lack the structure for sustained commitment. The chart describes tendencies, not destiny.",
+    "faq3Q": "What is a double whammy in synastry?",
+    "faq3A": "A double whammy occurs when two planets aspect each other reciprocally across both charts — for example, person A's Sun conjuncts person B's Moon, and person B's Sun trines person A's Moon. This mutual activation intensifies that particular dynamic in both directions, making it one of the most prominent themes in the relationship.",
+    "faq4Q": "Do house overlays matter as much as aspects in synastry?",
+    "faq4A": "House overlays show where one person's planets fall in the other's houses, revealing which life areas the relationship activates. Your partner's Venus in your 7th house activates your sense of partnership; in your 2nd house, it touches your resources and values. Overlays add texture and context; interaspects remain the primary indicator of the relationship's energetic quality.",
+    "faq5Q": "How does sidereal synastry differ from tropical?",
+    "faq5A": "The ~23° Lahiri ayanamsa shift can change sign placements and, in some cases, convert one aspect type to another. A planet at 28° Scorpio tropical becomes roughly 5° Scorpio sidereal — the sign holds, but barely. At tropical 27° or earlier, the shift crosses a sign boundary into sidereal Libra, altering the entire sign-level interpretation in synastry."
   },
   "tarot": {
     "title": "Thoth Tarot",
@@ -1147,7 +1159,19 @@
     "archangel": "Archangel",
     "connects": "Connects",
     "tarotCard": "Tarot Card",
-    "astrology": "Astrology"
+    "astrology": "Astrology",
+    "aboutAria": "About the Kabbalistic Tree of Life",
+    "aboutHeading": "About the Tree of Life",
+    "faq1Q": "What is the difference between Qabalah, Kabbalah, and Cabala?",
+    "faq1A": "All three refer to the same mystical tradition through different transmission lineages. Kabbalah (Hebrew: קַבָּלָה) is the Jewish mystical tradition dating from medieval Spain and earlier. Cabala refers to the Renaissance Hermetic-Christian adaptation. Qabalah designates the further Hermetic adaptation systematised by the Golden Dawn in the 1890s and extended by Crowley — the system Estrevia's Tree of Life uses. Crowley's pre-1929 works (777, Equinox Vol I, Liber AL) are the primary source material.",
+    "faq2Q": "What does it mean that Da'ath is not a true sephirah?",
+    "faq2A": "The ten sephiroth represent complete, independent aspects of divine emanation. Da'ath (Knowledge) appears between Binah and Chesed in some traditions, but represents a crossing-point — the Great Abyss where individual consciousness dissolves before it can ascend into the Supernal Triangle. Crossing it in the initiatory sense means dissolution of the personal self. It is numbered 11 informally in some systems but never counted among the ten.",
+    "faq3Q": "Why do the sephiroth have planetary correspondences?",
+    "faq3A": "The seven classical planets (Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon) are assigned to sephiroth 3 through 9 in the Golden Dawn system. The outer planets (Uranus, Neptune, Pluto) are assigned to Kether, Chokmah, and the hidden Da'ath in later extensions. These correspondences align with the Chaldean order used in planetary hours — the same seven planetary forces operate across both systems.",
+    "faq4Q": "How do the three pillars relate to astrological signs?",
+    "faq4A": "The Pillar of Mercy corresponds to the active principles of fire and air; the Pillar of Severity corresponds to the passive principles of water and earth. The Middle Pillar holds the solar sphere (Tiphareth) and the lunar sphere (Yesod) at its centre — the two luminaries that anchor the astrological chart. The pillars map the same polarities that the astrological tradition expresses as active/receptive pairs.",
+    "faq5Q": "Can the Tree of Life be studied without knowing the Tarot?",
+    "faq5A": "Yes, but the Tarot considerably accelerates understanding. Each of the twenty-two paths corresponds to one Major Arcana Trump. Meditating on the Fool gives direct intuitive access to path 11 (Kether to Chokmah) in a way that abstract description alone cannot. Conversely, knowing the Tree gives Tarot readings far more depth — each card becomes a precise location on a map of consciousness rather than a general symbol."
   },
   "avatar": {
     "title": "AI Avatar",
