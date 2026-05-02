@@ -33,45 +33,49 @@ const NO_STORE = 'no-store, no-cache, must-revalidate, max-age=0';
 const IMMUTABLE_1Y =
   'public, max-age=31536000, s-maxage=31536000, immutable, stale-while-revalidate=86400';
 
-// Sign → Unicode glyph mapping
+// Unicode Variation Selector-15 — forces text (non-emoji) rendering for any
+// Unicode character that has an emoji presentation variant. Without this,
+// Satori falls back to the OS emoji font for ♈–♓ and planet glyphs, ignoring
+// CSS color and producing purple/yellow colored emoji boxes.
+const TV = '︎';
+
+// Sign → Unicode glyph. Always append TV at render site.
 const SIGN_GLYPH: Record<string, string> = {
-  Aries: '♈',
-  Taurus: '♉',
-  Gemini: '♊',
-  Cancer: '♋',
-  Leo: '♌',
-  Virgo: '♍',
-  Libra: '♎',
-  Scorpio: '♏',
-  Sagittarius: '♐',
-  Capricorn: '♑',
-  Aquarius: '♒',
-  Pisces: '♓',
+  Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋',
+  Leo: '♌', Virgo: '♍', Libra: '♎', Scorpio: '♏',
+  Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓',
 };
+
+// Luminary label → display color per design.md planetary color tokens
+const LUMINARY_COLOR = {
+  sun: '#FFD700',   // Gold
+  moon: '#C0C0E0',  // Silver
+  asc: '#A78BFA',   // Violet
+} as const;
 
 // Element → color + symbol
 const ELEMENT_STYLE: Record<string, { color: string; symbol: string }> = {
-  Fire: { color: '#FF6B35', symbol: '△' },
+  Fire:  { color: '#FF6B35', symbol: '△' },
   Earth: { color: '#8B7355', symbol: '▽' },
   Air:   { color: '#87CEEB', symbol: '△' },
   Water: { color: '#4169E1', symbol: '▽' },
 };
 
-// Planet → symbol
-const PLANET_SYMBOL: Record<string, string> = {
-  Sun:     '☉',
-  Moon:    '☽',
-  Mercury: '☿',
-  Venus:   '♀',
-  Mars:    '♂',
-  Jupiter: '♃',
-  Saturn:  '♄',
-  Uranus:  '♅',
-  Neptune: '♆',
-  Pluto:   '♇',
+// Planet → display color per design.md
+const PLANET_COLOR: Record<string, string> = {
+  Sun: '#FFD700', Moon: '#C0C0E0', Mercury: '#B8D430',
+  Venus: '#50C878', Mars: '#E04040', Jupiter: '#4169E1',
+  Saturn: '#708090', Uranus: '#00CED1', Neptune: '#9370DB', Pluto: '#8B0000',
 };
 
-// Format → dimensions map for multi-format OG images
+// Planet → symbol. Append TV at render site.
+const PLANET_SYMBOL: Record<string, string> = {
+  Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀',
+  Mars: '♂', Jupiter: '♃', Saturn: '♄',
+  Uranus: '♅', Neptune: '♆', Pluto: '♇',
+};
+
+// Format → dimensions
 const FORMAT_DIMS: Record<string, { width: number; height: number }> = {
   og:      { width: 1200, height: 630 },
   square:  { width: 1080, height: 1080 },
@@ -83,7 +87,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   // -------------------------------------------------------------------------
-  // Rate limiting — 60 req/min per IP (P1 fix: audit 10 High-1)
+  // Rate limiting — 60 req/min per IP
   // -------------------------------------------------------------------------
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anon';
@@ -102,13 +106,12 @@ export async function GET(
 
   const { id } = await params;
 
-  // Parse format from query string
   const url = new URL(request.url);
   const format = url.searchParams.get('format') ?? 'og';
   const dims = FORMAT_DIMS[format] ?? FORMAT_DIMS.og;
 
   // -------------------------------------------------------------------------
-  // Look up passport from DB
+  // DB lookup
   // -------------------------------------------------------------------------
   let passport: typeof cosmicPassports.$inferSelect | undefined;
   try {
@@ -141,7 +144,7 @@ export async function GET(
   }
 
   // -------------------------------------------------------------------------
-  // Load astro symbols font buffer (P0 fix: audit 05 B-3)
+  // Font load
   // -------------------------------------------------------------------------
   let fontBuffer: ArrayBuffer;
   try {
@@ -154,437 +157,429 @@ export async function GET(
     });
   }
 
-  const sunGlyph  = SIGN_GLYPH[passport.sunSign]  ?? '?';
-  const moonGlyph = SIGN_GLYPH[passport.moonSign] ?? '?';
-  const ascGlyph  = passport.ascendantSign ? (SIGN_GLYPH[passport.ascendantSign] ?? '?') : null;
+  // -------------------------------------------------------------------------
+  // Derived display values
+  // -------------------------------------------------------------------------
+  const sunGlyph  = (SIGN_GLYPH[passport.sunSign]  ?? '?') + TV;
+  const moonGlyph = (SIGN_GLYPH[passport.moonSign] ?? '?') + TV;
+  const ascGlyph  = passport.ascendantSign
+    ? (SIGN_GLYPH[passport.ascendantSign] ?? '?') + TV
+    : null;
 
-  const elementStyle = ELEMENT_STYLE[passport.element] ?? { color: '#888', symbol: '◇' };
-  const planetSymbol = PLANET_SYMBOL[passport.rulingPlanet] ?? '★';
+  const elementStyle    = ELEMENT_STYLE[passport.element]      ?? { color: '#888', symbol: '◇' };
+  const rulingColor     = PLANET_COLOR[passport.rulingPlanet]  ?? '#E2C97E';
+  const rulingSymbol    = (PLANET_SYMBOL[passport.rulingPlanet] ?? '★') + TV;
+  const rarityDisplay   = getRarityTier(passport.rarityPercent);
+  const rarityPct       = passport.rarityPercent.toFixed(1);
 
-  // V08 bonus: use qualitative tier label instead of raw float — consistent with page UI.
-  const rarityDisplay = getRarityTier(passport.rarityPercent);
-
-  // Capture for use in nested helper functions (TS narrowing doesn't cross function boundaries)
-  const passportElement = passport.element;
-  const passportRulingPlanet = passport.rulingPlanet;
+  // Capture for closures
+  const el         = passport.element;
+  const rulingName = passport.rulingPlanet;
 
   // -------------------------------------------------------------------------
-  // Shared Satori fragments — inline styles only, no Tailwind
-  // All fontFamily values use 'AstroSymbols, serif' to render Unicode glyphs.
+  // Shared style helpers
   // -------------------------------------------------------------------------
 
-  // Starfield background (shared across all formats)
-  const starfieldBg = (
+  // Deep navy background with multi-layer starfield radial gradients.
+  // Opacity raised to 20-22% so the gradients read against the dark base.
+  const starfield = (
     <div
       style={{
-        position: 'absolute',
-        inset: 0,
+        position: 'absolute', inset: 0, display: 'flex',
         background:
-          'radial-gradient(ellipse at 20% 30%, rgba(139,92,246,0.12) 0%, transparent 60%),' +
-          'radial-gradient(ellipse at 80% 70%, rgba(59,130,246,0.10) 0%, transparent 60%)',
-        display: 'flex',
+          `radial-gradient(ellipse at 14% 55%, rgba(139,92,246,0.22) 0%, transparent 50%),` +
+          `radial-gradient(ellipse at 86% 22%, rgba(59,130,246,0.19) 0%, transparent 50%),` +
+          `radial-gradient(ellipse at 50% 95%, rgba(16,185,129,0.11) 0%, transparent 40%),` +
+          `radial-gradient(ellipse at 50% -5%, ${elementStyle.color}1A 0%, transparent 45%)`,
       }}
     />
   );
 
-  // Border frame (shared, inset scales with format)
-  const borderInset = format === 'stories' ? '32px' : '24px';
-  const borderFrame = (
+  // Subtle inset border frame
+  const borderFrame = (inset: string) => (
     <div
       style={{
-        position: 'absolute',
-        inset: borderInset,
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '16px',
-        display: 'flex',
+        position: 'absolute', inset,
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: '16px', display: 'flex',
       }}
     />
   );
 
-  // Heading section
-  function HeadingSection({ subtitleSize, titleSize, lineWidth }: { subtitleSize: string; titleSize: string; lineWidth: string }) {
-    return (
+  // Rarity stamp: circular, hatched diagonal stripes, rotated 8°.
+  // The stamp is the visual hero of the OG image — sized prominently.
+  const RarityStamp = ({
+    size, top, right, labelPx, tierPx, pctPx,
+  }: {
+    size: number; top: number; right: number;
+    labelPx: number; tierPx: number; pctPx: number;
+  }) => (
+    <div
+      style={{
+        position: 'absolute', top: `${top}px`, right: `${right}px`,
+        width: `${size}px`, height: `${size}px`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        borderRadius: '50%',
+        // Hatched background — diagonal stripe pattern via CSS gradient
+        background:
+          'repeating-linear-gradient(-45deg,' +
+          '  rgba(139,92,246,0.18), rgba(139,92,246,0.18) 1.5px,' +
+          '  transparent 1.5px, transparent 9px)',
+        border: '2.5px solid rgba(139,92,246,0.78)',
+        // Satori supports transform:rotate on explicit-sized elements
+        transform: 'rotate(8deg)',
+      }}
+    >
       <div
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '6px',
-          zIndex: 1,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: '2px',
         }}
       >
-        <div
-          style={{
-            fontSize: subtitleSize,
-            letterSpacing: '4px',
-            color: 'rgba(255,255,255,0.4)',
-            textTransform: 'uppercase',
-            display: 'flex',
-            fontFamily: 'AstroSymbols, serif',
-          }}
-        >
-          SIDEREAL ASTROLOGY
+        <div style={{
+          fontSize: `${labelPx}px`, letterSpacing: '2px',
+          color: 'rgba(167,139,250,0.60)', display: 'flex',
+          textTransform: 'uppercase',
+        }}>
+          RARITY
         </div>
-        <div
-          style={{
-            fontSize: titleSize,
-            fontWeight: 700,
-            color: '#FFFFFF',
-            letterSpacing: '8px',
-            textTransform: 'uppercase',
-            display: 'flex',
-            fontFamily: 'AstroSymbols, serif',
-          }}
-        >
-          COSMIC PASSPORT
-        </div>
-        <div
-          style={{
-            width: lineWidth,
-            height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-            marginTop: '4px',
-            display: 'flex',
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Single sign column (Sun / Moon / ASC)
-  function SignColumn({ label, glyph, signName, glyphColor, glyphSize, labelSize, nameSize }: {
-    label: string; glyph: string; signName: string; glyphColor: string;
-    glyphSize: string; labelSize: string; nameSize: string;
-  }) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '8px',
-          fontFamily: 'AstroSymbols, serif',
-        }}
-      >
-        <div style={{ fontSize: labelSize, color: 'rgba(255,255,255,0.4)', display: 'flex' }}>
-          {label}
-        </div>
-        <div style={{ fontSize: glyphSize, color: glyphColor, display: 'flex' }}>
-          {glyph}
-        </div>
-        <div style={{ fontSize: nameSize, color: '#FFFFFF', fontWeight: 600, display: 'flex' }}>
-          {signName}
-        </div>
-      </div>
-    );
-  }
-
-  // Vertical divider
-  function Divider({ height }: { height: string }) {
-    return (
-      <div
-        style={{
-          width: '1px',
-          height,
-          background: 'rgba(255,255,255,0.12)',
-          display: 'flex',
-        }}
-      />
-    );
-  }
-
-  // Element badge
-  function ElementBadge({ fontSize, iconSize, padding }: { fontSize: string; iconSize: string; padding: string }) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '8px',
-          background: 'rgba(255,255,255,0.05)',
-          border: `1px solid ${elementStyle.color}40`,
-          borderRadius: '32px',
-          padding,
-          fontFamily: 'AstroSymbols, serif',
-        }}
-      >
-        <span style={{ fontSize: iconSize, color: elementStyle.color, display: 'flex' }}>
-          {elementStyle.symbol}
-        </span>
-        <span style={{ fontSize, color: elementStyle.color, fontWeight: 600, display: 'flex' }}>
-          {passportElement}
-        </span>
-      </div>
-    );
-  }
-
-  // Ruling planet badge
-  function RulerBadge({ fontSize, iconSize, padding }: { fontSize: string; iconSize: string; padding: string }) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '8px',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          borderRadius: '32px',
-          padding,
-          fontFamily: 'AstroSymbols, serif',
-        }}
-      >
-        <span style={{ fontSize: iconSize, color: '#E2C97E', display: 'flex' }}>
-          {planetSymbol}
-        </span>
-        <span style={{ fontSize, color: 'rgba(255,255,255,0.7)', display: 'flex' }}>
-          Ruled by{' '}
-        </span>
-        <span style={{ fontSize, color: '#FFFFFF', fontWeight: 600, display: 'flex' }}>
-          {passportRulingPlanet}
-        </span>
-      </div>
-    );
-  }
-
-  // Rarity badge
-  function RarityBadge({ fontSize, valueSize, padding }: { fontSize: string; valueSize: string; padding: string }) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '6px',
-          background: 'rgba(139,92,246,0.12)',
-          border: '1px solid rgba(139,92,246,0.3)',
-          borderRadius: '32px',
-          padding,
-          fontFamily: 'AstroSymbols, serif',
-        }}
-      >
-        <span style={{ fontSize, color: '#A78BFA', fontWeight: 700, display: 'flex' }}>
+        <div style={{
+          fontSize: `${tierPx}px`, fontWeight: 700,
+          color: '#A78BFA', display: 'flex',
+          textTransform: 'uppercase', letterSpacing: '0.5px',
+        }}>
           {rarityDisplay}
-        </span>
-      </div>
-    );
-  }
-
-  // Branding line
-  function Branding({ fontSize }: { fontSize: string }) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          zIndex: 1,
-        }}
-      >
-        <div style={{ fontSize, color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', display: 'flex', fontFamily: 'AstroSymbols, serif' }}>
-          estrevia.app
+        </div>
+        <div style={{
+          fontSize: `${pctPx}px`, fontWeight: 800,
+          color: '#FFFFFF', display: 'flex',
+        }}>
+          {rarityPct}%
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+
+  // Sign column: label → glyph (large, planetary color) → sign name
+  const SignCol = ({
+    label, glyph, signName, color, glyphPx, labelPx, namePx,
+  }: {
+    label: string; glyph: string; signName: string; color: string;
+    glyphPx: number; labelPx: number; namePx: number;
+  }) => (
+    <div
+      style={{
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', gap: '10px',
+      }}
+    >
+      <div style={{ fontSize: `${labelPx}px`, letterSpacing: '3px', color: 'rgba(255,255,255,0.32)', display: 'flex' }}>
+        {label}
+      </div>
+      <div style={{ fontSize: `${glyphPx}px`, color, display: 'flex', lineHeight: 1 }}>
+        {glyph}
+      </div>
+      <div style={{ fontSize: `${namePx}px`, fontWeight: 600, color, display: 'flex' }}>
+        {signName}
+      </div>
+    </div>
+  );
+
+  // Vertical divider between sign columns
+  const VDivider = ({ h }: { h: number }) => (
+    <div style={{ width: '1px', height: `${h}px`, background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+  );
+
+  // Element + ruling planet badge row
+  const BadgeRow = ({ px, iconPx, pad }: { px: number; iconPx: number; pad: string }) => (
+    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '14px' }}>
+      {/* Element */}
+      <div style={{
+        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '7px',
+        background: `${elementStyle.color}14`,
+        border: `1px solid ${elementStyle.color}3A`,
+        borderRadius: '32px', padding: pad,
+      }}>
+        <span style={{ fontSize: `${iconPx}px`, color: elementStyle.color, display: 'flex' }}>{elementStyle.symbol}</span>
+        <span style={{ fontSize: `${px}px`, color: elementStyle.color, fontWeight: 600, display: 'flex' }}>{el}</span>
+      </div>
+      {/* Ruling planet */}
+      <div style={{
+        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '7px',
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.09)',
+        borderRadius: '32px', padding: pad,
+      }}>
+        <span style={{ fontSize: `${iconPx}px`, color: rulingColor, display: 'flex' }}>{rulingSymbol}</span>
+        <span style={{ fontSize: `${px}px`, color: 'rgba(255,255,255,0.45)', display: 'flex' }}>Ruled by</span>
+        <span style={{ fontSize: `${px}px`, color: '#FFFFFF', fontWeight: 600, display: 'flex' }}>{rulingName}</span>
+      </div>
+    </div>
+  );
+
+  // Brand line — estrevia.app with ornament flanks
+  const Brand = ({ px }: { px: number }) => (
+    <div style={{
+      display: 'flex', flexDirection: 'row', alignItems: 'center',
+      justifyContent: 'center', gap: '10px',
+    }}>
+      <div style={{ fontSize: `${Math.round(px * 0.6)}px`, color: 'rgba(255,255,255,0.18)', display: 'flex' }}>✦</div>
+      <div style={{ fontSize: `${px}px`, color: 'rgba(255,255,255,0.52)', letterSpacing: '2px', display: 'flex' }}>
+        estrevia.app
+      </div>
+      <div style={{ fontSize: `${Math.round(px * 0.6)}px`, color: 'rgba(255,255,255,0.18)', display: 'flex' }}>✦</div>
+    </div>
+  );
 
   // -------------------------------------------------------------------------
-  // Layout JSX — conditional on format
+  // Layout JSX — branched on format
   // -------------------------------------------------------------------------
   let layoutJsx: React.ReactElement;
 
-  if (format === 'square') {
-    // 1080x1080 — vertical stack, centered, large glyphs
+  // ── OG 1200×630 ──────────────────────────────────────────────────────────
+  if (format === 'og') {
+    // Band heights: hero 40% + center 40% + footer 20% = 252 + 252 + 126
     layoutJsx = (
       <div
         style={{
-          width: `${dims.width}px`,
-          height: `${dims.height}px`,
+          width: '1200px', height: '630px',
           background: '#0A0A0F',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '64px 72px',
-          fontFamily: 'AstroSymbols, serif',
-          position: 'relative',
-          overflow: 'hidden',
+          display: 'flex', flexDirection: 'column',
+          position: 'relative', overflow: 'hidden',
+          fontFamily: 'AstroSymbols, sans-serif',
         }}
       >
-        {starfieldBg}
-        {borderFrame}
+        {starfield}
+        {borderFrame('20px')}
 
-        <HeadingSection subtitleSize="14px" titleSize="38px" lineWidth="140px" />
+        {/* Rarity stamp — absolute hero element, top-right, rotated 8° */}
+        <RarityStamp size={148} top={32} right={40} labelPx={10} tierPx={14} pctPx={26} />
 
-        {/* Signs — vertical stack */}
+        {/* Hero band — top 252px */}
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '32px',
-            zIndex: 1,
+            height: '252px', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '10px', zIndex: 1,
           }}
         >
-          <SignColumn label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign} glyphColor="#F5C842" glyphSize="72px" labelSize="22px" nameSize="24px" />
-          <div style={{ width: '100px', height: '1px', background: 'rgba(255,255,255,0.12)', display: 'flex' }} />
-          <SignColumn label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign} glyphColor="#C0C0C0" glyphSize="72px" labelSize="22px" nameSize="24px" />
-          <div style={{ width: '100px', height: '1px', background: 'rgba(255,255,255,0.12)', display: 'flex' }} />
-          <SignColumn label="↑ ASC" glyph={ascGlyph ?? '–'} signName={passport.ascendantSign ?? 'Unknown'} glyphColor={ascGlyph ? '#A78BFA' : 'rgba(255,255,255,0.2)'} glyphSize="72px" labelSize="22px" nameSize="24px" />
-        </div>
-
-        {/* Badges — vertical stack */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '12px',
-            zIndex: 1,
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
-            <ElementBadge fontSize="18px" iconSize="20px" padding="10px 24px" />
-            <RulerBadge fontSize="18px" iconSize="20px" padding="10px 24px" />
+          <div style={{
+            fontSize: '13px', letterSpacing: '5px',
+            color: 'rgba(255,255,255,0.32)', display: 'flex',
+            textTransform: 'uppercase',
+          }}>
+            Sidereal Astrology
           </div>
-          <RarityBadge fontSize="18px" valueSize="22px" padding="10px 24px" />
+          <div style={{
+            fontSize: '62px', fontWeight: 700, color: '#FFFFFF',
+            letterSpacing: '6px', display: 'flex',
+            textTransform: 'uppercase',
+          }}>
+            COSMIC BLUEPRINT
+          </div>
+          <div style={{
+            width: '200px', height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
+            display: 'flex', marginTop: '2px',
+          }} />
         </div>
 
-        <Branding fontSize="14px" />
+        {/* Center band — three signs row */}
+        <div
+          style={{
+            height: '252px', display: 'flex', flexDirection: 'row',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '0px', zIndex: 1,
+          }}
+        >
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <SignCol label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign}
+              color={LUMINARY_COLOR.sun} glyphPx={68} labelPx={16} namePx={22} />
+          </div>
+          <VDivider h={110} />
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <SignCol label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign}
+              color={LUMINARY_COLOR.moon} glyphPx={68} labelPx={16} namePx={22} />
+          </div>
+          <VDivider h={110} />
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <SignCol
+              label="↑ RISING"
+              glyph={ascGlyph ?? '–'}
+              signName={passport.ascendantSign ?? 'Unknown'}
+              color={ascGlyph ? LUMINARY_COLOR.asc : 'rgba(255,255,255,0.18)'}
+              glyphPx={68} labelPx={16} namePx={22}
+            />
+          </div>
+        </div>
+
+        {/* Footer band — bottom 126px */}
+        <div
+          style={{
+            height: '126px', display: 'flex', flexDirection: 'column',
+            justifyContent: 'center', alignItems: 'center',
+            gap: '14px', zIndex: 1,
+          }}
+        >
+          <BadgeRow px={15} iconPx={17} pad="7px 18px" />
+          <Brand px={18} />
+        </div>
       </div>
     );
+
+  // ── Stories 1080×1920 ─────────────────────────────────────────────────────
   } else if (format === 'stories') {
-    // 1080x1920 — full 9:16 vertical
-    // Top 1/3 = heading. Middle 1/3 = huge sign glyphs. Bottom 1/3 = badges + branding.
+    // Hero 35% (672px) + Signs 45% (864px) + Footer 20% (384px)
     layoutJsx = (
       <div
         style={{
-          width: `${dims.width}px`,
-          height: `${dims.height}px`,
+          width: '1080px', height: '1920px',
           background: '#0A0A0F',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '80px 64px',
-          fontFamily: 'AstroSymbols, serif',
-          position: 'relative',
-          overflow: 'hidden',
+          display: 'flex', flexDirection: 'column',
+          position: 'relative', overflow: 'hidden',
+          fontFamily: 'AstroSymbols, sans-serif',
         }}
       >
-        {starfieldBg}
-        {borderFrame}
+        {starfield}
+        {borderFrame('32px')}
 
-        {/* Top 1/3: heading */}
+        {/* Rarity stamp — absolute, overlaps hero/signs junction on right */}
+        <RarityStamp size={180} top={600} right={48} labelPx={12} tierPx={17} pctPx={32} />
+
+        {/* Hero band — top 35% = 672px */}
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '16px',
-            zIndex: 1,
+            height: '672px', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '14px', zIndex: 1,
           }}
         >
-          <HeadingSection subtitleSize="18px" titleSize="50px" lineWidth="180px" />
-        </div>
-
-        {/* Middle 1/3: huge sign glyphs */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '48px',
-            zIndex: 1,
-          }}
-        >
-          <SignColumn label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign} glyphColor="#F5C842" glyphSize="96px" labelSize="28px" nameSize="32px" />
-          <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.12)', display: 'flex' }} />
-          <SignColumn label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign} glyphColor="#C0C0C0" glyphSize="96px" labelSize="28px" nameSize="32px" />
-          <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.12)', display: 'flex' }} />
-          <SignColumn label="↑ ASC" glyph={ascGlyph ?? '–'} signName={passport.ascendantSign ?? 'Unknown'} glyphColor={ascGlyph ? '#A78BFA' : 'rgba(255,255,255,0.2)'} glyphSize="96px" labelSize="28px" nameSize="32px" />
-        </div>
-
-        {/* Bottom 1/3: badges + branding */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '20px',
-            zIndex: 1,
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-            <ElementBadge fontSize="24px" iconSize="28px" padding="14px 32px" />
-            <RulerBadge fontSize="24px" iconSize="28px" padding="14px 32px" />
-            <RarityBadge fontSize="24px" valueSize="30px" padding="14px 32px" />
+          <div style={{
+            fontSize: '16px', letterSpacing: '5px',
+            color: 'rgba(255,255,255,0.32)', display: 'flex',
+            textTransform: 'uppercase',
+          }}>
+            Sidereal Astrology
           </div>
-          <Branding fontSize="18px" />
+          <div style={{
+            fontSize: '72px', fontWeight: 700, color: '#FFFFFF',
+            letterSpacing: '5px', display: 'flex',
+            textTransform: 'uppercase',
+          }}>
+            COSMIC
+          </div>
+          <div style={{
+            fontSize: '72px', fontWeight: 700, color: '#FFFFFF',
+            letterSpacing: '5px', display: 'flex',
+            textTransform: 'uppercase',
+          }}>
+            BLUEPRINT
+          </div>
+          <div style={{
+            width: '180px', height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
+            display: 'flex', marginTop: '4px',
+          }} />
+        </div>
+
+        {/* Signs band — middle 45% = 864px, vertical stack */}
+        <div
+          style={{
+            height: '864px', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '0px', zIndex: 1,
+          }}
+        >
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <SignCol label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign}
+              color={LUMINARY_COLOR.sun} glyphPx={96} labelPx={22} namePx={30} />
+          </div>
+          <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <SignCol label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign}
+              color={LUMINARY_COLOR.moon} glyphPx={96} labelPx={22} namePx={30} />
+          </div>
+          <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <SignCol
+              label="↑ RISING"
+              glyph={ascGlyph ?? '–'}
+              signName={passport.ascendantSign ?? 'Unknown'}
+              color={ascGlyph ? LUMINARY_COLOR.asc : 'rgba(255,255,255,0.18)'}
+              glyphPx={96} labelPx={22} namePx={30}
+            />
+          </div>
+        </div>
+
+        {/* Footer band — bottom 20% = 384px */}
+        <div
+          style={{
+            height: '384px', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: '22px', zIndex: 1,
+          }}
+        >
+          <BadgeRow px={20} iconPx={24} pad="12px 28px" />
+          <Brand px={22} />
         </div>
       </div>
     );
+
+  // ── Square 1080×1080 ──────────────────────────────────────────────────────
   } else {
-    // Default: og (1200x630) — original layout
+    // Square: top heading + signs vertical + badges + brand
     layoutJsx = (
       <div
         style={{
-          width: `${dims.width}px`,
-          height: `${dims.height}px`,
+          width: '1080px', height: '1080px',
           background: '#0A0A0F',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '48px 64px',
-          fontFamily: 'AstroSymbols, serif',
-          position: 'relative',
-          overflow: 'hidden',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'space-between',
+          padding: '64px 72px',
+          position: 'relative', overflow: 'hidden',
+          fontFamily: 'AstroSymbols, sans-serif',
         }}
       >
-        {starfieldBg}
-        {borderFrame}
+        {starfield}
+        {borderFrame('24px')}
 
-        <HeadingSection subtitleSize="13px" titleSize="36px" lineWidth="120px" />
+        {/* Rarity stamp top-right */}
+        <RarityStamp size={144} top={40} right={56} labelPx={11} tierPx={15} pctPx={27} />
 
-        {/* Center: Sun / Moon / ASC row */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '40px',
-            zIndex: 1,
-          }}
-        >
-          <SignColumn label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign} glyphColor="#F5C842" glyphSize="56px" labelSize="20px" nameSize="22px" />
-          <Divider height="100px" />
-          <SignColumn label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign} glyphColor="#C0C0C0" glyphSize="56px" labelSize="20px" nameSize="22px" />
-          <Divider height="100px" />
-          <SignColumn label="↑ ASC" glyph={ascGlyph ?? '–'} signName={passport.ascendantSign ?? 'Unknown'} glyphColor={ascGlyph ? '#A78BFA' : 'rgba(255,255,255,0.2)'} glyphSize="56px" labelSize="20px" nameSize="22px" />
+        {/* Heading */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 1 }}>
+          <div style={{ fontSize: '12px', letterSpacing: '4px', color: 'rgba(255,255,255,0.32)', display: 'flex', textTransform: 'uppercase' }}>
+            Sidereal Astrology
+          </div>
+          <div style={{ fontSize: '38px', fontWeight: 700, color: '#FFFFFF', letterSpacing: '5px', display: 'flex', textTransform: 'uppercase' }}>
+            COSMIC BLUEPRINT
+          </div>
+          <div style={{ width: '140px', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)', display: 'flex' }} />
         </div>
 
-        {/* Lower badges row */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '24px',
-            zIndex: 1,
-          }}
-        >
-          <ElementBadge fontSize="18px" iconSize="20px" padding="10px 24px" />
-          <RulerBadge fontSize="18px" iconSize="20px" padding="10px 24px" />
-          <RarityBadge fontSize="18px" valueSize="22px" padding="10px 24px" />
+        {/* Signs vertical stack */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', zIndex: 1 }}>
+          <SignCol label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign}
+            color={LUMINARY_COLOR.sun} glyphPx={80} labelPx={20} namePx={26} />
+          <div style={{ width: '100px', height: '1px', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+          <SignCol label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign}
+            color={LUMINARY_COLOR.moon} glyphPx={80} labelPx={20} namePx={26} />
+          <div style={{ width: '100px', height: '1px', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
+          <SignCol
+            label="↑ RISING"
+            glyph={ascGlyph ?? '–'}
+            signName={passport.ascendantSign ?? 'Unknown'}
+            color={ascGlyph ? LUMINARY_COLOR.asc : 'rgba(255,255,255,0.18)'}
+            glyphPx={80} labelPx={20} namePx={26}
+          />
         </div>
 
-        <Branding fontSize="14px" />
+        {/* Badges + brand */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', zIndex: 1 }}>
+          <BadgeRow px={18} iconPx={20} pad="10px 22px" />
+          <Brand px={16} />
+        </div>
       </div>
     );
   }
@@ -592,7 +587,6 @@ export async function GET(
   return new ImageResponse(layoutJsx, {
     width: dims.width,
     height: dims.height,
-    // P0 fix: pass astro font buffer so Satori renders Unicode glyphs correctly
     fonts: [
       {
         name: 'AstroSymbols',
@@ -602,7 +596,6 @@ export async function GET(
       },
     ],
     headers: {
-      // P2 fix: immutable cache headers for successful 200 responses
       'Cache-Control': IMMUTABLE_1Y,
     },
   });
