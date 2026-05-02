@@ -26,17 +26,19 @@ The advertising agent has all upstream pieces in place:
 - Only 3 of 36 hook templates were used (8.3% angle coverage). Five high-potential templates remain untested: `identity-reveal-2`, `identity-reveal-6`, `authority-3`, `rarity-3`, `rarity-5`.
 - Two existing creatives have quality issues: `QgVH83CNEv1unzbRdOKJC` (artifact text-like marks in sky) and `V8a1sQF5SwR1P-OGOIrfo` (off-prompt planet collage).
 - The admin review page filters only `pending_review`, so approved/uploaded/live creatives are invisible.
+- The Meta launch **Campaign** and **EN/ES Ad Sets** do not yet exist in Meta Business Manager. Each Ad must attach to an existing Ad Set, so this is a hard precondition. Resolved by generating them via API (Agent 11) rather than manual UI setup.
 
 ---
 
 ## 2. Goals
 
-1. Build a production Meta Graph API adapter that fully implements both `MetaApiClient` and `MetaAdClient` interfaces (full S4 act-stream — upload + pause + scaleBudget + duplicate).
+1. Build a production Meta Graph API adapter that fully implements both `MetaApiClient` and `MetaAdClient` interfaces (full S4 act-stream — upload + pause + scaleBudget + duplicate + createCampaign + createAdSet).
 2. Wire the adapter into the admin approve route (auto-upload at approval) and into the act-stream runtime (replace mock when `NODE_ENV=production` and `DRY_RUN!=true`).
-3. Ship a bulk-publish CLI to migrate the 15 already-approved creatives (after rejecting 2 bad ones) into Meta as paused ads.
-4. Expand creative coverage: generate 20 new creatives across 5 untested templates.
-5. Fix the admin UX bug so all status values are visible with a filter.
-6. Decompose the work into 10 parallel agent tasks.
+3. Ship a one-off setup CLI that creates the launch Campaign + EN/ES Ad Sets via Meta API (founder copies returned IDs to Vercel env vars).
+4. Ship a bulk-publish CLI + admin endpoint + UI button to migrate the 15 already-approved creatives (after rejecting 2 bad ones) and 20 new ones into Meta as paused ads.
+5. Expand creative coverage: generate 20 new creatives across 5 untested templates.
+6. Fix the admin UX bug so all status values are visible with a filter.
+7. Decompose the work into 11 parallel agent tasks (one extra for the campaign setup script).
 
 ## 3. Non-goals (out of scope)
 
@@ -79,10 +81,11 @@ The advertising agent has all upstream pieces in place:
 
 ### Entry points into the adapter
 
-1. **`src/app/api/admin/creatives/[id]/approve/route.ts`** — calls `uploadClient.uploadCreative(...)` after the approval `UPDATE`. Auto-upload at approval going forward.
-2. **`scripts/advertising/publish-approved.ts`** — one-off CLI for already-approved creatives without an `meta_ad_id`. Idempotent.
-3. **`src/app/api/admin/creatives/publish-batch/route.ts`** — admin endpoint mirroring the CLI for UI button (optional).
-4. **`src/modules/advertising/act/index.ts`** runtime factory — returns the real `MetaAdManagementClient` when `NODE_ENV === 'production'` AND `ADVERTISING_AGENT_DRY_RUN !== 'true'`. Mock in tests.
+1. **`scripts/advertising/setup-meta-campaign.ts`** — one-off CLI run by founder before any ads are launched. Calls `adClient.createCampaign(...)` + `adClient.createAdSet(...)` × 2 (EN, ES). Prints IDs and the exact `vercel env add` commands to set `META_LAUNCH_CAMPAIGN_ID`, `META_LAUNCH_ADSET_ID_EN`, `META_LAUNCH_ADSET_ID_ES`.
+2. **`src/app/api/admin/creatives/[id]/approve/route.ts`** — calls `uploadClient.uploadCreative(...)` after the approval `UPDATE`. Auto-upload at approval going forward.
+3. **`scripts/advertising/publish-approved.ts`** — one-off CLI for already-approved creatives without an `meta_ad_id`. Idempotent. Shares logic with the admin endpoint via a `publishApprovedService` module.
+4. **`src/app/api/admin/creatives/publish-batch/route.ts`** — admin endpoint exposing the same `publishApprovedService` for the UI button on the review page.
+5. **`src/modules/advertising/act/index.ts`** runtime factory — returns the real `MetaAdManagementClient` when `NODE_ENV === 'production'` AND `ADVERTISING_AGENT_DRY_RUN !== 'true'`. Mock in tests.
 
 ### What does not change
 
@@ -156,15 +159,42 @@ class MetaUploadClient extends MetaGraphApiBase implements MetaApiClient {
 
 ```typescript
 class MetaAdManagementClient extends MetaGraphApiBase implements MetaAdClient {
+  // Existing interface methods (act stream, runs when DRY_RUN=false)
   async pauseAd(adId): Promise<void>;
   async updateAdSetBudget(adSetId, dailyBudgetCents): Promise<void>;
   async duplicateAd(adId, overrides): Promise<{ ad_id: string }>;
+
+  // Setup methods (used once during campaign bootstrap)
+  async createCampaign(opts: {
+    name: string;
+    objective: 'OUTCOME_TRAFFIC' | 'OUTCOME_AWARENESS';
+    status: 'PAUSED';
+  }): Promise<{ campaign_id: string }>;
+
+  async createAdSet(opts: {
+    campaignId: string;
+    name: string;
+    locale: 'en' | 'es';
+    dailyBudgetCents: number;
+    targeting: {
+      countries: string[];          // EN: ['US','GB','CA','AU']; ES: LATAM list
+      ageMin: number; ageMax: number;
+      interests?: string[];          // optional MVP
+    };
+    optimizationGoal: 'LINK_CLICKS' | 'LANDING_PAGE_VIEWS';
+    billingEvent: 'IMPRESSIONS' | 'LINK_CLICKS';
+    status: 'PAUSED';
+  }): Promise<{ adset_id: string }>;
 }
 ```
 
 - `pauseAd`: `POST /<ad_id>` body `{ status: 'PAUSED' }`.
 - `updateAdSetBudget`: `POST /<adset_id>` body `{ daily_budget: <cents> }`.
 - `duplicateAd`: uses Meta's native copy endpoint `POST /<ad_id>/copies` — atomic copy with overrides.
+- `createCampaign`: `POST /act_<id>/campaigns` — returns `campaign_id`.
+- `createAdSet`: `POST /act_<id>/adsets` — returns `adset_id`. Targeting is JSON-encoded per Meta's [Targeting Specs](https://developers.facebook.com/docs/marketing-api/audiences/reference/targeting-specs/).
+
+`MetaAdClient` interface in `act/meta-marketing.ts` will be extended to include `createCampaign` + `createAdSet` (interface change, but additive — existing mock just adds two stubs).
 
 ### 5.5 `meta-graph-api/index.ts`
 
@@ -175,15 +205,17 @@ export function createMetaAdClient(): MetaAdClient;
 
 Reads `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID` from env. In test mode (`process.env.VITEST=true` or `NODE_ENV=test`) throws `Error('Use mock in tests')` to prevent accidental real-API calls in unit tests.
 
-### 5.6 Modifications to existing files
+### 5.6 Modifications + new files
 
 | File | Change |
 |---|---|
 | `src/app/api/admin/creatives/[id]/approve/route.ts` | After `UPDATE status='approved'`, call `createMetaUploadClient().uploadCreative(...)`, then `UPDATE status='uploaded', meta_ad_id`. Also fix race: `UPDATE … WHERE id=<id> AND status='pending_review' RETURNING id` |
 | `src/modules/advertising/act/index.ts` | Add `getMetaAdClient()` factory; returns real adapter in production+notDryRun, mock in tests/dev |
-| `src/app/admin/advertising/creatives/review/page.tsx` | Replace fixed `eq(status, 'pending_review')` with dropdown filter `?status=pending_review|approved|uploaded|live|paused|rejected|all`, default `pending_review` |
-| `scripts/advertising/publish-approved.ts` | NEW: reads `status='approved' AND meta_ad_id IS NULL` rows; batch upload via `createMetaUploadClient()`; idempotent re-run safe |
-| `src/app/api/admin/creatives/publish-batch/route.ts` | NEW (optional): admin endpoint mirroring CLI for UI |
+| `src/modules/advertising/act/meta-marketing.ts` | Extend `MetaAdClient` interface with `createCampaign` + `createAdSet` (additive change; existing tests gain 2 mock stubs) |
+| `src/app/admin/advertising/creatives/review/page.tsx` | Replace fixed `eq(status, 'pending_review')` with dropdown filter `?status=pending_review|approved|uploaded|live|paused|rejected|all`, default `pending_review`. Add **"Publish all approved" button** that POSTs to `/api/admin/creatives/publish-batch` and shows progress |
+| `scripts/advertising/publish-approved.ts` | **NEW**: reads `status='approved' AND meta_ad_id IS NULL` rows; batch upload via `createMetaUploadClient()`; idempotent re-run safe; `--dry-run` and `--limit=N` flags |
+| `scripts/advertising/setup-meta-campaign.ts` | **NEW** (one-off): creates Campaign + EN AdSet + ES AdSet via Meta API; prints IDs and exact `vercel env add` commands for the founder to run |
+| `src/app/api/admin/creatives/publish-batch/route.ts` | **NEW**: admin endpoint mirroring CLI logic; same idempotency guard; returns `{uploaded, failed, skipped}` summary for UI display |
 
 ---
 
@@ -372,7 +404,7 @@ Acceptance gate: minimum 1 test per public method + each edge case from §7.2.
 
 ---
 
-## 9. Decomposition into 10 parallel agent tasks
+## 9. Decomposition into 11 parallel agent tasks
 
 ### 9.1 Task table
 
@@ -380,40 +412,42 @@ Acceptance gate: minimum 1 test per public method + each edge case from §7.2.
 |---|---|---|---|---|---|
 | 1 | `backend` | Foundation: HTTP wrapper, auth, retry, rate limit | `meta-graph-api/{base,errors,types}.ts` + `base.test.ts` | — | 45-60 min |
 | 2 | `backend` | `MetaUploadClient` — 3-step upload | `meta-graph-api/upload-client.ts` + test | 1 (types only) | 60-90 min |
-| 3 | `backend` | `MetaAdManagementClient` — pause + scale + duplicate | `meta-graph-api/ad-client.ts` + test | 1 (types only) | 60-90 min |
+| 3 | `backend` | `MetaAdManagementClient` — pause + scale + duplicate + **createCampaign + createAdSet**; also extends `MetaAdClient` interface in `act/meta-marketing.ts` | `meta-graph-api/ad-client.ts` + `act/meta-marketing.ts` (interface extension) + tests + mock stubs | 1 (types only) | 90-120 min |
 | 4 | `backend` | Factory + integration test (smoke through factory) | `meta-graph-api/index.ts` + `integration.test.ts` | 2, 3 | 30-45 min |
 | 5 | `backend` | Wire upload into admin approve route + race-fix `WHERE status='pending_review' RETURNING id` | `src/app/api/admin/creatives/[id]/approve/route.ts` + tests | 2 | 30-45 min |
-| 6 | `backend` | Bulk publish CLI with idempotency guard (search-before-upload) | `scripts/advertising/publish-approved.ts` + test | 2, 4 | 60-75 min |
+| 6 | `backend` | Bulk publish: CLI script + admin POST endpoint (shared service module). Both call same `publishApprovedService(deps)` function with idempotency guard | `scripts/advertising/publish-approved.ts` + `src/app/api/admin/creatives/publish-batch/route.ts` + shared service + tests | 2, 4 | 90-120 min |
 | 7 | `backend` | Wire `getMetaAdClient()` factory into act-stream runtime; env-gate | `src/modules/advertising/act/index.ts` (modify) + test | 3, 4 | 30-45 min |
 | 8 | `meta-ads` | Generate creatives: `identity-reveal-2` + `identity-reveal-6` (4 EN + 4 ES = 8 ads) | existing CLI run + commit log to `docs/advertising/` | — | 10-20 min |
 | 9 | `meta-ads` | Generate creatives: `authority-3` + `rarity-3` + `rarity-5` (6 EN + 6 ES = 12 ads) | existing CLI run + commit log | — | 15-25 min |
-| 10 | `frontend` | Admin UX: status-filter dropdown in `/admin/advertising/creatives/review` + reject 2 bad creatives via `/api/admin/creatives/<id>/reject` | `src/app/admin/advertising/creatives/review/page.tsx` + reject script | — | 30-45 min |
+| 10 | `frontend` | Admin UX: status-filter dropdown + **"Publish all approved" button** wired to `/api/admin/creatives/publish-batch` + reject 2 bad creatives via `/api/admin/creatives/<id>/reject` | `src/app/admin/advertising/creatives/review/page.tsx` (modify) + new client component for the button + reject script | 6 (for endpoint to call) | 60-75 min |
+| 11 | `backend` | **NEW** — Setup CLI: creates Campaign + EN AdSet + ES AdSet via Meta API; prints IDs and exact `vercel env add` commands for the founder | `scripts/advertising/setup-meta-campaign.ts` + test | 3 (needs createCampaign + createAdSet methods) | 45-60 min |
 
 ### 9.2 Dependency waves
 
 ```
-Wave 1 (T+0)                — 4 agents in parallel
+Wave 1 (T+0)                — 3 agents in parallel
    ├── Agent 1:  base + errors + types
    ├── Agent 8:  gen creatives batch A (identity-reveal-2 + -6)
-   ├── Agent 9:  gen creatives batch B (authority-3 + rarity-3 + rarity-5)
-   └── Agent 10: admin UX + reject bad creatives
+   └── Agent 9:  gen creatives batch B (authority-3 + rarity-3 + rarity-5)
 
 Wave 2 (T+45-60m)           — 2 agents in parallel (after Agent 1 publishes types)
    ├── Agent 2:  MetaUploadClient
-   └── Agent 3:  MetaAdManagementClient
+   └── Agent 3:  MetaAdManagementClient (incl. createCampaign + createAdSet)
 
-Wave 3 (T+1.5-2h)           — up to 2 agents in parallel
-   ├── Agent 5:  approve-route wire    (starts as soon as Agent 2 done)
-   └── Agent 4:  factory + integration (needs Agent 2 AND Agent 3 done)
+Wave 3 (T+1.5-2h)           — up to 3 agents in parallel
+   ├── Agent 5:  approve-route wire    (needs Agent 2)
+   ├── Agent 4:  factory + integration (needs Agent 2 AND Agent 3)
+   └── Agent 11: setup-meta-campaign script (needs Agent 3)
 
-Wave 4 (T+2-2.5h)           — 2 agents in parallel (after Agent 4)
-   ├── Agent 6:  bulk-publish CLI      (needs Agent 2 AND Agent 4)
-   └── Agent 7:  act runtime factory   (needs Agent 3 AND Agent 4)
+Wave 4 (T+2-3h)             — 3 agents in parallel (after Agent 4 + Agent 6)
+   ├── Agent 6:  bulk-publish CLI + admin endpoint (needs Agent 2 AND Agent 4)
+   ├── Agent 7:  act runtime factory   (needs Agent 3 AND Agent 4)
+   └── Agent 10: admin UX + Publish button + reject bad creatives (needs Agent 6 endpoint)
 
-T+3-4h                      — all 10 done → manual smoke run
+T+3-4h                      — all 11 done → manual smoke run
 ```
 
-**Wall-clock estimate: 3-4 hours** until CLI is ready for bulk-publish. Manual smoke (1 ad first, verify in Meta UI, then bulk) adds 30-60 min.
+**Wall-clock estimate: 3-4 hours** until CLI/endpoint are ready for bulk-publish. Manual smoke (run setup script → 1 ad → verify in Meta UI → bulk) adds 30-60 min. Note that Agent 10 (UI button) moved from Wave 1 → Wave 4 because it now needs the `publish-batch` endpoint to call.
 
 ### 9.3 Types-first development
 
@@ -424,13 +458,23 @@ Agent 1 publishes `types.ts` with all Meta API response shapes + interface signa
 ## 10. Launch sequence (after agents complete)
 
 ```
-[T+4h] All 10 agent PRs/commits merged into main
+[T+4h] All 11 agent PRs/commits merged into main
    │
    ▼
-[T+4h] Production deploy (vercel --prod)
+[T+4h] Founder runs setup-meta-campaign.ts locally
+   │   $ npx tsx scripts/advertising/setup-meta-campaign.ts
+   │   Output: campaign_id=cmp_xyz, adset_id_en=as_abc, adset_id_es=as_def
+   │   Output also prints exact commands:
+   │     vercel env add META_LAUNCH_CAMPAIGN_ID production  (paste cmp_xyz)
+   │     vercel env add META_LAUNCH_ADSET_ID_EN production  (paste as_abc)
+   │     vercel env add META_LAUNCH_ADSET_ID_ES production  (paste as_def)
+   │   Founder runs those 3 commands.
    │
    ▼
-[T+4h+5m] Smoke run #1: dry-run preview
+[T+4h+5m] Production deploy (vercel --prod) with updated env vars
+   │
+   ▼
+[T+4h+10m] Smoke run #1: dry-run preview
    │   $ npx tsx scripts/advertising/publish-approved.ts --dry-run
    │   Output: "Would upload up to 35 creatives." (15 existing approved after
    │   rejecting 2 of original 17, + up to 20 new approved by founder).
@@ -438,30 +482,32 @@ Agent 1 publishes `types.ts` with all Meta API response shapes + interface signa
    │   Inspect payload sample by eye
    │
    ▼
-[T+4h+10m] Smoke run #2: 1 ad
+[T+4h+15m] Smoke run #2: 1 ad
    │   $ npx tsx scripts/advertising/publish-approved.ts --limit=1
+   │   (or click "Publish all approved" in admin UI with limit=1 — both routes work)
    │
    ▼
-[T+4h+15m] Manual verify in Meta Ads Manager
+[T+4h+20m] Manual verify in Meta Ads Manager
    │   • Ad exists, status=PAUSED ✓
    │   • Asset URL renders correctly ✓
    │   • Copy + CTA display ✓
    │   • UTM in link_url correct ✓
-   │   • adset_id linkage correct ✓
+   │   • adset_id linkage correct (under our launch campaign) ✓
    │
    ▼
-[T+4h+20m] Bulk publish remaining (up to 34)
+[T+4h+25m] Bulk publish remaining (up to 34)
    │   $ npx tsx scripts/advertising/publish-approved.ts
+   │   (or "Publish all approved" admin button)
    │   ~30 sec per ad → ~17 min total worst case
    │
    ▼
-[T+4h+35m] Verify in Meta Ads Manager: up to 35 paused ads (1 smoke + bulk rest)
+[T+4h+40m] Verify in Meta Ads Manager: up to 35 paused ads (1 smoke + bulk rest)
    │
    ▼
-[T+4h+40m] Founder un-pauses 6-12 best ads in Meta UI ($20/day cap stays)
+[T+4h+45m] Founder un-pauses 6-12 best ads in Meta UI ($20/day cap stays)
    │
    ▼
-[T+4h+45m] LIVE — ads run paid traffic
+[T+4h+50m] LIVE — ads run paid traffic
    │   DRY_RUN remains true (agent observes only for first 24-48h)
    │
    ▼
@@ -475,8 +521,9 @@ Agent 1 publishes `types.ts` with all Meta API response shapes + interface signa
 
 | Level | Trigger | Action | Time |
 |---|---|---|---|
+| Wrong campaign/adset created | setup-meta-campaign.ts ran with bad targeting/budget | Manually archive Campaign in Meta Business Manager UI; re-run setup script with corrected params; copy new IDs to Vercel env; redeploy | 10 min |
 | Single creative | One creative is bad / Meta disapproved | `POST /api/admin/creatives/<id>/reject` → status='rejected'; archive in Meta UI | 1 min |
-| Bulk publish broke | CLI failed mid-run | Idempotent — fix env, re-run | 5 min |
+| Bulk publish broke | CLI/endpoint failed mid-run | Idempotent — fix env, re-run | 5 min |
 | Many orphans in Meta | Visible after batch | Manual cleanup in Meta Business Manager UI | 30 min manual |
 | Adapter breaks everything | Production-error storm, Sentry alert flood | Kill switch: `vercel env rm ADVERTISING_AGENT_ENABLED && add false`; redeploy | 2 min |
 | Catastrophic spend | Creative accidentally launched as ACTIVE, Meta burning budget | Meta Ads Manager → Pause All; debug afterwards | 1 min (UI) |
@@ -491,13 +538,15 @@ Agent 1 publishes `types.ts` with all Meta API response shapes + interface signa
 1. `npm test` green (existing 1098+ tests + new tests from agents).
 2. `npm run typecheck` (or equivalent `tsc --noEmit`) passes.
 3. `npm run advertising:pre-launch-check` still 23/23 passed.
-4. Adapter implements both interfaces — TS compiler enforces.
-5. `publish-approved.ts --dry-run` prints correct preview without errors.
-6. One creative successfully appears in Meta Ads Manager as paused with all fields correct (asset, copy, CTA, UTM in link, adset linkage).
-7. 20 new creatives generated and approved (after admin click) — visible at `/admin/advertising/creatives/review?status=approved`.
-8. 2 bad creatives in DB at `status='rejected'` (`QgVH83CNEv1unzbRdOKJC`, `V8a1sQF5SwR1P-OGOIrfo`).
-9. Admin review page shows status filter dropdown; default `pending_review`, switchable to all values including `all`.
-10. Production deploy successful; ENABLED=true, DRY_RUN=true; cron handlers continue triggering Telegram alerts.
+4. Adapter implements both interfaces (`MetaApiClient` + extended `MetaAdClient` with `createCampaign` + `createAdSet`) — TS compiler enforces.
+5. `setup-meta-campaign.ts` runs end-to-end against Meta API and creates a Campaign + 2 Ad Sets (visible in Meta Business Manager UI, all in `PAUSED` status). IDs printed plus `vercel env add` commands.
+6. After founder runs the printed `vercel env add` commands and redeploys, `publish-approved.ts --dry-run` prints correct preview without errors.
+7. One creative successfully appears in Meta Ads Manager as paused with all fields correct (asset, copy, CTA, UTM in link, adset linkage to our launch Campaign/AdSet).
+8. Admin "Publish all approved" button works: triggers the endpoint, shows progress, ends with summary `{uploaded, failed, skipped}`. CLI and endpoint produce the same result for the same DB state (idempotency).
+9. 20 new creatives generated and approved (after admin click) — visible at `/admin/advertising/creatives/review?status=approved`.
+10. 2 bad creatives in DB at `status='rejected'` (`QgVH83CNEv1unzbRdOKJC`, `V8a1sQF5SwR1P-OGOIrfo`).
+11. Admin review page shows status filter dropdown; default `pending_review`, switchable to all values including `all`.
+12. Production deploy successful; ENABLED=true, DRY_RUN=true; cron handlers continue triggering Telegram alerts.
 
 ---
 
@@ -528,8 +577,10 @@ Agent 1 publishes `types.ts` with all Meta API response shapes + interface signa
 
 ---
 
-## 15. Open questions for plan phase (writing-plans)
+## 15. Resolutions log
 
-1. Are the launch adsets (`META_LAUNCH_ADSET_ID_EN`, `META_LAUNCH_ADSET_ID_ES`) preconfigured in Meta Business Manager? If not, manual setup is a precondition before agents run.
-2. Should `publish-batch` admin endpoint (item 4 in §4) be in this iteration, or deferred? Currently marked optional.
-3. Should we add a `dry-run-review-day7-report.md` reminder doc in this iteration, or rely on the scheduled remote agent (`trig_012WMFuy4qxchNRKhtu14YUu`)?
+Resolutions captured during brainstorming for traceability:
+
+1. **Launch adsets** — Not preconfigured in Meta Business Manager. **Resolved:** generate Campaign + EN/ES Ad Sets via Meta API in a one-off setup CLI (`setup-meta-campaign.ts`). Agent 11 owns this. See §5.6 + §10 step 1.
+2. **`publish-batch` admin endpoint** — **In scope.** CLI and endpoint share the same service module to avoid duplication. UI gets a "Publish all approved" button on the review page. Agent 6 owns CLI + endpoint; Agent 10 owns the button. See §5.6 + §9.1 row 6 + row 10.
+3. **Day-7 review reminder doc** — **Not in scope.** Relying on the existing scheduled remote agent (`trig_012WMFuy4qxchNRKhtu14YUu`) which fires on 2026-05-09 14:00 UTC and opens a GitHub issue with the manual review checklist.
