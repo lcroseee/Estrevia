@@ -33,6 +33,9 @@ npm-debug.log*
 .claude/scheduled_tasks.lock
 .claude/worktrees/
 
+# advertising launch artifacts (local-only, source of truth in DB)
+tmp/
+
 # playwright MCP local artifacts
 .playwright-mcp/
 

@@ -74,7 +74,7 @@ function makeEvent(overrides?: Partial<MetaDisapprovalEvent>): MetaDisapprovalEv
     reason: 'PERSONAL_ATTRIBUTES',
     policy_summary: 'Ad targets personal attributes',
     hook_archetype: 'identity_reveal',
-    occurred_at: new Date('2026-04-26T10:00:00Z'),
+    occurred_at: new Date(),
     ...overrides,
   };
 }

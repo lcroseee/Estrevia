@@ -13,6 +13,6 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    exclude: ['tests/e2e/**', 'node_modules/**'],
+    exclude: ['tests/e2e/**', 'node_modules/**', '.claude/worktrees/**'],
   },
 });
