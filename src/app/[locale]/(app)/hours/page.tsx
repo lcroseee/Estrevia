@@ -8,13 +8,12 @@ import { PlanetaryHoursGrid } from '@/modules/astro-engine/components/PlanetaryH
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.hours');
+  const locale = await getLocale();
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/hours',
-    locale: locale as 'en' | 'es',
     keywords: [
       'planetary hours',
       'chaldean hours',
@@ -22,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
       'planet of the hour',
       'sidereal planetary hours',
     ],
+  locale: locale as 'en' | 'es',
   });
 }
 
