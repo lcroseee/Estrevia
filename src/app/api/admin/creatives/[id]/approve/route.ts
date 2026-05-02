@@ -138,11 +138,20 @@ export async function POST(
     // Meta upload failed — log but DO NOT revert DB status.
     // Row stays at status='approved', meta_ad_id=NULL so the bulk-publish CLI
     // (scripts/advertising/publish-approved.ts) can pick it up for retry.
+    //
+    // Always log to stderr first (visible in Vercel logs even when Sentry
+    // capture fails or instrumentation isn't initialised yet on cold start).
+    console.error(
+      '[admin/creatives/approve] meta upload failed for', id,
+      'name=', err instanceof Error ? err.constructor.name : typeof err,
+      'message=', err instanceof Error ? err.message : String(err),
+      'stack=', err instanceof Error ? err.stack : undefined,
+    );
     try {
       const { captureException } = await import('@sentry/nextjs');
       captureException(err, { tags: { area: 'meta-upload', creative_id: id } });
-    } catch {
-      console.error('[admin/creatives/approve] meta upload failed:', err);
+    } catch (sentryErr) {
+      console.error('[admin/creatives/approve] sentry capture also failed:', sentryErr);
     }
 
     return NextResponse.json(
