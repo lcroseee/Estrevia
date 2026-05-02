@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo/metadata';
 import { JsonLdScript, breadcrumbSchema, faqSchema } from '@/shared/seo/json-ld';

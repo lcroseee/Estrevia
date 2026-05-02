@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';

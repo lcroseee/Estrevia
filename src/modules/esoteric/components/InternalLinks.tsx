@@ -5,7 +5,7 @@
  * Renders 3-5 contextual links with descriptive anchor text.
  */
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getRelatedPages } from '@/shared/seo';
 

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, organizationSchema, softwareAppSchema, howToSchema, faqSchema } from '@/shared/seo';
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';

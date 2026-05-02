@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import type { Metadata } from 'next';
 import { headers, cookies } from 'next/headers';
 import { eq } from 'drizzle-orm';

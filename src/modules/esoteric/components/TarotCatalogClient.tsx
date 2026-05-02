@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { TarotCard } from './TarotCard';
 import { DailyCard } from './DailyCard';
 import type { TarotCardData } from './TarotCard';

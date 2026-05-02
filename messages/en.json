@@ -102,6 +102,10 @@
     "faq2A": "No. Moon phase is the angular gap between the Sun and Moon — identical in both systems. The ~24° Lahiri ayanamsa offset shifts the Moon's zodiac sign but not its phase angle.",
     "faq3Q": "How accurate are the new and full moon dates?",
     "faq3A": "Dates are calculated with Swiss Ephemeris using the Moshier analytical ephemeris, accurate to ±0.01°. The event time is narrowed by binary search to within ±1 minute.",
+    "faq4Q": "What is a void-of-course Moon?",
+    "faq4A": "The Moon is void of course (VOC) from its last major aspect in a sign until it enters the next sign. This window can last minutes or several hours. Traditional practice treats VOC periods as unfavorable for initiating important matters — decisions made then often require revision. The Moon changes sign roughly every 2.3 days, so VOC windows occur frequently throughout the month.",
+    "faq5Q": "Does the Moon's zodiac sign affect its phase energy?",
+    "faq5A": "The sign colors the quality of the phase rather than its strength. A full Moon in sidereal Scorpio concentrates emotional intensity very differently than a full Moon in sidereal Taurus, even though both represent the same maximum illumination point. The phase sets the volume; the sign shapes the texture of that energy.",
     "breadcrumb": "Moon Phase",
     "freeMonthOnly": "Free plan: current month only.",
     "unlockFullCalendar": "Unlock full calendar",
@@ -215,6 +219,10 @@
     "faq2A": "The day is split into 12 equal parts between sunrise and sunset (day hours) and 12 equal parts between sunset and the next sunrise (night hours). Hour length varies by season and latitude. The first hour of each day is ruled by the weekday planet — Sun on Sunday, Moon on Monday, Mars on Tuesday, Mercury on Wednesday, Jupiter on Thursday, Venus on Friday, Saturn on Saturday.",
     "faq3Q": "Sidereal vs tropical — does it matter?",
     "faq3A": "Planetary hours are based on sunrise/sunset times, not zodiac positions, so they are identical in both sidereal and tropical astrology. The Chaldean sequence (Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon) is independent of ayanamsa.",
+    "faq4Q": "Which planetary hour is best for creative work?",
+    "faq4A": "Venus hours favor creative work, artistic projects, and relationship conversations — any context where harmony and beauty serve the outcome. Sun hours suit public-facing creative acts where confidence and authority matter. Mercury hours are better for the analytical side of creative work: editing, structuring, and communicating ideas clearly.",
+    "faq5Q": "Can I use planetary hours without knowing my natal chart?",
+    "faq5A": "Yes. Planetary hours are a universal timing system — they depend on sunrise and sunset at your location, not on your birth data. Knowing your natal chart adds another layer (for example, you might prioritize hours ruled by your chart ruler), but the basic hour-selection practice requires only your current location and time.",
     "breadcrumb": "Planetary Hours",
     "freeTodayOnly": "Free plan: today only.",
     "unlockAnyDate": "Unlock any date",
@@ -1376,5 +1384,45 @@
   "disclaimer": {
     "text": "Astrology is for personal reflection and entertainment purposes only. Nothing on this site constitutes medical, financial, legal, or psychological advice. Always consult a qualified professional for decisions affecting your health, finances, or wellbeing.",
     "ariaLabel": "Legal disclaimer"
+  },
+  "educational": {
+    "hours": {
+      "sectionAria": "Educational content about planetary hours",
+      "whatAreThey": {
+        "heading": "What Are Planetary Hours?",
+        "body": "The Chaldean system of planetary hours originates in Hellenistic astrology of the 2nd century BCE, formalized by Greek astronomers who mapped the seven classical planets to every hour of the day and night. Each day divides into 24 unequal segments — 12 from sunrise to sunset (day hours) and 12 from sunset to the next sunrise (night hours). The sequence cycles continuously in Chaldean order: Saturn, Jupiter, Mars, Sun, Venus, Mercury, Moon — then repeats. This is not an abstract pattern; it encodes a specific cosmological model where planetary spheres nest concentrically, each governing one step in the cycle. The first hour of each day is always ruled by the weekday's planet: Saturn governs Saturday's first hour, giving the day its name in most European languages (Samedi in French, Sabado in Spanish, Samstag in German). When that hour ends, the next planet in the Chaldean sequence takes over, cycling through all 24 hours. The result is a timing system that has driven magical and astrological practice for over two thousand years — still used today without any modification to the original sequence."
+      },
+      "howToUse": {
+        "heading": "How to Use Planetary Hours",
+        "body": "Choose the planet whose qualities match your intended action, then plan that action for its ruling hour. Venus hours favor creative work, relationship conversations, and artistic projects — any context where harmony serves the outcome. Mercury hours sharpen communication: write proposals, sign contracts, or open negotiations during Mercury's window. Saturn hours reward structured effort — study, long-term planning, technical work, or any task requiring sustained concentration. Mars hours suit physical activity, competitive situations, or decisive action where momentum matters. Jupiter hours open well to expansion: pitching ideas, beginning ventures that need goodwill, or any move that benefits from optimism and growth energy. Sun hours carry authority — ideal for public-facing actions or moments where confidence and visibility matter. Moon hours are receptive, good for emotional conversations, creative absorption, or anything that benefits from flexibility rather than force. These planet-action correspondences align with the same 777 table that maps planets to colors, stones, and deities — the hour system is one expression of a much larger symbolic framework."
+      },
+      "dayRuler": {
+        "heading": "Day Ruler vs. Hour Ruler",
+        "body": "Every day carries two planetary governors: the day ruler and the current hour ruler — and they are not always the same planet. The day ruler is the planet that owns the entire calendar day. Sun rules Sunday, Moon rules Monday, Mars rules Tuesday (visible in French mardi and Italian martedì), Mercury rules Wednesday (mercredi, miércoles), Jupiter rules Thursday (jeudi, jueves), Venus rules Friday (vendredi, viernes), Saturn rules Saturday. This naming convention, present across Indo-European languages, derives directly from the planetary hours system: whichever planet rules the first hour of the day gives that day its name. The hour ruler changes every hour throughout the day, cycling through all seven planets in Chaldean order. During a Sunday ruled by the Sun, the early morning hours may fall under Mars or Jupiter — the hour ruler is distinct from the day's solar character. Practitioners often read both layers together: a Jupiter hour on a Thursday (Jupiter's day) intensifies Jovian qualities; the same Jupiter hour on a Saturn day introduces a productive tension between expansion and limitation."
+      },
+      "whySidereal": {
+        "heading": "Why This Matters in Sidereal Astrology",
+        "body": "Planetary hours are not a zodiacal system. They depend entirely on sunrise and sunset times at your specific location — the Chaldean cycle restarts from sunrise each day, anchored to the actual solar horizon. This means the planetary hours calculation is identical whether you practice sidereal or tropical astrology. The ~24° Lahiri ayanamsa that shifts every natal planet in your chart by roughly one sign does not affect planetary hour boundaries at all. Hours change when the Sun crosses your local horizon; they do not care whether that degree is sidereal Pisces or tropical Aries. This makes planetary hours one of the few classical timing tools that integrates cleanly across both zodiac frameworks — a sidereal practitioner and a tropical practitioner standing in the same city at the same moment are in exactly the same planetary hour."
+      }
+    },
+    "moon": {
+      "sectionAria": "Educational content about lunar phases",
+      "phases": {
+        "heading": "The Eight Lunar Phases",
+        "body": "Each lunar cycle lasts approximately 29.5 days — the synodic month — during which the Moon travels from conjunction with the Sun to opposition and back. The cycle divides into eight phases defined by the Sun-Moon angular separation.\n\nNew Moon (0°): Sun and Moon share the same ecliptic longitude. The Moon rises and sets with the Sun and is invisible from Earth. Historically the moment of beginnings; intentions planted now develop through the full cycle.\n\nWaxing Crescent (0–90°): A thin sliver of reflected light appears on the Moon's western limb. Energy is accumulative, building outward from the new seed.\n\nFirst Quarter (90°): The Moon is 90° ahead of the Sun — a half-circle visible in the afternoon sky. The first point of visible tension in the cycle; the moment for action and decision.\n\nWaxing Gibbous (90–180°): The illuminated face expands toward fullness, rising in mid-afternoon. Refinement and adjustment characterize this phase — the work is nearly complete but not yet revealed.\n\nFull Moon (180°): Sun and Moon are directly opposite. Maximum illumination. The Moon rises at sunset and sets at sunrise. Traditionally associated with completion, revelation, and peak emotional intensity. The exact full moon moment, pinpointed by Swiss Ephemeris, occurs at a precise second; the visual peak spans roughly three nights.\n\nWaning Gibbous (180–270°): Illumination decreases. The Moon rises after sunset and remains visible past midnight. Associated with integration — sharing and applying what the full moon revealed.\n\nLast Quarter (270°): Half-illuminated again, now on the eastern limb. Rising around midnight. Release and revision — let go of what no longer serves the next cycle.\n\nWaning Crescent (270–360°): A diminishing arc appears before dawn. The cycle closes. Rest, reflection, and clearing space for the next new beginning."
+      },
+      "magic": {
+        "heading": "Lunar Magic in Tradition",
+        "body": "The Moon's role in magical timing runs through virtually every pre-modern esoteric tradition. Greek Magical Papyri (1st–5th century CE, now in public domain) specify which lunar phase is appropriate for each category of operation: waxing phases for acquisitive work — love, wealth, influence; waning phases for banishing, dissolution, and binding. Medieval European grimoires preserved this structure in Christian framing. The Picatrix (11th century Arabic, translated into Latin 1256) treats the Moon's phase and sign as the primary variables for any timing operation. The logic is partly astronomical: the Moon moves faster than any other point in astrology, changing sign every 2.3 days, making it the primary timing pulse of any chart. Even in Liber AL vel Legis (1904, public domain), Nuit names herself the continuous one of Heaven — a reference to the night sky the Moon traverses. Whether approached as symbolic resonance or practical timing intelligence, the eight-phase framework maps directly onto eight-pointed star symbolism found across Sumerian, Egyptian, and later Western esoteric traditions — a structural correspondence too consistent to be coincidental."
+      },
+      "siderealMoon": {
+        "heading": "Sidereal Moon vs. Tropical Moon",
+        "body": "The sidereal and tropical zodiacs diverge by ~24°07′ (Lahiri ayanamsa, 2026). This shifts the Moon's sign position by approximately 24 days — if your tropical chart shows the Moon in Gemini, your sidereal Moon is likely in Taurus. The Moon's phase angle — the gap between Sun and Moon — is identical in both systems, because phase depends on their relative geometry, not on zodiac placement. What changes is the sign context: sidereal Taurus Moon reads through fixed earth qualities; tropical Gemini Moon reads through mutable air. Both describe the same sky, two different interpretive lenses. For a full comparison of what sidereal and tropical actually measure differently, see the guide to why sidereal astrology differs from tropical."
+      },
+      "calculation": {
+        "heading": "How Estrevia Calculates Moon Phase",
+        "body": "Estrevia calculates lunar phase using Swiss Ephemeris with the Moshier analytical ephemeris, accurate to ±0.01°. Phase angle is the angular difference between the Moon's and Sun's ecliptic longitudes. Exact new and full moon moments are located by binary search, narrowing to within ±1 minute. Moon sign uses the Lahiri ayanamsa (sidereal) by default; a tropical toggle is available on the chart page."
+      }
+    }
   }
 }

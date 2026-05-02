@@ -5,7 +5,7 @@
  * wraps child pages with a consistent two-column structure on desktop.
  */
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { headers } from 'next/headers';
 
 const NAV_ITEMS = [

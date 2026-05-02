@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getTranslations } from 'next-intl/server';
 import { JsonLdScript, organizationSchema } from '@/shared/seo';
 import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher';

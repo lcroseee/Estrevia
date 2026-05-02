@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { PlanetaryHourBar } from '@/modules/astro-engine/components/PlanetaryHourBar';
 import { UserMenu } from '@/modules/auth/components/UserMenu';
 import { SubscriptionProvider } from '@/shared/context/SubscriptionProvider';
