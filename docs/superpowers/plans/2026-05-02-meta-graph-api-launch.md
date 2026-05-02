@@ -2046,11 +2046,13 @@ adapter code."
 **Subagent type:** `meta-ads`
 **Depends on:** none
 
-- [ ] **8.1** — Verify the targeted batch CLI flags. Actual flags (per `parseCliArgs` in `scripts/advertising/generate-launch-batch.ts`):
-- `--templates=<comma-separated-ids>` (plural)
-- `--samples=<n>`
+- [ ] **8.1** — Verify the targeted batch CLI flags. Actual flags (per `parseCliArgs` in `scripts/advertising/generate-launch-batch.ts:101-122` — uses **space-separated** `--flag value` form, NOT `--flag=value`):
+- `--templates <comma-separated-ids>` (plural)
+- `--samples <n>`
 - locale is inferred from template ID prefix (`en-` / `es-`)
-- optional `--model=fast|ultra` (default ultra @ $0.06/img)
+- optional `--model fast|ultra` (default ultra @ $0.06/img)
+
+If you pass `--templates=...` (with `=`), the parser ignores the arg and the script falls through to default archetype rotation mode → wrong creatives generated → burned cost. Always use spaces.
 
 Template IDs in `hooks-{en,es}.ts` are prefixed: e.g. `en-identity-reveal-2`, `es-identity-reveal-2`.
 
@@ -2058,11 +2060,13 @@ Template IDs in `hooks-{en,es}.ts` are prefixed: e.g. `en-identity-reveal-2`, `e
 
 ```bash
 npx tsx scripts/advertising/generate-launch-batch.ts \
-  --templates=en-identity-reveal-2,es-identity-reveal-2,en-identity-reveal-6,es-identity-reveal-6 \
-  --samples=2
+  --templates en-identity-reveal-2,es-identity-reveal-2,en-identity-reveal-6,es-identity-reveal-6 \
+  --samples 2
 ```
 
 Expected: 8 rows in `advertising_creatives` with `status='pending_review'`. Total Gemini cost ~$0.48.
+
+**Quota note:** the Gemini account may hit per-minute rate-limit (HTTP 429) on a burst of 8+ image gens. The CLI fail-fast on 4xx, so a 429 mid-batch leaves a partial result. If hit, wait 2-5 minutes and re-run — script is safe to repeat (only generates rows that don't already exist for that batch).
 
 - [ ] **8.3** — Verify in DB:
 
@@ -2105,15 +2109,17 @@ git commit -m "docs(advertising): batch A creative gen run (identity-reveal -2 -
 **Subagent type:** `meta-ads`
 **Depends on:** none
 
-- [ ] **9.1** — Run a single batch (6 templates × 2 samples = 12 ads). CLI flags as documented in Task 8.1.
+- [ ] **9.1** — Run a single batch (6 templates × 2 samples = 12 ads). Use space-separated flag syntax (see Task 8.1).
 
 ```bash
 npx tsx scripts/advertising/generate-launch-batch.ts \
-  --templates=en-authority-3,es-authority-3,en-rarity-3,es-rarity-3,en-rarity-5,es-rarity-5 \
-  --samples=2
+  --templates en-authority-3,es-authority-3,en-rarity-3,es-rarity-3,en-rarity-5,es-rarity-5 \
+  --samples 2
 ```
 
 Expected: 12 new rows pending_review. Cost ~$0.72.
+
+**Run AFTER Task 8 completes** — Gemini per-minute rate limit means parallel runs collide. Serialize.
 
 - [ ] **9.2** — Verify count via `count-creatives.ts`.
 
