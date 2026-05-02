@@ -3,11 +3,11 @@ import 'dotenv/config';
 import { MetaAdManagementClient } from '@/modules/advertising/meta-graph-api/ad-client';
 import type { MetaAdClient } from '@/modules/advertising/act/meta-marketing';
 
-const EN_COUNTRIES = ['US', 'GB', 'CA', 'AU', 'IE', 'NZ'];
-const ES_COUNTRIES = [
-  'MX', 'AR', 'CO', 'CL', 'PE', 'VE', 'EC', 'GT', 'CU', 'BO',
-  'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'PA', 'UY',
-];
+// Targeting per docs/marketing.md "Параллельная Spanish-кампания (с дня 1)":
+// EN Tier 1 — 4 high-CPM English markets ($14/day = 70% of $20)
+// ES LATAM   — 5 high-volume LATAM markets ($6/day = 30%)
+const EN_COUNTRIES = ['US', 'GB', 'CA', 'AU'];
+const ES_COUNTRIES = ['MX', 'AR', 'CO', 'CL', 'PE'];
 
 interface SetupOpts {
   adClient: Pick<MetaAdClient, 'createCampaign' | 'createAdSet'>;
@@ -26,8 +26,11 @@ interface SetupResult {
 
 export async function runSetup(opts: SetupOpts): Promise<SetupResult> {
   const { adClient } = opts;
-  const ageMin = opts.ageMin ?? 18;
-  const ageMax = opts.ageMax ?? 45;
+  // Age 22-38 per docs/marketing.md — astrology-niche sweet spot.
+  // No gender filter: Meta's 2026 algorithm finds the 70-80% female audience
+  // organically; explicit female-only cuts reach without proportional CPM gain.
+  const ageMin = opts.ageMin ?? 22;
+  const ageMax = opts.ageMax ?? 38;
 
   const { campaign_id } = await adClient.createCampaign({
     name: opts.campaignName ?? 'Estrevia Launch — Sidereal Astrology',
@@ -35,14 +38,18 @@ export async function runSetup(opts: SetupOpts): Promise<SetupResult> {
     status: 'PAUSED',
   });
 
+  // optimization_goal=LANDING_PAGE_VIEWS + billing=IMPRESSIONS:
+  // LPV filters out drive-by clicks → cleaner pixel learning signal on cold start.
+  // LINK_CLICKS optimization counts every click (incl. profile/comments) and
+  // pollutes pixel during the critical first-50-events window.
   const en = await adClient.createAdSet({
     campaignId: campaign_id,
     name: 'EN — Launch — Sidereal interest',
     locale: 'en',
     dailyBudgetCents: opts.dailyBudgetCentsEn,
     targeting: { countries: EN_COUNTRIES, ageMin, ageMax },
-    optimizationGoal: 'LINK_CLICKS',
-    billingEvent: 'LINK_CLICKS',
+    optimizationGoal: 'LANDING_PAGE_VIEWS',
+    billingEvent: 'IMPRESSIONS',
     status: 'PAUSED',
   });
 
@@ -52,8 +59,8 @@ export async function runSetup(opts: SetupOpts): Promise<SetupResult> {
     locale: 'es',
     dailyBudgetCents: opts.dailyBudgetCentsEs,
     targeting: { countries: ES_COUNTRIES, ageMin, ageMax },
-    optimizationGoal: 'LINK_CLICKS',
-    billingEvent: 'LINK_CLICKS',
+    optimizationGoal: 'LANDING_PAGE_VIEWS',
+    billingEvent: 'IMPRESSIONS',
     status: 'PAUSED',
   });
 
@@ -68,8 +75,8 @@ async function main() {
 
   const result = await runSetup({
     adClient,
-    dailyBudgetCentsEn: 500, // $5/day
-    dailyBudgetCentsEs: 500, // $5/day
+    dailyBudgetCentsEn: 1400, // $14/day — 70% per docs/marketing.md
+    dailyBudgetCentsEs: 600,  // $6/day  — 30% per docs/marketing.md
   });
 
   console.log('\n=== Setup complete ===');
