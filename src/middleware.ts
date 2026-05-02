@@ -1,5 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import createIntlMiddleware from 'next-intl/middleware';
+import { routing } from '@/i18n/routing';
+
+const intlMiddleware = createIntlMiddleware(routing);
 
 // Routes that require authentication — all others are public by default.
 // Include-based list: only these paths trigger the auth check inside the handler.
@@ -26,40 +30,66 @@ const isProtectedRoute = createRouteMatcher([
   '/api/admin(.*)',
 ]);
 
+/**
+ * Redirects any *.vercel.app deployment URL to the canonical estrevia.app domain.
+ * Gated on VERCEL_ENV==='production' so preview deploys remain accessible on their
+ * vercel.app URL (preview deploys also have NODE_ENV=production — use VERCEL_ENV).
+ */
+function redirectVercelHostToCanonical(req: NextRequest): NextResponse | null {
+  const host = req.headers.get('host') ?? '';
+  if (host.endsWith('.vercel.app') && process.env.VERCEL_ENV === 'production') {
+    const url = new URL(req.url);
+    url.host = 'estrevia.app';
+    url.protocol = 'https:';
+    return NextResponse.redirect(url, 301);
+  }
+  return null;
+}
+
 export default clerkMiddleware(async (auth, req) => {
-  if (!isProtectedRoute(req)) return;
+  // 1) Canonical-host redirect first — short-circuits before i18n/auth.
+  const hostRedirect = redirectVercelHostToCanonical(req);
+  if (hostRedirect) return hostRedirect;
 
-  const { userId } = await auth();
-  if (userId) return; // authenticated — pass through
-
-  // Unauthenticated on a protected route: API routes get JSON 401, pages get redirect.
-  // Clerk v6 auth.protect() uses a rewrite-to-/_not-found pattern that returns 200
-  // with HTML for POST requests — clients cannot detect this as a 401. We short-circuit
-  // that behavior here with explicit responses.
-  const { pathname } = req.nextUrl;
-
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.json(
-      { success: false, data: null, error: 'UNAUTHORIZED' },
-      { status: 401 },
-    );
+  // 2) Auth gate for protected routes (preserves existing behaviour verbatim).
+  //    Calling auth() inside the wrapper avoids the Clerk v6 auth.protect() rewrite
+  //    pattern that returns 200 HTML for POST requests (clients cannot detect 401).
+  if (isProtectedRoute(req)) {
+    const { userId } = await auth();
+    if (!userId) {
+      const { pathname } = req.nextUrl;
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { success: false, data: null, error: 'UNAUTHORIZED' },
+          { status: 401 },
+        );
+      }
+      // Page route: redirect to sign-in preserving the return path.
+      const signInUrl = new URL('/sign-in', req.url);
+      signInUrl.searchParams.set('redirect_url', req.url);
+      return NextResponse.redirect(signInUrl);
+    }
   }
 
-  // Page route: redirect to sign-in preserving the return path.
-  const signInUrl = new URL('/sign-in', req.url);
-  signInUrl.searchParams.set('redirect_url', req.url);
-  return NextResponse.redirect(signInUrl);
+  // 3) Run intl middleware on page routes — handles rewrite/redirect for /es.
+  //    Skip API routes (no locale segment for API paths).
+  if (req.nextUrl.pathname.startsWith('/api/')) return;
+  return intlMiddleware(req);
 });
 
 export const config = {
-  // Include-based matcher: only run Clerk middleware on routes that need auth.
-  // Public routes (/, /s/[id], /essays/*, /signs/*, /pricing, etc.) are excluded
-  // to avoid the Clerk cold-start cost on the viral-share critical path.
-  //
-  // IMPORTANT: every path listed in createRouteMatcher above must also appear here.
-  // config.matcher controls WHETHER middleware runs; createRouteMatcher controls
-  // WHETHER the auth check fires. Both must be kept in sync.
+  // Include-based matcher: controls WHETHER middleware runs on a given path.
+  // Two layers:
+  //   • Page routes — let intl middleware handle locale resolution.
+  //     Excludes _next, _vercel, public static files, and API routes
+  //     (API routes have their own auth-only matchers below).
+  //   • Auth-required API routes — preserved verbatim from previous middleware.
+  //     config.matcher and createRouteMatcher above must stay in sync:
+  //     every path in createRouteMatcher must also be matched here.
   matcher: [
+    // Page routes — intl + optional Clerk auth
+    // Excludes: _next internals, _vercel, static files (any path with extension), api paths
+    '/((?!_next|_vercel|api|.*\\..*).*)',
     // Admin pages and API routes — Clerk auth required; allowlist checked inside handlers
     '/admin/:path*',
     '/api/admin/:path*',
