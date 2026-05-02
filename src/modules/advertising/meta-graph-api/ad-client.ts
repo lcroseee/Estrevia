@@ -64,6 +64,10 @@ export class MetaAdManagementClient extends MetaGraphApiBase {
         daily_budget: opts.dailyBudgetCents,
         optimization_goal: opts.optimizationGoal,
         billing_event: opts.billingEvent,
+        // LOWEST_COST_WITHOUT_CAP = auto-bid, no upper cost cap.
+        // Optimal for cold start: Meta seeks cheapest events for learning.
+        // Upgrade to COST_CAP/BID_CAP after 30-50 conversions establish baseline.
+        bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
         targeting,
         status: opts.status,
       },

@@ -87,6 +87,10 @@ describe('MetaAdManagementClient', () => {
       expect(body.targeting.age_min).toBe(18);
       expect(body.targeting.age_max).toBe(45);
       expect(body.optimization_goal).toBe('LINK_CLICKS');
+      // Auto-bidding for cold-start: required since 2024 to avoid "bid amount
+      // required" error when bid_strategy field is omitted (Meta defaults to
+      // a strategy that needs an explicit bid_amount).
+      expect(body.bid_strategy).toBe('LOWEST_COST_WITHOUT_CAP');
     });
   });
 });

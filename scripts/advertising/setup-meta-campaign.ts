@@ -16,6 +16,8 @@ interface SetupOpts {
   dailyBudgetCentsEs: number;
   ageMin?: number;
   ageMax?: number;
+  /** Reuse an existing campaign instead of creating a new one (recovery mode). */
+  reuseCampaignId?: string;
 }
 
 interface SetupResult {
@@ -32,11 +34,15 @@ export async function runSetup(opts: SetupOpts): Promise<SetupResult> {
   const ageMin = opts.ageMin ?? 22;
   const ageMax = opts.ageMax ?? 38;
 
-  const { campaign_id } = await adClient.createCampaign({
-    name: opts.campaignName ?? 'Estrevia Launch — Sidereal Astrology',
-    objective: 'OUTCOME_TRAFFIC',
-    status: 'PAUSED',
-  });
+  // Allow reusing an existing PAUSED campaign (e.g. from a partial prior run)
+  // instead of creating a new one. Skip campaign creation if reuseCampaignId set.
+  const campaign_id = opts.reuseCampaignId
+    ? opts.reuseCampaignId
+    : (await adClient.createCampaign({
+        name: opts.campaignName ?? 'Estrevia Launch — Sidereal Astrology',
+        objective: 'OUTCOME_TRAFFIC',
+        status: 'PAUSED',
+      })).campaign_id;
 
   // optimization_goal=LANDING_PAGE_VIEWS + billing=IMPRESSIONS:
   // LPV filters out drive-by clicks → cleaner pixel learning signal on cold start.
@@ -73,10 +79,16 @@ async function main() {
   if (!accessToken || !adAccountId) throw new Error('Missing META_ACCESS_TOKEN or META_AD_ACCOUNT_ID');
   const adClient = new MetaAdManagementClient({ accessToken, adAccountId });
 
+  // META_REUSE_CAMPAIGN_ID: recovery hatch when a prior partial run created a
+  // campaign but failed at the adset step. Set this to skip campaign creation
+  // and only create the missing adsets.
+  const reuseCampaignId = process.env.META_REUSE_CAMPAIGN_ID || undefined;
+
   const result = await runSetup({
     adClient,
     dailyBudgetCentsEn: 1400, // $14/day — 70% per docs/marketing.md
     dailyBudgetCentsEs: 600,  // $6/day  — 30% per docs/marketing.md
+    reuseCampaignId,
   });
 
   console.log('\n=== Setup complete ===');
