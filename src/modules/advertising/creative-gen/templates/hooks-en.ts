@@ -264,7 +264,8 @@ export const hooksEn: HookTemplate[] = [
     archetype: 'rarity',
     copy_template:
       'The Cosmic Passport shows the exact sidereal combination — and how common it is across all charts calculated.',
-    visual_mood: 'social proof, animated passport card fill, share button visible',
+    visual_mood:
+      'Photorealistic close-up study of a luxurious astrological identity card floating alone in deep cosmic space. Card face shows a circular sidereal chart wheel rendered in fine pale-gold and white linework on a deep navy-to-black gradient. Twelve zodiac sectors are separated by thin radial lines, with two concentric inner rings, abstract symbolic forms (no readable script) centered in each sector, and small bright golden dots marking planetary placements. A small luminous gold percentage motif sits at the bottom of the card surface to suggest rarity. Subtle gold-foil card edge, soft celestial halo around the card. Background: deep cosmic black-to-indigo gradient with sparse faint scattered stars. Empty negative space at the bottom of the frame for text overlay. Vertical 9:16 composition. NO people, NO faces, NO hands, NO phone screens, NO devices, NO UI elements, NO interface, NO icons, NO modern interface, NO arrows, NO data dashboards, NO logos, NO words, NO letters, NO characters, NO labels, NO names, NO numbers, NO digits, NO captions.',
     duration_sec: 15,
     aspect_ratios: ['9:16', '4:5'],
     locale: 'en',
@@ -296,7 +297,8 @@ export const hooksEn: HookTemplate[] = [
     archetype: 'rarity',
     copy_template:
       'The Cosmic Passport is shareable. Calculate, get the rarity score, post it.',
-    visual_mood: 'social-first, share sheet animation, friends-comparing energy',
+    visual_mood:
+      'Photorealistic celestial artifact study. A single large luminous astrological identity card displayed alone like a museum exhibit, suspended at center frame against a deep cosmic black-to-navy gradient backdrop with sparse golden stars. The card face shows a circular sidereal chart wheel in fine pale-gold and white linework with twelve sectors separated by thin radial lines, two concentric inner rings, abstract symbolic forms in each sector, and small bright golden dots at planetary positions. A small luminous gold percentage motif near the lower edge of the card suggests rarity. Subtle gold-foil card border, soft halo of light around the card. A single warm shaft of light from the upper left grazes the card surface, evoking reverent presentation of a sacred object. Empty negative space at the bottom of the frame for text overlay. Vertical 9:16 composition. NO people, NO faces, NO hands, NO phone screens, NO devices, NO UI elements, NO interface, NO icons, NO modern interface, NO arrows, NO logos, NO words, NO letters, NO characters, NO labels, NO names, NO numbers, NO digits, NO captions.',
     duration_sec: 12,
     aspect_ratios: ['9:16', '1:1'],
     locale: 'en',

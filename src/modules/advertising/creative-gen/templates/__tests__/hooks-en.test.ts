@@ -77,4 +77,16 @@ describe('hooks-en', () => {
   it('getHookTemplate returns undefined for unknown id', () => {
     expect(getHookTemplate('does-not-exist')).toBeUndefined();
   });
+
+  // Regression — Imagen 4 interprets "share button" / "share sheet" /
+  // "friends comparing" prompts as social-network app screenshots
+  // (Snapchat/IG-style visuals), confusing brand category and tripping
+  // Meta policy review. Visual moods must describe astrological aesthetic,
+  // not product UI affordances.
+  it('no visual_mood contains social-app UI affordance phrasing', () => {
+    const forbidden = /\bshare\s+(button|sheet|icon)|\bsocial\s*[- ]?(first|proof)|\bfriends?[- ]comparing|\bchat\s+bubble|\bspeech\s+balloon|\bemoji|\bmessenger\b/i;
+    for (const h of hooksEn) {
+      expect(h.visual_mood, `${h.id} visual_mood leaks social-app UI`).not.toMatch(forbidden);
+    }
+  });
 });

@@ -112,4 +112,15 @@ describe('hooks-es', () => {
   it('getHookTemplateEs returns undefined for unknown id', () => {
     expect(getHookTemplateEs('does-not-exist')).toBeUndefined();
   });
+
+  // Regression — same rationale as hooks-en: prompts mentioning UI
+  // affordances (botón de compartir, prueba social, amigos comparando)
+  // produce social-network app aesthetic instead of astrological imagery.
+  it('no visual_mood contains social-app UI affordance phrasing', () => {
+    const forbidden =
+      /\bbot[oó]n\s+de\s+compartir|\bhoja\s+para\s+compartir|\bprueba\s+social|\benfoque\s+social|\bamigos?\s+comparando|\bglobo\s+de\s+di[aá]logo|\bburbuja\s+de\s+chat|\bemoji|\bmensajer[ií]a/i;
+    for (const h of hooksEs) {
+      expect(h.visual_mood, `${h.id} visual_mood leaks social-app UI`).not.toMatch(forbidden);
+    }
+  });
 });

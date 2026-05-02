@@ -263,7 +263,8 @@ export const hooksEs: HookTemplate[] = [
     archetype: 'rarity',
     copy_template:
       'El Pasaporte Cósmico muestra la combinación sidérea exacta — y qué tan común es en todas las cartas calculadas.',
-    visual_mood: 'prueba social, animación de llenado de tarjeta de pasaporte, botón de compartir visible',
+    visual_mood:
+      'Estudio fotorrealista en primer plano de una lujosa tarjeta de identidad astrológica flotando sola en el espacio cósmico profundo. La tarjeta muestra una rueda circular de carta sidérea trazada con finas líneas de oro pálido y blanco sobre un gradiente azul marino a negro profundo. Doce sectores zodiacales separados por líneas radiales delgadas, dos anillos concéntricos interiores, formas simbólicas abstractas (sin escritura legible) centradas en cada sector, y pequeños puntos dorados brillantes que marcan posiciones planetarias. Un pequeño motivo luminoso de porcentaje en oro en la parte inferior de la tarjeta sugiere rareza. Borde dorado sutil estilo lámina de oro, halo celestial suave alrededor de la tarjeta. Fondo: gradiente cósmico negro a índigo con estrellas dispersas tenues. Espacio negativo vacío en la parte inferior del cuadro para superposición de texto. Composición vertical 9:16. SIN personas, SIN rostros, SIN manos, SIN pantallas de teléfono, SIN dispositivos, SIN elementos de UI, SIN interfaz, SIN íconos, SIN interfaz moderna, SIN flechas, SIN paneles de datos, SIN logos, SIN palabras, SIN letras, SIN caracteres, SIN etiquetas, SIN nombres, SIN números, SIN dígitos, SIN subtítulos.',
     duration_sec: 15,
     aspect_ratios: ['9:16', '4:5'],
     locale: 'es',
@@ -295,7 +296,8 @@ export const hooksEs: HookTemplate[] = [
     archetype: 'rarity',
     copy_template:
       'El Pasaporte Cósmico se puede compartir. Calcula, obtén el puntaje de rareza, publícalo.',
-    visual_mood: 'enfoque social, animación de hoja para compartir, energía de amigos comparando',
+    visual_mood:
+      'Estudio fotorrealista de artefacto celestial. Una sola tarjeta de identidad astrológica luminosa, grande, exhibida sola como pieza de museo, suspendida en el centro del cuadro contra un fondo de gradiente cósmico negro a azul marino con estrellas doradas dispersas. La cara de la tarjeta muestra una rueda circular de carta sidérea en finas líneas de oro pálido y blanco con doce sectores separados por líneas radiales delgadas, dos anillos concéntricos interiores, formas simbólicas abstractas en cada sector, y pequeños puntos dorados brillantes en posiciones planetarias. Un pequeño motivo luminoso de porcentaje en oro cerca del borde inferior de la tarjeta sugiere rareza. Borde dorado sutil estilo lámina, halo de luz suave alrededor de la tarjeta. Un único haz de luz cálida desde la esquina superior izquierda roza la superficie de la tarjeta, evocando la presentación reverente de un objeto sagrado. Espacio negativo vacío en la parte inferior del cuadro para superposición de texto. Composición vertical 9:16. SIN personas, SIN rostros, SIN manos, SIN pantallas de teléfono, SIN dispositivos, SIN elementos de UI, SIN interfaz, SIN íconos, SIN interfaz moderna, SIN flechas, SIN logos, SIN palabras, SIN letras, SIN caracteres, SIN etiquetas, SIN nombres, SIN números, SIN dígitos, SIN subtítulos.',
     duration_sec: 12,
     aspect_ratios: ['9:16', '1:1'],
     locale: 'es',
