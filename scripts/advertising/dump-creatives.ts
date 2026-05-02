@@ -37,7 +37,8 @@ async function main() {
     ORDER BY locale, created_at
   `);
 
-  const rows = ((raw as { rows?: CreativeRow[] }).rows ?? (raw as CreativeRow[])) as CreativeRow[];
+  const rows = ((raw as unknown as { rows?: CreativeRow[] }).rows
+    ?? (raw as unknown as CreativeRow[])) as CreativeRow[];
 
   const jsonPath = path.join(OUT_DIR, 'creatives.json');
   await writeFile(jsonPath, JSON.stringify(rows, null, 2));

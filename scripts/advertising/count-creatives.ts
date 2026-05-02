@@ -11,14 +11,14 @@ async function main() {
     GROUP BY status, locale
     ORDER BY status, locale
   `);
-  const byStatusLocale = (byStatusLocaleRaw as { rows?: unknown[] }).rows
-    ?? (byStatusLocaleRaw as unknown[]);
+  const byStatusLocale = (byStatusLocaleRaw as unknown as { rows?: unknown[] }).rows
+    ?? (byStatusLocaleRaw as unknown as unknown[]);
 
   const totalRaw = await db.execute(sql`
     SELECT COUNT(*)::int AS count FROM advertising_creatives
   `);
-  const totalRows = (totalRaw as { rows?: { count: number }[] }).rows
-    ?? (totalRaw as { count: number }[]);
+  const totalRows = ((totalRaw as unknown as { rows?: { count: number }[] }).rows
+    ?? (totalRaw as unknown as { count: number }[]));
   const total = totalRows[0]?.count ?? 0;
 
   console.log('\n=== advertising_creatives by status × locale ===');
@@ -39,8 +39,8 @@ async function main() {
     ORDER BY created_at DESC
     LIMIT 15
   `);
-  const recent = (recentRaw as { rows?: unknown[] }).rows
-    ?? (recentRaw as unknown[]);
+  const recent = (recentRaw as unknown as { rows?: unknown[] }).rows
+    ?? (recentRaw as unknown as unknown[]);
 
   console.log('\n=== last 15 creatives ===');
   if ((recent as unknown[]).length === 0) {
