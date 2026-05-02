@@ -1416,7 +1416,7 @@
         "telegram": "Just calculated my sidereal cosmic passport — Sun in {sun}, Moon in {moon}, Rising in {rising}. {url}",
         "whatsapp": "Look what I got 👇 {url}",
         "stories_caption": "Cosmic blueprint unlocked 🌌",
-        "native_share": "{name}'s Cosmic Passport — {url}"
+        "native_share": "My Cosmic Passport — {url}"
       }
     }
   },
