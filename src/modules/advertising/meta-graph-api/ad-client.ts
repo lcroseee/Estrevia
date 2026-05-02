@@ -37,6 +37,10 @@ export class MetaAdManagementClient extends MetaGraphApiBase {
         objective: opts.objective,
         status: opts.status,
         special_ad_categories: [], // required by Meta even when empty
+        // Required by Meta API since 2024 when not using campaign budget (CBO).
+        // false = strict ABO: each ad set keeps its own budget, no cross-sharing.
+        // We rely on this for the documented 70/30 EN/ES split holding firm.
+        is_adset_budget_sharing_enabled: false,
       },
     );
     return { campaign_id: res.id };

@@ -59,6 +59,9 @@ describe('MetaAdManagementClient', () => {
       const body = JSON.parse(init.body as string);
       expect(body.special_ad_categories).toEqual([]);
       expect(body.objective).toBe('OUTCOME_TRAFFIC');
+      // Locks 2024+ ABO requirement: false = strict per-adset budget,
+      // preserves the documented 70/30 EN/ES split
+      expect(body.is_adset_budget_sharing_enabled).toBe(false);
     });
   });
 
