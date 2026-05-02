@@ -63,6 +63,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { cardId } = await params;
+  const locale = await getLocale();
   const card = await loadCard(cardId);
 
   if (!card) {
@@ -70,6 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: 'Card Not Found',
       description: 'This tarot card was not found.',
       path: `/tarot/${cardId}`,
+      locale: locale as 'en' | 'es',
     });
   }
 
@@ -77,6 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${card.name.en} — Thoth Tarot`,
     description: card.description.en.slice(0, 155),
     path: `/tarot/${cardId}`,
+    locale: locale as 'en' | 'es',
     keywords: [card.name.en, 'thoth tarot', card.suit, card.astrology, card.hebrewLetter],
   });
 }

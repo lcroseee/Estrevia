@@ -50,6 +50,7 @@ export async function generateMetadata(props: {
       title: 'Essay not found',
       description: 'The requested essay could not be found.',
       path: `/essays/${slug}`,
+      locale: locale as 'en' | 'es',
       noIndex: true,
     });
   }
@@ -59,6 +60,7 @@ export async function generateMetadata(props: {
     description: essay.meta.description,
     path: `/essays/${slug}`,
     type: 'article',
+    locale: locale as 'en' | 'es',
     publishedTime: essay.meta.publishedAt,
     modifiedTime: essay.meta.updatedAt,
     keywords: essay.meta.keywords,

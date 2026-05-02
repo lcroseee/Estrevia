@@ -18,12 +18,14 @@ import type { EssayMeta } from '@/modules/esoteric/lib/essays';
 // Metadata
 // ---------------------------------------------------------------------------
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   return createMetadata({
     title: 'Sidereal Astrology Essays — Planet in Sign Interpretations',
     description:
       'Explore 120 sidereal astrology essays — every planet in every sign interpreted through the Lahiri ayanamsa. Sun through Pluto across all 12 signs.',
     path: '/essays',
+    locale: locale as 'en' | 'es',
     keywords: [
       'sidereal astrology essays',
       'planet in sign sidereal',

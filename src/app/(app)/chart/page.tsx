@@ -1,17 +1,19 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, softwareAppSchema, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { ChartDisplay } from '@/modules/astro-engine/components/ChartDisplay';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.chart');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/chart',
+    locale: locale as 'en' | 'es',
     keywords: [
       'sidereal natal chart',
       'birth chart calculator',

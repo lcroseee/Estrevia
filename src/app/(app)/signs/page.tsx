@@ -31,11 +31,13 @@ interface SignDescription {
 // ---------------------------------------------------------------------------
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.signs');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/signs',
+    locale: locale as 'en' | 'es',
     keywords: [
       'sidereal zodiac signs',
       'sidereal astrology signs',

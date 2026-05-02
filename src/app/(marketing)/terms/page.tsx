@@ -1,16 +1,18 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo';
 
 // Dynamic rendering required so the NEXT_LOCALE cookie is honored.
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.terms');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/terms',
+    locale: locale as 'en' | 'es',
   });
 }
 

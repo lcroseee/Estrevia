@@ -35,7 +35,7 @@ export function DesktopNav() {
 
   return (
     <nav
-      className="hidden md:flex items-center gap-1"
+      className="hidden md:flex items-center gap-0.5 lg:gap-1"
       aria-label="Primary navigation"
     >
       {ALL_NAV.map(({ href, labelKey, icon: Icon }) => {
@@ -46,7 +46,7 @@ export function DesktopNav() {
             href={href}
             aria-current={active ? 'page' : undefined}
             className={[
-              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150',
+              'flex items-center gap-1 px-1.5 py-1.5 lg:px-2.5 lg:gap-1.5 rounded-lg text-xs font-medium transition-all duration-150',
               'font-[var(--font-geist-sans)] tracking-wide',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0F]',
               active

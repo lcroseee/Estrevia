@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata } from '@/shared/seo/metadata';
 import { SupportForm } from './SupportForm';
 
@@ -7,11 +7,13 @@ import { SupportForm } from './SupportForm';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.support');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/support',
+    locale: locale as 'en' | 'es',
     keywords: ['estrevia support', 'contact', 'help'],
   });
 }

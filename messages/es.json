@@ -1385,6 +1385,17 @@
     "text": "La astrología es para reflexión personal y entretenimiento. Nada en este sitio constituye consejo médico, financiero, legal o psicológico. Siempre consulta a un profesional calificado para decisiones que afecten tu salud, finanzas o bienestar.",
     "ariaLabel": "Aviso legal"
   },
+  "share": {
+    "passport": {
+      "copy": {
+        "x": "Resulta que soy un blueprint cósmico de 1 entre {rarity} 👀 {url}",
+        "telegram": "Acabo de calcular mi pasaporte cósmico sideral — Sol en {sun}, Luna en {moon}, Ascendente en {rising}. {url}",
+        "whatsapp": "Mira lo que me salió 👇 {url}",
+        "stories_caption": "Blueprint cósmico desbloqueado 🌌",
+        "native_share": "Pasaporte Cósmico de {name} — {url}"
+      }
+    }
+  },
   "educational": {
     "hours": {
       "sectionAria": "Contenido educativo sobre las horas planetarias",

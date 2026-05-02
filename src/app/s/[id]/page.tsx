@@ -90,6 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: 'Passport Not Found',
       description: 'This Cosmic Passport no longer exists. Calculate your own at Estrevia.',
       path: `/s/${id}`,
+      locale: 'en',
       noIndex: true,
     });
   }
@@ -102,6 +103,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     path: `/s/${id}`,
+    locale: 'en',
     noIndex: true,
     ogImage: `/api/og/passport/${id}`,
   });
@@ -203,49 +205,66 @@ export default async function SharePage({ params }: Props) {
           </h1>
         </div>
 
-        {/* Passport card — the shareable visual artifact */}
-        <div className="w-full">
-          <PassportCard passport={passport} />
-        </div>
-
-        {/* Rarity callout — qualitative tier, not a statistical frequency claim */}
-        <p
-          className="text-xs text-center text-white/35"
-          style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
+        {/* ── Unified passport section ─────────────────────────────────────
+            The card, share buttons, and CTA are one visual unit: a single
+            golden-glow container that anchors the viral loop on this page.
+            Golden box-shadow unifies all three without imposing a heavy bg.
+        ─────────────────────────────────────────────────────────────────── */}
+        <section
+          className="w-full flex flex-col items-center rounded-2xl overflow-hidden"
+          style={{
+            gap: '12px',
+            paddingBottom: '16px',
+            boxShadow:
+              '0 0 0 1px rgba(255,215,0,0.08),' +
+              '0 0 56px -10px rgba(255,215,0,0.18)',
+          }}
+          aria-label="Your Cosmic Passport and share options"
         >
-          Rarity tier:{' '}
-          <span className="text-white/70 font-medium">
-            {getRarityTier(passport.rarityPercent)}
-          </span>
-        </p>
+          {/* PassportCard — fills the top, its rounded-2xl sits inside the section */}
+          <PassportCard passport={passport} />
 
-        {/* Share buttons */}
-        <div className="w-full">
-          <ShareButton passportId={passport.id} passport={passport} />
-        </div>
-
-        {/* CTA separator */}
-        <div className="flex items-center gap-3 w-full">
-          <div
-            className="flex-1 h-px"
-            style={{ background: 'rgba(255,255,255,0.06)' }}
-            aria-hidden="true"
-          />
-          <span
-            className="text-[10px] tracking-[0.15em] uppercase text-white/20"
+          {/* Rarity callout — inside the golden zone */}
+          <p
+            className="text-xs text-center text-white/35 px-4"
             style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
           >
-            or
-          </span>
-          <div
-            className="flex-1 h-px"
-            style={{ background: 'rgba(255,255,255,0.06)' }}
-            aria-hidden="true"
-          />
-        </div>
+            Rarity tier:{' '}
+            <span className="text-white/70 font-medium">
+              {getRarityTier(passport.rarityPercent)}
+            </span>
+          </p>
 
-        {/* Primary CTA — fires passport_converted then navigates */}
-        <PassportCta passportId={id} />
+          {/* Share buttons */}
+          <div className="w-full px-4">
+            <ShareButton passportId={passport.id} passport={passport} />
+          </div>
+
+          {/* Separator */}
+          <div className="flex items-center gap-3 w-full px-4">
+            <div
+              className="flex-1 h-px"
+              style={{ background: 'rgba(255,255,255,0.06)' }}
+              aria-hidden="true"
+            />
+            <span
+              className="text-[10px] tracking-[0.15em] uppercase text-white/20"
+              style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}
+            >
+              or
+            </span>
+            <div
+              className="flex-1 h-px"
+              style={{ background: 'rgba(255,255,255,0.06)' }}
+              aria-hidden="true"
+            />
+          </div>
+
+          {/* Primary CTA — fires passport_converted then navigates */}
+          <div className="w-full px-4">
+            <PassportCta passportId={id} />
+          </div>
+        </section>
 
         <p
           className="text-[10px] text-center text-white/20"

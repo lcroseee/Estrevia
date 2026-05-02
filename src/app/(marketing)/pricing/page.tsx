@@ -7,7 +7,7 @@
  */
 
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, faqSchema, breadcrumbSchema, productSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { PricingToggle } from './PricingToggle';
@@ -16,11 +16,13 @@ import { PricingToggle } from './PricingToggle';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.pricing');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/pricing',
+    locale: locale as 'en' | 'es',
     keywords: ['estrevia pricing', 'sidereal astrology premium', 'natal chart unlimited'],
   });
 }

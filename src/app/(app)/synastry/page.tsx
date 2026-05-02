@@ -1,17 +1,19 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { SynastryClient } from '@/modules/astro-engine/components/SynastryClient';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.synastry');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/synastry',
+    locale: locale as 'en' | 'es',
     keywords: [
       'synastry calculator',
       'astrological compatibility',

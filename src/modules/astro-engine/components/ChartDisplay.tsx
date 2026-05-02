@@ -251,7 +251,7 @@ export function ChartDisplay() {
               type="checkbox"
               checked={showAspects}
               onChange={(e) => setShowAspects(e.target.checked)}
-              className="accent-[#FFD700] w-3.5 h-3.5 rounded"
+              className="accent-[#FFD700] w-3.5 h-3.5 rounded cursor-pointer opacity-40 checked:opacity-100"
             />
             {t('aspects')}
           </label>
@@ -261,7 +261,7 @@ export function ChartDisplay() {
                 type="checkbox"
                 checked={showHouses}
                 onChange={(e) => setShowHouses(e.target.checked)}
-                className="accent-[#FFD700] w-3.5 h-3.5 rounded"
+                className="accent-[#FFD700] w-3.5 h-3.5 rounded cursor-pointer opacity-40 checked:opacity-100"
               />
               {t('houses')}
             </label>

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Link } from '@/i18n/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import {
   createMetadata,
   JsonLdScript,
@@ -23,11 +23,13 @@ export const dynamic = 'force-dynamic';
 // ---------------------------------------------------------------------------
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.whySidereal');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/why-sidereal',
+    locale: locale as 'en' | 'es',
     type: 'article',
     keywords: [
       'sidereal astrology',

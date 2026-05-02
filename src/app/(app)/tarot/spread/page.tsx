@@ -1,18 +1,20 @@
 import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { SpreadTabs } from './SpreadTabs';
 import type { TarotCardData } from '@/modules/esoteric/components/TarotCard';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   return createMetadata({
     title: 'Tarot Spreads — Three Card & Celtic Cross',
     description:
       'Draw a Three-Card or Celtic Cross spread from the 78-card Thoth deck. AI interpretation available with Pro.',
     path: '/tarot/spread',
+    locale: locale as 'en' | 'es',
     keywords: [
       'tarot spread',
       'three card tarot',

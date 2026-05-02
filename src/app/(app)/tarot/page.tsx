@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { Link } from '@/i18n/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { TarotCatalogClient } from '@/modules/esoteric/components/TarotCatalogClient';
@@ -11,11 +11,13 @@ import { TarotCatalogClient } from '@/modules/esoteric/components/TarotCatalogCl
 export const revalidate = 86400;
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.tarot');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/tarot',
+    locale: locale as 'en' | 'es',
     keywords: [
       'thoth tarot',
       'tarot deck',

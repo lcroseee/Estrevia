@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Link } from '@/i18n/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, organizationSchema, softwareAppSchema, howToSchema, faqSchema } from '@/shared/seo';
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';
 import { LandingAnimations } from './LandingAnimations';
@@ -9,11 +9,13 @@ import { NewFeatureCards } from './NewFeatureCards';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.landing');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/',
+    locale: locale as 'en' | 'es',
     keywords: [
       'sidereal astrology',
       'natal chart calculator',

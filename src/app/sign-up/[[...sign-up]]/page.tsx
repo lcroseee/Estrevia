@@ -10,6 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/sign-up',
+    locale: 'en',
     noIndex: true,
   });
 }

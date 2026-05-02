@@ -1,18 +1,20 @@
 import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { TreeOfLifeClient } from '@/modules/esoteric/components/TreeOfLife';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.treeOfLife');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/tree-of-life',
+    locale: locale as 'en' | 'es',
     keywords: [
       'tree of life',
       'kabbalah',

@@ -76,6 +76,7 @@ export async function generateMetadata({
     }),
     path: `/signs/${sign}`,
     type: 'article',
+    locale: locale as 'en' | 'es',
     keywords: [
       `sidereal ${data.sign.toLowerCase()}`,
       `${data.sign.toLowerCase()} sidereal astrology`,

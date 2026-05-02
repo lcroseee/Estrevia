@@ -11,16 +11,18 @@ import { createMetadata } from '@/shared/seo';
 import { getCurrentUser } from '@/modules/auth/lib/helpers';
 import { getSubscriptionDetails } from '@/modules/auth/lib/premium';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { SettingsPortalButton } from './SettingsPortalButton';
 import { SettingsClientSections } from './SettingsClientSections';
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
   const tMeta = await getTranslations('pageMeta.settings');
   return createMetadata({
     title: tMeta('title'),
     description: tMeta('description'),
     path: '/settings',
+    locale: locale as 'en' | 'es',
     noIndex: true,
   });
 }
