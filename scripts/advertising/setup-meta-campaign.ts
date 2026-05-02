@@ -5,9 +5,15 @@ import type { MetaAdClient } from '@/modules/advertising/act/meta-marketing';
 
 // Targeting per docs/marketing.md "Параллельная Spanish-кампания (с дня 1)":
 // EN Tier 1 — 4 high-CPM English markets ($14/day = 70% of $20)
-// ES LATAM   — 5 high-volume LATAM markets ($6/day = 30%)
+// ES LATAM   — 4 high-volume LATAM markets ($6/day = 30%)
+//
+// AR excluded despite docs listing it: Stripe is USD-only and Argentina's
+// "Impuesto PAÍS" + Ganancias/Bienes Personales percepciones make foreign-
+// currency subscriptions effectively ~1.85× more expensive at checkout, plus
+// many local cards block USD merchant charges entirely. Adding AR back
+// requires either Stripe ARS support or a Mercado Pago integration.
 const EN_COUNTRIES = ['US', 'GB', 'CA', 'AU'];
-const ES_COUNTRIES = ['MX', 'AR', 'CO', 'CL', 'PE'];
+const ES_COUNTRIES = ['MX', 'CO', 'CL', 'PE'];
 
 interface SetupOpts {
   adClient: Pick<MetaAdClient, 'createCampaign' | 'createAdSet'>;

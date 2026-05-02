@@ -18,6 +18,9 @@ describe('runSetup', () => {
     expect(enCall.targeting.countries).toContain('US');
     const esCall = adClient.createAdSet.mock.calls.find((c) => c[0].locale === 'es')![0];
     expect(esCall.targeting.countries).toContain('MX');
+    // AR explicitly excluded — Stripe is USD-only and AR's foreign-currency
+    // tax stack (~1.85× checkout multiplier) kills conversion economics.
+    expect(esCall.targeting.countries).not.toContain('AR');
   });
 
   it('reuses existing campaign when reuseCampaignId is set (recovery mode)', async () => {
