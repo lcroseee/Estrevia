@@ -50,6 +50,7 @@ function makeDeps(): PauseDeps {
 
   return {
     metaApi: meta,
+    insightsApi: meta,
     telegramBot: mockTelegramBot(),
     spendCapDb: makeSpendCapDb(),
     decisionDb: makeDecisionDb(),
@@ -105,7 +106,7 @@ describe('pause', () => {
     // here uses plannedDelta=0, so cap won't block. Instead test with explicit delta.
     const decision = makeDecision({ action: 'scale_up', delta_budget_usd: 20 });
     // Report $79 to trigger block at $79+20>80
-    (deps.metaApi as ReturnType<typeof mockMetaApi>).getInsights.mockResolvedValue([
+    (deps.insightsApi as ReturnType<typeof mockMetaApi>).getInsights.mockResolvedValue([
       mockAdMetric({ spend_usd: 79 }),
     ]);
 
@@ -135,7 +136,7 @@ describe('pause', () => {
     const deps = makeDeps();
     (deps.metaApi as ReturnType<typeof mockMetaApi>).pauseAd.mockImplementation(() => {
       calls.push('meta');
-      return Promise.resolve({ success: true });
+      return Promise.resolve(undefined);
     });
 
     // Should throw before reaching Meta

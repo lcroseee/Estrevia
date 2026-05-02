@@ -1,10 +1,13 @@
 import type { AdDecision, DecisionRecord } from '@/shared/types/advertising';
-import type { MetaAdClient } from './meta-marketing';
-import type { SpendCapDeps, AlertSender } from '../safety/spend-cap';
+import type { MetaAdActOps } from '@/modules/advertising/meta-graph-api';
+import type { SpendCapDeps, AlertSender, InsightsProvider } from '../safety/spend-cap';
 import type { DecisionLogDb } from '../audit/decision-log';
 
 export interface PauseDeps {
-  metaApi: MetaAdClient;
+  /** Narrow act-layer client — only pauseAd is called from this module. */
+  metaApi: MetaAdActOps;
+  /** Separate insights client used by the spend-cap pre-flight check. */
+  insightsApi: InsightsProvider;
   telegramBot: AlertSender;
   spendCapDb: SpendCapDeps['db'];
   decisionDb: DecisionLogDb;
@@ -32,7 +35,7 @@ export async function pause(decision: AdDecision, deps: PauseDeps): Promise<Deci
   // for consistency — planned delta is 0 for pause actions)
   const plannedDelta = decision.delta_budget_usd ?? 0;
   const capResult = await checkSpendCap(Math.max(0, plannedDelta), {
-    metaApi: deps.metaApi,
+    metaApi: deps.insightsApi,
     telegramBot: deps.telegramBot,
     db: deps.spendCapDb,
   });

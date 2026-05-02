@@ -48,6 +48,7 @@ function makeDeps(): DuplicateDeps {
   meta.getInsights.mockResolvedValue([mockAdMetric({ spend_usd: 20 })]);
   return {
     metaApi: meta,
+    insightsApi: meta,
     telegramBot: mockTelegramBot(),
     spendCapDb: makeSpendCapDb(),
     decisionDb: makeDecisionDb(),
@@ -102,7 +103,7 @@ describe('duplicate', () => {
 
   it('throws when spend cap would be exceeded', async () => {
     const deps = makeDeps();
-    (deps.metaApi as ReturnType<typeof mockMetaApi>).getInsights.mockResolvedValue([
+    (deps.insightsApi as ReturnType<typeof mockMetaApi>).getInsights.mockResolvedValue([
       mockAdMetric({ spend_usd: 79 }),
     ]);
 

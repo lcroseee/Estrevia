@@ -179,7 +179,7 @@ describe('handleDisapproval', () => {
 
     const meta = deps.metaApi as ReturnType<typeof mockMetaApi>;
     expect(meta.duplicateAd).not.toHaveBeenCalled();
-    expect(meta.scaleBudget).not.toHaveBeenCalled();
+    expect(meta.updateAdSetBudget).not.toHaveBeenCalled();
   });
 });
 

@@ -167,6 +167,7 @@ async function runDailyTriage(opts: {
     if (decision.action === 'pause') {
       const record = await pause(decision, {
         metaApi: metaApi,
+        insightsApi: metaApi,
         telegramBot: telegram as unknown as Parameters<typeof pause>[1]['telegramBot'],
         spendCapDb: spendCapDb as unknown as Parameters<typeof pause>[1]['spendCapDb'],
         decisionDb: decisionDb as unknown as Parameters<typeof pause>[1]['decisionDb'],

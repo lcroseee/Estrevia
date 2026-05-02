@@ -18,6 +18,7 @@ import { assertCronAuth } from '@/shared/lib/cron-auth';
 import { fetchMetaInsights } from '@/modules/advertising/perceive/meta-insights';
 import { decide } from '@/modules/advertising/decide/orchestrator';
 import { pause } from '@/modules/advertising/act/pause';
+import { getMetaAdClient } from '@/modules/advertising/act';
 import { TelegramBot } from '@/modules/advertising/alerts/telegram-bot';
 import { isDryRun } from '@/modules/advertising/safety/kill-switch';
 import type { MetaInsightsApi } from '@/modules/advertising/perceive/meta-insights';
@@ -41,8 +42,11 @@ export async function GET(request: Request) {
   try {
     const dryRun = isDryRun();
 
-    // Build dependencies — real implementations use env vars in production
+    // Build dependencies — real implementations use env vars in production.
+    // metaApiClient: insights + perceive (buildMetaApiClient stub → Phase 2: real insights adapter)
+    // actClient:     act-layer operations (getMetaAdClient() — real MetaAdManagementClient in prod)
     const metaApiClient = buildMetaApiClient();
+    const actClient = getMetaAdClient();
     const telegramBot = buildTelegramBot();
     const decisionDb = buildDecisionDb();
     const spendCapDb = buildSpendCapDb();
@@ -81,7 +85,8 @@ export async function GET(request: Request) {
         continue;
       }
       const record = await pause(decision, {
-        metaApi: metaApiClient,
+        metaApi: actClient,
+        insightsApi: metaApiClient,
         telegramBot: telegramBotAsAlertSender(telegramBot),
         spendCapDb,
         decisionDb,
@@ -142,9 +147,9 @@ function buildMetaApiClient(): MetaInsightsApi & MetaAdClient {
         `[triage-hourly] MetaMarketingClient.pauseAd not yet implemented. ad=${adId}`,
       );
     },
-    scaleBudget: async (adId, delta) => {
+    updateAdSetBudget: async (adSetId, cents) => {
       throw new Error(
-        `[triage-hourly] MetaMarketingClient.scaleBudget not yet implemented. ad=${adId} delta=${delta}`,
+        `[triage-hourly] MetaMarketingClient.updateAdSetBudget not yet implemented. adSetId=${adSetId} cents=${cents}`,
       );
     },
     duplicateAd: async (adId) => {

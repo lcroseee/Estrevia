@@ -22,6 +22,7 @@ import { decideBayesian } from '@/modules/advertising/decide/tier-2-bayesian';
 import { pause } from '@/modules/advertising/act/pause';
 import { scale } from '@/modules/advertising/act/scale';
 import { duplicate } from '@/modules/advertising/act/duplicate';
+import { getMetaAdClient } from '@/modules/advertising/act';
 import { TelegramBot } from '@/modules/advertising/alerts/telegram-bot';
 import { isDryRun } from '@/modules/advertising/safety/kill-switch';
 import type { MetaInsightsApi } from '@/modules/advertising/perceive/meta-insights';
@@ -51,8 +52,11 @@ export async function GET(request: Request) {
     const dateStr = yesterday.toISOString().slice(0, 10);
     const todayStr = now.toISOString().slice(0, 10);
 
-    // Build dependencies
+    // Build dependencies.
+    // metaApiClient: insights + perceive (stub → Phase 2: real insights adapter)
+    // actClient:     act-layer operations (getMetaAdClient() — real MetaAdManagementClient in prod)
     const metaApiClient = buildMetaApiClient();
+    const actClient = getMetaAdClient();
     const posthogClient = buildPosthogClient();
     const stripeClient = buildStripeClient();
     const telegramBot = buildTelegramBot();
@@ -124,7 +128,8 @@ export async function GET(request: Request) {
         const alertSender = telegramBotAsAlertSender(telegramBot);
         if (decision.action === 'pause') {
           const record = await pause(decision, {
-            metaApi: metaApiClient,
+            metaApi: actClient,
+            insightsApi: metaApiClient,
             telegramBot: alertSender,
             spendCapDb,
             decisionDb,
@@ -133,7 +138,8 @@ export async function GET(request: Request) {
           pauseCount++;
         } else if (decision.action === 'scale_up' || decision.action === 'scale_down') {
           const record = await scale(decision, {
-            metaApi: metaApiClient,
+            metaApi: actClient,
+            insightsApi: metaApiClient,
             telegramBot: alertSender,
             spendCapDb,
             decisionDb,
@@ -142,7 +148,8 @@ export async function GET(request: Request) {
           scaleCount++;
         } else if (decision.action === 'duplicate') {
           const record = await duplicate(decision, {
-            metaApi: metaApiClient,
+            metaApi: actClient,
+            insightsApi: metaApiClient,
             telegramBot: alertSender,
             spendCapDb,
             decisionDb,
@@ -231,9 +238,9 @@ function buildMetaApiClient(): MetaInsightsApi & MetaAdClient {
     pauseAd: async (adId) => {
       throw new Error(`[triage-daily] MetaMarketingClient.pauseAd not yet implemented. ad=${adId}`);
     },
-    scaleBudget: async (adId, delta) => {
+    updateAdSetBudget: async (adSetId, cents) => {
       throw new Error(
-        `[triage-daily] MetaMarketingClient.scaleBudget not yet implemented. ad=${adId} delta=${delta}`,
+        `[triage-daily] MetaMarketingClient.updateAdSetBudget not yet implemented. adSetId=${adSetId} cents=${cents}`,
       );
     },
     duplicateAd: async (adId) => {

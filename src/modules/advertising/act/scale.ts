@@ -1,10 +1,13 @@
 import type { AdDecision, DecisionRecord } from '@/shared/types/advertising';
-import type { MetaAdClient } from './meta-marketing';
-import type { SpendCapDeps, AlertSender } from '../safety/spend-cap';
+import type { MetaAdActOps } from '@/modules/advertising/meta-graph-api';
+import type { SpendCapDeps, AlertSender, InsightsProvider } from '../safety/spend-cap';
 import type { DecisionLogDb } from '../audit/decision-log';
 
 export interface ScaleDeps {
-  metaApi: MetaAdClient;
+  /** Narrow act-layer client — only updateAdSetBudget is called from this module. */
+  metaApi: MetaAdActOps;
+  /** Separate insights client used by the spend-cap pre-flight check. */
+  insightsApi: InsightsProvider;
   telegramBot: AlertSender;
   spendCapDb: SpendCapDeps['db'];
   decisionDb: DecisionLogDb;
@@ -40,7 +43,7 @@ export async function scale(decision: AdDecision, deps: ScaleDeps): Promise<Deci
   // Pre-flight 2: spend cap — only positive deltas consume budget
   const plannedDelta = Math.max(0, decision.delta_budget_usd);
   const capResult = await checkSpendCap(plannedDelta, {
-    metaApi: deps.metaApi,
+    metaApi: deps.insightsApi,
     telegramBot: deps.telegramBot,
     db: deps.spendCapDb,
   });
@@ -51,10 +54,16 @@ export async function scale(decision: AdDecision, deps: ScaleDeps): Promise<Deci
     );
   }
 
-  // Execute via Meta API
+  // Execute via Meta API.
+  // NOTE (Phase 2): decision.ad_id here acts as the ad-set ID for the budget call.
+  // AdDecision will gain an explicit adset_id field in Phase 2 once the perceive
+  // layer maps ad → ad-set. delta_budget_usd (signed USD) is converted to cents
+  // and used as the new absolute daily budget — a simplification until we can
+  // fetch the current budget and add the delta properly.
+  const dailyBudgetCents = Math.round(Math.abs(decision.delta_budget_usd) * 100);
   let metaResponse: unknown;
   try {
-    metaResponse = await deps.metaApi.scaleBudget(decision.ad_id, decision.delta_budget_usd);
+    metaResponse = await deps.metaApi.updateAdSetBudget(decision.ad_id, dailyBudgetCents);
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     const record = await logDecision(decision, false, {

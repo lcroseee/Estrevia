@@ -49,6 +49,7 @@ function makeDeps(): ScaleDeps {
   meta.getInsights.mockResolvedValue([mockAdMetric({ spend_usd: 20 })]);
   return {
     metaApi: meta,
+    insightsApi: meta,
     telegramBot: mockTelegramBot(),
     spendCapDb: makeSpendCapDb(),
     decisionDb: makeDecisionDb(),
@@ -81,13 +82,14 @@ describe('scale', () => {
     const decision = makeDecision({ delta_budget_usd: undefined });
 
     await expect(scale(decision, deps)).rejects.toThrow('delta_budget_usd');
-    expect(deps.metaApi.scaleBudget).not.toHaveBeenCalled();
+    expect(deps.metaApi.updateAdSetBudget).not.toHaveBeenCalled();
   });
 
-  it('calls metaApi.scaleBudget with correct adId and delta', async () => {
+  it('calls metaApi.updateAdSetBudget with correct adId and budget in cents', async () => {
     const deps = makeDeps();
     await scale(makeDecision({ delta_budget_usd: 15 }), deps);
-    expect(deps.metaApi.scaleBudget).toHaveBeenCalledWith('ad_001', 15);
+    // 15 USD * 100 = 1500 cents (absolute daily budget — Phase 2 will add delta semantics)
+    expect(deps.metaApi.updateAdSetBudget).toHaveBeenCalledWith('ad_001', 1500);
   });
 
   it('returns a DecisionRecord with applied=true on success', async () => {
@@ -102,34 +104,35 @@ describe('scale', () => {
     const deps = makeDeps();
 
     await expect(scale(makeDecision(), deps)).rejects.toBeInstanceOf(KillSwitchError);
-    expect(deps.metaApi.scaleBudget).not.toHaveBeenCalled();
+    expect(deps.metaApi.updateAdSetBudget).not.toHaveBeenCalled();
   });
 
   it('blocks and throws when spend cap is exceeded', async () => {
     const deps = makeDeps();
-    (deps.metaApi as ReturnType<typeof mockMetaApi>).getInsights.mockResolvedValue([
+    (deps.insightsApi as ReturnType<typeof mockMetaApi>).getInsights.mockResolvedValue([
       mockAdMetric({ spend_usd: 79 }),
     ]);
 
     await expect(scale(makeDecision({ delta_budget_usd: 10 }), deps)).rejects.toThrow('spend cap');
-    expect(deps.metaApi.scaleBudget).not.toHaveBeenCalled();
+    expect(deps.metaApi.updateAdSetBudget).not.toHaveBeenCalled();
   });
 
   it('does not check spend cap for negative delta (scale_down reduces budget)', async () => {
     const deps = makeDeps();
     // Meta at $79; delta is -10 (scale down) → plannedDelta = max(0, -10) = 0 → should pass
-    (deps.metaApi as ReturnType<typeof mockMetaApi>).getInsights.mockResolvedValue([
+    (deps.insightsApi as ReturnType<typeof mockMetaApi>).getInsights.mockResolvedValue([
       mockAdMetric({ spend_usd: 79 }),
     ]);
 
     const record = await scale(makeDecision({ delta_budget_usd: -10 }), deps);
     expect(record.applied).toBe(true);
-    expect(deps.metaApi.scaleBudget).toHaveBeenCalledWith('ad_001', -10);
+    // abs(-10) * 100 = 1000 cents
+    expect(deps.metaApi.updateAdSetBudget).toHaveBeenCalledWith('ad_001', 1000);
   });
 
   it('writes audit record with applied=false on Meta failure', async () => {
     const deps = makeDeps();
-    (deps.metaApi as ReturnType<typeof mockMetaApi>).scaleBudget.mockRejectedValueOnce(
+    (deps.metaApi as ReturnType<typeof mockMetaApi>).updateAdSetBudget.mockRejectedValueOnce(
       new Error('api_error'),
     );
 

@@ -14,10 +14,15 @@ import type { AdMetric } from '@/shared/types/advertising';
 
 export interface MetaAdClient {
   /** Pauses the ad identified by adId. */
-  pauseAd(adId: string): Promise<{ success: boolean }>;
+  pauseAd(adId: string): Promise<void>;
 
-  /** Adjusts the ad's daily budget by deltaUsd (positive = increase). */
-  scaleBudget(adId: string, deltaUsd: number): Promise<{ success: boolean }>;
+  /**
+   * Sets the absolute daily budget (in cents) for an ad set.
+   * Replaces the legacy `scaleBudget(delta)` — callers must compute the new
+   * absolute value before calling (current_budget + delta). Phase 2 will add
+   * budget-fetch helpers so act-stream functions can do this automatically.
+   */
+  updateAdSetBudget(adSetId: string, dailyBudgetCents: number): Promise<void>;
 
   /** Duplicates the ad and returns the new ad's ID. */
   duplicateAd(adId: string): Promise<{ ad_id: string }>;
