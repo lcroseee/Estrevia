@@ -71,9 +71,18 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
-  // 3) Run intl middleware on page routes — handles rewrite/redirect for /es.
-  //    Skip API routes (no locale segment for API paths).
-  if (req.nextUrl.pathname.startsWith('/api/')) return;
+  // 3) Run intl middleware on locale-dependent page routes only.
+  //    Skip API routes and routes intentionally outside [locale]/ directory:
+  //      /s/       — share pages (EN-only, noindex, no [locale] segment)
+  //      /admin/   — admin panel (EN-only, Clerk allowlist)
+  //    Without these exclusions, intl middleware would rewrite e.g.
+  //    /s/abc → /en/s/abc which has no matching page → 404.
+  const { pathname } = req.nextUrl;
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/s/') ||
+    pathname.startsWith('/admin/')
+  ) return;
   return intlMiddleware(req);
 });
 
