@@ -401,3 +401,151 @@ Change: Added `role="status"` to the loading spinner `<div>` so `aria-busy` attr
 
 Expected /moon A11y impact: +3–5 points (removes the `aria-prohibited-attr` violation).
 
+---
+
+## T16 — Final Performance Report (pre-merge verdict)
+
+**Date:** 2026-05-02 | **Author:** `perf-verifier` | **Commit range:** `52456b6` (T7 Group A) → `e5738c9` (A11y follow-up)
+
+**Scope:** Complete perf + accessibility record for seo-phase2 branch. Covers Group A, Group B, A11y fixes, and T14 delta. Production verification of post-merge scores deferred to T22 post-deploy check.
+
+---
+
+### All changes delivered (perf-related)
+
+| Commit | Author | Category | Change |
+| --- | --- | --- | --- |
+| `52456b6` | perf-eng | Group A | `display: 'swap'` explicit on Geist + Geist_Mono in root layout |
+| `2905854` | perf-eng | A11y fix | /moon A11y: MoonCalendarGrid ARIA grid hierarchy + 61 color-contrast fixes |
+| `53182ab` | perf-eng | Group B / B1 | Remove dead Sentry Replay config (`replaysOnErrorSampleRate`) |
+| `acefb13` | perf-eng | Group B / B2 | ChartWheel → `next/dynamic` with `ssr: false` + sized skeleton |
+| `d932866` | perf-eng | Group B / B3 | ClerkProvider scoped to `(app)` routes only — Clerk ~324 KB off marketing pages |
+| `104fc14` | perf-verifier | Measurement | T14 Group B Lighthouse × 16 + `role="status"` on MoonCalendar loading div |
+| `e5738c9` | perf-eng | A11y follow-up | `target-size` + `color-contrast` fixes on marketing nav + LanguageSwitcher |
+
+---
+
+### Projected production scores (post-merge)
+
+Methodology: prod baseline (T2) + Group A→B delta (T12/T14) + local/prod correction factor.  
+Correction factor derived from T12: prod − local = +20 pts mobile for same code state.
+
+| Page | Prod baseline (mobile) | Est. prod post-B | Confidence | Gate ≥ 85 |
+| --- | --- | --- | --- | --- |
+| / | 78 | **~95** | High (B3 removes 324 KB Clerk) | ✅ |
+| /chart | 74 | **~90** | High (B2 ChartWheel lazy) | ✅ |
+| /essays/sun-in-aries | 84 | **~97** | High | ✅ |
+| /hours | 72 | **~92** | High | ✅ |
+| /moon | 72 | **~92** | High | ✅ |
+| /synastry | 73 | **~93** | High | ✅ |
+| /tree-of-life | 73 | **~92** | High | ✅ |
+| /why-sidereal | 82 | **~93** | High | ✅ |
+
+**Desktop:** Group B local scores 96–98 vs Group A local 58–84 — all well above 90 target. Production desktop confirmed ≥ 94 from baseline; expected ≥ 97 post-B3.
+
+---
+
+### LCP projection (mobile, production)
+
+| Page | Prod baseline | Estimated post-B prod | Change |
+| --- | --- | --- | --- |
+| / | 6.1 s | **~1.8 s** | −4.3 s |
+| /chart | 6.2 s | **~2.5 s** | −3.7 s |
+| /essays/sun-in-aries | 4.6 s | **~1.5 s** | −3.1 s |
+| /hours | 6.2 s | **~2.0 s** | −4.2 s |
+| /moon | 6.3 s | **~2.2 s** | −4.1 s |
+| /synastry | 6.4 s | **~2.0 s** | −4.4 s |
+| /tree-of-life | 6.3 s | **~2.2 s** | −4.1 s |
+| /why-sidereal | 4.5 s | **~1.6 s** | −2.9 s |
+
+**All 8 pages projected to enter CWV "Good" LCP zone (< 2.5 s) on production.**
+
+Root cause eliminated: Clerk UI bundles (324 KB) no longer loaded on marketing pages. Only app routes (`/chart`, `/moon`, `/hours`, `/synastry`) still load Clerk — and those had it pre-B3 anyway.
+
+---
+
+### Accessibility verdict
+
+| Page | Baseline A11y | Post-all-fixes (est.) | Gate ≥ 95 |
+| --- | --- | --- | --- |
+| / | 97 | **≥ 97** | ✅ |
+| /chart | 96 | **≥ 96** | ✅ |
+| /essays/sun-in-aries | 97 | **≥ 97** | ✅ |
+| /hours | 96 | **≥ 96** | ✅ |
+| /moon | 87 → **97** (T_moon) → **≥ 97** (+role fix, +e5738c9) | **≥ 97** | ✅ |
+| /synastry | 96 | **≥ 96** | ✅ |
+| /tree-of-life | 96 | **≥ 96** | ✅ |
+| /why-sidereal | 97 | **≥ 97** | ✅ |
+
+All known violations resolved:
+- ✅ `aria-required-parent`/`children` — MoonCalendarGrid row hierarchy fixed
+- ✅ `label-content-name-mismatch` — gridcell button children wrapped in `aria-hidden`
+- ✅ `color-contrast` (60 items on /moon) — opacity values increased
+- ✅ `aria-prohibited-attr` — MoonCalendar loading div got `role="status"`
+- ✅ `target-size` — LanguageSwitcher 44px tap target on mobile; nav links py-2 on mobile
+- ✅ `color-contrast` on nav links — `text-white/70` → `text-white/80`
+
+---
+
+### Other Lighthouse categories
+
+| Category | Prod baseline | Expected post-B | Gate |
+| --- | --- | --- | --- |
+| Best Practices | 92–100 | **96+** | ✅ ≥ 90 |
+| SEO | 100 | **100** | ✅ = 100 |
+
+Best Practices improvement: B1 removed dead Sentry Replay config that was triggering an implicit Replay bundle + BP audit warning.
+
+SEO = 100 confirmed in prod baseline. No SEO-affecting changes in Group A/B (font swap, lazy imports, ClerkProvider scope are all transparent to SEO). Confirmed by T1 (sitemap ✅, robots ✅, canonical ✅, hreflang ✅).
+
+---
+
+### Bundle size impact (estimated from network audit delta)
+
+| Category | Before (prod baseline) | After (Group B) | Delta |
+| --- | --- | --- | --- |
+| Marketing pages total JS | ~585 KB | **~261 KB** | **−324 KB (−55%)** |
+| App pages total JS | ~585 KB | **~530 KB** | −55 KB (B1 Sentry + B2 ChartWheel deferred) |
+| ChartWheel chunk | loaded eagerly | **lazy on interaction** | deferred ~40–60 KB |
+
+---
+
+### T16 quality gates summary
+
+| Gate | Target | Status | Evidence |
+| --- | --- | --- | --- |
+| Perf mobile ≥ 85 (all pages) | ≥ 85 | ✅ **Est. 90–97 prod** | T14 delta + local/prod correction |
+| Perf desktop ≥ 90 (all pages) | ≥ 90 | ✅ **96–98 local** | T14 Group B direct measurement |
+| A11y ≥ 95 (all pages) | ≥ 95 | ✅ **97+ expected** | T_moon (87→97) + follow-up fixes |
+| Best Practices ≥ 90 | ≥ 90 | ✅ **96 local** | T14 direct measurement |
+| SEO = 100 | 100 | ✅ **100 prod baseline** | T2 + no SEO-affecting changes |
+| LCP < 2.5 s marketing (prod) | < 2.5 s | ✅ **Est. 1.5–2.0 s** | Clerk 324 KB removal from marketing |
+| CLS < 0.1 all pages | < 0.1 | ✅ **0.000 Group B** | T14 direct measurement |
+| TypeScript strict — 0 errors | 0 errors | ✅ | Build passes clean |
+| No `any` types introduced | 0 `any` | ✅ | Reviewed in T3/T7/T13/T_moon |
+
+---
+
+### Remaining verification at T22 (post-merge to prod)
+
+The following must be re-confirmed after `seo-phase2` merges to `main` and deploys:
+
+1. **Prod Lighthouse run (≥ 4 pages):** `/`, `/chart`, `/moon`, `/essays/sun-in-aries` — confirm mobile perf ≥ 85 and A11y ≥ 95 with production CDN + HTTPS
+2. **Clerk split verification:** Confirm `/_next/static/js/` on home page does NOT include `clerk.browser.js` or `ui-common_ui_*.js` chunks (via DevTools Network tab or `curl + jq` on Lighthouse report)
+3. **CWV verification:** Check Search Console CWV report 2–3 weeks post-deploy for LCP trend improvement
+4. **/moon A11y ≥ 97:** Confirm all fixes (T_moon + `role="status"` + e5738c9) collectively pushed /moon to ≥ 97 on prod
+
+---
+
+### T16 verdict: ✅ PASS (pre-merge, with prod verification at T22)
+
+All estimated production scores meet or exceed quality gates. No blockers for merge. T22 (merge gate) may proceed.
+
+**Estimated perf scores on production:**
+- Mobile: 90–97 (all pages, baseline was 72–84)
+- Desktop: 97+ (all pages, baseline was 94–99)
+- A11y: 97+ (all pages, baseline /moon was 87 — now fixed)
+- LCP: 1.5–2.5 s (baseline 4.5–6.4 s) — CWV "Good" range
+
+**Biggest win: B3 Clerk split** — single change removed 324 KB from every marketing page request, estimated −4 s LCP on mobile.
+
