@@ -42,7 +42,7 @@ export function LanguageSwitcher() {
           aria-checked={locale === code}
           onClick={() => handleChange(code)}
           disabled={isPending}
-          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 ${
+          className={`px-2.5 py-3 sm:py-1 rounded-md text-xs font-medium transition-all duration-150 min-h-[44px] sm:min-h-0 flex items-center justify-center ${
             locale === code
               ? 'bg-white/10 text-white'
               : 'text-white/40 hover:text-white/60'
