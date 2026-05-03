@@ -17,14 +17,30 @@ import type { PosthogFunnelApi } from '@/modules/advertising/perceive/posthog-fu
  * conversion_from_previous, so this client only needs raw counts per event.
  */
 
-const FUNNEL_EVENTS: FunnelEvent['event_name'][] = [
-  'landing_view',
-  'chart_calculated',
-  'passport_shared',
-  'user_registered',
-  'paywall_view',
-  'subscription_started',
+/**
+ * Canonical funnel event names (what the agent's reconciler operates on)
+ * mapped to the actual event names fired in the codebase. The HogQL query
+ * uses real names (right column); results are remapped back to canonical
+ * names for the FunnelSnapshot consumers downstream.
+ *
+ * Identity mappings (canonical === real) for events instrumented by
+ * Tracks 1/2/3/4/6 (`landing_view`, `user_registered`, `subscription_started`)
+ * and the existing `chart_calculated`. Two events use legacy names that
+ * we translate here to avoid renaming 6 call sites in product code.
+ */
+const FUNNEL_EVENT_MAP: Array<{
+  canonical: FunnelEvent['event_name'];
+  real: string;
+}> = [
+  { canonical: 'landing_view',         real: 'landing_view' },
+  { canonical: 'chart_calculated',     real: 'chart_calculated' },
+  { canonical: 'passport_shared',      real: 'passport_reshared' },
+  { canonical: 'user_registered',      real: 'user_registered' },
+  { canonical: 'paywall_view',         real: 'paywall_opened' },
+  { canonical: 'subscription_started', real: 'subscription_started' },
 ];
+
+const FUNNEL_EVENTS_REAL: string[] = FUNNEL_EVENT_MAP.map((m) => m.real);
 
 interface HogQLResponse {
   results?: [string, number, number][]; // [event, count, unique_users]
@@ -56,7 +72,7 @@ export class PosthogFunnelClient implements PosthogFunnelApi {
     date_to: string;
     filters?: { utm_source?: string; ad_id?: string };
   }): Promise<FunnelSnapshot> {
-    const eventList = FUNNEL_EVENTS.map((e) => `'${e}'`).join(', ');
+    const eventList = FUNNEL_EVENTS_REAL.map((e) => `'${e}'`).join(', ');
 
     let where = `timestamp >= toDateTime('${opts.date_from}') AND timestamp < toDateTime('${opts.date_to}') AND event IN (${eventList})`;
     if (opts.filters?.utm_source) {
@@ -92,10 +108,12 @@ export class PosthogFunnelClient implements PosthogFunnelApi {
       counts.set(event, { count: Number(count) || 0, unique: Number(unique) || 0 });
     }
 
-    const steps: FunnelEvent[] = FUNNEL_EVENTS.map((event_name) => {
-      const r = counts.get(event_name) ?? { count: 0, unique: 0 };
+    // Re-emit results under canonical names for downstream consumers.
+    // counts is keyed by REAL event name (from HogQL), we pull-then-rename.
+    const steps: FunnelEvent[] = FUNNEL_EVENT_MAP.map(({ canonical, real }) => {
+      const r = counts.get(real) ?? { count: 0, unique: 0 };
       return {
-        event_name,
+        event_name: canonical,
         count: r.count,
         unique_users: r.unique,
         // conversion_from_previous is overwritten by normalizeConversions
