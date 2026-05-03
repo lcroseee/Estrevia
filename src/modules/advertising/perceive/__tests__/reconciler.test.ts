@@ -1,5 +1,23 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Stub the recon-state-store at module-load time so reconciler doesn't
+// touch the real Drizzle DB during unit tests. All four exports stubbed for
+// safety even though only `suspend` is called from reconciler.
+vi.mock('../recon-state-store', () => ({
+  suspend: vi.fn().mockResolvedValue(undefined),
+  resume: vi.fn().mockResolvedValue(undefined),
+  getReconState: vi.fn().mockResolvedValue({
+    suspended: false,
+    suspendedAt: null,
+    suspendReason: null,
+    autoResumeAt: null,
+    lastDriftPct: null,
+  }),
+  checkAutoResume: vi.fn().mockResolvedValue({ resumed: false }),
+}));
+
 import { reconcile } from '../reconciler';
+import { suspend } from '../recon-state-store';
 import { fetchMetaInsights } from '../meta-insights';
 import { fetchFunnelSnapshot } from '../posthog-funnel';
 import { fetchStripeAttribution } from '../stripe-attribution';
@@ -8,6 +26,10 @@ import { mockPosthog } from '../../__tests__/mocks/posthog';
 import { mockStripe } from '../../__tests__/mocks/stripe';
 import { mockTelegramBot } from '../../__tests__/mocks/telegram';
 import { mockAdMetric, mockFunnelSnapshot, mockStripeAttribution } from '../../__tests__/fixtures';
+
+beforeEach(() => {
+  vi.mocked(suspend).mockClear();
+});
 
 // ─── Unit tests for reconcile() ──────────────────────────────────────────────
 
@@ -134,10 +156,55 @@ describe('reconcile', () => {
 
     await reconcile(meta, funnel, { alertBot: telegram });
 
-    expect(telegram.sendMessage).toHaveBeenCalledTimes(1);
-    expect(telegram.sendMessage).toHaveBeenCalledWith(
+    // Two messages on critical_drift: (1) drift detected, (2) suspended notice
+    expect(telegram.sendMessage).toHaveBeenCalledTimes(2);
+    expect(telegram.sendMessage.mock.calls[0][0]).toEqual(
       expect.stringContaining('critical_drift'),
     );
+    expect(telegram.sendMessage.mock.calls[1][0]).toEqual(
+      expect.stringContaining('SUSPENDED'),
+    );
+  });
+
+  it('triggers global suspend on critical_drift', async () => {
+    const meta = [mockAdMetric({ clicks: 200 })];
+    const funnel = mockFunnelSnapshot({
+      steps: [
+        { event_name: 'landing_view', count: 100, unique_users: 100, conversion_from_previous: 1.0 },
+        { event_name: 'chart_calculated', count: 45, unique_users: 45, conversion_from_previous: 0.45 },
+        { event_name: 'passport_shared', count: 6, unique_users: 6, conversion_from_previous: 0.13 },
+        { event_name: 'user_registered', count: 8, unique_users: 8, conversion_from_previous: 0.18 },
+        { event_name: 'paywall_view', count: 7, unique_users: 7, conversion_from_previous: 0.88 },
+        { event_name: 'subscription_started', count: 1, unique_users: 1, conversion_from_previous: 0.14 },
+      ],
+    });
+
+    await reconcile(meta, funnel, { alertBot: mockTelegramBot() });
+
+    expect(suspend).toHaveBeenCalledTimes(1);
+    expect(suspend).toHaveBeenCalledWith(
+      expect.stringContaining('critical_drift'),
+      expect.any(Number),
+      24,
+    );
+  });
+
+  it('does not call suspend on minor_drift or match', async () => {
+    const meta = [mockAdMetric({ clicks: 100 })];
+    const funnel = mockFunnelSnapshot({
+      steps: [
+        { event_name: 'landing_view', count: 95, unique_users: 95, conversion_from_previous: 1.0 },
+        { event_name: 'chart_calculated', count: 43, unique_users: 43, conversion_from_previous: 0.45 },
+        { event_name: 'passport_shared', count: 6, unique_users: 6, conversion_from_previous: 0.14 },
+        { event_name: 'user_registered', count: 8, unique_users: 8, conversion_from_previous: 0.18 },
+        { event_name: 'paywall_view', count: 7, unique_users: 7, conversion_from_previous: 0.88 },
+        { event_name: 'subscription_started', count: 1, unique_users: 1, conversion_from_previous: 0.14 },
+      ],
+    });
+
+    await reconcile(meta, funnel);
+
+    expect(suspend).not.toHaveBeenCalled();
   });
 
   it('does not trigger alert on minor_drift or match', async () => {

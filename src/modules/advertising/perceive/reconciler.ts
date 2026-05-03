@@ -1,5 +1,6 @@
 import type { AdMetric, FunnelSnapshot, ReconciliationResult } from '@/shared/types/advertising';
 import type { MockTelegramBot } from '../__tests__/mocks/telegram';
+import { suspend } from './recon-state-store';
 
 export interface AlertBot {
   sendMessage(text: string): Promise<unknown>;
@@ -11,6 +12,8 @@ export interface ReconcileOptions {
 
 const THRESHOLD_MINOR: 0.10 = 0.10;
 const THRESHOLD_CRITICAL: 0.25 = 0.25;
+/** Default auto-resume window after a critical_drift suspend (hours). */
+const SUSPEND_AUTO_RESUME_HOURS = 24;
 
 /**
  * Pure synchronous reconciliation of Meta click count vs PostHog landing_view count.
@@ -51,12 +54,31 @@ export async function reconcile(
     threshold_critical: THRESHOLD_CRITICAL,
   };
 
-  if (status === 'critical_drift' && opts.alertBot) {
-    await opts.alertBot.sendMessage(
-      `[perceive/reconciler] critical_drift detected — ` +
-        `meta_clicks=${metaClicks}, posthog_landings=${phLandings}, ` +
-        `delta_pct=${(delta_pct * 100).toFixed(1)}%`,
+  if (status === 'critical_drift') {
+    if (opts.alertBot) {
+      await opts.alertBot.sendMessage(
+        `[perceive/reconciler] critical_drift detected — ` +
+          `meta_clicks=${metaClicks}, posthog_landings=${phLandings}, ` +
+          `delta_pct=${(delta_pct * 100).toFixed(1)}%`,
+      );
+    }
+
+    // Trigger global agent suspend. The orchestrator gates non-emergency
+    // decisions while suspended; the triage-daily cron auto-resumes after
+    // the configured window. Founder can override via /admin/advertising/recon-state.
+    await suspend(
+      `critical_drift: meta=${metaClicks}, posthog=${phLandings}, delta=${(delta_pct * 100).toFixed(1)}%`,
+      delta_pct,
+      SUSPEND_AUTO_RESUME_HOURS,
     );
+
+    if (opts.alertBot) {
+      await opts.alertBot.sendMessage(
+        `🚨 ADVERTISING AGENT SUSPENDED — reconciler critical_drift. ` +
+          `All non-emergency decisions paused for ${SUSPEND_AUTO_RESUME_HOURS}h auto-resume. ` +
+          `Investigate Pixel/PostHog drift. Founder unblock: /admin/advertising/recon-state`,
+      );
+    }
   }
 
   return result;
