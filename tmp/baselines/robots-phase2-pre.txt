@@ -1,0 +1,9 @@
+User-Agent: *
+Allow: /
+Disallow: /api/
+Disallow: /s/
+
+User-Agent: *
+Allow: /api/og/
+
+Sitemap: https://estrevia.app/sitemap.xml

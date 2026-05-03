@@ -35,6 +35,9 @@ npm-debug.log*
 
 # advertising launch artifacts (local-only, source of truth in DB)
 tmp/
+# exception: SEO/perf baseline snapshots are committed for phase diff tracking
+!tmp/baselines/
+!tmp/baselines/**
 
 # playwright MCP local artifacts
 .playwright-mcp/
