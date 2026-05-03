@@ -160,6 +160,11 @@ export const AnalyticsEvent = {
   COOKIE_CONSENT_DECLINED: 'cookie_consent_declined',
   DATA_EXPORT_REQUESTED: 'data_export_requested',
   ACCOUNT_DELETED: 'account_deleted',
+  // Avatar
+  AVATAR_GENERATED: 'avatar_generated',
+  AVATAR_GENERATION_FAILED: 'avatar_generation_failed',
+  AVATAR_QUOTA_EXHAUSTED: 'avatar_quota_exhausted',
+  AVATAR_STYLE_LOCKED_CLICKED: 'avatar_style_locked_clicked',
 } as const;
 
 export type AnalyticsEventName = (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];
