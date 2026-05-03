@@ -38,6 +38,9 @@ tmp/
 # exception: SEO/perf baseline snapshots are committed for phase diff tracking
 !tmp/baselines/
 !tmp/baselines/**
+# exception: QA reports are committed for merge-gate audit trail
+!tmp/qa-reports/
+!tmp/qa-reports/**
 
 # playwright MCP local artifacts
 .playwright-mcp/
