@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { fetchStripeAttribution } from '../stripe-attribution';
 import { mockStripe } from '../../__tests__/mocks/stripe';
 import { mockStripeAttribution } from '../../__tests__/fixtures';
@@ -87,5 +87,89 @@ describe('fetchStripeAttribution', () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].utm_content).toBe('ad_test_001');
+  });
+
+  describe('attribution window', () => {
+    it('drops subs whose subscription is older than attributionWindowDays from utm_click_timestamp', async () => {
+      const apiClient = {
+        listSubscriptionsCreatedBetween: vi.fn().mockResolvedValue([
+          mockStripeAttribution({
+            subscription_id: 'sub_in',
+            user_id: 'user_1',
+            created_at: new Date('2026-04-21T12:00:00Z'), // 5 days after click
+            utm_content: 'AD_X',
+            utm_click_timestamp: '2026-04-16T12:00:00Z',
+          }),
+          mockStripeAttribution({
+            subscription_id: 'sub_out',
+            user_id: 'user_2',
+            created_at: new Date('2026-04-30T12:00:00Z'), // 30 days after click — out of 14d window
+            utm_content: 'AD_X',
+            utm_click_timestamp: '2026-03-31T12:00:00Z',
+          }),
+        ]),
+      };
+
+      const result = await fetchStripeAttribution({
+        apiClient,
+        windowStart: new Date('2026-04-01T00:00:00Z'),
+        windowEnd: new Date('2026-05-01T00:00:00Z'),
+      });
+
+      expect(result.map((r) => r.subscription_id)).toEqual(['sub_in']);
+    });
+
+    it('keeps legacy subs without utm_click_timestamp', async () => {
+      const apiClient = {
+        listSubscriptionsCreatedBetween: vi.fn().mockResolvedValue([
+          mockStripeAttribution({
+            subscription_id: 'sub_legacy',
+            user_id: 'user_3',
+            created_at: new Date('2026-04-21T12:00:00Z'),
+            utm_content: 'AD_Y',
+            utm_click_timestamp: undefined,
+          }),
+        ]),
+      };
+
+      const result = await fetchStripeAttribution({
+        apiClient,
+        windowStart: new Date('2026-04-01T00:00:00Z'),
+        windowEnd: new Date('2026-05-01T00:00:00Z'),
+      });
+
+      expect(result.map((r) => r.subscription_id)).toEqual(['sub_legacy']);
+    });
+
+    it('honours custom attributionWindowDays', async () => {
+      const eightDaysAfterClick = mockStripeAttribution({
+        subscription_id: 'sub_8d',
+        user_id: 'user_1',
+        created_at: new Date('2026-04-21T12:00:00Z'),
+        utm_content: 'AD_X',
+        utm_click_timestamp: '2026-04-13T12:00:00Z', // 8 days before sub
+      });
+
+      const apiClient = {
+        listSubscriptionsCreatedBetween: vi.fn().mockResolvedValue([eightDaysAfterClick]),
+      };
+
+      const within14 = await fetchStripeAttribution({
+        apiClient,
+        windowStart: new Date('2026-04-01T00:00:00Z'),
+        windowEnd: new Date('2026-05-01T00:00:00Z'),
+        attributionWindowDays: 14,
+      });
+      expect(within14).toHaveLength(1);
+
+      apiClient.listSubscriptionsCreatedBetween.mockResolvedValueOnce([eightDaysAfterClick]);
+      const within7 = await fetchStripeAttribution({
+        apiClient,
+        windowStart: new Date('2026-04-01T00:00:00Z'),
+        windowEnd: new Date('2026-05-01T00:00:00Z'),
+        attributionWindowDays: 7,
+      });
+      expect(within7).toHaveLength(0);
+    });
   });
 });

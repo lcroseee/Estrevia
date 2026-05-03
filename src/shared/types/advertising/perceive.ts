@@ -39,6 +39,16 @@ export interface StripeAttribution {
   utm_campaign?: string;
   utm_content?: string; // ad_id
   first_touch_source?: string;
+  /**
+   * ISO-8601 timestamp of the first click that drove this subscription.
+   * Captured at checkout-session creation when UTM cookies are present.
+   * Used by `fetchStripeAttribution` to enforce the 14-day attribution
+   * window (Q4 hybrid: Meta=7d_click, PostHog=14d, Stripe=14d). Optional
+   * because legacy subs created before this metadata was captured do not
+   * have it; those fall back to `created_at` timing already inside the
+   * Stripe-side window.
+   */
+  utm_click_timestamp?: string;
 }
 
 export interface ReconciliationResult {
