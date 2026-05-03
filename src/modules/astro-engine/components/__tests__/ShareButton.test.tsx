@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { ShareButton } from '../ShareButton';
 
@@ -130,5 +130,40 @@ describe('ShareButton — ES render', () => {
     expect(screen.getByLabelText('Comparte tu Pasaporte Cósmico')).not.toBeNull();
     expect(screen.getByLabelText('Compartir en X')).not.toBeNull();
     expect(screen.getByLabelText('Formato de descarga')).not.toBeNull();
+  });
+});
+
+describe('ShareButton — desktop fallback (no native share)', () => {
+  beforeEach(() => {
+    // Override the outer beforeEach: set share=undefined so canNativeShare = false.
+    // We must spread globalThis.navigator THEN override share, because the outer
+    // beforeEach has already replaced globalThis.navigator (vi.stubGlobal mutates
+    // globalThis in place), so spreading it would otherwise inherit share:vi.fn().
+    vi.stubGlobal('navigator', {
+      ...globalThis.navigator,
+      share: undefined,
+      clipboard: { writeText: vi.fn() },
+    });
+  });
+
+  it('renders "Copy Link" primary button when navigator.share is unavailable', () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <ShareButton passportId="test-id" passport={passport} />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByText('Copy Link')).not.toBeNull();
+    expect(screen.getByLabelText('Copy share link')).not.toBeNull();
+  });
+
+  it('flips primary button to "Copied!" + aria.linkCopied after click', async () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={enMessages}>
+        <ShareButton passportId="test-id" passport={passport} />
+      </NextIntlClientProvider>,
+    );
+    fireEvent.click(screen.getByText('Copy Link'));
+    expect(await screen.findByText('Copied!')).not.toBeNull();
+    expect(screen.getByLabelText('Link copied to clipboard')).not.toBeNull();
   });
 });
