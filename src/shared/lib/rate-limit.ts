@@ -106,6 +106,11 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(15, '1m'),
     prefix: 'rl:chart/sun-sign',
   }),
+  'sidereal/sun-sign': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1m'),
+    prefix: 'rl:sidereal/sun-sign',
+  }),
   'user/account': new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(3, '1h'),

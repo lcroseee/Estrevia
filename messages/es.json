@@ -1510,5 +1510,164 @@
         "body": "Los veintidós Triunfos del Tarot se mapean directamente sobre los veintidós senderos, convirtiendo al Tarot en una clave visual para la estructura del Árbol. Para entender el Loco, mira el sendero 11 — el salto de Kether a Chokmah, el espíritu antes del pensamiento. Para entender el Universo, mira el sendero 32 — el paso final de Yesod a Malkuth, el circuito completo de manifestación.\n\nLa sección de Tarot de Estrevia incluye los veintidós Triunfos con sus atribuciones del mazo Thoth. Cada página de carta muestra su número de sendero correspondiente, letra hebrea y atribución astrológica. El Loco se conecta con el Mago, que se conecta con la Sacerdotisa — tres senderos descendiendo desde Kether, tres rostros del acto primordial de la creación. Leer las cartas con el Árbol en mente transforma el Tarot en un mapa de la conciencia con lógica interna precisa. Explora el Loco, el Mago, la Sacerdotisa y el Universo para seguir los polos del Árbol."
       }
     }
+  },
+  "siderealDates": {
+    "common": {
+      "breadcrumbHome": "Inicio",
+      "breadcrumbAria": "Navegación de migas de pan",
+      "breadcrumbSection": "Fechas siderales",
+      "whyDifferentH2": "Por qué estas fechas difieren de la astrología tropical",
+      "annualVariationH2": "Cómo cambian las fechas año tras año",
+      "yearTableTitle": "Sol en este signo — tabla de 7 años",
+      "seeAlsoH2": "Ver también",
+      "readWhySidereal": "Por qué la astrología sideral difiere de la tropical",
+      "calculateChart": "Calcula tu carta natal completa",
+      "widgetH2": "¿Cuál es tu signo solar sideral?",
+      "widgetIntro": "Ingresa tu fecha de nacimiento para saber en qué signo sideral estaba el Sol.",
+      "widgetLabel": "Fecha de nacimiento",
+      "widgetSubmit": "Encontrar mi signo",
+      "widgetLoading": "Calculando…",
+      "widgetError": "No se pudo calcular. Inténtalo de nuevo.",
+      "widgetRateLimited": "Demasiadas solicitudes. Espera un minuto, por favor.",
+      "widgetResult": "Tu signo solar sideral es {sign} ({startDate} – {endDate}).",
+      "widgetReadOther": "Lee sobre el Sol en {sign} sideral →",
+      "tableYear": "Año",
+      "tableStart": "El Sol entra",
+      "tableEnd": "El Sol sale",
+      "signs": {
+        "aries": "Aries",
+        "taurus": "Tauro",
+        "gemini": "Géminis",
+        "cancer": "Cáncer",
+        "leo": "Leo",
+        "virgo": "Virgo",
+        "libra": "Libra",
+        "scorpio": "Escorpio",
+        "sagittarius": "Sagitario",
+        "capricorn": "Capricornio",
+        "aquarius": "Acuario",
+        "pisces": "Piscis"
+      }
+    },
+    "aries": {
+      "title": "Fechas de Aries Sideral {year}: Cuándo el Sol entra en Aries (Lahiri)",
+      "description": "El Sol está en Aries sideral desde aproximadamente el 14 de abril hasta el 14 de mayo cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Aries tropical. Fechas exactas y tabla de 7 años adentro.",
+      "h1": "Sol en Aries Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Aries sideral",
+      "directAnswer": "El Sol está en Aries sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. La ventana comienza aproximadamente 24 días después de que el Aries tropical abre el 20–21 de marzo, diferencia que refleja la acumulación de 24.21° de precesión entre el punto equinoccial y el patrón estelar real de Aries.",
+      "whyDifferent": "La astrología tropical fija Aries al equinoccio de primavera: el 20–21 de marzo, fijo por definición. La astrología sideral lo ancla a la constelación de Aries misma. El bamboleo axial de la Tierra —precesión— mueve el equinoccio hacia el oeste respecto a las estrellas a unos 50.3 segundos de arco por año. A lo largo de 2.000 años ese ritmo acumula casi 28°. El ayanamsa Lahiri, codificado por el gobierno indio en 1955 y estándar en la astrología védica, cuantifica esa deriva en aproximadamente 24.21° a partir de 2026. Al restar ese valor de la longitud tropical del Sol se obtiene la posición del astro respecto al verdadero cinturón estelar de Aries. Cuando el Sol cruza 0° de Aries sideral, ya lleva tres semanas en 0° de Aries tropical.",
+      "annualVariation": "El ayanamsa Lahiri crece aproximadamente 50.3 segundos de arco cada año, lo que desplaza la entrada de Aries unos 20 minutos por década. Para la mayoría de los propósitos la fecha es estable: alrededor del 14 de abril en 2026, en 2036, en 2046, variando únicamente en la hora del día en UTC. La precisión importa sobre todo si naciste dentro de las 24 horas del límite Aries–Piscis. La tabla de siete años más abajo ofrece los tiempos exactos de ingreso y egreso en UTC para 2023–2029.",
+      "readEssayLink": "Sol en Aries — personalidad y rasgos"
+    },
+    "taurus": {
+      "title": "Fechas de Tauro Sideral {year}: Cuándo el Sol entra en Tauro (Lahiri)",
+      "description": "El Sol está en Tauro sideral desde aproximadamente el 14 de mayo hasta el 15 de junio cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Tauro tropical. Fechas exactas con tabla de 7 años adentro.",
+      "h1": "Sol en Tauro Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Tauro sideral",
+      "directAnswer": "El Sol está en Tauro sideral desde {startDate} hasta {endDate} en {year}, utilizando el ayanamsa Lahiri. La ventana abre aproximadamente tres semanas después de que comienza el Tauro tropical el 19–20 de abril, reflejo del desfase de 24.21° entre el equinoccio y el cinturón estelar real de Tauro.",
+      "whyDifferent": "El Tauro tropical comienza cuando el Sol cruza los 30° del zodíaco tropical: un punto geométrico fijo anclado al equinoccio de primavera. El Tauro sideral comienza cuando el Sol entra en la constelación de Tauro —la región que contiene las Pléyades, las Híadas y Aldebarán. La Tierra precesa a unos 50 segundos de arco por año; en la época de Ptolomeo (siglo II d.C.) los dos zodíacos casi coincidían. Hoy divergen en 24.21°, cuantificados por el ayanamsa Lahiri, estándar oficial de la astrología india desde 1955. El resultado práctico: la mayoría de los Soles en Tauro tropical son Soles en Aries sideral bajo el cálculo Lahiri, excepto los últimos grados de Tauro tropical, que ya caen en el Tauro sideral.",
+      "annualVariation": "El ayanamsa Lahiri aumenta a razón de unos 50.3 segundos de arco al año, lo que desplaza la entrada a Tauro sideral alrededor de 20 minutos por década. En 2026 eso significa aproximadamente el 14 de mayo; en 2036 sigue siendo el 14 de mayo, pero unas horas más tarde en UTC. Esta precisión es relevante sobre todo para quienes nacieron un día antes o después del límite Tauro–Aries, para confirmar en qué signo cae realmente tu Sol. La tabla de abajo da los tiempos exactos de ingreso y egreso UTC para 2023–2029.",
+      "readEssayLink": "Sol en Tauro — personalidad y rasgos"
+    },
+    "gemini": {
+      "title": "Fechas de Géminis Sideral {year}: Cuándo el Sol entra en Géminis (Lahiri)",
+      "description": "El Sol está en Géminis sideral desde aproximadamente el 15 de junio hasta el 16 de julio cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Géminis tropical. Fechas exactas con tabla de 7 años adentro.",
+      "h1": "Sol en Géminis Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Géminis sideral",
+      "directAnswer": "El Sol está en Géminis sideral desde {startDate} hasta {endDate} en {year} según el ayanamsa Lahiri. La ventana cae en pleno periodo en que el Cáncer tropical está comenzando — ilustración clara de cómo un ayanamsa de 24.21° separa los dos sistemas zodiacales.",
+      "whyDifferent": "El Géminis tropical abarca del 21 de mayo al 20 de junio, anclado a la geometría del equinoccio. El Géminis sideral cubre un tramo diferente del cielo: la banda que contiene a Castor y Pólux, el radiante de las Gemínidas y el cruce de la eclíptica con la Vía Láctea. Los dos zodíacos se alinearon alrededor del año 285 d.C.; desde entonces la precesión de la Tierra los ha separado a razón de unos 50 segundos de arco al año, aproximadamente 1° cada 72 años. En 2026 la diferencia asciende a 24.21°, el valor del ayanamsa Lahiri. El Sol transita físicamente la banda estelar de Géminis desde mediados de junio, no a finales de mayo. La astronomía lo confirma: las fechas del Géminis tropical son consecuencia de la definición del equinoccio, no un mapa de posiciones celestes reales.",
+      "annualVariation": "El ayanamsa Lahiri crece 50.3 segundos de arco al año, desplazando el ingreso sideral a Géminis unos 20 minutos por década. La fecha de entrada se mantiene cerca del 15 de junio a lo largo de todo el rango de la Efeméride Suiza (5400 a.C. a 5400 d.C.). La excepción son las personas nacidas el 14–16 de junio en cualquier año: para ellas conviene verificar el tiempo exacto de ingreso de ese año concreto para confirmar si su Sol está en Tauro o Géminis sideral. La tabla abajo lista los tiempos UTC de entrada y salida para 2023–2029.",
+      "readEssayLink": "Sol en Géminis — personalidad y rasgos"
+    },
+    "cancer": {
+      "title": "Fechas de Cáncer Sideral {year}: Cuándo el Sol entra en Cáncer (Lahiri)",
+      "description": "El Sol está en Cáncer sideral desde aproximadamente el 16 de julio hasta el 17 de agosto cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Cáncer tropical. Fechas exactas y tabla de 7 años adentro.",
+      "h1": "Sol en Cáncer Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Cáncer sideral",
+      "directAnswer": "El Sol está en Cáncer sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. La ventana comienza a mediados de julio, cuando el Sol transita físicamente la constelación de Cáncer — incluido el cúmulo Beehive (M44) — en vez del Cáncer tropical que abre en el solsticio de junio.",
+      "whyDifferent": "El Cáncer tropical comienza en el solsticio de verano: el momento en que el Sol alcanza su punto más septentrional en la eclíptica. En el modelo de Ptolomeo eso coincidía con la constelación de Cáncer, de ahí que los astrónomos antiguos llamaran a ese paralelo terrestre \"Trópico de Cáncer\". La precesión ha desplazado desde entonces el punto solsticial 24.21° hacia atrás, ya en la franja final de la constelación de Géminis. Así, cuando el Sol cruza los 0° de Cáncer tropical el 21 de junio, se sitúa a unos 6° de Géminis sideral según el cálculo Lahiri. Solo llega al verdadero Cáncer sideral aproximadamente 24 días después. La astrología sideral preserva el vínculo original entre los nombres de los signos y las estrellas; la tropical preserva el vínculo estacional.",
+      "annualVariation": "El ingreso de Cáncer sideral se desplaza unos 20 minutos por década conforme el ayanamsa Lahiri crece 50.3 segundos de arco al año. En 2026 el Sol entra en Cáncer sideral alrededor del 16 de julio y sale hacia el 17 de agosto. Las variaciones entre años se mantienen por debajo de dos horas. Si tu fecha de nacimiento cae dentro de las 24 horas de alguno de los dos límites, la tabla abajo te da el tiempo UTC exacto del cruce para cada año de 2023 a 2029. Para todos los demás Soles en Cáncer, la fecha del 16 de julio es fiable con margen de horas en cualquier año moderno.",
+      "readEssayLink": "Sol en Cáncer — personalidad y rasgos"
+    },
+    "leo": {
+      "title": "Fechas de Leo Sideral {year}: Cuándo el Sol entra en Leo (Lahiri)",
+      "description": "El Sol está en Leo sideral desde aproximadamente el 17 de agosto hasta el 17 de septiembre cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Leo tropical. Fechas exactas con tabla de 7 años adentro.",
+      "h1": "Sol en Leo Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Leo sideral",
+      "directAnswer": "El Sol está en Leo sideral desde {startDate} hasta {endDate} en {year} según el ayanamsa Lahiri. La ventana sitúa al Sol físicamente cerca de Régulo — la estrella alfa de Leo, históricamente llamada \"el corazón del león\" — en lugar del Leo tropical que va del 22 de julio al 22 de agosto.",
+      "whyDifferent": "El Leo tropical comienza el 22–23 de julio, cuando el Sol alcanza los 120° del zodíaco tropical. El Leo sideral comienza cuando el Sol cruza el límite de la constelación de Leo — una región anclada en Régulo (0° de Leo sideral en la tradición védica) y que se extiende hasta Denébola. La brecha de 24.21° existe porque el eje de la Tierra precesa a 50.3 segundos de arco al año. El ayanamsa Lahiri — estándar astronómico oficial de la India desde 1955 — resta esta deriva acumulada de las posiciones tropicales. En el siglo I d.C., el inicio del Leo tropical y el límite de la constelación coincidían; hoy el límite de la constelación lleva 24 días de retraso respecto al signo tropical. La astrología sideral rastrea el cielo real; la tropical, las estaciones.",
+      "annualVariation": "El ayanamsa Lahiri suma unos 50.3 segundos de arco al año, empujando la fecha de entrada a Leo aproximadamente 20 minutos más tarde cada década. El Sol entra en Leo sideral alrededor del 17 de agosto en 2026 y sale alrededor del 17 de septiembre, una ventana de 31 días. Las variaciones entre años se mantienen por debajo de dos horas. El tiempo de ingreso importa más cerca de los límites Leo–Cáncer y Leo–Virgo: si tu fecha de nacimiento es el 16–18 de agosto o el 16–18 de septiembre en cualquier año, revisa la tabla de abajo para el tiempo UTC exacto.",
+      "readEssayLink": "Sol en Leo — personalidad y rasgos"
+    },
+    "virgo": {
+      "title": "Fechas de Virgo Sideral {year}: Cuándo el Sol entra en Virgo (Lahiri)",
+      "description": "El Sol está en Virgo sideral desde aproximadamente el 17 de septiembre hasta el 17 de octubre cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Virgo tropical. Fechas exactas y tabla de 7 años adentro.",
+      "h1": "Sol en Virgo Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Virgo sideral",
+      "directAnswer": "El Sol está en Virgo sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. La ventana cubre del 17 de septiembre al 17 de octubre — el trecho en que el Sol transita físicamente la constelación de Virgo, sede de Spica (α Virginis) y del cúmulo de galaxias de Virgo detrás de la eclíptica.",
+      "whyDifferent": "El Virgo tropical abre el 22–23 de agosto y cierra el 22 de septiembre, ligado a la división del zodíaco basada en el equinoccio. El Virgo sideral abre unos 24 días más tarde, cuando el Sol entra realmente en la región estelar de Virgo. El ayanamsa Lahiri — actualmente en torno a 24.21° a partir de 2026 — representa la deriva acumulada por precesión desde que los dos zodíacos estuvieron alineados (alrededor del año 285 d.C.). El eje de la Tierra oscila a unos 50.3 segundos de arco por año; en 1.741 años eso se acumula en unos 24.3°. La tradición védica incorpora esa deriva en cada cálculo de carta natal; la astrología tropical occidental no lo hace. El resultado: el Sol tropical en Virgo asociado a los nativos de agosto–septiembre equivale a un Sol en Leo sideral bajo Lahiri, salvo los últimos seis grados del Virgo tropical, que ya caen en territorio del Virgo sideral.",
+      "annualVariation": "El ingreso sideral en Virgo avanza unos 20 minutos por década conforme el ayanamsa Lahiri crece 50.3 segundos de arco al año. En 2026 el Sol entra en Virgo sideral alrededor del 17 de septiembre y sale alrededor del 17 de octubre, una ventana de 30 días. Las variaciones entre años se mantienen por debajo de dos horas. Si tu fecha de nacimiento es el 16–18 de septiembre o el 16–18 de octubre en cualquier año, verifica el tiempo UTC exacto de ingreso en la tabla de abajo para ese año concreto. Para todos los demás Soles en Virgo, el 17 de septiembre es un punto de referencia fiable con margen de horas en cualquier año moderno.",
+      "readEssayLink": "Sol en Virgo — personalidad y rasgos"
+    },
+    "libra": {
+      "title": "Fechas de Libra Sideral {year}: Cuándo el Sol está en Libra (Lahiri)",
+      "description": "El Sol está en Libra sideral desde aproximadamente el 17 de octubre hasta el 15 de noviembre cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Libra tropical. Fechas exactas y tabla de 7 años adentro.",
+      "h1": "Sol en Libra Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Libra sideral",
+      "directAnswer": "El Sol está en Libra sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. Esta ventana abarca los últimos días de la temporada de Libra tropical y las primeras tres semanas de Escorpio tropical — lo que significa que muchas personas etiquetadas como Escorpio tropical pueden tener en realidad el Sol en Libra sideral.",
+      "whyDifferent": "La astrología tropical fija Libra al equinoccio de otoño — el 22 de septiembre. La astrología sideral lo ancla a la posición real de la constelación de Libra en el cielo. Los dos sistemas coincidieron hacia el año 285 d.C.; desde entonces, la precesión axial de la Tierra (~50.3 segundos de arco por año) ha desplazado el equinoccio unos 24° al oeste del patrón estelar de Libra. El ayanamsa Lahiri, codificado como estándar oficial indio en 1955 y cuantificado en aproximadamente 24.21° en 2026, corrige esta deriva. El Sol en Libra sideral corresponde al Sol transitando físicamente la constelación de Libra — opuesto a Aries, donde alcanza su debilitación a los 10°.",
+      "annualVariation": "El ayanamsa Lahiri crece aproximadamente 50.3 segundos de arco por año, desplazando el ingreso de Libra unos 20 minutos por década. La fecha de entrada se mantiene cerca del 17 de octubre a lo largo de las décadas modernas; la variación de año en año es de horas. La tabla de 7 años más abajo muestra los tiempos exactos UTC de ingreso y egreso para 2023–2029, útil para quienes nacieron cerca del 16–18 de octubre donde el límite sideral Virgo-Libra determina el signo solar.",
+      "readEssayLink": "Sol en Libra — personalidad y rasgos"
+    },
+    "scorpio": {
+      "title": "Fechas de Escorpio Sideral {year}: Cuándo el Sol está en Escorpio (Lahiri)",
+      "description": "El Sol está en Escorpio sideral desde aproximadamente el 16 de noviembre hasta el 15 de diciembre cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Escorpio tropical. Fechas exactas y tabla de 7 años adentro.",
+      "h1": "Sol en Escorpio Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Escorpio sideral",
+      "directAnswer": "El Sol está en Escorpio sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. Esta ventana cubre los últimos días de la temporada de Escorpio tropical y las primeras tres semanas de Sagitario tropical — quienes se identifican como Sagitario tropical pero no reconocen el optimismo filosófico arquetípico como propio pueden tener el Sol en Escorpio sideral.",
+      "whyDifferent": "La astrología tropical inicia Escorpio el 23 de octubre, anclado al equinoccio. La astrología sideral lo inicia cuando el Sol alcanza la constelación real de Escorpius, aproximadamente 25 días después. El desfase de ~24.21° equivale a la precesión acumulada desde el año ~285 d.C., cuando los dos sistemas coincidían: aproximadamente 1.740 años × 50.3 segundos de arco por año. Swiss Ephemeris aplica la corrección Lahiri a cada longitud planetaria, colocando los límites de Escorpio unas tres semanas y media más tarde que en las cartas tropicales.",
+      "annualVariation": "La ventana sideral de Escorpio se desplaza ~20 minutos por década a medida que el ayanamsa Lahiri aumenta ~50.3 segundos de arco por año. La fecha de entrada es estable al día para usos cotidianos. La tabla de 7 años más abajo muestra los tiempos exactos UTC para 2023–2029, especialmente útil para quienes nacieron entre el 14 y el 18 de noviembre, donde el límite sideral Libra-Escorpio determina el signo solar.",
+      "readEssayLink": "Sol en Escorpio — personalidad y rasgos"
+    },
+    "sagittarius": {
+      "title": "Fechas de Sagitario Sideral {year}: Cuándo el Sol está en Sagitario (Lahiri)",
+      "description": "El Sol está en Sagitario sideral desde aproximadamente el 16 de diciembre hasta el 13 de enero con el ayanamsa Lahiri. La ventana cruza el límite del año calendario. Fechas exactas y tabla de 7 años adentro.",
+      "h1": "Sol en Sagitario Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Sagitario sideral",
+      "directAnswer": "El Sol está en Sagitario sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. La ventana cruza el límite diciembre-enero: el Sol entra a mediados de diciembre y sale a mediados de enero. La mayoría de los Capricornio tropicales nacidos entre el 22 de diciembre y el 13 de enero tienen el Sol en Sagitario sideral — el filósofo de fuego mutable, no el estratega de tierra cardinal.",
+      "whyDifferent": "La astrología tropical inicia Sagitario el 22 de noviembre, contando desde el equinoccio vernal. La astrología sideral lo inicia cuando el Sol alcanza el patrón estelar de Sagitario, aproximadamente el 16 de diciembre. La discrepancia de ~24.21° equivale a la precesión acumulada desde ~285 d.C.: aproximadamente 1.740 años × 50.3 segundos de arco/año. El ayanamsa Lahiri, estándar oficial de la India desde 1955, resta esta cifra acumulada de las longitudes tropicales en cada cálculo.",
+      "annualVariation": "Como Sagitario abarca diciembre y enero, la tabla de 7 años muestra entradas a mediados de diciembre del año seleccionado y salidas a mediados de enero del año siguiente. El ingreso se desplaza ~20 minutos por década. Los datos de Swiss Ephemeris para 2023–2029 son especialmente útiles para quienes nacieron cerca del 15–17 de diciembre o el 12–15 de enero, donde el límite sideral determina el signo solar.",
+      "readEssayLink": "Sol en Sagitario — personalidad y rasgos"
+    },
+    "capricorn": {
+      "title": "Fechas de Capricornio Sideral {year}: Cuándo el Sol está en Capricornio (Lahiri)",
+      "description": "El Sol está en Capricornio sideral desde aproximadamente el 14 de enero hasta el 11 de febrero cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Capricornio tropical. Ambas fechas caen dentro del mismo año calendario.",
+      "h1": "Sol en Capricornio Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Capricornio sideral",
+      "directAnswer": "El Sol está en Capricornio sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. A diferencia del Sagitario vecino, que cruza el límite diciembre-enero, esta ventana transcurre completamente dentro de enero y febrero del mismo año. Personas etiquetadas como Acuario tropical que se identifican más con la disciplina saturnina y la ambición de largo plazo que con el idealismo colectivo acuariano pueden tener el Sol en Capricornio sideral.",
+      "whyDifferent": "La astrología tropical inicia Capricornio en el solsticio de invierno — el 22 de diciembre —. La astrología sideral lo inicia cuando el Sol alcanza la constelación real de Capricornus, aproximadamente el 14 de enero. La precesión axial de la Tierra ha desplazado el solsticio ~24.21° al oeste de las estrellas de Capricornus desde ~285 d.C. — a ~50.3 segundos de arco por año durante 1.740 años. El ayanamsa Lahiri corrige esta deriva acumulada en cada carta que calcula Estrevia. El Sol y Saturno son enemigos naturales en Jyotish: esta ubicación produce personas que deben cultivar conscientemente la confianza en sí mismas, forjando un carácter excepcional a través de esa fricción.",
+      "annualVariation": "El ayanamsa Lahiri crece ~50.3 segundos de arco por año, desplazando el ingreso de Capricornio aproximadamente 20 minutos por década. Para uso cotidiano las fechas son estables al día. La tabla de 7 años más abajo muestra la precisión de Swiss Ephemeris para 2023–2029 — la ventana del 13–15 de enero es donde el límite sideral Sagitario-Capricornio puede marcar la diferencia para quien nació en esas fechas.",
+      "readEssayLink": "Sol en Capricornio — personalidad y rasgos"
+    },
+    "aquarius": {
+      "title": "Fechas de Acuario Sideral {year}: Cuándo el Sol está en Acuario (Lahiri)",
+      "description": "El Sol está en Acuario sideral desde aproximadamente el 12 de febrero hasta el 13 de marzo cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Acuario tropical. Fechas exactas y tabla de 7 años adentro.",
+      "h1": "Sol en Acuario Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Acuario sideral",
+      "directAnswer": "El Sol está en Acuario sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. Esta ventana abarca la mayor parte de lo que la astrología tropical llama temporada de Piscis — quienes fueron clasificados como Piscis tropical pero se identifican más con el distanciamiento intelectual y la orientación colectiva que con la empatía oceánica pueden estar operando desde un Sol en Acuario sideral.",
+      "whyDifferent": "La astrología tropical coloca Acuario desde el 20 de enero, contando desde el equinoccio vernal. La astrología sideral lo ubica donde la constelación de Acuarius realmente está en el cielo, posición que el Sol alcanza aproximadamente el 12 de febrero. Los ~24.21° de diferencia equivalen a la precesión acumulada desde ~285 d.C.: aproximadamente 1.740 años × 50.3 segundos de arco/año. El ayanamsa Lahiri, estándar oficial indio desde 1955, resta esta cifra de cada longitud tropical. El resultado: la mayoría de los Soles en Piscis tropical (del 19 de febrero al 13 de marzo) son Acuario sideral bajo Lahiri.",
+      "annualVariation": "El ingreso a Acuario se desplaza ~20 minutos por década a medida que el ayanamsa Lahiri aumenta ~50.3 segundos de arco por año. La variación de año en año es de horas. La tabla de Swiss Ephemeris para 2023–2029 en la sección siguiente muestra la precisión necesaria para quienes nacieron cerca del límite del 11–13 de febrero, donde la frontera sideral Capricornio-Acuario puede cambiar la interpretación del signo solar.",
+      "readEssayLink": "Sol en Acuario — personalidad y rasgos"
+    },
+    "pisces": {
+      "title": "Fechas de Piscis Sideral {year}: Cuándo el Sol está en Piscis (Lahiri)",
+      "description": "El Sol está en Piscis sideral desde aproximadamente el 14 de marzo hasta el 13 de abril cada año con el ayanamsa Lahiri — unos 24 días después de que comienza el Piscis tropical. Fechas exactas y tabla de 7 años adentro.",
+      "h1": "Sol en Piscis Sideral: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Fechas de Piscis sideral",
+      "directAnswer": "El Sol está en Piscis sideral desde {startDate} hasta {endDate} en {year}, calculado con el ayanamsa Lahiri. Esta ventana coincide con la mayor parte de lo que la astrología tropical llama temporada de Aries — muchos nacidos entre el 21 de marzo y el 13 de abril que no se reconocen en el arquetipo del guerrero pionero pueden tener el Sol en Piscis sideral, donde Venus alcanza su exaltación a los 27°.",
+      "whyDifferent": "La astrología tropical inicia Piscis el 18 de febrero, anclado al equinoccio. La astrología sideral lo inicia cuando el Sol entra en la constelación real de Pisces, aproximadamente el 14 de marzo. El desfase de ~24.21° es la precesión acumulada desde ~285 d.C., cuando los dos zodíacos coincidían: ~50.3 segundos de arco/año × 1.740 años ≈ 24.21°. El ayanamsa Lahiri corrige esta diferencia en cada carta que Estrevia calcula, colocando los planetas en sus posiciones estelares verificadas.",
+      "annualVariation": "El ayanamsa Lahiri crece ~50.3 segundos de arco por año, desplazando el ingreso a Piscis aproximadamente 20 minutos por década. Para usos cotidianos, la fecha es estable al día. La tabla de 7 años más abajo muestra los datos exactos de Swiss Ephemeris para 2023–2029, incluida la ventana del 13–15 de marzo donde el límite sideral Acuario-Piscis puede determinar el signo solar de quien nació en esa fecha.",
+      "readEssayLink": "Sol en Piscis — personalidad y rasgos"
+    }
   }
 }

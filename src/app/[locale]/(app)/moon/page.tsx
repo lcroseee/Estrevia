@@ -82,7 +82,7 @@ export default async function MoonPage() {
           {/* Eyebrow */}
           <p
             className="text-[10px] tracking-[0.22em] uppercase mb-3"
-            style={{ color: 'rgba(192,192,192,0.45)', fontFamily: 'var(--font-geist-mono, monospace)' }}
+            style={{ color: 'rgba(192,192,192,0.75)', fontFamily: 'var(--font-geist-mono, monospace)' }}
           >
             ☽ &nbsp;{t('eyebrow')}
           </p>
@@ -94,7 +94,7 @@ export default async function MoonPage() {
           </h1>
           <p
             className="text-sm leading-relaxed max-w-md"
-            style={{ color: 'rgba(255,255,255,0.42)' }}
+            style={{ color: 'rgba(255,255,255,0.55)' }}
           >
             {t('description')}
           </p>

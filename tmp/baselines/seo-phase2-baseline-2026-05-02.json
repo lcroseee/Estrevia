@@ -1,0 +1,66 @@
+{
+  "capturedAt": "2026-05-03T01:29:34Z",
+  "capturedBy": "seo-verifier (devops agent)",
+  "branch": "seo-phase2",
+  "env": {
+    "NEXT_PUBLIC_SITE_URL_set": true,
+    "note": "NEXT_PUBLIC_SITE_URL present in both Production and Preview (p0-seo-foundation) environments via `vercel env ls`"
+  },
+  "sitemap": {
+    "url": "https://estrevia.app/sitemap.xml",
+    "locCount": 442,
+    "imageImageCount": 0,
+    "xmlnsImageDeclared": false,
+    "note": "442 <loc> entries confirmed. Zero image sitemap entries — ready for seo-eng T4 to add."
+  },
+  "robots": {
+    "sitemapDirective": "https://estrevia.app/sitemap.xml",
+    "disallowSlashS": true,
+    "disallowSlashEs": false,
+    "disallowSidereal": false,
+    "disallowSlashApi": true,
+    "allowSlashApiOg": true,
+    "fullContent": "User-Agent: *\nAllow: /\nDisallow: /api/\nDisallow: /s/\n\nUser-Agent: *\nAllow: /api/og/\n\nSitemap: https://estrevia.app/sitemap.xml",
+    "notes": [
+      "Disallow: /api/ is present — standard, blocks internal API endpoints.",
+      "Second user-agent block allows /api/og/ — correct, needed for OG image generation.",
+      "No Disallow: /es/ — /es/* pages will be crawled correctly.",
+      "No Disallow: /sidereal- — future /sidereal-{sign}-dates pages will be crawled correctly."
+    ]
+  },
+  "esCurlMatrix": [
+    {
+      "path": "/es/",
+      "status": 308,
+      "redirectsTo": "/es",
+      "finalStatus": 200,
+      "note": "Trailing slash redirect — standard Next.js behavior (trailingSlash: false default). Not a regression."
+    },
+    { "path": "/es/chart", "status": 200 },
+    { "path": "/es/why-sidereal", "status": 200 },
+    { "path": "/es/essays/sun-in-aries", "status": 200 },
+    { "path": "/es/hours", "status": 200 },
+    { "path": "/es/moon", "status": 200 },
+    { "path": "/es/synastry", "status": 200 },
+    { "path": "/es/tree-of-life", "status": 200 }
+  ],
+  "spotCheck": {
+    "esWhySidereal": {
+      "canonical": "https://estrevia.app/es/why-sidereal",
+      "htmlLang": "es",
+      "canonicalCorrect": true,
+      "langCorrect": true
+    }
+  },
+  "deviationsFromExpected": [
+    {
+      "check": "esCurlMatrix /es/ status",
+      "expected": 200,
+      "actual": 308,
+      "verdict": "NOT_A_REGRESSION",
+      "explanation": "Next.js removes trailing slashes by default (trailingSlash config). /es/ → 308 → /es → 200. Page accessible. Not a blocker for seo-eng T4/T5/T6."
+    }
+  ],
+  "readyForSeoEng": true,
+  "summary": "All critical checks pass. sitemap=442, image entries=0 (seo-eng adds in T4), robots intact, /es/* all resolve to 200 (one trailing-slash 308 is expected Next.js behavior), canonical+lang correct on /es/why-sidereal. Green light for T4/T5/T6."
+}

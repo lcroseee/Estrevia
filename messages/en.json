@@ -1510,5 +1510,164 @@
         "body": "The twenty-two Tarot Trumps map directly onto the twenty-two paths, making the Tarot a visual key to the Tree’s structure. To understand the Fool, look at Path 11 — the leap from Kether into Chokmah, spirit before thought. To understand the Universe, look at Path 32 — the final step from Yesod into Malkuth, the completed circuit of manifestation.\n\nEstrevia’s Tarot section carries all twenty-two Trumps in their Thoth deck attributions. Each card page shows its corresponding path number, Hebrew letter, and astrological attribution. The Fool connects to the Magus, which connects to the Priestess — three paths descending from Kether, three faces of the primal act of creation. Reading the cards with the Tree in mind transforms the Tarot from a symbol set into a map of consciousness with precise internal logic. Explore the Fool, the Magus, the Priestess, and the Universe to follow the poles of the Tree from the highest emanation to the material world."
       }
     }
+  },
+  "siderealDates": {
+    "common": {
+      "breadcrumbHome": "Home",
+      "breadcrumbAria": "Breadcrumb navigation",
+      "breadcrumbSection": "Sidereal dates",
+      "whyDifferentH2": "Why these dates differ from tropical astrology",
+      "annualVariationH2": "How dates shift year over year",
+      "yearTableTitle": "Sun in this sign — 7-year table",
+      "seeAlsoH2": "See also",
+      "readWhySidereal": "Why sidereal differs from tropical",
+      "calculateChart": "Calculate your full birth chart",
+      "widgetH2": "What’s your sidereal sun sign?",
+      "widgetIntro": "Enter your birth date to find which sidereal sign the Sun was in.",
+      "widgetLabel": "Birth date",
+      "widgetSubmit": "Find my sign",
+      "widgetLoading": "Calculating…",
+      "widgetError": "Could not compute. Please try again.",
+      "widgetRateLimited": "Too many requests. Please wait a minute.",
+      "widgetResult": "Your sidereal sun sign is {sign} ({startDate} – {endDate}).",
+      "widgetReadOther": "Read about Sun in sidereal {sign} →",
+      "tableYear": "Year",
+      "tableStart": "Sun enters",
+      "tableEnd": "Sun exits",
+      "signs": {
+        "aries": "Aries",
+        "taurus": "Taurus",
+        "gemini": "Gemini",
+        "cancer": "Cancer",
+        "leo": "Leo",
+        "virgo": "Virgo",
+        "libra": "Libra",
+        "scorpio": "Scorpio",
+        "sagittarius": "Sagittarius",
+        "capricorn": "Capricorn",
+        "aquarius": "Aquarius",
+        "pisces": "Pisces"
+      }
+    },
+    "aries": {
+      "title": "Sidereal Aries Dates {year}: When Sun Enters Aries (Lahiri)",
+      "description": "Sun is in sidereal Aries from approximately April 14 to May 14 each year under the Lahiri ayanamsa — about 24 days later than tropical Aries begins. Exact dates and year table inside.",
+      "h1": "Sun in Sidereal Aries: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Aries dates",
+      "directAnswer": "The Sun is in sidereal Aries from {startDate} to {endDate} in {year}, computed with the Lahiri ayanamsa. That places the window roughly 24 days after tropical Aries opens on March 20–21 — the accumulated gap between the fixed equinox point and the actual Aries star pattern, currently about 24.21°.",
+      "whyDifferent": "Tropical astrology anchors Aries to the vernal equinox: March 20–21 every year, fixed by definition. Sidereal astrology anchors it to the Aries constellation itself. Earth’s axial wobble — precession — moves the equinox westward against the stars at about 50.3 arcseconds per year. That rate compounds: over 2,000 years the equinox has drifted nearly 28°. The Lahiri ayanamsa, codified by the Indian government in 1955 and now the standard for Vedic astrology, quantifies this drift at approximately 24.21° as of 2026. Subtracting that value from the tropical Sun longitude gives the Sun’s position relative to the true Aries star band. So when the Sun crosses 0° sidereal Aries — the border between Pisces and Aries stars — it has already been at 0° tropical Aries for three weeks.",
+      "annualVariation": "The Lahiri ayanamsa grows by roughly 50.3 arcseconds each year. That sounds precise — and it is. In daily terms it shifts the Aries entry point by about 20 minutes per decade, less than half an hour over ten years. For most purposes the date is stable: April 14 in 2026, April 14 in 2036, April 14 in 2046, with only the hour of day varying. The exact UTC ingress time matters most if you were born within 24 hours of the Aries–Pisces boundary and want to confirm which sign your Sun occupies. The seven-year table below gives UTC precision for 2023–2029.",
+      "readEssayLink": "Sun in Aries — personality and traits"
+    },
+    "taurus": {
+      "title": "Sidereal Taurus Dates {year}: When Sun Enters Taurus (Lahiri)",
+      "description": "Sun is in sidereal Taurus from approximately May 14 to June 15 each year under the Lahiri ayanamsa — about 24 days later than tropical Taurus begins. Exact ingress times and 7-year table inside.",
+      "h1": "Sun in Sidereal Taurus: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Taurus dates",
+      "directAnswer": "The Sun is in sidereal Taurus from {startDate} to {endDate} in {year}, using the Lahiri ayanamsa. The window opens about three weeks after tropical Taurus begins on April 19–20, reflecting the 24.21° accumulated offset between the equinox and the actual Taurus star band.",
+      "whyDifferent": "Tropical Taurus begins when the Sun crosses 30° of the tropical zodiac — a fixed geometric point tethered to the spring equinox. Sidereal Taurus begins when the Sun enters the Taurus constellation, the region of the ecliptic occupied by the Pleiades, Hyades, and Aldebaran. Earth’s axis precesses at 50.3 arcseconds per year, meaning the equinox-based zodiac drifts steadily backward relative to the star patterns. In Ptolemy’s era (2nd century CE) the two zodiacs nearly aligned; today they diverge by roughly 24.21° — just over 24 days of solar travel. The Lahiri ayanamsa captures this drift precisely, making it the standard calculation in Indian astrological tradition since 1955. The practical upshot: every tropical Taurus Sun becomes a sidereal Aries Sun under Lahiri — unless the Sun is in the final 6° of tropical Taurus, where it crosses into sidereal Taurus instead.",
+      "annualVariation": "Lahiri’s ayanamsa increases by about 50.3 arcseconds yearly, shifting the sidereal Taurus entry date by roughly 20 minutes per decade. For 2026 that means around May 14; by 2036 the ingress is still around May 14, but a few hours later in UTC. That precision becomes relevant only for people born within a day of the Taurus–Aries boundary — everyone else sees no practical difference. The table below lists exact UTC ingress and egress times for 2023 through 2029, making it a useful reference for rectification work and historical research.",
+      "readEssayLink": "Sun in Taurus — personality and traits"
+    },
+    "gemini": {
+      "title": "Sidereal Gemini Dates {year}: When Sun Enters Gemini (Lahiri)",
+      "description": "Sun is in sidereal Gemini from approximately June 15 to July 16 each year under the Lahiri ayanamsa — about 24 days later than tropical Gemini begins. Exact dates with 7-year table inside.",
+      "h1": "Sun in Sidereal Gemini: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Gemini dates",
+      "directAnswer": "The Sun is in sidereal Gemini from {startDate} to {endDate} in {year} by the Lahiri ayanamsa. This places the sidereal Gemini window squarely in the period when tropical Cancer is opening — a clear illustration of how a 24.21° ayanamsa separates the two zodiac systems.",
+      "whyDifferent": "Tropical Gemini spans May 21 to June 20, anchored to the ecliptic geometry of the equinox. Sidereal Gemini spans a different stretch of sky — the band containing the bright twin stars Castor and Pollux, the Geminids’ radiant, and the ecliptic crossing of the Milky Way. The two zodiacs aligned around 285 CE; since then, Earth’s axial precession has shifted them apart at 50.3 arcseconds per year, or roughly 1° every 72 years. By 2026 the gap stands at approximately 24.21°, quantified by the Lahiri ayanamsa. The result: the Sun physically transits the Gemini star band starting in mid-June, not late May. Astronomers confirm this; tropical Gemini dates are an artifact of the equinox definition, not a map of actual sky positions.",
+      "annualVariation": "The Lahiri ayanamsa grows at 50.3 arcseconds per year, moving the sidereal Gemini ingress by about 20 minutes per decade. This is negligible for most purposes — the Gemini entry date stays near June 15 across the entire span of years covered by the Swiss Ephemeris (5400 BCE to 5400 CE). The exceptions: people born on June 14–16 in any year, where the sign boundary crosses the birth date, should check the year-specific ingress time to confirm whether their Sun is in sidereal Taurus or Gemini. The table below provides exact UTC entry and exit times for 2023–2029.",
+      "readEssayLink": "Sun in Gemini — personality and traits"
+    },
+    "cancer": {
+      "title": "Sidereal Cancer Dates {year}: When Sun Enters Cancer (Lahiri)",
+      "description": "Sun is in sidereal Cancer from approximately July 16 to August 17 each year under the Lahiri ayanamsa — about 24 days later than tropical Cancer begins. Exact dates and 7-year table inside.",
+      "h1": "Sun in Sidereal Cancer: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Cancer dates",
+      "directAnswer": "The Sun is in sidereal Cancer from {startDate} to {endDate} in {year}, computed with the Lahiri ayanamsa. The window begins in mid-July, when the Sun is actually traversing the dim but astronomically significant Cancer star cluster — including the Beehive (M44) — rather than the tropical Cancer that opens on the June solstice.",
+      "whyDifferent": "Tropical Cancer famously begins at the summer solstice — the moment when the Sun reaches its northernmost point on the ecliptic. In Ptolemy’s model that coincided with the Cancer constellation, which is why ancient astrologers called the solstice point the \"Tropic of Cancer.\" Precession has since moved the solstice point backward through 24.21° of actual sky, into what is now the end of the Gemini star band. So when the Sun crosses 0° tropical Cancer on June 21, it sits at approximately 6° sidereal Gemini under the Lahiri calculation. The Sun only reaches sidereal Cancer — the actual constellation — roughly 24 days later. Sidereal astrology preserves the original connection between sign names and star patterns; tropical astrology preserves the seasonal connection.",
+      "annualVariation": "The Cancer ingress shifts by about 20 minutes per decade under the Lahiri ayanamsa’s steady 50.3 arcsecond annual increment. In 2026 the Sun enters sidereal Cancer around July 16; in 2036 it will be July 16, a few hours later. The Sun exits sidereal Cancer around August 17, entering Leo for the next 31-day arc. If your birth date falls within 24 hours of either boundary, the year-specific table below gives you the exact UTC crossing time. For all other Cancer Suns the date is stable to within a few hours regardless of year.",
+      "readEssayLink": "Sun in Cancer — personality and traits"
+    },
+    "leo": {
+      "title": "Sidereal Leo Dates {year}: When Sun Enters Leo (Lahiri)",
+      "description": "Sun is in sidereal Leo from approximately August 17 to September 17 each year under the Lahiri ayanamsa — about 24 days later than tropical Leo begins. Exact ingress times and 7-year table inside.",
+      "h1": "Sun in Sidereal Leo: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Leo dates",
+      "directAnswer": "The Sun is in sidereal Leo from {startDate} to {endDate} in {year} under the Lahiri ayanamsa. The sidereal window places the Sun physically near Regulus — Leo’s alpha star, historically called \"the heart of the lion\" — rather than in the tropical Leo that runs July 22 to August 22.",
+      "whyDifferent": "Tropical Leo begins July 22–23, when the Sun reaches 120° of the tropical ecliptic. Sidereal Leo begins when the Sun crosses the border of the Leo constellation — a region anchored by Regulus at 0° sidereal Leo (by traditional Vedic reckoning) and extending through Denebola. This 24.21° gap exists because Earth’s axis precesses at 50.3 arcseconds per year. The Lahiri ayanamsa — India’s official astronomical standard since 1955 — subtracts this accumulated drift from tropical positions. In the first century CE the two zodiacs overlapped; the tropical Leo opening and the Leo constellation matched. Today the constellation boundary lags 24 days behind the tropical sign boundary. Sidereal astrology tracks the actual sky; tropical astrology tracks the seasons.",
+      "annualVariation": "Lahiri’s ayanamsa adds about 50.3 arcseconds annually, pushing the Leo entry date roughly 20 minutes later each decade. The Sun enters sidereal Leo around August 17 in 2026 and exits around September 17, a 31-day window. Variations between years stay under 2 hours. The ingress time matters most near the Leo–Cancer and Leo–Virgo boundaries: if your birth date is August 16–18 or September 16–18 in any year, check the table below for the exact UTC crossing. For all other Leo Suns, August 17 is a reliable baseline across decades.",
+      "readEssayLink": "Sun in Leo — personality and traits"
+    },
+    "virgo": {
+      "title": "Sidereal Virgo Dates {year}: When Sun Enters Virgo (Lahiri)",
+      "description": "Sun is in sidereal Virgo from approximately September 17 to October 17 each year under the Lahiri ayanamsa — about 24 days later than tropical Virgo begins. Exact dates and 7-year table inside.",
+      "h1": "Sun in Sidereal Virgo: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Virgo dates",
+      "directAnswer": "The Sun is in sidereal Virgo from {startDate} to {endDate} in {year}, computed with the Lahiri ayanamsa. The window covers September 17 through October 17 — the stretch when the Sun physically passes through the Virgo constellation, home to Spica (α Virginis) and the Virgo galaxy cluster behind the ecliptic.",
+      "whyDifferent": "Tropical Virgo opens August 22–23 and closes September 22, tethered to the equinox-based ecliptic division. Sidereal Virgo opens about 24 days later, when the Sun actually enters the Virgo star region. The Lahiri ayanamsa — currently about 24.21° as of 2026 — represents the accumulated precession drift since the two zodiacs were last aligned (around 285 CE). Earth’s axis wobbles at roughly 50.3 arcseconds per year; over 1,741 years that compounds to about 24.3°. The Vedic tradition accounts for this drift in every chart calculation; Western tropical astrology does not. The result: the tropical Virgo Sun that western astrology associates with August–September birthdates corresponds to a sidereal Leo Sun under Lahiri — except for the last six degrees of tropical Virgo, which finally cross into sidereal Virgo territory.",
+      "annualVariation": "The sidereal Virgo ingress advances by about 20 minutes per decade as the Lahiri ayanamsa grows at 50.3 arcseconds annually. In 2026 the Sun enters sidereal Virgo around September 17 and exits around October 17 — a 30-day window. Anyone born September 16–18 or October 16–18 should verify their birth year’s exact UTC ingress time in the table below, since the boundary crossing can shift by several hours across the seven years shown. For all other Virgo Suns the September 17 entry is reliable to within a day across any modern year.",
+      "readEssayLink": "Sun in Virgo — personality and traits"
+    },
+    "libra": {
+      "title": "Sidereal Libra Dates {year}: When Sun is in Libra (Lahiri)",
+      "description": "Sun is in sidereal Libra from approximately October 17 to November 15 each year under the Lahiri ayanamsa — about 24 days later than tropical Libra begins. Exact dates and 7-year table inside.",
+      "h1": "Sun in Sidereal Libra: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Libra dates",
+      "directAnswer": "The Sun is in sidereal Libra from {startDate} to {endDate} in {year}, calculated with the Lahiri ayanamsa. This window spans the final days of tropical Libra season and the first three weeks of tropical Scorpio — so many people labeled tropical Scorpio by Western horoscope columns are actually carrying a sidereal Libra Sun.",
+      "whyDifferent": "Tropical astrology fixes Libra to the autumnal equinox — September 22. Sidereal astrology anchors it to the actual Libra constellation's position in the sky. The two systems coincided around 285 CE; since then, Earth's axial precession (~50.3 arcseconds per year) has shifted the equinox roughly 24° west of the Libra star pattern. The Lahiri ayanamsa, codified as India's official astronomical standard in 1955 and now the basis for Vedic chart calculations worldwide, quantifies this drift at approximately 24.21° as of 2026. Subtracting that value from the tropical Sun longitude gives the Sun's position relative to the actual Libra star band. A sidereal Libra Sun means the Sun physically transits the Libra constellation — opposite Aries, the sign of its exaltation, where the Sun's debilitation at 10° Libra forces the identity to negotiate rather than simply assert.",
+      "annualVariation": "The Lahiri ayanamsa grows by roughly 50.3 arcseconds each year, nudging the Libra ingress roughly 20 minutes later each decade. The entry date stays near October 17 in 2026, October 17 in 2036, October 17 in 2046 — only the UTC hour shifts. The seven-year table below shows exact Swiss Ephemeris entry and exit times for 2023–2029, computed using SEFLG_MOSEPH and Lahiri ayanamsa mode — the same engine Estrevia runs for every natal chart. Anyone born near the October 16–18 boundary between sidereal Virgo and Libra should verify their birth year's specific ingress time to confirm which sign the Sun occupied.",
+      "readEssayLink": "Sun in Libra — personality and traits"
+    },
+    "scorpio": {
+      "title": "Sidereal Scorpio Dates {year}: When Sun is in Scorpio (Lahiri)",
+      "description": "Sun is in sidereal Scorpio from approximately November 16 to December 15 each year under the Lahiri ayanamsa — about 24 days later than tropical Scorpio begins. Exact dates and 7-year table inside.",
+      "h1": "Sun in Sidereal Scorpio: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Scorpio dates",
+      "directAnswer": "The Sun is in sidereal Scorpio from {startDate} to {endDate} in {year}, calculated with the Lahiri ayanamsa. This window covers the last days of tropical Scorpio season and the first three weeks of tropical Sagittarius — meaning many who identify as tropical Sagittarius but find the philosophical restlessness uncharacteristic may be working from a sidereal Scorpio Sun instead.",
+      "whyDifferent": "Tropical astrology starts Scorpio at October 23, anchored to the ecliptic counted from the vernal equinox. Sidereal astrology starts it when the Sun reaches the actual Scorpius constellation — roughly 25 days later. The ~24.21° gap between the zodiacs equals Earth's accumulated precession since the systems were last aligned in ~285 CE: approximately 1,740 years × 50.3 arcseconds per year. The Lahiri ayanamsa, India's official standard since 1955, corrects for this by subtracting the accumulated drift from every tropical longitude. Swiss Ephemeris applies this correction to every planetary position, placing Scorpio's boundaries about three and a half weeks later than tropical charts show. The practical consequence: most people born in the first three weeks of tropical Sagittarius season (November 22 – December 15) are sidereal Scorpio under the Lahiri calculation.",
+      "annualVariation": "The sidereal Scorpio window shifts roughly 20 minutes later per decade as the Lahiri ayanamsa increases by ~50.3 arcseconds each year. In 2026 the Sun enters sidereal Scorpio around November 16 and exits around December 16 — the same calendar dates hold across modern decades, with only hours varying in UTC. The seven-year table below lists exact Swiss Ephemeris entry and exit times for 2023–2029, computed with SEFLG_MOSEPH and Lahiri ayanamsa mode. Anyone born November 14–18 should check their specific birth year's ingress time to confirm whether the Sun was in sidereal Libra or Scorpio — the sign boundary crosses this window.",
+      "readEssayLink": "Sun in Scorpio — personality and traits"
+    },
+    "sagittarius": {
+      "title": "Sidereal Sagittarius Dates {year}: When Sun is in Sagittarius (Lahiri)",
+      "description": "Sun is in sidereal Sagittarius from approximately December 16 to January 13 each year under the Lahiri ayanamsa. The window crosses the December–January calendar boundary. Exact dates and 7-year table inside.",
+      "h1": "Sun in Sidereal Sagittarius: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Sagittarius dates",
+      "directAnswer": "The Sun is in sidereal Sagittarius from {startDate} to {endDate} in {year}, calculated with the Lahiri ayanamsa. The window crosses the December–January calendar boundary: the Sun enters Sagittarius in mid-December and exits in mid-January. Most tropical Capricorns born December 22 – January 13 carry a sidereal Sagittarius Sun — the mutable fire philosopher rather than the cardinal earth strategist.",
+      "whyDifferent": "Tropical astrology begins Sagittarius at the November 22 Scorpio-Sagittarius cusp, counted from the vernal equinox. Sidereal astrology begins it when the Sun reaches the Sagittarius star pattern — roughly December 16. The ~24.21° discrepancy equals Earth's accumulated precession since the systems aligned in ~285 CE: approximately 1,740 years × 50.3 arcseconds per year. The Lahiri ayanamsa, India's official standard since 1955, subtracts this accumulated drift from tropical longitudes at every calculation. Astronomers confirm this independently: the Sun physically enters the Sagittarius star region in mid-December, not late November. The practical result is dramatic — most tropical Capricorns born December 22 through January 13 are sidereal Sagittarius by Lahiri calculation, the mutable fire philosopher rather than the cardinal earth strategist.",
+      "annualVariation": "Because Sagittarius straddles December and January, the seven-year table below lists entries in mid-December of the given year and exits in mid-January of the following year. In 2026 that means entry around December 16, exit around January 14, 2027. The ingress shifts roughly 20 minutes later per decade, computed via Swiss Ephemeris with SEFLG_MOSEPH and Lahiri ayanamsa. The data for 2023–2029 is especially useful for anyone born near December 15–17 or January 12–15, where the sidereal boundary separates Scorpio from Sagittarius and Sagittarius from Capricorn — two very different solar sign interpretations.",
+      "readEssayLink": "Sun in Sagittarius — personality and traits"
+    },
+    "capricorn": {
+      "title": "Sidereal Capricorn Dates {year}: When Sun is in Capricorn (Lahiri)",
+      "description": "Sun is in sidereal Capricorn from approximately January 14 to February 11 each year under the Lahiri ayanamsa — about 24 days later than tropical Capricorn begins. Both dates fall within the same calendar year.",
+      "h1": "Sun in Sidereal Capricorn: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Capricorn dates",
+      "directAnswer": "The Sun is in sidereal Capricorn from {startDate} to {endDate} in {year}, calculated with the Lahiri ayanamsa. Unlike neighboring Sagittarius, which crosses the December–January year boundary, this window stays entirely within January and February of the same calendar year. People told they're tropical Aquarius who identify more with Saturn's long-game discipline than Uranian idealism often find sidereal Capricorn a better fit.",
+      "whyDifferent": "Tropical astrology places Capricorn from December 22, anchored to the winter solstice. Sidereal astrology places it at the actual Capricornus constellation, which the Sun reaches approximately January 14. Earth's axial precession has shifted the solstice roughly 24.21° west of the Capricornus star pattern since ~285 CE — at ~50.3 arcseconds per year over 1,740 years. The Lahiri ayanamsa, India's official standard since 1955, corrects for this drift in every chart Estrevia calculates. In Jyotish the Sun and Saturn are natural enemies: the Sun drives toward individual radiance; Saturn demands discipline, patience, and deference to form and time. Sidereal Capricorn Suns must consciously develop the self-assurance that flows naturally elsewhere, but the effort typically forges exceptional character — the concept of neechabhanga (cancellation of debilitation) in Vedic tradition applies here when Saturn is powerfully placed.",
+      "annualVariation": "The Lahiri ayanamsa increases ~50.3 arcseconds per year, shifting Capricorn's entry and exit dates by roughly 20 minutes per decade. In 2026 the Sun enters sidereal Capricorn around January 14 and exits around February 12 — both dates within the same calendar year, unlike neighboring Sagittarius. The seven-year table below shows Swiss Ephemeris precision for 2023–2029, computed with SEFLG_MOSEPH and Lahiri ayanamsa mode. The January 13–15 window is where the sidereal Sagittarius-Capricorn boundary falls: a birth within 24 hours of that transition warrants checking the precise computed ingress time for the exact year.",
+      "readEssayLink": "Sun in Capricorn — personality and traits"
+    },
+    "aquarius": {
+      "title": "Sidereal Aquarius Dates {year}: When Sun is in Aquarius (Lahiri)",
+      "description": "Sun is in sidereal Aquarius from approximately February 12 to March 13 each year under the Lahiri ayanamsa — about 24 days later than tropical Aquarius begins. Exact dates and 7-year table inside.",
+      "h1": "Sun in Sidereal Aquarius: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Aquarius dates",
+      "directAnswer": "The Sun is in sidereal Aquarius from {startDate} to {endDate} in {year}, calculated with the Lahiri ayanamsa. This window covers most of what tropical astrology labels Pisces season — people classified as tropical Pisces who experience more intellectual detachment and collective orientation than oceanic empathy may be operating from a sidereal Aquarius Sun.",
+      "whyDifferent": "Tropical astrology places Aquarius from January 20, counted from the vernal equinox. Sidereal astrology places it at the Aquarius constellation's actual sky position, which the Sun reaches approximately February 12. The ~24.21° gap equals Earth's precession since the systems last aligned in ~285 CE: roughly 1,740 years × 50.3 arcseconds per year. The Lahiri ayanamsa, India's official astronomical standard since 1955, subtracts this accumulated drift from tropical longitudes for every body in the chart. The result: most tropical Pisces Sun people (born February 19 – March 13) are sidereal Aquarius under Lahiri. Astronomically, the Sun physically enters the Aquarius star region — a constellation containing the notable star Sadalsuud (β Aquarii, the luckiest star) — around mid-February each year, not late January.",
+      "annualVariation": "The Aquarius ingress shifts roughly 20 minutes later per decade as the Lahiri ayanamsa increases by ~50.3 arcseconds annually. In 2026 the Sun enters sidereal Aquarius around February 12 and exits around March 14. Year-to-year variation is a matter of hours. The seven-year table below shows Swiss Ephemeris entry and exit times for 2023–2029, computed with SEFLG_MOSEPH and Lahiri ayanamsa. Anyone born near the February 11–13 window where sidereal Capricorn transitions to Aquarius should verify their specific year's ingress time — at roughly 12 hours of annual shift, a two-year span can push the boundary by a full day.",
+      "readEssayLink": "Sun in Aquarius — personality and traits"
+    },
+    "pisces": {
+      "title": "Sidereal Pisces Dates {year}: When Sun is in Pisces (Lahiri)",
+      "description": "Sun is in sidereal Pisces from approximately March 14 to April 13 each year under the Lahiri ayanamsa — about 24 days later than tropical Pisces begins. Exact dates and 7-year table inside.",
+      "h1": "Sun in Sidereal Pisces: {startDate} – {endDate} ({year})",
+      "breadcrumbCurrent": "Sidereal Pisces dates",
+      "directAnswer": "The Sun is in sidereal Pisces from {startDate} to {endDate} in {year}, calculated with the Lahiri ayanamsa. This places sidereal Pisces over most of what tropical astrology calls Aries season — many born March 21 – April 13 who find the Aries warrior-pioneer archetype doesn't describe them may be carrying a sidereal Pisces Sun, where Venus reaches exaltation at 27°.",
+      "whyDifferent": "Tropical astrology begins Pisces at the February 18 Aquarius-Pisces cusp, anchored to the equinox count. Sidereal astrology begins it when the Sun enters the actual Pisces constellation — approximately March 14. The ~24.21° offset equals Earth's accumulated axial precession since ~285 CE, when the tropical and sidereal zodiacs coincided: ~50.3 arcseconds per year × 1,740 years ≈ 24.21°. The Lahiri ayanamsa corrects for this drift in every chart Estrevia calculates, placing planets at their verified sky positions. In Jyotish tradition, Venus reaches its exaltation at 27° Pisces — making Pisces the sign where Venusian beauty, harmony, and love find their highest expression. The Sun in sidereal Pisces diffuses solar identity through this medium: boundlessness and empathy over assertion and individual will.",
+      "annualVariation": "The Lahiri ayanamsa's annual growth of ~50.3 arcseconds moves the Pisces ingress about 20 minutes later each decade. In 2026 the Sun enters sidereal Pisces around March 14 and exits around April 14 — the final sign of the zodiac, completing just before Aries begins the new cycle. Year-to-year variation is a matter of hours. The seven-year table below shows Swiss Ephemeris data for 2023–2029, computed with SEFLG_MOSEPH and Lahiri ayanamsa. The March 13–15 boundary where sidereal Aquarius transitions to Pisces is a one-day window that can shift the entire solar sign interpretation — and the difference between Aquarius's intellectual orientation and Pisces's dissolution of self is substantial.",
+      "readEssayLink": "Sun in Pisces — personality and traits"
+    }
   }
 }

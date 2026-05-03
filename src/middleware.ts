@@ -73,15 +73,21 @@ export default clerkMiddleware(async (auth, req) => {
 
   // 3) Run intl middleware on locale-dependent page routes only.
   //    Skip API routes and routes intentionally outside [locale]/ directory:
-  //      /s/       — share pages (EN-only, noindex, no [locale] segment)
-  //      /admin/   — admin panel (EN-only, Clerk allowlist)
+  //      /s/            — share pages (EN-only, noindex, no [locale] segment)
+  //      /admin/        — admin panel (EN-only, Clerk allowlist)
+  //      /opengraph-image — Next.js special file-based OG image route; has no
+  //                         file extension so it passes the matcher regex and
+  //                         reaches middleware, but belongs to app root not
+  //                         [locale] tree. Without this exclusion intl middleware
+  //                         intercepts it → 404 (no locale segment in that path).
   //    Without these exclusions, intl middleware would rewrite e.g.
   //    /s/abc → /en/s/abc which has no matching page → 404.
   const { pathname } = req.nextUrl;
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/s/') ||
-    pathname.startsWith('/admin/')
+    pathname.startsWith('/admin/') ||
+    pathname === '/opengraph-image'
   ) return;
   return intlMiddleware(req);
 });
