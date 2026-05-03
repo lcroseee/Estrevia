@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 import { postJson } from '@/shared/lib/apiFetch';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 type AvatarStyle = 'cosmic' | 'tarot' | 'geometric' | 'nebula';
 type GenerationState = 'idle' | 'loading' | 'done' | 'error';
@@ -148,9 +149,18 @@ export function AvatarGenerator({
               <button
                 key={opt.value}
                 type="button"
-                disabled={isLocked || subLoading}
-                onClick={() => setStyle(opt.value)}
-                className="relative flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={subLoading}
+                aria-disabled={isLocked || subLoading}
+                onClick={() => {
+                  if (isLocked) {
+                    trackEvent(AnalyticsEvent.AVATAR_STYLE_LOCKED_CLICKED, {
+                      style: opt.value,
+                    });
+                    return;
+                  }
+                  setStyle(opt.value);
+                }}
+                className="relative flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:cursor-not-allowed"
                 style={{
                   background: isSelected
                     ? 'rgba(255,215,0,0.15)'
