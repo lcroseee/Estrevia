@@ -285,6 +285,28 @@ export const advertisingShadowComparisons = pgTable('advertising_shadow_comparis
 });
 
 // ---------------------------------------------------------------------------
+// advertising_recon_state  — singleton row tracking reconciler suspend state
+// ---------------------------------------------------------------------------
+//
+// When the reconciler detects critical_drift between Meta clicks and PostHog
+// landing_view counts (>= 25%), the agent suspends all non-emergency
+// decisions for 24h auto-resume. The founder can override via the admin UI
+// at /admin/advertising/recon-state.
+//
+// Singleton-row pattern: id defaults to 'singleton'; the table holds at most
+// one row. The seed migration inserts the initial row with suspended=false.
+// ---------------------------------------------------------------------------
+export const advertisingReconState = pgTable('advertising_recon_state', {
+  id: text('id').primaryKey().default('singleton'),
+  suspended: boolean('suspended').notNull().default(false),
+  suspendedAt: timestamp('suspended_at', { withTimezone: true }),
+  suspendReason: text('suspend_reason'),
+  autoResumeAt: timestamp('auto_resume_at', { withTimezone: true }),
+  lastDriftPct: real('last_drift_pct'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
 // Type aliases
 // ---------------------------------------------------------------------------
 export type User = typeof users.$inferSelect;
@@ -303,3 +325,4 @@ export type AdvertisingFeatureGate = typeof advertisingFeatureGates.$inferSelect
 export type AdvertisingSpendDaily = typeof advertisingSpendDaily.$inferSelect;
 export type AdvertisingAudience = typeof advertisingAudiences.$inferSelect;
 export type AdvertisingShadowComparison = typeof advertisingShadowComparisons.$inferSelect;
+export type AdvertisingReconState = typeof advertisingReconState.$inferSelect;
