@@ -4,6 +4,7 @@ import type { WebhookEvent } from '@clerk/nextjs/server';
 import { getDb } from '@/shared/lib/db';
 import { users } from '@/shared/lib/schema';
 import { eq } from 'drizzle-orm';
+import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 /**
  * POST /api/webhooks/clerk
@@ -80,6 +81,8 @@ export async function POST(req: Request) {
   try {
     if (eventType === 'user.created') {
       const email = data.email_addresses[0]?.email_address ?? '';
+      const emailDomain = email.includes('@') ? email.split('@')[1] : null;
+
       await db
         .insert(users)
         .values({
@@ -91,6 +94,32 @@ export async function POST(req: Request) {
         .onConflictDoNothing(); // idempotent — safe to retry
 
       console.info('[clerk-webhook] user.created', { userId: data.id });
+
+      // Fire user_registered to PostHog so the advertising agent's funnel
+      // reconciler can compare this against Meta clicks. Idempotency comes
+      // from PostHog's $insert_id dedup — same event from a Clerk retry
+      // collapses server-side. Wrapped in try/catch: PostHog being down must
+      // never escalate to a 500 (Clerk would retry → duplicate users).
+      try {
+        trackServerEvent(data.id, AnalyticsEvent.USER_REGISTERED, {
+          source: 'clerk_webhook',
+          email_domain: emailDomain,
+          $insert_id: `${data.id}:user_registered`,
+        });
+      } catch (phErr) {
+        console.warn(
+          '[clerk-webhook] PostHog user_registered fire failed (non-fatal)',
+          phErr instanceof Error ? phErr.message : 'unknown',
+        );
+        try {
+          const { captureException } = await import('@sentry/nextjs');
+          captureException(phErr, {
+            tags: { webhook: 'clerk', posthog: 'degraded' },
+          });
+        } catch {
+          // Sentry capture is best-effort.
+        }
+      }
     }
 
     if (eventType === 'user.updated') {
