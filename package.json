@@ -16,6 +16,7 @@
     "test:e2e": "playwright test",
     "generate:ephemeris": "npx tsx scripts/generate-ephemeris-tables.ts",
     "advertising:pre-launch-check": "tsx scripts/advertising/pre-launch-check.ts",
+    "advertising:verify-prod-state": "tsx scripts/advertising/verify-prod-state.ts",
     "advertising:generate-launch-batch": "tsx scripts/advertising/generate-launch-batch.ts",
     "advertising:publish-approved": "tsx scripts/advertising/publish-approved.ts",
     "advertising:migrate-frequency-caps": "tsx scripts/advertising/migrate-frequency-caps.ts"

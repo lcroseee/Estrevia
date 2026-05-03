@@ -79,6 +79,12 @@ interface EnvCheckOptions {
   severity: Severity;
   /** Optional format hint shown alongside length (no value!) */
   formatHint?: (value: string) => string;
+  /**
+   * Optional value validator. Return `null` if the value is valid, or a short
+   * description of the problem. The value itself is never logged unless the
+   * validator chooses to expose it.
+   */
+  validate?: (value: string) => string | null;
 }
 
 function checkEnvVar(opts: EnvCheckOptions): CheckResult {
@@ -90,6 +96,17 @@ function checkEnvVar(opts: EnvCheckOptions): CheckResult {
       message: 'not set',
       severity: opts.severity,
     };
+  }
+  if (opts.validate) {
+    const problem = opts.validate(value);
+    if (problem) {
+      return {
+        name: `ENV: ${opts.name}`,
+        passed: false,
+        message: problem,
+        severity: opts.severity,
+      };
+    }
   }
   const hint = opts.formatHint ? ` — ${opts.formatHint(value)}` : '';
   return {
@@ -667,7 +684,23 @@ async function runAllChecks(): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
 
   // ---- Critical env vars (errors if missing) ----
-  const criticalVars = [
+  const isBoolFlag = (v: string): string | null =>
+    v === 'true' || v === 'false' ? null : `must be "true" or "false" (got "${v}")`;
+
+  const isCommaSeparatedEmails = (v: string): string | null => {
+    const parts = v.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+    if (parts.length === 0) return 'empty list — provide at least one admin email';
+    const bad = parts.filter((p) => !p.includes('@'));
+    return bad.length === 0 ? null : `${bad.length} entry/entries missing '@'`;
+  };
+
+  type CriticalVar = {
+    name: string;
+    formatHint?: (v: string) => string;
+    validate?: (v: string) => string | null;
+  };
+
+  const criticalVars: readonly CriticalVar[] = [
     { name: 'META_ACCESS_TOKEN' },
     { name: 'META_AD_ACCOUNT_ID', formatHint: (v: string) => (v.startsWith('act_') ? 'format act_*' : `format: "${v.slice(0, 4)}…"`) },
     { name: 'META_PIXEL_ID' },
@@ -675,24 +708,28 @@ async function runAllChecks(): Promise<CheckResult[]> {
     { name: 'META_PAGE_ID' },
     { name: 'META_LAUNCH_ADSET_ID_EN' },
     { name: 'META_LAUNCH_ADSET_ID_ES' },
+    { name: 'NEXT_PUBLIC_META_PIXEL_ID' }, // browser-side Pixel <head> injection (Stage 0 of v3b)
     { name: 'ANTHROPIC_API_KEY' },
     { name: 'GEMINI_API_KEY' },
     { name: 'TELEGRAM_BOT_TOKEN' },
     { name: 'TELEGRAM_FOUNDER_CHAT_ID' },
     { name: 'DATABASE_URL', formatHint: (_v: string) => 'value hidden' },
-    { name: 'ADMIN_ALLOWED_EMAILS' },
+    { name: 'ADMIN_ALLOWED_EMAILS', validate: isCommaSeparatedEmails },
+    { name: 'ADVERTISING_AGENT_ENABLED', validate: isBoolFlag }, // 'true' = cron logic runs; 'false' = early-return
+    { name: 'ADVERTISING_AGENT_DRY_RUN', validate: isBoolFlag }, // 'true' = no Meta API mutations from act layer
     { name: 'CRON_SECRET' },
     { name: 'POSTHOG_PROJECT_ID' },
     { name: 'POSTHOG_PERSONAL_API_KEY' },
     { name: 'STRIPE_SECRET_KEY' },
-  ] as const;
+  ];
 
   for (const v of criticalVars) {
     results.push(
       checkEnvVar({
         name: v.name,
         severity: 'error',
-        formatHint: 'formatHint' in v ? v.formatHint as (val: string) => string : undefined,
+        formatHint: v.formatHint,
+        validate: v.validate,
       }),
     );
   }
