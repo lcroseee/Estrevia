@@ -48,7 +48,7 @@ vi.mock('../db', () => ({
 }));
 
 import { getDb } from '../db';
-import { checkAndIncrementUsage } from '../usage';
+import { checkAndIncrementUsage, decrementUsage } from '../usage';
 
 const mockGetDb = vi.mocked(getDb);
 
@@ -167,5 +167,64 @@ describe('checkAndIncrementUsage — concurrency documentation', () => {
     // row-level locking on the ON CONFLICT target row. The unit tests above
     // verify the application logic handles empty RETURNING correctly.
     expect(true).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// decrementUsage — refund path (used when an optimistic increment must be undone
+// because the gated operation failed, e.g. external API 5xx).
+// ---------------------------------------------------------------------------
+
+function makeUpdateMock(returningResult: { count: number }[]) {
+  const chain = {
+    set: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    returning: vi.fn().mockResolvedValue(returningResult),
+  };
+  return {
+    update: vi.fn().mockReturnValue(chain),
+    insert: vi.fn(),
+    select: vi.fn(),
+    _chain: chain,
+  };
+}
+
+describe('decrementUsage', () => {
+  it('returns the new count after a successful decrement', async () => {
+    const db = makeUpdateMock([{ count: 2 }]);
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>);
+
+    const newCount = await decrementUsage('user1', 'avatar', 'month', NOW);
+
+    expect(newCount).toBe(2);
+    expect(db.update).toHaveBeenCalledTimes(1);
+    expect(db._chain.set).toHaveBeenCalledTimes(1);
+    expect(db._chain.where).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 0 when no row exists for this user/feature/period', async () => {
+    const db = makeUpdateMock([]);
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>);
+
+    const newCount = await decrementUsage('user-no-row', 'avatar', 'month', NOW);
+
+    expect(newCount).toBe(0);
+  });
+
+  it('passes a clamped count expression that prevents negative values', async () => {
+    const db = makeUpdateMock([{ count: 0 }]);
+    mockGetDb.mockReturnValue(db as unknown as ReturnType<typeof getDb>);
+
+    await decrementUsage('user1', 'avatar', 'month', NOW);
+
+    // The set() call should include a SQL expression — Drizzle's sql tag is
+    // an opaque object, so we just confirm `count` was passed (not a literal
+    // number) and `updatedAt` is also set.
+    const setCall = db._chain.set.mock.calls[0][0];
+    expect(setCall).toHaveProperty('count');
+    expect(setCall).toHaveProperty('updatedAt');
+    // A literal number would fail the GREATEST() clamp invariant; the expression
+    // should be a Drizzle SQL object (typeof 'object'), not a number.
+    expect(typeof setCall.count).toBe('object');
   });
 });

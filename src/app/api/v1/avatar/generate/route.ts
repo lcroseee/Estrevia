@@ -12,7 +12,7 @@ import { z } from 'zod';
 import { requireAuth } from '@/modules/auth/lib/helpers';
 import { isPremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
-import { checkAndIncrementUsage } from '@/shared/lib/usage';
+import { checkAndIncrementUsage, decrementUsage } from '@/shared/lib/usage';
 import type { ApiResponse } from '@/shared/types';
 
 const bodySchema = z.object({
@@ -81,6 +81,20 @@ export async function POST(
   // ---------------------------------------------------------------------------
   const userIsPremium = await isPremium(userId);
 
+  // Track whether we optimistically incremented the monthly counter so that
+  // every downstream failure path can refund the user's quota. Without this,
+  // a transient Gemini 5xx (or even a malformed-body 400) would burn one of
+  // the user's 3 free generations even though no image was produced.
+  let usageIncremented = false;
+  const refundUsage = async () => {
+    if (!usageIncremented) return;
+    try {
+      await decrementUsage(userId, 'avatar', 'month');
+    } catch (refundErr) {
+      console.error('[avatar/generate] usage refund failed:', refundErr);
+    }
+  };
+
   if (!userIsPremium) {
     const usage = await checkAndIncrementUsage(userId, 'avatar', 'month', 3);
     if (!usage.allowed) {
@@ -94,6 +108,7 @@ export async function POST(
         { status: 403 },
       );
     }
+    usageIncremented = true;
   }
 
   // ---------------------------------------------------------------------------
@@ -104,6 +119,7 @@ export async function POST(
     const body = await request.json();
     const result = bodySchema.safeParse(body);
     if (!result.success) {
+      await refundUsage();
       return NextResponse.json(
         { success: false, data: null, error: 'INVALID_INPUT' },
         { status: 400 },
@@ -111,6 +127,7 @@ export async function POST(
     }
     parsed = result.data;
   } catch {
+    await refundUsage();
     return NextResponse.json(
       { success: false, data: null, error: 'INVALID_INPUT' },
       { status: 400 },
@@ -138,6 +155,7 @@ export async function POST(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     console.error('[avatar/generate] GEMINI_API_KEY not configured');
+    await refundUsage();
     return NextResponse.json(
       { success: false, data: null, error: 'GEMINI_NOT_CONFIGURED' },
       { status: 500 },
@@ -169,6 +187,7 @@ export async function POST(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[avatar/generate] Gemini API error:', errorText);
+      await refundUsage();
       return NextResponse.json(
         { success: false, data: null, error: 'GENERATION_FAILED' },
         { status: 502 },
@@ -181,6 +200,7 @@ export async function POST(
 
     if (!imageBase64) {
       console.error('[avatar/generate] No image in Gemini response');
+      await refundUsage();
       return NextResponse.json(
         { success: false, data: null, error: 'NO_IMAGE_GENERATED' },
         { status: 502 },
@@ -209,6 +229,7 @@ export async function POST(
       console.error('[avatar/generate] error:', err);
     }
 
+    await refundUsage();
     return NextResponse.json(
       { success: false, data: null, error: 'INTERNAL_ERROR' },
       { status: 500 },

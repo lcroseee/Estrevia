@@ -124,3 +124,40 @@ export async function checkAndIncrementUsage(
 
   return { allowed: true, count: rows[0].count, limit };
 }
+
+/**
+ * Refunds one unit of usage by decrementing the counter (clamped at 0).
+ *
+ * Use after `checkAndIncrementUsage` returned `allowed: true` but the underlying
+ * operation failed (e.g. external API 5xx) and we don't want to charge the user's
+ * quota for a failed attempt. Idempotent at the floor — repeated calls won't go
+ * negative because of the GREATEST(count - 1, 0) clamp.
+ *
+ * Returns the new count, or 0 if no row exists for this user/feature/period.
+ */
+export async function decrementUsage(
+  userId: string,
+  feature: string,
+  period: UsagePeriod,
+  now: Date = new Date(),
+): Promise<number> {
+  const db = getDb();
+  const periodKey = computePeriodKey(period, now);
+
+  const rows = await db
+    .update(usageCounters)
+    .set({
+      count: sql`GREATEST(${usageCounters.count} - 1, 0)`,
+      updatedAt: sql`now()`,
+    })
+    .where(
+      and(
+        eq(usageCounters.userId, userId),
+        eq(usageCounters.feature, feature),
+        eq(usageCounters.periodKey, periodKey),
+      ),
+    )
+    .returning({ count: usageCounters.count });
+
+  return rows[0]?.count ?? 0;
+}
