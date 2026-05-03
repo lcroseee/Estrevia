@@ -145,11 +145,13 @@ export async function POST(
   }
 
   try {
-    // TODO: The Gemini Imagen endpoint may change. If using a newer model
-    // (e.g. imagen-4.0-generate-preview), update the model name accordingly.
-    // Consider switching to the @google/generative-ai SDK if it adds Imagen support.
+    // Imagen 4 'fast' tier — Google retired imagen-3.0-generate-002 in favor of
+    // imagen-4.0-* models (verified 2026-05-03 via ListModels). The 'fast' variant
+    // matches our use case: stylized abstract avatars where ultra-quality is wasted,
+    // and the per-call cost matters because free users get 3/mo and Pro is unlimited.
+    // Response shape (predictions[0].{mimeType, bytesBase64Encoded}) is unchanged.
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
