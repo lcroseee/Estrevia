@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { ChartResult } from '@/shared/types';
@@ -28,6 +28,8 @@ const ChartWheel = dynamic(
 import { PositionTable } from './PositionTable';
 import { PassportCard } from './PassportCard';
 import { ShareButton } from './ShareButton';
+import { AvatarSection } from './AvatarSection';
+import { generatePassport } from '@/modules/astro-engine/passport';
 
 type Tab = 'wheel' | 'table';
 
@@ -307,6 +309,8 @@ export function ChartDisplay() {
     );
   }
 
+  const passport = useMemo(() => generatePassport(chart), [chart]);
+
   const tabs: [Tab, string][] = [
     ['wheel', t('tabWheel')],
     ['table', t('tabTable')],
@@ -424,6 +428,14 @@ export function ChartDisplay() {
           <PassportSection chartId={chartId} />
         </>
       )}
+
+      {/* Avatar section — also requires a calculated chart */}
+      <div
+        className="h-px"
+        style={{ background: 'rgba(255,255,255,0.06)' }}
+        aria-hidden="true"
+      />
+      <AvatarSection passport={passport} />
     </section>
   );
 }
