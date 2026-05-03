@@ -244,7 +244,7 @@ function buildClaudeForDropOff(): DropOffClaudeClient {
 
 function buildTelegramBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN ?? '';
-  const chatId = process.env.TELEGRAM_CHAT_ID ?? '';
+  const chatId = process.env.TELEGRAM_FOUNDER_CHAT_ID ?? '';
   return new TelegramBot({ token, chatId });
 }
 

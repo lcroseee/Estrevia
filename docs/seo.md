@@ -2,6 +2,10 @@
 
 > Астрология — поисковый рынок. Люди гуглят «my natal chart», «sidereal vs tropical», «moon in scorpio meaning». Органический трафик = бесплатные пользователи.
 
+> **Статус (2026-05-03):** SEO Phase 1 + Phase 2 отгружены. Sitemap содержит **466 URL** (233 канонических пути × 2 локали EN+ES). Mobile Lighthouse Performance ≥85 достигнут. Forward-looking разделы (AEO, Programmatic SEO Phase 3) ниже остаются актуальными целями.
+
+> **Single source of truth:** все мета-теги генерируются через `createMetadata()` из `src/shared/seo/metadata.ts`. Все JSON-LD генераторы (`articleSchema`, `faqSchema`, `howToSchema`, `breadcrumbSchema`, `organizationSchema`, `softwareAppSchema`) живут в `src/shared/seo/json-ld.ts`. Страницы импортируют эти утилиты — НЕ создают свои.
+
 ---
 
 ## Целевые ключевые слова
@@ -38,6 +42,7 @@
 | `/essays/sun-in-aries` | Sun in Sidereal Aries — Meaning & Interpretation | 120 страниц эссе |
 | `/signs/aries` | Aries in Sidereal Astrology | 12 страниц знаков |
 | `/planets/saturn` | Saturn in Sidereal Astrology | 10 страниц планет |
+| `/sidereal-{sign}-dates` | When is Sidereal {Sign}? Dates & Sun-Sign Calculator | 12 страниц диапазонов дат Солнца в сидерических знаках (Lahiri). EN+ES = 24 страницы |
 | `/s/[id]` | [Name]'s Real Sign is ♓ Pisces — Find Yours | Viral share page. Dynamic OG image. Noindex (не индексировать, это user-generated) |
 
 ### Ключевой принцип
@@ -56,27 +61,51 @@
 
 > Это важно для SEO: таблицы эфемерид = уникальные данные, которые Google индексирует. Structured data (table markup) повышает шансы на featured snippet.
 
+### Sidereal Sun-Sign Dates страницы (`/sidereal-{sign}-dates`)
+
+Phase 2 добавила 12 sun-sign посадочных страниц в EN + 12 в ES = **24 страницы**, каждая ≥400 слов.
+
+**SEO-цель:** покрыть long-tail запросы класса «when is sidereal aries», «sidereal scorpio dates», «what are real cancer dates» — крайне частотные после виральных тиктоков о «настоящих знаках». Tropical сайты не отвечают на эти запросы (они показывают tropical даты), сидерических калькуляторов почти нет — окно для first-mover открыто.
+
+**LATAM coverage:** ES-версии (`/es/sidereal-{sign}-dates`) покрывают рынок испаноязычных запросов «cuándo es aries sideral», «fechas reales de leo». Регистр — `tú`, español neutro LATAM (см. memory: feedback_spanish_style).
+
+**Что на странице:**
+- Прямой ответ в первом абзаце: «Sidereal {Sign}: {start date} — {end date}» с точностью до угловой секунды
+- SunSignWidget (мини-калькулятор по дате рождения) → API `/api/v1/sidereal/sun-sign` (Upstash rate limit 10 req/min/IP)
+- Таблица сравнения tropical vs sidereal дат
+- Legal disclaimer (CLAUDE.md content-legal-rules)
+
+**Технические детали:**
+- Публичный URL: `/sidereal-{sign}-dates` (rewrite через `next.config.ts` на `/sidereal-dates/[sign]` — App Router не поддерживает partial dynamic segments в именах папок)
+- Канонический URL и hreflang эмитятся через `createMetadata()` как обычно
+- OG-картинка переиспользуется от Sun essay: `/api/og/essay/sun-in-{sign}` (1200×630)
+- Расчёты в API: `getSunInSignRange` / `getSunSignForDate` (Lahiri sidereal, валидированы на 36 reference fixtures, точность ±30 мин)
+
 ---
 
 ## Техническая SEO
 
 ### Next.js Metadata API
 
+> **Правило (single source of truth):** все страницы используют `createMetadata()` из `src/shared/seo/metadata.ts`. Не вызывайте `generateMetadata` руками с произвольной структурой — `createMetadata()` сам строит canonical, hreflang (`en-US` / `es` / `x-default`), Open Graph, Twitter card, и обрезает title/description до лимитов. Локаль передаётся параметром (получай через `getLocale()` из `next-intl/server`).
+
+Пример вызова:
+
 ```typescript
-// app/essays/[slug]/page.tsx
+// app/[locale]/essays/[slug]/page.tsx
+import { createMetadata } from '@/shared/seo';
+import { getLocale } from 'next-intl/server';
+
 export async function generateMetadata({ params }) {
+  const locale = await getLocale();
   const essay = getEssay(params.slug);
-  return {
-    title: `${essay.planet} in Sidereal ${essay.sign} — ESTREVIA`,
+  return createMetadata({
+    title: essay.title,
     description: essay.excerpt,
-    openGraph: {
-      title: essay.title,
-      description: essay.excerpt,
-      images: [{ url: `/og/essay/${params.slug}` }],
-    },
-    // alternates: Фаза 2 (ES переводы)
-    // languages: { en: `/en/essays/${params.slug}`, es: `/es/essays/${params.slug}` },
-  };
+    path: `/essays/${params.slug}`,
+    type: 'article',
+    locale,
+  });
 }
 ```
 
@@ -86,7 +115,7 @@ export async function generateMetadata({ params }) {
 |---------|-----------|
 | `<title>` | Уникальный на каждой странице, ≤ 60 символов |
 | `meta description` | Уникальный, ≤ 155 символов |
-| `hreflang` | EN only (MVP). EN + ES — Фаза 2 |
+| `hreflang` | EN + ES активны. Каждый канонический путь эмитит две записи в sitemap (EN root, ES под `/es/`) с alternates `en-US` / `es` / `x-default`=EN |
 | `canonical` | На каждой странице |
 | `og:image` | Динамическая генерация через `next/og` |
 | `robots.txt` | Конфигурация ниже |
@@ -349,22 +378,24 @@ AI-текст (эссе) дополняет данные, а не заменяе
 
 ### Фазированный рост (правило: не масштабировать пока не проиндексировано)
 
-| Фаза | Страницы | Условие запуска | Мониторинг |
-|------|----------|-----------------|-----------|
-| **MVP** | **~150** | Запуск продукта | GSC: indexation rate, impressions |
-| | 120 эссе (planet×sign) + калькулятор на каждой | | |
-| | 12 страниц знаков | | |
-| | 12 "sidereal vs tropical [sign]" | | |
-| | 3 pillar pages + landing | | |
-| **Месяц 3-4** | **+1** | indexation > 80% | GSC: organic traffic growth |
-| | `/moon-today` — обновляется ежедневно (ISR) | | |
-| | Высокий volume: "what sign is the moon in" (50K-100K/мес) | | |
-| **Месяц 4-6** | **+78** | indexation > 80%, organic > 2K/мес | GSC: каннибализация |
-| | Compatibility pages (Фаза 2, после синастрии) | | |
-| | "[sign1] and [sign2] compatibility sidereal" | | |
-| **Месяц 6+** | **+500** | indexation > 80%, organic > 5K/мес | GSC: thin content warnings |
-| | Planetary hours × city (топ-500 городов) | | |
-| | Каждая страница с уникальными sunrise/sunset расчётами | | |
+| Фаза | Страницы | Статус | Условие запуска | Мониторинг |
+|------|----------|--------|-----------------|-----------|
+| **Phase 1 (MVP)** | **120 эссе** (planet×sign) + 12 страниц знаков + landing/pillar | ✅ Отгружено | Запуск продукта | GSC: indexation rate, impressions |
+| **Phase 2 (текущая)** | **+24 sun-sign дат** (`/sidereal-{sign}-dates` × EN+ES) + 78 tarot card pages + 6 app pages + legal/pricing | ✅ Отгружено (2026-05-03) | После Phase 1 SEO baseline | GSC Domain property настроен, мониторим indexation |
+| **Phase 3 (план)** | `/moon-today` — обновляется ежедневно (ISR) | Pending | indexation > 80% | GSC: organic traffic growth |
+| | Высокий volume: "what sign is the moon in" (50K-100K/мес) | | | |
+| **Phase 3+ (план)** | **+78** Compatibility pages — "[sign1] and [sign2] compatibility sidereal" | Pending (после синастрии) | indexation > 80%, organic > 2K/мес | GSC: каннибализация |
+| **Phase 4 (план)** | **+500** Planetary hours × city (топ-500 городов) с уникальными sunrise/sunset | Pending | indexation > 80%, organic > 5K/мес | GSC: thin content warnings |
+
+**Текущее состояние sitemap (2026-05-03):** 233 канонических пути × 2 локали = **466 URL**. Разбивка:
+- 1 homepage + 1 `/why-sidereal` + 1 `/pricing` + 2 legal = 5
+- 6 app pages (`/chart`, `/moon`, `/hours`, `/synastry`, `/tarot`, `/tree-of-life`)
+- 78 tarot card pages
+- 120 essay pages (planet × sign)
+- 12 sign overview pages
+- 12 sidereal-dates pages
+
+Image sitemap: 120 essay OG-картинок + homepage/why-sidereal hero OG (`<image:image>` блоки эмитятся автоматически Next.js 16+).
 
 **Правило:** не добавлять новый слой страниц, пока предыдущий не показал > 80% indexation в Google Search Console.
 
@@ -381,15 +412,28 @@ AI-текст (эссе) дополняет данные, а не заменяе
 
 ## Метрики SEO
 
-| Метрика | Инструмент | Цель (6 мес.) |
-|---------|-----------|--------------|
-| Indexed pages | Google Search Console | 150+ (MVP), 250+ (с compatibility) |
-| Indexation rate | GSC | > 80% (порог для масштабирования) |
-| Organic traffic | GSC + PostHog | 5,000 visits/мес |
-| Top 10 rankings | GSC | 20+ keywords |
-| Avg. position (sidereal) | GSC | < 5 |
-| Click-through rate | GSC | > 3% |
-| Core Web Vitals | GSC + Lighthouse | All green |
+| Метрика | Инструмент | Цель (6 мес.) | Текущее состояние |
+|---------|-----------|--------------|-------------------|
+| Sitemap URL count | `src/app/sitemap.ts` | 466+ (post-Phase 2) | **466** ✅ (233 paths × 2 locales) |
+| Indexed pages | Google Search Console | 80%+ от 466 | TBD — check GSC dashboard |
+| Indexation rate | GSC | > 80% (порог для масштабирования Phase 3) | TBD — check GSC dashboard |
+| Organic traffic | GSC + PostHog | 5,000 visits/мес | TBD — check GSC dashboard |
+| Top 10 rankings | GSC | 20+ keywords | TBD — check GSC dashboard |
+| Avg. position (sidereal) | GSC | < 5 | TBD — check GSC dashboard |
+| Click-through rate | GSC | > 3% | TBD — check GSC dashboard |
+| Mobile Lighthouse Performance | Lighthouse CI | ≥ 85 | **≥ 85** ✅ (достигнуто Phase 2) |
+| `/moon` Accessibility | Lighthouse | ≥ 95 | **97** ✅ (Phase 2: 87 → 97) |
+| Core Web Vitals | GSC + Lighthouse | All green | TBD — check GSC dashboard |
+
+**Performance улучшения, отгруженные в Phase 2:**
+- ClerkProvider scoped только на `(app)` + auth routes — убран с marketing страниц (большой прирост Performance на landing)
+- `ChartWheel` lazy-loaded через `next/dynamic` (уменьшение initial JS bundle)
+- Geist шрифты с `display: swap`
+- Удалены мёртвые Sentry replay sample rates (разблокировано tree-shaking)
+- `/opengraph-image` исключён из intl middleware (P0 fix — иначе ломал OG-превью)
+- A11y: target-size + contrast фиксы на marketing страницах
+
+**GSC setup:** см. `docs/seo/gsc-domain-property-setup.md` — пошаговая инструкция настройки Domain property через DNS (founder step).
 
 ---
 

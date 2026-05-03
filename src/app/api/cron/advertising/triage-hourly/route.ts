@@ -19,6 +19,7 @@ import { fetchMetaInsights } from '@/modules/advertising/perceive/meta-insights'
 import { decide } from '@/modules/advertising/decide/orchestrator';
 import { pause } from '@/modules/advertising/act/pause';
 import { getMetaAdClient } from '@/modules/advertising/act';
+import { createMetaAdClient } from '@/modules/advertising/meta-graph-api';
 import { TelegramBot } from '@/modules/advertising/alerts/telegram-bot';
 import { isDryRun } from '@/modules/advertising/safety/kill-switch';
 import type { MetaInsightsApi } from '@/modules/advertising/perceive/meta-insights';
@@ -123,58 +124,17 @@ export async function GET(request: Request) {
 // ---------------------------------------------------------------------------
 
 /**
- * Builds a Meta API client using env vars.
- * In production: connects to Meta Marketing API.
- * In tests: mocked via vi.mock on the perceive/act modules.
- *
- * Returns a minimal MetaInsightsApi + MetaAdClient shape built from env vars.
- * A full adapter class will be added in Phase 2.
+ * Builds a Meta API client using env vars (META_ACCESS_TOKEN, META_AD_ACCOUNT_ID).
+ * Returns the real Graph API adapter; tests mock this factory via vi.mock on
+ * `@/modules/advertising/meta-graph-api`.
  */
 function buildMetaApiClient(): MetaInsightsApi & MetaAdClient {
-  const accessToken = process.env.META_ACCESS_TOKEN ?? '';
-  const adAccountId = process.env.META_AD_ACCOUNT_ID ?? '';
-
-  // Placeholder implementation — Phase 2 will replace with facebook-nodejs-business-sdk
-  return {
-    getInsights: async (opts) => {
-      throw new Error(
-        `[triage-hourly] MetaMarketingClient not yet implemented. ` +
-          `Configure META_ACCESS_TOKEN + META_AD_ACCOUNT_ID. opts=${JSON.stringify(opts)}`,
-      );
-    },
-    pauseAd: async (adId) => {
-      throw new Error(
-        `[triage-hourly] MetaMarketingClient.pauseAd not yet implemented. ad=${adId}`,
-      );
-    },
-    updateAdSetBudget: async (adSetId, cents) => {
-      throw new Error(
-        `[triage-hourly] MetaMarketingClient.updateAdSetBudget not yet implemented. adSetId=${adSetId} cents=${cents}`,
-      );
-    },
-    duplicateAd: async (adId) => {
-      throw new Error(
-        `[triage-hourly] MetaMarketingClient.duplicateAd not yet implemented. ad=${adId}`,
-      );
-    },
-    getAccountStatus: async () => {
-      throw new Error(
-        `[triage-hourly] MetaMarketingClient.getAccountStatus not yet implemented. ` +
-          `account=${adAccountId} token=${accessToken ? '[set]' : '[missing]'}`,
-      );
-    },
-    createCampaign: async () => {
-      throw new Error(`[triage-hourly] MetaMarketingClient.createCampaign not yet implemented.`);
-    },
-    createAdSet: async () => {
-      throw new Error(`[triage-hourly] MetaMarketingClient.createAdSet not yet implemented.`);
-    },
-  };
+  return createMetaAdClient();
 }
 
 function buildTelegramBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN ?? '';
-  const chatId = process.env.TELEGRAM_CHAT_ID ?? '';
+  const chatId = process.env.TELEGRAM_FOUNDER_CHAT_ID ?? '';
   return new TelegramBot({ token, chatId });
 }
 

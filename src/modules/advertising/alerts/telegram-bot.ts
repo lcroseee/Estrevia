@@ -6,8 +6,8 @@
  * so tests never hit the real Telegram API.
  *
  * Environment variables required:
- *   TELEGRAM_BOT_TOKEN  — bot token from BotFather
- *   TELEGRAM_CHAT_ID    — founder's chat ID (or group chat ID)
+ *   TELEGRAM_BOT_TOKEN         — bot token from BotFather
+ *   TELEGRAM_FOUNDER_CHAT_ID   — founder's chat ID (or group chat ID)
  *
  * Approval flow:
  *   LOW_RISK  — auto-approves after AUTO_APPROVE_TIMEOUT_MS (default 4h) if no response
@@ -313,14 +313,14 @@ export class TelegramBot {
 
 /**
  * Creates a TelegramBot instance from environment variables.
- * Throws if TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID are not set.
+ * Throws if TELEGRAM_BOT_TOKEN or TELEGRAM_FOUNDER_CHAT_ID are not set.
  */
 export function createTelegramBot(opts?: { fetchFn?: FetchFn; autoApproveTimeoutMs?: number }): TelegramBot {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const chatId = process.env.TELEGRAM_FOUNDER_CHAT_ID;
 
   if (!token) throw new Error('[telegram-bot] TELEGRAM_BOT_TOKEN is not set');
-  if (!chatId) throw new Error('[telegram-bot] TELEGRAM_CHAT_ID is not set');
+  if (!chatId) throw new Error('[telegram-bot] TELEGRAM_FOUNDER_CHAT_ID is not set');
 
   return new TelegramBot({
     token,

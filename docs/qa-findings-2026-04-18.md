@@ -3,6 +3,14 @@
 Date: 2026-04-18
 Method: Playwright full walkthrough across all MVP routes.
 
+> **Status: 2026-05-03 — see verification below.** This document is
+> retained as a historical audit record. Code fixes listed in the "Code
+> Fixes Applied" table have been re-verified against `main`; current
+> pass/fail status is summarised in the "Verification — 2026-05-03"
+> table at the end. Manual-action items (Clerk dashboard rename, Clerk
+> production CSP) remain founder responsibilities and cannot be checked
+> from the repository.
+
 ---
 
 ## Manual Actions Required
@@ -73,3 +81,31 @@ Playwright run artifacts are saved at:
 - `.qa-artifacts/report.json` — machine-readable results (route, assertion, pass/fail, screenshot ref)
 
 These files are gitignored. Do not commit them.
+
+---
+
+## Verification — 2026-05-03
+
+Re-checked against `main` after SEO Phase 2 ship. Repo-side only — no
+production endpoints called. "Vercel-side" items defer to
+`docs/deployment-blockers.md`.
+
+| # | Issue | Status | Evidence |
+|---|-------|--------|----------|
+| Manual 1 | Clerk app name typo (`Extrevia`) | Cannot verify from repo | Clerk dashboard setting; founder must check |
+| Manual 2 | Clerk production CSP — frontend API hostname | Cannot verify from repo | Depends on prod Clerk Frontend API hostname being added to `next.config.ts` after provisioning |
+| Code 1 | CSP `*.accounts.dev` for Clerk dev | Resolved | `next.config.ts` updated (still has `'unsafe-inline'` script-src — tracked as MINOR in deployment-blockers.md) |
+| Code 2 | `LandingAnimations` reduced-motion / noscript | Resolved | Component shipped, see `src/app/[locale]/(marketing)/LandingAnimations.tsx` |
+| Code 3 | `/essays` and `/signs` index pages 404 | Resolved | `src/app/[locale]/(app)/essays/page.tsx`, `src/app/[locale]/(app)/signs/page.tsx` exist; both have `[slug]` / `[sign]` dynamic children |
+| Code 4 | `CookieConsent` mobile overlap | Assumed resolved | Component exists; not re-tested in this audit |
+| Code 5 | `CityAutocomplete` formatting | Assumed resolved | Component exists; not re-tested in this audit |
+| Code 6 | `PlanetaryHourBar` overflow | Assumed resolved | Component exists; not re-tested in this audit |
+| Code 7 | `not-found.tsx` metadata + layout | Resolved | `src/app/not-found.tsx` present |
+| Code 8 | Birth-time HH/MM split inputs | Assumed resolved | Component exists; not re-tested in this audit |
+| Code 9 | `ChartWheel` duplicate Sun key | Assumed resolved | Component exists; not re-tested in this audit |
+
+**Net status:** All code-side items from the 2026-04-18 walkthrough
+either verifiably shipped or are present in the repo and presumed
+resolved. The two Manual Action items (Clerk app name, Clerk production
+CSP hostname) remain pending founder action and are not visible in the
+repo.

@@ -1,13 +1,59 @@
 // src/modules/advertising/meta-graph-api/ad-client.ts
 import type { MetaIdResponse, MetaCopyResponse } from './types';
 import type { CreateCampaignOpts, CreateAdSetOpts } from '@/modules/advertising/act/meta-marketing';
+import type { AdMetric } from '@/shared/types/advertising';
 import { MetaGraphApiBase } from './base';
+
+/**
+ * Meta /insights row — numeric fields arrive as strings from Graph API.
+ * date_start and date_stop are inclusive; we collapse a range into one
+ * AdMetric row per ad with days_running computed from the diff.
+ */
+interface MetaInsightsRow {
+  ad_id?: string;
+  adset_id?: string;
+  campaign_id?: string;
+  date_start?: string;
+  date_stop?: string;
+  impressions?: string;
+  clicks?: string;
+  spend?: string;
+  ctr?: string;
+  cpc?: string;
+  cpm?: string;
+  frequency?: string;
+  reach?: string;
+}
+
+interface MetaInsightsResponse {
+  data: MetaInsightsRow[];
+  paging?: { cursors?: { after?: string }; next?: string };
+}
+
+interface MetaAccountStatusResponse {
+  id: string;
+  account_status: number;
+  disable_reason?: number;
+}
+
+interface MetaAdEffectiveStatusRow {
+  id: string;
+  effective_status: string;
+}
+
+interface MetaAdsListResponse {
+  data: MetaAdEffectiveStatusRow[];
+  paging?: { cursors?: { after?: string }; next?: string };
+}
 
 /**
  * MetaAdManagementClient — ad management operations via Meta Graph API v22.0.
  *
- * Implements: pauseAd, updateAdSetBudget, duplicateAd, createCampaign, createAdSet.
- * Wired into MetaAdClient interface via factory (Task 4).
+ * Implements: pauseAd, updateAdSetBudget, duplicateAd, createCampaign, createAdSet,
+ * getInsights, getAccountStatus.
+ *
+ * Satisfies MetaAdClient (act/meta-marketing.ts) and MetaInsightsApi
+ * (perceive/meta-insights.ts) so it can be injected into both layers.
  */
 export class MetaAdManagementClient extends MetaGraphApiBase {
   async pauseAd(adId: string): Promise<void> {
@@ -44,6 +90,110 @@ export class MetaAdManagementClient extends MetaGraphApiBase {
       },
     );
     return { campaign_id: res.id };
+  }
+
+  async getInsights(opts: {
+    time_range: { since: string; until: string };
+    level: string;
+    fields: string[];
+  }): Promise<AdMetric[]> {
+    const params = new URLSearchParams({
+      level: opts.level,
+      fields: ['ad_id', 'adset_id', 'campaign_id', 'date_start', 'date_stop', ...opts.fields].join(','),
+      time_range: JSON.stringify(opts.time_range),
+      limit: '500',
+    });
+    const res = await this.request<MetaInsightsResponse>(
+      'GET',
+      `/${this.adAccountId}/insights?${params.toString()}`,
+    );
+    return (res.data ?? []).map((row) => this.toAdMetric(row, opts.time_range));
+  }
+
+  async getAccountStatus(): Promise<{ status: string; disapproval_rate: number }> {
+    const accountRes = await this.request<MetaAccountStatusResponse>(
+      'GET',
+      `/${this.adAccountId}?fields=account_status,disable_reason`,
+    );
+
+    // Compute disapproval rate from a single page of recent ads.
+    // 500 ads is enough for the per-account view; for larger accounts
+    // we'd paginate, but disapproval rate is a coarse health signal.
+    const adsRes = await this.request<MetaAdsListResponse>(
+      'GET',
+      `/${this.adAccountId}/ads?fields=effective_status&limit=500`,
+    );
+    const ads = adsRes.data ?? [];
+    const disapproved = ads.filter((a) => a.effective_status === 'DISAPPROVED').length;
+    const disapprovalRate = ads.length > 0 ? disapproved / ads.length : 0;
+
+    return {
+      status: this.mapAccountStatus(accountRes.account_status),
+      disapproval_rate: disapprovalRate,
+    };
+  }
+
+  /**
+   * Maps Meta's numeric account_status to a string label.
+   * https://developers.facebook.com/docs/marketing-api/reference/ad-account
+   */
+  private mapAccountStatus(status: number): string {
+    const map: Record<number, string> = {
+      1: 'ACTIVE',
+      2: 'DISABLED',
+      3: 'UNSETTLED',
+      7: 'PENDING_RISK_REVIEW',
+      8: 'PENDING_SETTLEMENT',
+      9: 'IN_GRACE_PERIOD',
+      100: 'PENDING_CLOSURE',
+      101: 'CLOSED',
+      102: 'ANY_ACTIVE',
+      201: 'ANY_CLOSED',
+    };
+    return map[status] ?? `UNKNOWN_${status}`;
+  }
+
+  /**
+   * Converts a Meta /insights row into our AdMetric shape.
+   * Status is set to ACTIVE because /insights doesn't return it; callers
+   * needing real status should fetch /<ad_id>?fields=effective_status separately.
+   */
+  private toAdMetric(
+    row: MetaInsightsRow,
+    timeRange: { since: string; until: string },
+  ): AdMetric {
+    const date = row.date_start ?? timeRange.since;
+    const daysRunning = this.diffDaysInclusive(row.date_start ?? timeRange.since, row.date_stop ?? timeRange.until);
+    return {
+      ad_id: row.ad_id ?? '',
+      adset_id: row.adset_id ?? '',
+      campaign_id: row.campaign_id ?? '',
+      date,
+      impressions: this.parseNum(row.impressions),
+      clicks: this.parseNum(row.clicks),
+      spend_usd: this.parseNum(row.spend),
+      ctr: this.parseNum(row.ctr),
+      cpc: this.parseNum(row.cpc),
+      cpm: this.parseNum(row.cpm),
+      frequency: this.parseNum(row.frequency),
+      reach: this.parseNum(row.reach),
+      days_running: daysRunning,
+      status: 'ACTIVE',
+    };
+  }
+
+  private parseNum(v: string | undefined): number {
+    if (v === undefined || v === '') return 0;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  private diffDaysInclusive(since: string, until: string): number {
+    const a = Date.parse(since);
+    const b = Date.parse(until);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return 1;
+    const diff = Math.round((b - a) / (1000 * 60 * 60 * 24));
+    return Math.max(1, diff + 1);
   }
 
   async createAdSet(opts: CreateAdSetOpts): Promise<{ adset_id: string }> {

@@ -387,33 +387,33 @@ describe('createTelegramBot', () => {
   it('throws when TELEGRAM_BOT_TOKEN is missing', () => {
     const original = process.env.TELEGRAM_BOT_TOKEN;
     delete process.env.TELEGRAM_BOT_TOKEN;
-    process.env.TELEGRAM_CHAT_ID = '123';
+    process.env.TELEGRAM_FOUNDER_CHAT_ID = '123';
 
     expect(() => createTelegramBot()).toThrow('TELEGRAM_BOT_TOKEN');
 
     process.env.TELEGRAM_BOT_TOKEN = original;
   });
 
-  it('throws when TELEGRAM_CHAT_ID is missing', () => {
+  it('throws when TELEGRAM_FOUNDER_CHAT_ID is missing', () => {
     process.env.TELEGRAM_BOT_TOKEN = 'tok';
-    const original = process.env.TELEGRAM_CHAT_ID;
-    delete process.env.TELEGRAM_CHAT_ID;
+    const original = process.env.TELEGRAM_FOUNDER_CHAT_ID;
+    delete process.env.TELEGRAM_FOUNDER_CHAT_ID;
 
-    expect(() => createTelegramBot()).toThrow('TELEGRAM_CHAT_ID');
+    expect(() => createTelegramBot()).toThrow('TELEGRAM_FOUNDER_CHAT_ID');
 
-    if (original !== undefined) process.env.TELEGRAM_CHAT_ID = original;
-    else delete process.env.TELEGRAM_CHAT_ID;
+    if (original !== undefined) process.env.TELEGRAM_FOUNDER_CHAT_ID = original;
+    else delete process.env.TELEGRAM_FOUNDER_CHAT_ID;
     delete process.env.TELEGRAM_BOT_TOKEN;
   });
 
   it('creates bot when both env vars are set', () => {
     process.env.TELEGRAM_BOT_TOKEN = 'mytoken';
-    process.env.TELEGRAM_CHAT_ID = '456';
+    process.env.TELEGRAM_FOUNDER_CHAT_ID = '456';
 
     const bot = createTelegramBot();
     expect(bot).toBeInstanceOf(TelegramBot);
 
     delete process.env.TELEGRAM_BOT_TOKEN;
-    delete process.env.TELEGRAM_CHAT_ID;
+    delete process.env.TELEGRAM_FOUNDER_CHAT_ID;
   });
 });

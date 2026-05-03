@@ -4,7 +4,20 @@ Operational playbook for the autonomous Meta Ads management agent. Read this bef
 
 ---
 
-## Pre-launch checklist (before first paid spend)
+## Current state (as of 2026-05-03)
+
+Code-level state confirmed in repo (`src/modules/advertising/`):
+
+- **Pipeline modules present:** `perceive/`, `decide/`, `act/`, `audit/`, `safety/` (kill-switch + spend caps), `audiences/`, `alerts/` (Telegram bot), `creative-gen/`, `meta-graph-api/`, `posthog/` (funnel reads), `stripe/` (attribution)
+- **Cron handlers present:** `src/app/api/cron/advertising/{triage-hourly,triage-daily,retro-weekly}/route.ts`
+- **Defaults in `.env.example`:** `ADVERTISING_AGENT_ENABLED=false`, `ADVERTISING_AGENT_DRY_RUN=true` — i.e. the local/initial deploy posture is "disabled + dry-run on". The kill-switch module (`safety/kill-switch.ts`) treats anything other than `ENABLED=true` as disabled.
+- **Production posture:** founder confirms via `vercel env ls` whether the agent is currently `ENABLED=true` and whether `DRY_RUN=false` in production. Do not assume from this doc.
+
+If the agent is not yet live in production, follow "Pre-launch (historical)" below. If already live, skip to "Operations (current)".
+
+---
+
+## Pre-launch (historical) — checklist before first paid spend
 
 ### 1. Resolve outstanding manual steps
 
@@ -114,7 +127,9 @@ Approved creatives are uploaded but paused. Final step: Meta Ads Manager UI → 
 
 ---
 
-## Daily operations
+## Operations (current)
+
+Once the agent is live in production (`ENABLED=true`, `DRY_RUN=false` in Vercel env) the cadence below applies.
 
 ### Morning (5 minutes)
 

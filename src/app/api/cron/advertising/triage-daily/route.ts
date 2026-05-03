@@ -23,6 +23,9 @@ import { pause } from '@/modules/advertising/act/pause';
 import { scale } from '@/modules/advertising/act/scale';
 import { duplicate } from '@/modules/advertising/act/duplicate';
 import { getMetaAdClient } from '@/modules/advertising/act';
+import { createMetaAdClient } from '@/modules/advertising/meta-graph-api';
+import { createPosthogFunnelClient } from '@/modules/advertising/posthog/funnel-client';
+import { createStripeAttributionClient } from '@/modules/advertising/stripe/attribution-client';
 import { TelegramBot } from '@/modules/advertising/alerts/telegram-bot';
 import { isDryRun } from '@/modules/advertising/safety/kill-switch';
 import type { MetaInsightsApi } from '@/modules/advertising/perceive/meta-insights';
@@ -53,12 +56,12 @@ export async function GET(request: Request) {
     const todayStr = now.toISOString().slice(0, 10);
 
     // Build dependencies.
-    // metaApiClient: insights + perceive (stub → Phase 2: real insights adapter)
+    // metaApiClient: insights + perceive (real Graph API adapter via createMetaAdClient)
     // actClient:     act-layer operations (getMetaAdClient() — real MetaAdManagementClient in prod)
     const metaApiClient = buildMetaApiClient();
     const actClient = getMetaAdClient();
     const posthogClient = buildPosthogClient();
-    const stripeClient = buildStripeClient();
+    const stripeClient = await buildStripeClient();
     const telegramBot = buildTelegramBot();
     const decisionDb = buildDecisionDb();
     const spendCapDb = buildSpendCapDb();
@@ -228,64 +231,20 @@ export async function GET(request: Request) {
 // ---------------------------------------------------------------------------
 
 function buildMetaApiClient(): MetaInsightsApi & MetaAdClient {
-  // Phase 2: replace with facebook-nodejs-business-sdk adapter
-  return {
-    getInsights: async (opts) => {
-      throw new Error(
-        `[triage-daily] MetaMarketingClient not yet implemented. opts=${JSON.stringify(opts)}`,
-      );
-    },
-    pauseAd: async (adId) => {
-      throw new Error(`[triage-daily] MetaMarketingClient.pauseAd not yet implemented. ad=${adId}`);
-    },
-    updateAdSetBudget: async (adSetId, cents) => {
-      throw new Error(
-        `[triage-daily] MetaMarketingClient.updateAdSetBudget not yet implemented. adSetId=${adSetId} cents=${cents}`,
-      );
-    },
-    duplicateAd: async (adId) => {
-      throw new Error(
-        `[triage-daily] MetaMarketingClient.duplicateAd not yet implemented. ad=${adId}`,
-      );
-    },
-    getAccountStatus: async () => {
-      throw new Error(`[triage-daily] MetaMarketingClient.getAccountStatus not yet implemented.`);
-    },
-    createCampaign: async () => {
-      throw new Error(`[triage-daily] MetaMarketingClient.createCampaign not yet implemented.`);
-    },
-    createAdSet: async () => {
-      throw new Error(`[triage-daily] MetaMarketingClient.createAdSet not yet implemented.`);
-    },
-  };
+  return createMetaAdClient();
 }
 
 function buildPosthogClient(): PosthogFunnelApi {
-  // Phase 2: replace with posthog-node SDK integration
-  return {
-    getFunnel: async (opts) => {
-      throw new Error(
-        `[triage-daily] PostHog getFunnel not yet implemented. opts=${JSON.stringify(opts)}`,
-      );
-    },
-  };
+  return createPosthogFunnelClient();
 }
 
-function buildStripeClient(): StripeAttributionApi {
-  // Phase 2: replace with stripe SDK integration
-  return {
-    listSubscriptionsCreatedBetween: async (opts) => {
-      throw new Error(
-        `[triage-daily] Stripe listSubscriptionsCreatedBetween not yet implemented. ` +
-          `from=${opts.created_gte.toISOString()}`,
-      );
-    },
-  };
+async function buildStripeClient(): Promise<StripeAttributionApi> {
+  return createStripeAttributionClient();
 }
 
 function buildTelegramBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN ?? '';
-  const chatId = process.env.TELEGRAM_CHAT_ID ?? '';
+  const chatId = process.env.TELEGRAM_FOUNDER_CHAT_ID ?? '';
   return new TelegramBot({ token, chatId });
 }
 

@@ -1,6 +1,6 @@
 // src/modules/advertising/meta-graph-api/index.ts
 import type { MetaApiClient } from '@/modules/advertising/creative-gen/upload/meta-upload';
-import type { CreateCampaignOpts, CreateAdSetOpts } from '@/modules/advertising/act/meta-marketing';
+import type { MetaAdClient, CreateCampaignOpts, CreateAdSetOpts } from '@/modules/advertising/act/meta-marketing';
 import { MetaUploadClient } from './upload-client';
 import { MetaAdManagementClient } from './ad-client';
 
@@ -18,18 +18,13 @@ export {
 export type { MetaGraphConfig } from './types';
 
 /**
- * Narrowed interface for the act-stream + campaign-setup operations.
+ * Narrowed interface for act-stream + campaign-setup operations only.
+ * Used by act/scale.ts, act/pause.ts, etc. when they don't need
+ * insights or account-status reads.
  *
- * TYPE STRATEGY: Option 1 (narrow return type).
- *
- * The broader `MetaAdClient` in act/meta-marketing.ts also includes
- * `scaleBudget`, `getInsights`, and `getAccountStatus` — used by cron
- * handlers via `buildMetaApiClient()`. `MetaAdManagementClient` only
- * implements the 5 methods below; declaring `implements MetaAdClient`
- * would require throw-stubs for the rest. Instead we define this
- * precise interface so TypeScript enforces exactly what the factory
- * actually delivers. Callers that need cron operations use
- * `buildMetaApiClient()` (returns `MetaInsightsApi & MetaAdClient`).
+ * For cron handlers that need both reads and writes, use
+ * `createMetaAdClient()` which returns the broader `MetaAdClient`
+ * (implemented by MetaAdManagementClient).
  */
 export interface MetaAdActOps {
   pauseAd(adId: string): Promise<void>;
@@ -63,7 +58,7 @@ export function createMetaUploadClient(): MetaApiClient {
   return new MetaUploadClient(env);
 }
 
-export function createMetaAdClient(): MetaAdActOps {
+export function createMetaAdClient(): MetaAdClient {
   guardTestEnv();
   const env = readEnv();
   return new MetaAdManagementClient(env);

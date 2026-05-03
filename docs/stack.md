@@ -4,22 +4,27 @@
 
 | Слой | Технология | Версия | Почему |
 |------|-----------|--------|--------|
-| **Frontend** | Next.js (App Router) | 16+ | SSR, ISR, API routes, единый фреймворк |
-| **Язык** | TypeScript | 5.x | Типобезопасность, один язык на всём стеке |
-| **Стили** | Tailwind CSS | 4.x | Utility-first, тёмная тема, быстрый UI |
-| **UI компоненты** | shadcn/ui | latest | Не библиотека — копируемые компоненты, полный контроль |
-| **Астро-движок** | Swiss Ephemeris (`sweph`, Node.js native) | 2.10+ | Золотой стандарт эфемерид, ±0.01° точность, серверный расчёт |
-| **БД** | PostgreSQL | 16+ | Надёжность, JSON-поля, геоданные |
-| **ORM** | Drizzle ORM | latest | Type-safe, 7KB bundle (vs Prisma 1.6MB), быстрый cold start на serverless |
-| **Кэш** | Redis (Upstash) | — | Кэш эфемерид, rate limiting, сессии |
-| **Auth** | Clerk | — | OAuth, magic links, управление пользователями, Vercel Marketplace |
+| **Frontend** | Next.js (App Router) | 16.2 | SSR, ISR, API routes, единый фреймворк; React Server Components |
+| **React** | React / React DOM | 19.2 | Concurrent features, Server Components, Actions |
+| **Язык** | TypeScript | 6.0 (strict) | Типобезопасность, один язык на всём стеке |
+| **Dev bundler** | Turbopack | встроен в Next 16 | По умолчанию в `next dev` (`--turbopack`); быстрый HMR |
+| **i18n** | next-intl | 4.9 | Live (en+es) — `/`, `/es/` префиксы; ICU-форматирование |
+| **Стили** | Tailwind CSS | 4.2 | Utility-first, тёмная тема, быстрый UI; `@tailwindcss/postcss` |
+| **UI компоненты** | shadcn/ui | 4.3 (CLI) + `@base-ui/react` 1.3 | Не библиотека — копируемые компоненты, полный контроль; Base UI как primitives |
+| **Астро-движок** | Swiss Ephemeris (`sweph`, Node.js native) | 2.10 | Золотой стандарт эфемерид, ±0.01° точность, серверный расчёт |
+| **БД** | PostgreSQL (Neon serverless) | 16+ | Надёжность, JSON-поля, геоданные; pooled + unpooled URLs |
+| **ORM** | Drizzle ORM | 0.45 (`drizzle-kit` 0.31) | Type-safe, 7KB bundle (vs Prisma 1.6MB), быстрый cold start на serverless |
+| **Кэш / rate-limit** | Upstash Redis | `@upstash/redis` 1.37, `@upstash/ratelimit` 2.0 | Кэш эфемерид, rate limiting, сессии |
+| **Auth** | Clerk | `@clerk/nextjs` 7.2 | OAuth, magic links, управление пользователями, Vercel Marketplace |
+| **Платежи** | Stripe | `stripe` 22 | Подписки, webhooks, Stripe-attribution в advertising-модуле |
 | **AI (текст)** | Claude API | Sonnet/Haiku | Генерация контента, перевод, интерпретации |
-| **AI (изображения)** | Stability AI | — | Генерация аватаров, таро иллюстрации |
-| **Аналитика** | PostHog (**Cloud EU**) | — | Open-source, GDPR compliant (EU data residency), $0 до 1M events |
-| **Email** | Resend | — | Transactional emails, waitlist nurture |
-| **Хостинг frontend** | Vercel | — | Edge, ISR, preview deployments, zero-config |
-| **Хостинг backend** | Vercel Functions (Fluid Compute) | — | Один провайдер, серверные функции с полным Node.js |
-| **Хранилище файлов** | Vercel Blob | — | Фото, текстуры, медиа (public + private) |
+| **AI (изображения)** | Gemini (Imagen 4 / Nano Banana 2) | — | Генерация аватаров, ad-креативов; fallback Ideogram/Runway |
+| **Аналитика** | PostHog (**Cloud EU**) | `posthog-js` 1.36, `posthog-node` 5.28 | Open-source, GDPR compliant (EU data residency), $0 до 1M events |
+| **Error monitoring** | Sentry | `@sentry/nextjs` 10.47 | Source maps, alerting, free tier 5K errors/мес |
+| **Email** | Resend | `resend` 6.10 | Transactional emails, waitlist nurture |
+| **Хостинг frontend** | Vercel | — | ISR, preview deployments, zero-config |
+| **Хостинг backend** | Vercel Functions (Fluid Compute) | `@vercel/functions` 3.4 | Серверные функции с полным Node.js. **Edge Functions deprecated** per Vercel guidance — Fluid Compute по умолчанию (совместимость с native bindings типа `sweph`) |
+| **Хранилище файлов** | Vercel Blob | `@vercel/blob` 2.3 | Фото, текстуры, медиа (public + private) |
 | **DNS/Домены** | Cloudflare | — | Быстрый DNS, DDoS protection, дешёвые домены |
 
 > **3D Engine (Phase 2):** Three.js + React Three Fiber — 3D-визуализация планет и созвездий. Не входит в MVP.
@@ -67,15 +72,16 @@ Vercel (единая платформа)
 ├── Blob Storage (медиа, текстуры)
 └── Edge Config (feature flags)
 
-Vercel Marketplace
+Vercel Marketplace (Neon, Upstash, Clerk — Vercel сам Postgres/KV больше не поставляет)
 ├── Neon PostgreSQL (основная БД)
 ├── Upstash Redis (кэш, rate limiting)
 └── Clerk (аутентификация)
 
 Внешние
 ├── Claude API (генерация контента)
-├── Stability AI (генерация изображений)
+├── Gemini API (генерация изображений/видео)
 ├── PostHog Cloud (аналитика)
+├── Sentry (error monitoring)
 ├── Resend (email)
 ├── Cloudflare (DNS, DDoS)
 └── NASA/USGS/NOAA (данные)
@@ -101,15 +107,19 @@ Vercel Marketplace
 
 ```
 # Framework
-next
-react
-react-dom
-typescript
+next                      # 16.2 (App Router, Turbopack по умолчанию в dev)
+react                     # 19.2
+react-dom                 # 19.2
+typescript                # 6.0 (strict)
+
+# i18n (live: en + es)
+next-intl                 # 4.9
 
 # Стили и UI
-tailwindcss
+tailwindcss               # 4.2
 @tailwindcss/postcss
-shadcn/ui (via CLI)
+shadcn                    # 4.3 (CLI)
+@base-ui/react            # 1.3 (primitives под shadcn)
 lucide-react              # Иконки
 framer-motion             # Анимации
 
@@ -138,13 +148,23 @@ resend
 @modelcontextprotocol/sdk # MCP server SDK (обёртка над API для AI-ассистентов)
 
 # Платежи
-stripe                    # Stripe SDK (серверный)
+stripe                    # 22.x — Stripe SDK (серверный)
+
+# Error monitoring
+@sentry/nextjs            # 10.47
+
+# Vercel runtime
+@vercel/functions         # 3.4 (Fluid Compute helpers)
+@vercel/blob              # 2.3
+@vercel/og                # OG image generation (Satori)
+
+# Тестирование
+vitest                    # 4.1 — unit / integration
+@playwright/test          # 1.59 — e2e
 
 # Утилиты
-date-fns                  # Работа с датами
 date-fns-tz               # Timezone-aware операции с датами
-@vvo/tzdb                 # Полная IANA tz database (исторические DST/offset)
-zod                       # Валидация схем
+zod                       # 4.x — Валидация схем
 ```
 
 ---

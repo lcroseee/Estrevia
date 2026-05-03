@@ -66,6 +66,41 @@ vi.mock('@/modules/advertising/alerts/telegram-bot', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Mock real-API client factories (production code path).
+// Tests rely on the perceive-layer mocks below, so the client returned here
+// is a stub that throws if accidentally invoked — surfaces missing perceive mocks loudly.
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/meta-graph-api', async () => {
+  const actual = await vi.importActual<typeof import('@/modules/advertising/meta-graph-api')>(
+    '@/modules/advertising/meta-graph-api',
+  );
+  return {
+    ...actual,
+    createMetaAdClient: vi.fn(() => ({
+      getInsights: vi.fn(async () => { throw new Error('test stub: mock perceive instead'); }),
+      pauseAd: vi.fn(),
+      updateAdSetBudget: vi.fn(),
+      duplicateAd: vi.fn(async () => ({ ad_id: 'stub' })),
+      getAccountStatus: vi.fn(async () => ({ status: 'ACTIVE', disapproval_rate: 0 })),
+      createCampaign: vi.fn(async () => ({ campaign_id: 'stub' })),
+      createAdSet: vi.fn(async () => ({ adset_id: 'stub' })),
+    })),
+  };
+});
+
+vi.mock('@/modules/advertising/posthog/funnel-client', () => ({
+  createPosthogFunnelClient: vi.fn(() => ({
+    getFunnel: vi.fn(async () => { throw new Error('test stub: mock perceive instead'); }),
+  })),
+}));
+
+vi.mock('@/modules/advertising/stripe/attribution-client', () => ({
+  createStripeAttributionClient: vi.fn(async () => ({
+    listSubscriptionsCreatedBetween: vi.fn(async () => { throw new Error('test stub: mock perceive instead'); }),
+  })),
+}));
+
+// ---------------------------------------------------------------------------
 // Mock Meta insights fetch
 // ---------------------------------------------------------------------------
 vi.mock('@/modules/advertising/perceive/meta-insights', () => ({

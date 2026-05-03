@@ -93,4 +93,111 @@ describe('MetaAdManagementClient', () => {
       expect(body.bid_strategy).toBe('LOWEST_COST_WITHOUT_CAP');
     });
   });
+
+  describe('getInsights', () => {
+    it('GETs /act_X/insights with time_range JSON-encoded and parses string numbers', async () => {
+      const fetchImpl = chainedFetch(
+        ok({
+          data: [
+            {
+              ad_id: 'ad_1',
+              adset_id: 'as_1',
+              campaign_id: 'cmp_1',
+              date_start: '2026-04-25',
+              date_stop: '2026-04-26',
+              impressions: '5247',
+              clicks: '87',
+              spend: '18.40',
+              ctr: '0.0166',
+              cpc: '0.21',
+              cpm: '3.51',
+              frequency: '1.4',
+              reach: '3748',
+            },
+          ],
+        }),
+      );
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const res = await client.getInsights({
+        time_range: { since: '2026-04-25', until: '2026-04-26' },
+        level: 'ad',
+        fields: ['impressions', 'clicks', 'spend', 'ctr', 'cpc', 'cpm', 'frequency', 'reach'],
+      });
+
+      const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+      expect(init.method).toBe('GET');
+      expect(url).toContain('/act_1/insights');
+      expect(url).toContain('level=ad');
+      expect(url).toContain(encodeURIComponent('{"since":"2026-04-25","until":"2026-04-26"}'));
+
+      expect(res).toHaveLength(1);
+      expect(res[0]).toMatchObject({
+        ad_id: 'ad_1',
+        adset_id: 'as_1',
+        campaign_id: 'cmp_1',
+        date: '2026-04-25',
+        impressions: 5247,
+        clicks: 87,
+        spend_usd: 18.40,
+        ctr: 0.0166,
+        days_running: 2,
+        status: 'ACTIVE',
+      });
+    });
+
+    it('returns empty array when /insights returns empty data', async () => {
+      const fetchImpl = chainedFetch(ok({ data: [] }));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const res = await client.getInsights({
+        time_range: { since: '2026-04-25', until: '2026-04-26' },
+        level: 'ad',
+        fields: ['impressions'],
+      });
+      expect(res).toEqual([]);
+    });
+
+    it('coerces missing or invalid numeric fields to 0', async () => {
+      const fetchImpl = chainedFetch(
+        ok({ data: [{ ad_id: 'ad_x', impressions: undefined, clicks: 'NaN', spend: '' }] }),
+      );
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const res = await client.getInsights({
+        time_range: { since: '2026-04-25', until: '2026-04-26' },
+        level: 'ad',
+        fields: ['impressions'],
+      });
+      expect(res[0]).toMatchObject({ impressions: 0, clicks: 0, spend_usd: 0 });
+    });
+  });
+
+  describe('getAccountStatus', () => {
+    it('combines account_status with computed disapproval_rate from ads list', async () => {
+      const fetchImpl = chainedFetch(
+        ok({ id: 'act_1', account_status: 1, disable_reason: 0 }),
+        ok({
+          data: [
+            { id: 'ad_1', effective_status: 'ACTIVE' },
+            { id: 'ad_2', effective_status: 'ACTIVE' },
+            { id: 'ad_3', effective_status: 'DISAPPROVED' },
+            { id: 'ad_4', effective_status: 'PAUSED' },
+          ],
+        }),
+      );
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const res = await client.getAccountStatus();
+      expect(res.status).toBe('ACTIVE');
+      expect(res.disapproval_rate).toBeCloseTo(0.25, 4);
+    });
+
+    it('maps disabled accounts to DISABLED label', async () => {
+      const fetchImpl = chainedFetch(
+        ok({ id: 'act_1', account_status: 2 }),
+        ok({ data: [] }),
+      );
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const res = await client.getAccountStatus();
+      expect(res.status).toBe('DISABLED');
+      expect(res.disapproval_rate).toBe(0);
+    });
+  });
 });

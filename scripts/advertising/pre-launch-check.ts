@@ -672,6 +672,9 @@ async function runAllChecks(): Promise<CheckResult[]> {
     { name: 'META_AD_ACCOUNT_ID', formatHint: (v: string) => (v.startsWith('act_') ? 'format act_*' : `format: "${v.slice(0, 4)}…"`) },
     { name: 'META_PIXEL_ID' },
     { name: 'META_CAPI_TOKEN' },
+    { name: 'META_PAGE_ID' },
+    { name: 'META_LAUNCH_ADSET_ID_EN' },
+    { name: 'META_LAUNCH_ADSET_ID_ES' },
     { name: 'ANTHROPIC_API_KEY' },
     { name: 'GEMINI_API_KEY' },
     { name: 'TELEGRAM_BOT_TOKEN' },
@@ -679,6 +682,9 @@ async function runAllChecks(): Promise<CheckResult[]> {
     { name: 'DATABASE_URL', formatHint: (_v: string) => 'value hidden' },
     { name: 'ADMIN_ALLOWED_EMAILS' },
     { name: 'CRON_SECRET' },
+    { name: 'POSTHOG_PROJECT_ID' },
+    { name: 'POSTHOG_PERSONAL_API_KEY' },
+    { name: 'STRIPE_SECRET_KEY' },
   ] as const;
 
   for (const v of criticalVars) {

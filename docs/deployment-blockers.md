@@ -4,6 +4,14 @@ This document tracks issues that **cannot be fixed in code** and require
 manual action on Vercel, Clerk, DNS, or Stripe dashboards. Compiled from
 real-user QA walkthroughs in `docs/qa-findings-2026-04-18.md`.
 
+> **Status update — 2026-05-03:** Several blockers from the original
+> 2026-04-18 audit have been resolved in code (route pages shipped, legacy
+> API path removed, `NEXT_PUBLIC_SITE_URL` fallback wired in
+> `src/shared/seo/constants.ts`, Clerk JWT middleware live in
+> `src/middleware.ts`). See "Resolved Blockers (2026-05-03)" at the end of
+> this file for the audit trail. Items below either still block launch
+> or cannot be verified from the repository alone.
+
 ## Status Legend
 
 - **BLOCKER** — product cannot function; traffic must not be sent
@@ -17,6 +25,10 @@ real-user QA walkthroughs in `docs/qa-findings-2026-04-18.md`.
 **Symptom:** `dig estrevia.app` returns `NXDOMAIN`. Any `/s/[id]` share
 link, any Cosmic Passport URL, any ad destination currently points at a
 non-existent host.
+
+**Founder must verify in Vercel dashboard** — this cannot be confirmed
+from the repository. If the domain is already attached and SSL issued,
+mark this resolved manually.
 
 **Fix:**
 1. Register `estrevia.app` through a registrar (Namecheap, Cloudflare,
@@ -35,11 +47,18 @@ non-existent host.
 
 ## BLOCKER: Clerk is running on test keys in production
 
-**Symptom:** HTML contains
+**Symptom (2026-04-18):** HTML contains
 `publishableKey=pk_test_...mighty-mink-92.clerk.accounts.dev`.
 `signInUrl` and `signUpUrl` are empty strings, so `/sign-in` and
-`/sign-up` return 404. No user can register, therefore no user can
-subscribe.
+`/sign-up` return 404.
+
+**Code-side status (2026-05-03):** `src/middleware.ts` uses
+`clerkMiddleware` with stateless JWT verification, and `/sign-in` /
+`/sign-up` route pages exist under `src/app/[locale]/sign-in/` and
+`src/app/[locale]/sign-up/`. **Founder must verify in Vercel dashboard**
+that production environment variables are populated with `pk_live_...` /
+`sk_live_...` values (the repo only contains empty placeholders in
+`.env.example`).
 
 **Fix:**
 1. Clerk dashboard → create a new **Production** instance (or promote the
@@ -64,43 +83,18 @@ subscribe.
 
 ---
 
-## BLOCKER: `/api/chart/calculate` (legacy path) returns 404
+## MAJOR: `NEXT_PUBLIC_SITE_URL` must be set on Vercel Production
 
-**Symptom:** QA reports the form's Calculate button hits
-`POST /api/chart/calculate` which returns the 404 page. The live endpoint
-lives at `/api/v1/chart/calculate`.
+**Symptom (2026-04-18):** `robots.txt` said
+`Sitemap: http://localhost:3000/sitemap.xml`. All sitemap URLs and the
+`og:image` meta tag pointed at localhost.
 
-**Fix:** Check the form handler in
-`src/modules/astro-engine/components/HeroCalculator.tsx` and wherever the
-submit lives. All fetches must target `/api/v1/chart/calculate`. If the
-QA report is current, there is a stale non-versioned path somewhere.
-
-**Owner:** backend engineer.
-
-**Verification:**
-
-```bash
-curl -X POST https://estrevia.app/api/v1/chart/calculate \
-  -H 'Content-Type: application/json' \
-  -d '{"date":"1997-11-14","time":"14:30","lat":19.43,"lon":-99.13,"tz":"America/Mexico_City"}' \
-  -i | head -20
-```
-
-Expected: `200 OK` with JSON body containing `planets` array.
-
----
-
-## MAJOR: `NEXT_PUBLIC_SITE_URL` leaks `http://localhost:3000`
-
-**Symptom:** `robots.txt` says `Sitemap: http://localhost:3000/sitemap.xml`.
-All 539 sitemap URLs are `<loc>http://localhost:3000/...</loc>`. OG meta
-tag `og:image` is `http://localhost:3000/opengraph-image`.
-
-**Root cause:** `NEXT_PUBLIC_SITE_URL` environment variable on Vercel is
-either unset or set to localhost. The code falls back to
-`https://estrevia.app` when unset (after the fix in
-`src/shared/seo/constants.ts`), but this env value needs to be correct in
-all environments.
+**Code-side status (2026-05-03):** The fallback to
+`https://estrevia.app` is in place in `src/shared/seo/constants.ts`, and
+`.env.example` documents `NEXT_PUBLIC_SITE_URL=https://estrevia.app`.
+**Founder must verify in Vercel dashboard** that the Production
+environment variable is actually set to `https://estrevia.app` (and not
+empty or localhost) — the repo cannot confirm Vercel env values.
 
 **Fix:**
 1. Vercel → Settings → Environment Variables.
@@ -125,31 +119,6 @@ All three should contain `https://estrevia.app`, never `localhost`.
 
 ---
 
-## MAJOR: Missing production pages — `/essays`, `/signs`, `/about`, `/passport`
-
-**Symptom:** QA found that the pricing card advertises "All 120+ essays"
-but `/essays` returns 404. Same for `/signs`, `/about`,
-`/passport`, `/correspondences`, `/sidereal-vs-tropical`. Files exist in
-the repo (some as untracked `??` in `git status`), but the routes are
-not built or not linked.
-
-**Fix:**
-1. Decide scope for MVP launch. Minimum viable:
-   - `/essays` — index page listing all 120 essays (one exists as
-     untracked `src/app/(app)/essays/page.tsx`). Commit and wire up.
-   - `/signs` — index of 12 sign pages (one exists as untracked
-     `src/app/(app)/signs/page.tsx`). Commit and wire up.
-   - `/why-sidereal` — already live, add to header nav (currently
-     SEO-only, no UI link).
-2. For pages that are **not** ready: remove from nav/footer/pricing card
-   and sitemap until they ship. Do not promise what you cannot deliver.
-3. Add `/about` with at least one paragraph + legal entity (required for
-   German Impressumspflicht, UK advertising standards).
-
-**Owner:** frontend + content engineers.
-
----
-
 ## MAJOR: No `Impressum` / legal entity on site
 
 **Symptom:** Terms of Service refers to "Estrevia and its operators"
@@ -157,6 +126,10 @@ without naming a legal entity, address, or UK representative. In
 Germany §5 TMG requires an Impressum page; in UK the Companies Act
 requires trading details; ASA requires astrology-entertainment
 disclaimer visible from landing.
+
+**Repo-side status (2026-05-03):** No `/about` or `/legal/imprint` route
+exists under `src/app/[locale]/(marketing)/`. Still blocking for EU/UK
+launch.
 
 **Fix:**
 1. Register a legal entity (sole trader, LLC, UK Ltd — founder's
@@ -179,6 +152,10 @@ disclaimer visible from landing.
 market — second largest astrology market globally — has no PT-BR file.
 Gen Z QA (Luiza, São Paulo) flagged this as blocker for LATAM reach.
 
+**Repo-side status (2026-05-03):** Confirmed — `messages/` contains only
+`en.json` and `es.json`; `src/i18n/routing.ts` declares
+`locales: ['en', 'es']`. PT-BR not yet wired.
+
 **Fix:**
 1. Copy `messages/es.json` to `messages/pt.json`.
 2. Translate to Brazilian Portuguese (NOT European — they differ
@@ -198,6 +175,11 @@ Stripe checkout shows USD only and does not offer regional payment
 methods. For LATAM (PIX), EU (SEPA, iDEAL, Bizum), this is a checkout
 conversion killer.
 
+**Founder must verify in Stripe dashboard** which payment methods are
+enabled — this cannot be confirmed from the repository. Code change in
+`src/app/api/v1/stripe/checkout/route.ts` (currency: 'auto') still
+required regardless.
+
 **Fix:**
 1. Stripe dashboard → Payment methods → enable SEPA, iDEAL, Bizum, PIX
    (requires Stripe Brazil connection), Cartão de Crédito.
@@ -216,6 +198,12 @@ conversion killer.
 production keys, webhook signing secret must also be production, else
 `/api/webhooks/clerk` will 401 every event and user-table sync breaks.
 Same for Stripe.
+
+**Repo-side status (2026-05-03):** Both webhook endpoints exist
+(`src/app/api/webhooks/clerk/`, `src/app/api/webhooks/stripe/`) and
+`CLERK_WEBHOOK_SECRET` / `STRIPE_WEBHOOK_SECRET` are documented in
+`.env.example`. **Founder must verify in Vercel dashboard** that the
+Production env vars hold live signing secrets.
 
 **Fix:**
 - Clerk dashboard → Webhooks → copy live signing secret → Vercel env
@@ -300,3 +288,40 @@ curl -s $DOMAIN | grep -q '"@type":"FAQPage"'
 ```
 
 If any line fails, **do not launch**.
+
+---
+
+## Resolved Blockers (2026-05-03)
+
+Audit trail of items removed from the active list above. Verified
+against repo state on 2026-05-03 — code-side resolution only; production
+behaviour still depends on the Vercel-side items above.
+
+- **BLOCKER: `/api/chart/calculate` (legacy path) returns 404 — RESOLVED.**
+  `src/modules/astro-engine/components/HeroCalculator.tsx` now fetches
+  `/api/v1/chart/calculate`. The remaining reference in
+  `src/modules/esoteric/components/MiniCalculator.tsx` is a doc comment;
+  the actual `fetch()` call hits `/api/chart/sun-sign`, which exists as
+  a route handler.
+- **MAJOR: Missing production pages (`/essays`, `/signs`, `/why-sidereal`)
+  — RESOLVED.** Route pages now exist at
+  `src/app/[locale]/(app)/essays/page.tsx`,
+  `src/app/[locale]/(app)/signs/page.tsx`, and
+  `src/app/[locale]/(marketing)/why-sidereal/page.tsx`. Sitemap
+  (`src/app/sitemap.ts`) reaches 466 URLs as of SEO Phase 2 ship
+  (2026-05-03), including the new `/sidereal-{sign}-dates × 24` set.
+  Note: `/about`, `/passport` (UI), `/correspondences`, and
+  `/sidereal-vs-tropical` UI pages are still not present in the repo —
+  but are no longer linked from pricing/nav, so they no longer
+  misrepresent the product. Whether to ship them is a scoping decision,
+  not a blocker.
+- **Spanish localization claim — PARTIALLY OBSOLETE.** Spanish is now
+  live for sidereal-dates and shipped pages via `messages/es.json` +
+  `[locale]` routing with `localePrefix: 'as-needed'`. PT-BR remains
+  missing (kept as MAJOR above).
+- **Code-side fixes from 2026-04-18 walkthrough — RESOLVED.** Clerk JWT
+  middleware (`src/middleware.ts`), `NEXT_PUBLIC_SITE_URL` fallback in
+  `src/shared/seo/constants.ts`, and Sentry / PostHog / Stripe / Resend /
+  Upstash dependencies are all wired (verified in `package.json` and
+  `.env.example`). Vercel-side configuration of these (live keys, prod
+  URLs) is tracked separately above and still requires founder action.
