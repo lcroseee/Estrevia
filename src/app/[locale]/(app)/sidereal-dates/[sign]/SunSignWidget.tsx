@@ -56,7 +56,12 @@ export function SunSignWidget({ currentSign, localeStr }: SunSignWidgetProps) {
           console.error('sun-sign API error:', body.error);
         }
       } else {
-        setResult(await res.json() as SunSignResult);
+        const body = await res.json() as { success: boolean; data: SunSignResult; error: string | null };
+        if (!body.success || !body.data) {
+          setError(t('widgetError'));
+          return;
+        }
+        setResult(body.data);
       }
     } catch {
       setError(t('widgetError'));
