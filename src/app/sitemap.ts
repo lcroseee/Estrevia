@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getAllEssaySlugs, getAllSignSlugs } from '@/shared/seo';
+import { getAllEssaySlugs, getAllSignSlugs, SIGNS } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 
 // ---------------------------------------------------------------------------
@@ -101,10 +101,14 @@ function emitLocalized(
  *   78 tarot card pages (/tarot/[cardId])
  *   120 essay pages (/essays/[planet]-in-[sign])
  *   12  sign pages (/signs/[sign])
+ *   12  sidereal-dates pages (/sidereal-{sign}-dates)
  * ─────
- *   221 canonical paths × 2 locales = 442 total entries
+ *   233 canonical paths × 2 locales = 466 total entries
  *
  * Note: /s/[id] share pages are noIndex and excluded from sitemap.
+ * Note: /sidereal-{sign}-dates public URLs are rewritten internally by
+ *       next.config.ts to /sidereal-dates/[sign] (App Router limitation:
+ *       partial dynamic segments in folder names are not supported).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -169,5 +173,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  return [...staticPages, ...appPages, ...tarotPages, ...essayPages, ...signPages];
+  // ── Sidereal-dates pages (12 total: one per sign) ─────────────────────────
+  // Public URL: /sidereal-{sign}-dates (next.config.ts rewrites to /sidereal-dates/[sign]).
+  // Image: reuse Sun essay OG image — features the sign glyph prominently at 1200×630.
+  // changeFrequency: weekly — SSR dates update annually but content may be refreshed.
+  const siderealDatesPages: MetadataRoute.Sitemap = SIGNS.flatMap((sign) =>
+    emitLocalized(`/sidereal-${sign}-dates`, {
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+      images: [essayOgImage(`sun-in-${sign}`)],
+    }),
+  );
+
+  return [...staticPages, ...appPages, ...tarotPages, ...essayPages, ...signPages, ...siderealDatesPages];
 }
