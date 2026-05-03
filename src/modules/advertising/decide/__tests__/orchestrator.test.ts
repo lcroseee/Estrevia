@@ -62,8 +62,8 @@ describe('decide (orchestrator)', () => {
 
   it('returns one decision per metric', async () => {
     const metrics = [
-      mockAdMetric({ ad_id: 'ad_001', days_running: 5 }),
-      mockAdMetric({ ad_id: 'ad_002', days_running: 5 }),
+      mockAdMetric({ ad_id: 'ad_001', days_running: 7 }),
+      mockAdMetric({ ad_id: 'ad_002', days_running: 7 }),
     ];
     const deps = makeDeps({ claudeClient: claude });
     const { decisions } = await decide(metrics, [], deps);
@@ -81,7 +81,7 @@ describe('decide (orchestrator)', () => {
   // --- Tier 1 always runs ---
 
   it('Tier 1 decision is used when no baseline and no Tier 2 gate', async () => {
-    const metric = mockAdMetric({ days_running: 5, frequency: 1.0, cpc: 1.0, spend_usd: 5.0 });
+    const metric = mockAdMetric({ days_running: 7, frequency: 1.0, cpc: 1.0, spend_usd: 5.0 });
     const deps = makeDeps({ claudeClient: claude });
     const { decisions } = await decide([metric], [], deps);
 
@@ -90,7 +90,7 @@ describe('decide (orchestrator)', () => {
   });
 
   it('Tier 1 pause overrides Tier 2 scale_up when frequency exceeded', async () => {
-    const metric = mockAdMetric({ days_running: 5, frequency: 5.0 });
+    const metric = mockAdMetric({ days_running: 7, frequency: 5.0 });
     const tier2 = makeTier2Stub('scale_up');
     const gate = makeGate('tier_2_bayesian', 'active_auto');
     const deps = makeDeps({
@@ -108,7 +108,7 @@ describe('decide (orchestrator)', () => {
   it('Tier 1 pause overrides Tier 3 hold', async () => {
     claude.anomalyExplain.mockResolvedValue('Mercury retrograde — expected event');
 
-    const metric = mockAdMetric({ ad_id: 'ad_x', days_running: 5, frequency: 5.0, cpc: 6.0 });
+    const metric = mockAdMetric({ ad_id: 'ad_x', days_running: 7, frequency: 5.0, cpc: 6.0 });
     const baseline = flatBaseline(1.0, 3.5, 0.016);
     // Make metric anomalous for cpc
     baseline.cpc = Array(30).fill(1.0);
@@ -138,7 +138,7 @@ describe('decide (orchestrator)', () => {
     // but anomalous vs the flat baseline (flat baseline + different value → extreme z-score)
     const metric = mockAdMetric({
       ad_id: 'ad_anomaly',
-      days_running: 5,
+      days_running: 7,
       frequency: 1.0,
       cpc: 4.5,     // below Tier 1 CPC_HARD_CAP ($5), but far above baseline of $1
       cpm: 3.5,
@@ -168,7 +168,7 @@ describe('decide (orchestrator)', () => {
     const tier2 = makeTier2Stub('scale_up');
     const gate = makeGate('tier_2_bayesian', 'off');
     const deps = makeDeps({ claudeClient: claude, tier2Decide: tier2 });
-    const metric = mockAdMetric({ days_running: 5 });
+    const metric = mockAdMetric({ days_running: 7 });
 
     await decide([metric], [gate], deps);
 
@@ -179,7 +179,7 @@ describe('decide (orchestrator)', () => {
     const tier2 = makeTier2Stub('scale_up');
     const gate = makeGate('tier_2_bayesian', 'shadow');
     const deps = makeDeps({ claudeClient: claude, tier2Decide: tier2 });
-    const metric = mockAdMetric({ days_running: 5 });
+    const metric = mockAdMetric({ days_running: 7 });
 
     await decide([metric], [gate], deps);
 
@@ -190,7 +190,7 @@ describe('decide (orchestrator)', () => {
     const tier2 = makeTier2Stub('scale_up');
     const gate = makeGate('tier_2_bayesian', 'active_auto');
     const deps = makeDeps({ claudeClient: claude, tier2Decide: tier2 });
-    const metric = mockAdMetric({ days_running: 5 });
+    const metric = mockAdMetric({ days_running: 7 });
 
     await decide([metric], [gate], deps);
 
@@ -201,7 +201,7 @@ describe('decide (orchestrator)', () => {
     const gate = makeGate('tier_2_bayesian', 'active_auto');
     // No tier2Decide provided
     const deps = makeDeps({ claudeClient: claude });
-    const metric = mockAdMetric({ days_running: 5 });
+    const metric = mockAdMetric({ days_running: 7 });
 
     const { decisions } = await decide([metric], [gate], deps);
 
@@ -221,7 +221,7 @@ describe('decide (orchestrator)', () => {
       metrics_snapshot: mockAdMetric(),
     });
     const gate = makeGate('tier_2_bayesian', 'active_auto');
-    const metric = mockAdMetric({ ad_id: 'ad_001', days_running: 5, frequency: 5.0 });
+    const metric = mockAdMetric({ ad_id: 'ad_001', days_running: 7, frequency: 5.0 });
     const deps = makeDeps({ claudeClient: claude, tier2Decide: tier2 });
 
     const { decisions, shadowLog } = await decide([metric], [gate], deps);
@@ -233,7 +233,7 @@ describe('decide (orchestrator)', () => {
   it('Tier 2 scale_up applied when Tier 1 and Tier 3 maintain', async () => {
     const metric = mockAdMetric({
       ad_id: 'ad_good',
-      days_running: 5,
+      days_running: 7,
       frequency: 1.0,
       cpc: 1.0,
       cpm: 3.5,
@@ -270,7 +270,7 @@ describe('decide (orchestrator)', () => {
   it('shadow log entry contains final_decision and reason when Tier 2 is overridden', async () => {
     const tier2 = makeTier2Stub('scale_up');
     const gate = makeGate('tier_2_bayesian', 'active_auto');
-    const metric = mockAdMetric({ ad_id: 'ad_001', days_running: 5, frequency: 5.0 });
+    const metric = mockAdMetric({ ad_id: 'ad_001', days_running: 7, frequency: 5.0 });
     const deps = makeDeps({ claudeClient: claude, tier2Decide: tier2 });
 
     const { shadowLog } = await decide([metric], [gate], deps);
@@ -286,7 +286,7 @@ describe('decide (orchestrator)', () => {
 
   it('processes multiple metrics concurrently and returns correct count', async () => {
     const metrics = Array.from({ length: 5 }, (_, i) =>
-      mockAdMetric({ ad_id: `ad_${i}`, days_running: 5 }),
+      mockAdMetric({ ad_id: `ad_${i}`, days_running: 7 }),
     );
     const deps = makeDeps({ claudeClient: claude });
     const { decisions } = await decide(metrics, [], deps);

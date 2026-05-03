@@ -262,7 +262,7 @@ describe('advertising agent — end-to-end daily triage (all mocked)', () => {
     // Override Meta API to return a metric that violates Tier 1 frequency cap (≥4.0)
     const fatiguedMetric = mockAdMetric({
       ad_id: 'ad_fatigued',
-      days_running: 5,
+      days_running: 7,
       frequency: 5.0, // exceeds FREQUENCY_CAP = 4.0
       ctr: 0.01,
       cpc: 1.0,
@@ -293,9 +293,9 @@ describe('advertising agent — end-to-end daily triage (all mocked)', () => {
 
   it('multiple metrics produce one decision per metric', async () => {
     const multipleMetrics = [
-      mockAdMetric({ ad_id: 'ad_001', days_running: 5 }),
-      mockAdMetric({ ad_id: 'ad_002', days_running: 5 }),
-      mockAdMetric({ ad_id: 'ad_003', days_running: 5 }),
+      mockAdMetric({ ad_id: 'ad_001', days_running: 7 }),
+      mockAdMetric({ ad_id: 'ad_002', days_running: 7 }),
+      mockAdMetric({ ad_id: 'ad_003', days_running: 7 }),
     ];
     meta.getInsights.mockResolvedValue(multipleMetrics);
 
@@ -307,9 +307,9 @@ describe('advertising agent — end-to-end daily triage (all mocked)', () => {
 
   it('audit_records_written matches decisions for multiple metrics', async () => {
     const multipleMetrics = [
-      mockAdMetric({ ad_id: 'ad_001', days_running: 5 }),
-      mockAdMetric({ ad_id: 'ad_002', days_running: 5 }),
-      mockAdMetric({ ad_id: 'ad_003', days_running: 5 }),
+      mockAdMetric({ ad_id: 'ad_001', days_running: 7 }),
+      mockAdMetric({ ad_id: 'ad_002', days_running: 7 }),
+      mockAdMetric({ ad_id: 'ad_003', days_running: 7 }),
     ];
     meta.getInsights.mockResolvedValue(multipleMetrics);
 
@@ -320,7 +320,7 @@ describe('advertising agent — end-to-end daily triage (all mocked)', () => {
   });
 
   it('learning phase metrics produce hold decisions (no pause, no audit for act)', async () => {
-    // days_running < 2 → learning phase → hold decision
+    // days_running < 7 → learning phase → hold decision
     const earlyMetric = mockAdMetric({ ad_id: 'ad_early', days_running: 1 });
     meta.getInsights.mockResolvedValue([earlyMetric]);
 
