@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | Date | 2026-05-03 |
-| Status | Draft → pending founder review |
+| Status | Implemented (Cluster A complete on `main` — see §0 post-merge correction) |
 | Authors | Lead (Claude Opus 4.7) + brainstorming with founder |
 | Trigger | 2026-05-03 audit (in-conversation) — Cluster A of 7-cluster decomposition |
 | Scope | Passport share flow i18n — ShareButton in `[locale]/chart` + OG image route + `getRarityTier()` refactor |
@@ -39,6 +39,8 @@ Cluster A is the first of 7 sub-projects identified in the May-3 audit decomposi
 | `getRarityTier()` is called from 5 sites | ✓ (`og/route:172`, `s/[id]/page:234`, `PassportCard:163,207,227`) | T2 |
 
 **Key infrastructure finding:** `cosmicPassports.locale` column already exists in the schema (`schema.ts:218` — `text('locale', { enum: ['en', 'es'] }).notNull()`). The OG route can read locale directly from the DB row it already fetches. No URL parameter changes needed; automatic backwards compatibility for all existing passports.
+
+> **🔧 Post-merge correction (2026-05-03):** The claim above was incorrect. `schema.ts:218` referenced `advertisingCreatives.locale`, not `cosmicPassports.locale`. The `locale` column did NOT exist on `cosmic_passports` pre-T4. T4 (commit `9927915`) added the column via migration `drizzle/0005_dark_tusk.sql` (`text('locale', { enum: ['en', 'es'] }).notNull().default('en')`). The T4 fix commit `876f1f2` then wired `locale` through the passport-creation request flow (`ChartDisplay.tsx` → `useLocale()` → `POST /api/v1/passport` body → Zod-validated `.values({ ..., locale })`). Existing pre-T4 rows backfilled to `'en'` (no historical session-locale signal was captured); new ES passports correctly persist `locale='es'` and render ES OG previews. The "automatic backwards compatibility" promise still holds — pre-T4 EN passports continue rendering EN OG; new ES passports render ES post-deploy. **Operational gate:** `npm run db:migrate` must run before T4 code deploys, or the SELECT on `passport.locale` fails column-not-found.
 
 **Critical context for ShareButton scope** — `src/app/s/layout.tsx:24` explicitly hardcodes `setRequestLocale('en')` with comment citing `spec §2.3 #14` ("share pages are EN-only, noindex, never localized"). This means ShareButton renders in two contexts:
 
