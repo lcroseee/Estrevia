@@ -206,7 +206,7 @@ export function getRarity(sunSign: Sign, moonSign: Sign): number {
 // Qualitative rarity tiers
 // ---------------------------------------------------------------------------
 
-export type RarityTier = 'Exceptional' | 'Very Rare' | 'Rare' | 'Uncommon';
+export type RarityTier = 'exceptional' | 'veryRare' | 'rare' | 'uncommon';
 
 /**
  * Maps a rarity weight to a qualitative tier label.
@@ -222,8 +222,8 @@ export type RarityTier = 'Exceptional' | 'Very Rare' | 'Rare' | 'Uncommon';
  * not a statistical claim about birth frequency.
  */
 export function getRarityTier(weight: number): RarityTier {
-  if (weight < 5) return 'Exceptional';
-  if (weight < 6) return 'Very Rare';
-  if (weight < 7.5) return 'Rare';
-  return 'Uncommon';
+  if (weight < 5) return 'exceptional';
+  if (weight < 6) return 'veryRare';
+  if (weight < 7.5) return 'rare';
+  return 'uncommon';
 }

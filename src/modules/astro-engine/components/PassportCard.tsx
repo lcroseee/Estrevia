@@ -11,6 +11,7 @@
 
 import type { PassportResponse } from '@/shared/types/api';
 import { getRarityTier } from '@/modules/astro-engine/rarity';
+import { useTranslations } from 'next-intl';
 
 // Planetary colors matching the design system
 const PLANET_COLORS: Record<string, string> = {
@@ -142,6 +143,7 @@ export function PassportCard({ passport }: PassportCardProps) {
     rarityPercent,
   } = passport;
 
+  const tTier = useTranslations('astro.rarityTier');
   const elementConfig = ELEMENT_CONFIG[element] ?? ELEMENT_CONFIG.Fire;
   const rulingPlanetColor = PLANET_COLORS[rulingPlanet] ?? '#ffffff';
   const rulingPlanetGlyph = PLANET_GLYPHS[rulingPlanet] ?? '';
@@ -160,7 +162,7 @@ export function PassportCard({ passport }: PassportCardProps) {
         border: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 0 0 1px rgba(255,215,0,0.06), 0 24px 48px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
-      aria-label={`Cosmic Passport: Sun in ${sunSign}, Moon in ${moonSign}, ${ascendantSign ? `Ascendant in ${ascendantSign}` : 'Ascendant unknown'}, Element ${element}, Ruling planet ${rulingPlanet}, Rarity ${getRarityTier(rarityPercent)}`}
+      aria-label={`Cosmic Passport: Sun in ${sunSign}, Moon in ${moonSign}, ${ascendantSign ? `Ascendant in ${ascendantSign}` : 'Ascendant unknown'}, Element ${element}, Ruling planet ${rulingPlanet}, Rarity ${tTier(getRarityTier(rarityPercent))}`}
     >
       {/* Subtle noise texture overlay */}
       <div
@@ -204,7 +206,7 @@ export function PassportCard({ passport }: PassportCardProps) {
           {/* Rarity badge — qualitative tier, not a frequency claim */}
           <div
             className="flex flex-col items-end gap-0.5"
-            aria-label={`Rarity tier: ${getRarityTier(rarityPercent)}`}
+            aria-label={`Rarity tier: ${tTier(getRarityTier(rarityPercent))}`}
           >
             <span
               className="text-[11px] tracking-[0.15em] uppercase text-white/30"
@@ -224,7 +226,7 @@ export function PassportCard({ passport }: PassportCardProps) {
                 fontFamily: 'var(--font-geist-mono, monospace)',
               }}
             >
-              {getRarityTier(rarityPercent)}
+              {tTier(getRarityTier(rarityPercent))}
             </span>
           </div>
         </div>

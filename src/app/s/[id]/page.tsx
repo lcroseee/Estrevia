@@ -9,6 +9,7 @@ import { cosmicPassports } from '@/shared/lib/schema';
 import { createMetadata } from '@/shared/seo';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { getRarityTier } from '@/shared/lib/rarity';
+import { getTranslations } from 'next-intl/server';
 import { PassportCard } from '@/modules/astro-engine/components/PassportCard';
 import { ShareButton } from '@/modules/astro-engine/components/ShareButton';
 import { ReferralTracker } from '@/modules/astro-engine/components/ReferralTracker';
@@ -147,6 +148,8 @@ export default async function SharePage({ params }: Props) {
     is_new_device: isNewDeviceId,
   });
 
+  const tTier = await getTranslations({ locale: 'en', namespace: 'astro.rarityTier' });
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative"
@@ -231,7 +234,7 @@ export default async function SharePage({ params }: Props) {
           >
             Rarity tier:{' '}
             <span className="text-white/70 font-medium">
-              {getRarityTier(passport.rarityPercent)}
+              {tTier(getRarityTier(passport.rarityPercent))}
             </span>
           </p>
 

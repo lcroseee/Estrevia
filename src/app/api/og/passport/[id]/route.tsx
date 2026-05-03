@@ -6,6 +6,7 @@ import { getDb } from '@/shared/lib/db';
 import { cosmicPassports } from '@/shared/lib/schema';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getRarityTier } from '@/modules/astro-engine/rarity';
+import { getTranslations } from 'next-intl/server';
 
 // nodejs runtime required: Neon HTTP driver uses Node.js net/tls APIs
 // not available in the Edge runtime.
@@ -143,6 +144,9 @@ export async function GET(
     });
   }
 
+  // T2: Translate rarity tier — locale always 'en' until T4 reads passport.locale.
+  const tTier = await getTranslations({ locale: 'en', namespace: 'astro.rarityTier' });
+
   // -------------------------------------------------------------------------
   // Font load
   // -------------------------------------------------------------------------
@@ -169,7 +173,7 @@ export async function GET(
   const elementStyle    = ELEMENT_STYLE[passport.element]      ?? { color: '#888', symbol: '◇' };
   const rulingColor     = PLANET_COLOR[passport.rulingPlanet]  ?? '#E2C97E';
   const rulingSymbol    = (PLANET_SYMBOL[passport.rulingPlanet] ?? '★') + TV;
-  const rarityDisplay   = getRarityTier(passport.rarityPercent);
+  const rarityDisplay   = tTier(getRarityTier(passport.rarityPercent));
   const rarityPct       = passport.rarityPercent.toFixed(1);
 
   // Capture for closures
