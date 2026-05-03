@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getAllEssaySlugs, getAllSignSlugs, SIGNS } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
+import { lastModifiedFor } from '@/shared/seo/sitemap-mtime';
 
 // ---------------------------------------------------------------------------
 // Image sitemap helpers
@@ -87,6 +88,25 @@ function emitLocalized(
 }
 
 /**
+ * Like emitLocalized() but resolves lastModified per locale. Used for content
+ * whose EN and ES sources of truth diverge (essays MDX, signs descriptions).
+ */
+function emitLocalizedWithLocale(
+  canonicalPath: string,
+  partial: Omit<MetadataRoute.Sitemap[number], 'url' | 'alternates' | 'lastModified'>,
+  lastModifiedByLocale: (locale: 'en' | 'es') => Date,
+): MetadataRoute.Sitemap {
+  const base = SITE_URL.replace(/\/$/, '');
+  const enUrl = `${base}${canonicalPath}`;
+  const esUrl = `${base}/es${canonicalPath}`;
+  const alternates = buildAlternates(canonicalPath);
+  return [
+    { url: enUrl, ...partial, lastModified: lastModifiedByLocale('en'), alternates },
+    { url: esUrl, ...partial, lastModified: lastModifiedByLocale('es'), alternates },
+  ];
+}
+
+/**
  * Dynamic sitemap for Estrevia.
  *
  * Each canonical path emits TWO entries: EN at root, ES under /es/.
@@ -112,45 +132,87 @@ function emitLocalized(
  *       partial dynamic segments in folder names are not supported).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
   // ── Static / marketing pages ──────────────────────────────────────────────
   const staticPages: MetadataRoute.Sitemap = [
     ...emitLocalized('/', {
-      lastModified: now,
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(marketing)/page.tsx'),
       changeFrequency: 'weekly',
       priority: 1.0,
       images: [HERO_OG_IMAGE],
     }),
     ...emitLocalized('/why-sidereal', {
-      lastModified: now,
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(marketing)/why-sidereal/page.tsx'),
       changeFrequency: 'monthly',
       priority: 0.9,
       images: [HERO_OG_IMAGE],
     }),
-    ...emitLocalized('/pricing', { lastModified: now, changeFrequency: 'monthly', priority: 0.7 }),
+    ...emitLocalized('/pricing', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(marketing)/pricing/page.tsx'),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    }),
     // Legal pages — low priority, indexed for trust signals
-    ...emitLocalized('/privacy', { lastModified: now, changeFrequency: 'yearly', priority: 0.3 }),
-    ...emitLocalized('/terms', { lastModified: now, changeFrequency: 'yearly', priority: 0.3 }),
-    // Index hubs (added T5; T6 will swap lastModified to lastModifiedFor('static', ...))
-    ...emitLocalized('/essays', { lastModified: now, changeFrequency: 'weekly', priority: 0.85 }),
-    ...emitLocalized('/signs', { lastModified: now, changeFrequency: 'monthly', priority: 0.85 }),
+    ...emitLocalized('/privacy', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(marketing)/privacy/page.tsx'),
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    }),
+    ...emitLocalized('/terms', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(marketing)/terms/page.tsx'),
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    }),
+    // Index hubs
+    ...emitLocalized('/essays', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/essays/page.tsx'),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    }),
+    ...emitLocalized('/signs', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/signs/page.tsx'),
+      changeFrequency: 'monthly',
+      priority: 0.85,
+    }),
   ];
 
   // ── App pages ─────────────────────────────────────────────────────────────
   const appPages: MetadataRoute.Sitemap = [
-    ...emitLocalized('/chart', { lastModified: now, changeFrequency: 'weekly', priority: 0.9 }),
-    ...emitLocalized('/moon', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
-    ...emitLocalized('/hours', { lastModified: now, changeFrequency: 'daily', priority: 0.8 }),
-    ...emitLocalized('/synastry', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
-    ...emitLocalized('/tarot', { lastModified: now, changeFrequency: 'weekly', priority: 0.8 }),
-    ...emitLocalized('/tree-of-life', { lastModified: now, changeFrequency: 'monthly', priority: 0.7 }),
+    ...emitLocalized('/chart', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/chart/page.tsx'),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    }),
+    ...emitLocalized('/moon', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/moon/page.tsx'),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    }),
+    ...emitLocalized('/hours', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/hours/page.tsx'),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    }),
+    ...emitLocalized('/synastry', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/synastry/page.tsx'),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }),
+    ...emitLocalized('/tarot', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/tarot/page.tsx'),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }),
+    ...emitLocalized('/tree-of-life', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/tree-of-life/page.tsx'),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    }),
   ];
 
   // ── Tarot card pages (78 total) ───────────────────────────────────────────
   const tarotPages: MetadataRoute.Sitemap = TAROT_CARD_IDS.flatMap((cardId) =>
     emitLocalized(`/tarot/${cardId}`, {
-      lastModified: now,
+      lastModified: lastModifiedFor('tarot'),
       changeFrequency: 'monthly',
       priority: 0.6,
     }),
@@ -159,31 +221,39 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // ── Essay pages (120 total: 10 planets × 12 signs) ────────────────────────
   // Each essay has a unique OG image at /api/og/essay/[slug] (1200×630).
   // robots.txt explicitly allows /api/og/, so Google can crawl these images.
+  // Per-locale mtime: EN reads content/essays/<slug>.mdx frontmatter,
+  // ES reads content/essays/es/<slug>.mdx frontmatter.
   const essayPages: MetadataRoute.Sitemap = getAllEssaySlugs().flatMap((slug) =>
-    emitLocalized(`/essays/${slug}`, {
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-      images: [essayOgImage(slug)],
-    }),
+    emitLocalizedWithLocale(
+      `/essays/${slug}`,
+      {
+        changeFrequency: 'monthly',
+        priority: 0.7,
+        images: [essayOgImage(slug)],
+      },
+      (locale) => lastModifiedFor('essay', slug, locale),
+    ),
   );
 
   // ── Sign overview pages (12 total) ────────────────────────────────────────
+  // Per-locale mtime: EN sources content/signs/descriptions.json,
+  // ES sources content/signs/descriptions.es.json.
   const signPages: MetadataRoute.Sitemap = getAllSignSlugs().flatMap((sign) =>
-    emitLocalized(`/signs/${sign}`, {
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.75,
-    }),
+    emitLocalizedWithLocale(
+      `/signs/${sign}`,
+      { changeFrequency: 'monthly', priority: 0.75 },
+      (locale) => lastModifiedFor('sign', sign, locale),
+    ),
   );
 
   // ── Sidereal-dates pages (12 total: one per sign) ─────────────────────────
   // Public URL: /sidereal-{sign}-dates (next.config.ts rewrites to /sidereal-dates/[sign]).
   // Image: reuse Sun essay OG image — features the sign glyph prominently at 1200×630.
-  // changeFrequency: weekly — SSR dates update annually but content may be refreshed.
+  // Year-dependent content: lastModified is Jan 1 of the current year (one bump
+  // per calendar year, not per deploy) per spec §8.
   const siderealDatesPages: MetadataRoute.Sitemap = SIGNS.flatMap((sign) =>
     emitLocalized(`/sidereal-${sign}-dates`, {
-      lastModified: now,
+      lastModified: lastModifiedFor('sidereal-dates'),
       changeFrequency: 'weekly',
       priority: 0.8,
       images: [essayOgImage(`sun-in-${sign}`)],
