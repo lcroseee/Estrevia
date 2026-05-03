@@ -1198,7 +1198,9 @@
     "errorRateLimit": "Too many requests. Please wait a moment and try again.",
     "errorGeneration": "Couldn't generate avatar. Please try again.",
     "proHint": "Upgrade to Pro for unlimited regenerations and 4 styles.",
-    "download": "Download"
+    "download": "Download",
+    "altText": "AI-generated {style} avatar reflecting {sunSign} Sun and {moonSign} Moon",
+    "upgradeLink": "Upgrade to Pro →"
   },
   "notifications": {
     "title": "Notification Preferences",

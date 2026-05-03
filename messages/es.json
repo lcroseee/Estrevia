@@ -1198,7 +1198,9 @@
     "errorRateLimit": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
     "errorGeneration": "No se pudo generar el avatar. Inténtalo de nuevo.",
     "proHint": "Mejora a Pro para regeneraciones ilimitadas y 4 estilos.",
-    "download": "Descargar"
+    "download": "Descargar",
+    "altText": "Avatar IA estilo {style} que refleja Sol en {sunSign} y Luna en {moonSign}",
+    "upgradeLink": "Mejora a Pro →"
   },
   "notifications": {
     "title": "Preferencias de notificaciones",
