@@ -7,7 +7,24 @@ import type { ChartResult } from '@/shared/types';
 import type { PassportResponse } from '@/shared/types/api';
 import { BirthDataForm } from './BirthDataForm';
 import type { FormValues } from './BirthDataForm';
-import { ChartWheel } from './ChartWheel';
+import dynamic from 'next/dynamic';
+
+// Lazy-load ChartWheel — it's a large SVG component (~250 KB parsed) that's
+// only needed on the 'wheel' tab after chart calculation. The skeleton div
+// preserves layout space (aspect-ratio 1:1, maxWidth 520) to prevent CLS.
+const ChartWheel = dynamic(
+  () => import('./ChartWheel').then((m) => ({ default: m.ChartWheel })),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        style={{ width: '100%', aspectRatio: '1 / 1', maxWidth: 520, margin: '0 auto' }}
+        className="rounded-full animate-pulse bg-white/[0.04]"
+        aria-hidden="true"
+      />
+    ),
+  },
+);
 import { PositionTable } from './PositionTable';
 import { PassportCard } from './PassportCard';
 import { ShareButton } from './ShareButton';
