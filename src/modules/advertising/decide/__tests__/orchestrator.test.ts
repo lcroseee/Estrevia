@@ -1,9 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Stub the recon-state-store at module-load. Default state is "not suspended".
+// Per-test overrides via `mockResolvedValueOnce`.
+vi.mock('@/modules/advertising/perceive/recon-state-store', () => ({
+  getReconState: vi.fn().mockResolvedValue({
+    suspended: false,
+    suspendedAt: null,
+    suspendReason: null,
+    autoResumeAt: null,
+    lastDriftPct: null,
+  }),
+}));
+
 import { decide } from '../orchestrator';
 import type { DecideDeps, Tier2DecideFn } from '../orchestrator';
 import type { AdDecision, FeatureGate } from '@/shared/types/advertising';
 import { mockAdMetric } from '../../__tests__/fixtures';
 import { mockClaudeApi } from '../../__tests__/mocks/claude';
+import { getReconState } from '@/modules/advertising/perceive/recon-state-store';
 import type { Baseline } from '../tier-3-anomaly';
 
 // ------- Fixtures -------
@@ -294,5 +308,62 @@ describe('decide (orchestrator)', () => {
     expect(decisions).toHaveLength(5);
     const ids = decisions.map((d) => d.ad_id).sort();
     expect(ids).toEqual(['ad_0', 'ad_1', 'ad_2', 'ad_3', 'ad_4'].sort());
+  });
+
+  // --- Reconciler suspend gate ---
+
+  it('returns empty decisions when reconciler is suspended and no DISAPPROVED ads', async () => {
+    vi.mocked(getReconState).mockResolvedValueOnce({
+      suspended: true,
+      suspendedAt: new Date(),
+      suspendReason: 'critical_drift',
+      autoResumeAt: new Date(Date.now() + 24 * 3600 * 1000),
+      lastDriftPct: 0.5,
+    });
+
+    const metric = mockAdMetric({
+      ad_id: 'ad_active',
+      days_running: 7,
+      frequency: 5.0, // would normally trigger Tier 1 pause
+      status: 'ACTIVE',
+    });
+    const deps = makeDeps({ claudeClient: claude });
+    const { decisions, shadowLog } = await decide([metric], [], deps);
+
+    expect(decisions).toEqual([]);
+    expect(shadowLog).toEqual([]);
+  });
+
+  it('still pauses DISAPPROVED ads when reconciler is suspended', async () => {
+    vi.mocked(getReconState).mockResolvedValueOnce({
+      suspended: true,
+      suspendedAt: new Date(),
+      suspendReason: 'critical_drift',
+      autoResumeAt: new Date(Date.now() + 24 * 3600 * 1000),
+      lastDriftPct: 0.5,
+    });
+
+    const metric = mockAdMetric({
+      ad_id: 'ad_disapproved',
+      days_running: 7,
+      status: 'DISAPPROVED',
+    });
+    const deps = makeDeps({ claudeClient: claude });
+    const { decisions } = await decide([metric], [], deps);
+
+    expect(decisions.length).toBe(1);
+    expect(decisions[0].action).toBe('pause');
+    expect(decisions[0].reasoning_tier).toBe('tier_1_rules');
+  });
+
+  it('runs normal logic when reconciler is NOT suspended', async () => {
+    // Default mock returns suspended=false; no override needed
+    const metric = mockAdMetric({ days_running: 7, frequency: 5.0 });
+    const deps = makeDeps({ claudeClient: claude });
+    const { decisions } = await decide([metric], [], deps);
+
+    // Tier 1 pause path runs normally — frequency 5.0 triggers pause
+    expect(decisions[0].action).toBe('pause');
+    expect(decisions[0].reasoning_tier).toBe('tier_1_rules');
   });
 });

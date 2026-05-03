@@ -2,6 +2,7 @@ import type { AdMetric, AdDecision, FeatureGate } from '@/shared/types/advertisi
 import { applyTier1Rules } from './tier-1-rules';
 import { detectAnomaly } from './tier-3-anomaly';
 import type { Baseline, AnomalyExplainClient } from './tier-3-anomaly';
+import { getReconState } from '@/modules/advertising/perceive/recon-state-store';
 
 /**
  * A shadow log entry records a decision produced by a tier that is not yet
@@ -103,6 +104,34 @@ export async function decide(
   gates: FeatureGate[],
   deps: DecideDeps,
 ): Promise<{ decisions: AdDecision[]; shadowLog: ShadowLog[] }> {
+  // Reconciler suspend gate: when the agent is globally suspended (typically
+  // after a reconciler critical_drift event), only Meta-side DISAPPROVED ads
+  // are allowed to flow through — those carry real policy-violation cost and
+  // must still be paused regardless of upstream data drift. Everything else
+  // returns empty so we don't act on potentially-bad data.
+  const reconState = await getReconState();
+  if (reconState.suspended) {
+    const disapproved = metrics.filter((m) => m.status === 'DISAPPROVED');
+    if (disapproved.length === 0) {
+      console.info(
+        '[decide] reconciler suspended — no DISAPPROVED ads, returning empty',
+      );
+      return { decisions: [], shadowLog: [] };
+    }
+    // Emit synthetic Tier 1 pause decisions for the emergency cases.
+    return {
+      decisions: disapproved.map<AdDecision>((m) => ({
+        ad_id: m.ad_id,
+        action: 'pause',
+        reason: 'reconciler_suspended_disapproved_ad_emergency_pause',
+        reasoning_tier: 'tier_1_rules',
+        confidence: 1.0,
+        metrics_snapshot: m,
+      })),
+      shadowLog: [],
+    };
+  }
+
   const tier2Active = isGateActive(gates, 'tier_2_bayesian') && deps.tier2Decide != null;
   const decisions: AdDecision[] = [];
   const shadowLog: ShadowLog[] = [];
