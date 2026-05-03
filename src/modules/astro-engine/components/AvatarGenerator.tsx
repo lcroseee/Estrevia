@@ -16,11 +16,11 @@ interface AvatarGeneratorProps {
   element: string;
 }
 
-const STYLE_OPTIONS: { value: AvatarStyle; label: string }[] = [
-  { value: 'cosmic', label: 'Cosmic' },
-  { value: 'tarot', label: 'Tarot' },
-  { value: 'geometric', label: 'Geometric' },
-  { value: 'nebula', label: 'Nebula' },
+const STYLE_OPTIONS: { value: AvatarStyle }[] = [
+  { value: 'cosmic' },
+  { value: 'tarot' },
+  { value: 'geometric' },
+  { value: 'nebula' },
 ];
 
 export function AvatarGenerator({
@@ -45,10 +45,12 @@ export function AvatarGenerator({
   const [state, setState] = useState<GenerationState>('idle');
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   const handleGenerate = useCallback(async () => {
     setState('loading');
     setErrorMessage(null);
+    setErrorCode(null);
 
     type AvatarResponse = {
       success: boolean;
@@ -74,10 +76,13 @@ export function AvatarGenerator({
           if (data.error === 'FREE_LIMIT_REACHED') {
             msg = t('freeLimitReached', { limit: data.meta?.limit ?? 3 });
             setQuota({ used: data.meta?.count ?? 3, limit: data.meta?.limit ?? 3 });
+            setErrorCode('FREE_LIMIT_REACHED');
           } else if (data.error === 'RATE_LIMITED') {
             msg = t('errorRateLimit');
+            setErrorCode('RATE_LIMITED');
           } else {
             msg = t('errorGeneration');
+            setErrorCode('GENERATION_FAILED');
           }
           setErrorMessage(msg);
           setState('error');
@@ -103,10 +108,13 @@ export function AvatarGenerator({
         if (payload?.error === 'FREE_LIMIT_REACHED') {
           msg = t('freeLimitReached', { limit: payload.meta?.limit ?? 3 });
           setQuota({ used: payload.meta?.count ?? 3, limit: payload.meta?.limit ?? 3 });
+          setErrorCode('FREE_LIMIT_REACHED');
         } else if (payload?.error === 'RATE_LIMITED') {
           msg = t('errorRateLimit');
+          setErrorCode('RATE_LIMITED');
         } else {
           msg = t('errorGeneration');
+          setErrorCode('GENERATION_FAILED');
         }
         setErrorMessage(msg);
         setState('error');
@@ -115,6 +123,7 @@ export function AvatarGenerator({
 
       case 'network-error':
         setErrorMessage(t('errorGeneration'));
+        setErrorCode('NETWORK_ERROR');
         setState('error');
         return;
     }
@@ -175,11 +184,11 @@ export function AvatarGenerator({
                 aria-pressed={isSelected}
                 aria-label={
                   isLocked
-                    ? `${opt.label} (Pro only)`
-                    : opt.label
+                    ? `${t(`styles.${opt.value}`)} (Pro only)`
+                    : t(`styles.${opt.value}`)
                 }
               >
-                {opt.label}
+                {t(`styles.${opt.value}`)}
                 {isLocked && (
                   <span
                     className="absolute -top-1.5 -right-1.5 text-[9px] px-1 rounded-full"
@@ -211,7 +220,11 @@ export function AvatarGenerator({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageDataUri}
-              alt={`AI-generated cosmic avatar for ${sunSign} Sun, ${moonSign} Moon`}
+              alt={t('altText', {
+                style: t(`styles.${style}`),
+                sunSign,
+                moonSign,
+              })}
               className="w-full h-full object-cover"
             />
           </div>
@@ -243,6 +256,16 @@ export function AvatarGenerator({
         >
           {errorMessage}
         </p>
+      )}
+
+      {errorCode === 'FREE_LIMIT_REACHED' && (
+        <a
+          href="/pricing?utm_source=avatar_limit&utm_medium=in_app&utm_campaign=quota_block"
+          className="text-xs text-center underline underline-offset-2 transition-colors hover:opacity-80"
+          style={{ color: '#FFD700' }}
+        >
+          {t('upgradeLink')}
+        </a>
       )}
 
       {/* Generate / Regenerate button */}
