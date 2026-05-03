@@ -13,6 +13,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { assertCronAuth } from '@/shared/lib/cron-auth';
+import { getDb } from '@/shared/lib/db';
 import { fetchMetaInsights } from '@/modules/advertising/perceive/meta-insights';
 import { fetchFunnelSnapshot } from '@/modules/advertising/perceive/posthog-funnel';
 import { fetchStripeAttribution } from '@/modules/advertising/perceive/stripe-attribution';
@@ -32,7 +33,8 @@ import type { MetaInsightsApi } from '@/modules/advertising/perceive/meta-insigh
 import type { PosthogFunnelApi } from '@/modules/advertising/perceive/posthog-funnel';
 import type { StripeAttributionApi } from '@/modules/advertising/perceive/stripe-attribution';
 import type { MetaAdClient } from '@/modules/advertising/act/meta-marketing';
-import type { AlertSender } from '@/modules/advertising/safety/spend-cap';
+import type { AlertSender, SpendCapDb } from '@/modules/advertising/safety/spend-cap';
+import type { DecisionLogDb } from '@/modules/advertising/audit/decision-log';
 import type { DecisionRecord } from '@/shared/types/advertising';
 
 export const dynamic = 'force-dynamic';
@@ -167,7 +169,12 @@ export async function GET(request: Request) {
           actErr,
         );
         Sentry.captureException(actErr, {
-          tags: { cron: true, route: '/api/cron/advertising/triage-daily' },
+          tags: {
+            cron: true,
+            route: '/api/cron/advertising/triage-daily',
+            db_layer: 'drizzle',
+            cron_route: '/api/cron/advertising/triage-daily',
+          },
           extra: { ad_id: decision.ad_id, action: decision.action },
         });
       }
@@ -216,7 +223,12 @@ export async function GET(request: Request) {
   } catch (e) {
     console.error('[cron/advertising/triage-daily] failed', e);
     Sentry.captureException(e, {
-      tags: { cron: true, route: '/api/cron/advertising/triage-daily' },
+      tags: {
+        cron: true,
+        route: '/api/cron/advertising/triage-daily',
+        db_layer: 'drizzle',
+        cron_route: '/api/cron/advertising/triage-daily',
+      },
     });
     return NextResponse.json(
       { success: false, error: String(e) },
@@ -260,14 +272,15 @@ function telegramBotAsAlertSender(bot: TelegramBot): AlertSender {
   };
 }
 
-function buildDecisionDb() {
-  // DB client placeholder. In tests, `pause`/`scale`/`duplicate` are vi.mocked
-  // so the db object is never actually invoked. Phase 2 wires in a real Drizzle client.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return null as any;
+function buildDecisionDb(): DecisionLogDb {
+  // Real Drizzle client. The structural DecisionLogDb interface in
+  // decision-log.ts is satisfied by the Drizzle db's insert() chain on the
+  // advertising_decision_log table. The `as unknown as` cast bridges the
+  // structural interface (mock-shape) to the real Drizzle client type.
+  return getDb() as unknown as DecisionLogDb;
 }
 
-function buildSpendCapDb() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return null as any;
+function buildSpendCapDb(): SpendCapDb {
+  // Real Drizzle client. Same structural-cast rationale as buildDecisionDb.
+  return getDb() as unknown as SpendCapDb;
 }

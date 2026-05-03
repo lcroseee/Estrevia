@@ -21,14 +21,34 @@ vi.mock('@sentry/nextjs', () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Mock shared DB — routes call require('@/shared/lib/db') lazily in factories
+// Mock @/shared/lib/db — routes call getDb() lazily inside DI factories.
+// Both `getDb` (the actual export) and `db` (legacy convenience) are exposed
+// so existing test files importing either continue to work.
+//
+// Wrapped in vi.hoisted() because vi.mock() factories are hoisted to the top
+// of the file by vitest — without hoisting the const definition alongside,
+// the factory closure would reference an uninitialized binding.
 // ---------------------------------------------------------------------------
+const { mockDrizzleDb } = vi.hoisted(() => {
+  return {
+    mockDrizzleDb: {
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
+        }),
+      }),
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
+      }),
+      update: vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+      }),
+    },
+  };
+});
 vi.mock('@/shared/lib/db', () => ({
-  db: {
-    insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) }),
-    select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }) }),
-    update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
-  },
+  getDb: () => mockDrizzleDb,
+  db: mockDrizzleDb,
 }));
 
 // ---------------------------------------------------------------------------

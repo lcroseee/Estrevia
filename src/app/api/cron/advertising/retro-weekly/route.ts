@@ -13,6 +13,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import { assertCronAuth } from '@/shared/lib/cron-auth';
+import { getDb } from '@/shared/lib/db';
 import { auditTopCreatives } from '@/modules/advertising/decide/brand-voice-audit';
 import { runDailyDropOffCheck, InMemoryDropOffStore } from '@/modules/advertising/alerts/drop-off-monitor';
 import { evaluateGates } from '@/modules/advertising/decide/feature-gates';
@@ -141,7 +142,12 @@ export async function GET(request: Request) {
   } catch (e) {
     console.error('[cron/advertising/retro-weekly] failed', e);
     Sentry.captureException(e, {
-      tags: { cron: true, route: '/api/cron/advertising/retro-weekly' },
+      tags: {
+        cron: true,
+        route: '/api/cron/advertising/retro-weekly',
+        db_layer: 'drizzle',
+        cron_route: '/api/cron/advertising/retro-weekly',
+      },
     });
     return NextResponse.json(
       { success: false, error: String(e) },
@@ -249,19 +255,9 @@ function buildTelegramBot() {
 }
 
 function buildGatesDb(): GatesDb {
-  // Phase 2: replace with real Drizzle db
-  // Returns a no-op mock that satisfies the interface with empty data
-  return {
-    select: () => ({
-      from: async () => [],
-    }),
-    insert: () => ({
-      values: async () => {},
-    }),
-    update: () => ({
-      set: () => ({
-        where: async () => {},
-      }),
-    }),
-  };
+  // Real Drizzle client. The structural GatesDb interface in
+  // feature-gates.ts is satisfied by the Drizzle db's select/insert/update
+  // methods on the advertising_feature_gates table. evaluateGates is
+  // safe on an empty table — returns [] when no rows present.
+  return getDb() as unknown as GatesDb;
 }
