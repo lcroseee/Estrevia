@@ -71,3 +71,7 @@ export { calculateCompatibilityScores, CATEGORY_CONFIG, ASPECT_WEIGHTS } from '.
 export type { PassportData } from './passport';
 export { generatePassport } from './passport';
 export { getRarity } from './rarity';
+
+// Sidereal sun-sign ranges (for /sidereal-{sign}-dates pages + API)
+export type { SiderealSign, SunInSignRange, Ayanamsa } from './sun-in-sign-range';
+export { getSunInSignRange, getSunSignForDate } from './sun-in-sign-range';
