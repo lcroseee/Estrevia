@@ -138,7 +138,7 @@ export function AvatarGenerator({
           className="text-xs font-medium"
           style={{ color: 'rgba(255,255,255,0.5)' }}
         >
-          {t('styleLabel')}
+          {t('style')}
         </label>
         <div className="flex gap-2">
           {STYLE_OPTIONS.map((opt) => {
