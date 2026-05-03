@@ -131,6 +131,8 @@ interface PostHogClient {
 // ---------------------------------------------------------------------------
 
 export const AnalyticsEvent = {
+  // Funnel — viral acquisition path (matches advertising agent's expected events)
+  LANDING_VIEW: 'landing_view',
   // Chart
   CHART_CALCULATED: 'chart_calculated',
   CHART_SAVED: 'chart_saved',
@@ -144,6 +146,7 @@ export const AnalyticsEvent = {
   // Auth
   USER_SIGNED_UP: 'user_signed_up',
   USER_SIGNED_IN: 'user_signed_in',
+  USER_REGISTERED: 'user_registered',
   // Conversion funnel — paywall → sign-up → checkout → Stripe
   PAYWALL_OPENED: 'paywall_opened',
   PAYWALL_TRIAL_CLICKED: 'paywall_trial_clicked',
@@ -151,6 +154,7 @@ export const AnalyticsEvent = {
   CHECKOUT_AUTO_STARTED: 'checkout_auto_started',
   CHECKOUT_STRIPE_REDIRECTED: 'checkout_stripe_redirected',
   CHECKOUT_ERROR: 'checkout_error',
+  SUBSCRIPTION_STARTED: 'subscription_started',
   // GDPR
   COOKIE_CONSENT_ACCEPTED: 'cookie_consent_accepted',
   COOKIE_CONSENT_DECLINED: 'cookie_consent_declined',
