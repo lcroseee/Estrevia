@@ -115,13 +115,13 @@ export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
             className="text-sm mb-3 flex items-center justify-center sm:justify-start gap-1.5 flex-wrap"
             style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-geist-sans, sans-serif)' }}
           >
-            <span style={{ color: 'rgba(255,255,255,0.35)' }}>{t('current.moonIn')}</span>
+            <span style={{ color: 'rgba(255,255,255,0.55)' }}>{t('current.moonIn')}</span>
             <ZodiacGlyph sign={data.moonSign} size={15} className="text-[#F0D080]" />
             <span style={{ color: '#E8E0D0' }}>{data.moonSign}</span>
             {hasExit && (
               <>
                 <span aria-hidden="true" style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
-                <span style={{ color: 'rgba(255,255,255,0.35)' }}>{t('current.until')}</span>
+                <span style={{ color: 'rgba(255,255,255,0.55)' }}>{t('current.until')}</span>
                 <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: 'rgba(255,255,255,0.55)' }}>
                   {formatExitTime(data.signExitTime as string, locale, monthShort)}
                 </span>
@@ -133,14 +133,14 @@ export function CurrentPhaseCard({ data }: CurrentPhaseCardProps) {
         {/* Next events */}
         <div className="flex flex-col sm:flex-row gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
           <span>
-            <span style={{ color: 'rgba(255,255,255,0.3)' }}>{t('current.nextNewMoon')} </span>
+            <span style={{ color: 'rgba(255,255,255,0.55)' }}>{t('current.nextNewMoon')} </span>
             <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: 'rgba(255,255,255,0.65)' }}>
               {formatShortDate(data.nextNewMoon, locale, monthShort)}
             </span>
           </span>
           <span className="hidden sm:inline" style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
           <span>
-            <span style={{ color: 'rgba(255,255,255,0.3)' }}>{t('current.nextFullMoon')} </span>
+            <span style={{ color: 'rgba(255,255,255,0.55)' }}>{t('current.nextFullMoon')} </span>
             <span style={{ fontFamily: 'var(--font-geist-mono, monospace)', color: '#F0D080' }}>
               {formatShortDate(data.nextFullMoon, locale, monthShort)}
             </span>
