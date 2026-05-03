@@ -13,6 +13,7 @@ import { requireAuth } from '@/modules/auth/lib/helpers';
 import { isPremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { checkAndIncrementUsage, decrementUsage } from '@/shared/lib/usage';
+import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import type { ApiResponse } from '@/shared/types';
 
 const bodySchema = z.object({
@@ -52,6 +53,7 @@ interface AvatarGenerateResponse {
 export async function POST(
   request: Request,
 ): Promise<NextResponse<ApiResponse<AvatarGenerateResponse>>> {
+  const t0 = Date.now();
   // ---------------------------------------------------------------------------
   // 1. Auth
   // ---------------------------------------------------------------------------
@@ -80,6 +82,7 @@ export async function POST(
   // 2b. Tier check — free users get 3 generations/month and 'cosmic' style only
   // ---------------------------------------------------------------------------
   const userIsPremium = await isPremium(userId);
+  const tier: 'free' | 'premium' = userIsPremium ? 'premium' : 'free';
 
   // Track whether we optimistically incremented the monthly counter so that
   // every downstream failure path can refund the user's quota. Without this,
@@ -98,6 +101,11 @@ export async function POST(
   if (!userIsPremium) {
     const usage = await checkAndIncrementUsage(userId, 'avatar', 'month', 3);
     if (!usage.allowed) {
+      trackServerEvent(userId, AnalyticsEvent.AVATAR_QUOTA_EXHAUSTED, {
+        tier: 'free',
+        limit: usage.limit,
+        count: usage.count,
+      });
       return NextResponse.json(
         {
           success: false,
@@ -119,6 +127,11 @@ export async function POST(
     const body = await request.json();
     const result = bodySchema.safeParse(body);
     if (!result.success) {
+      trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATION_FAILED, {
+        error_code: 'INVALID_INPUT',
+        tier,
+        latency_ms: Date.now() - t0,
+      });
       await refundUsage();
       return NextResponse.json(
         { success: false, data: null, error: 'INVALID_INPUT' },
@@ -127,6 +140,11 @@ export async function POST(
     }
     parsed = result.data;
   } catch {
+    trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATION_FAILED, {
+      error_code: 'INVALID_INPUT',
+      tier,
+      latency_ms: Date.now() - t0,
+    });
     await refundUsage();
     return NextResponse.json(
       { success: false, data: null, error: 'INVALID_INPUT' },
@@ -155,6 +173,11 @@ export async function POST(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     console.error('[avatar/generate] GEMINI_API_KEY not configured');
+    trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATION_FAILED, {
+      error_code: 'GEMINI_NOT_CONFIGURED',
+      tier,
+      latency_ms: Date.now() - t0,
+    });
     await refundUsage();
     return NextResponse.json(
       { success: false, data: null, error: 'GEMINI_NOT_CONFIGURED' },
@@ -187,6 +210,11 @@ export async function POST(
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[avatar/generate] Gemini API error:', errorText);
+      trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATION_FAILED, {
+        error_code: 'GENERATION_FAILED',
+        tier,
+        latency_ms: Date.now() - t0,
+      });
       await refundUsage();
       return NextResponse.json(
         { success: false, data: null, error: 'GENERATION_FAILED' },
@@ -200,6 +228,11 @@ export async function POST(
 
     if (!imageBase64) {
       console.error('[avatar/generate] No image in Gemini response');
+      trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATION_FAILED, {
+        error_code: 'NO_IMAGE_GENERATED',
+        tier,
+        latency_ms: Date.now() - t0,
+      });
       await refundUsage();
       return NextResponse.json(
         { success: false, data: null, error: 'NO_IMAGE_GENERATED' },
@@ -209,6 +242,15 @@ export async function POST(
 
     // TODO: Upload to Vercel Blob for persistent storage instead of returning
     // base64 inline. For now, the client displays as a data URI.
+    trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATED, {
+      style,
+      tier,
+      model: 'imagen-4.0-fast-generate-001',
+      latency_ms: Date.now() - t0,
+      sun_sign: sunSign,
+      moon_sign: moonSign,
+      has_ascendant: ascendantSign != null,
+    });
     return NextResponse.json(
       {
         success: true,
@@ -229,6 +271,11 @@ export async function POST(
       console.error('[avatar/generate] error:', err);
     }
 
+    trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATION_FAILED, {
+      error_code: 'INTERNAL_ERROR',
+      tier,
+      latency_ms: Date.now() - t0,
+    });
     await refundUsage();
     return NextResponse.json(
       { success: false, data: null, error: 'INTERNAL_ERROR' },
