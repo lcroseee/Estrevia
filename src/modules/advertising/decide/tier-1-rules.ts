@@ -4,7 +4,10 @@ import type { AdMetric, AdDecision } from '@/shared/types/advertising';
 const FREQUENCY_CAP = 4.0;
 const CPC_HARD_CAP = 5.0; // USD
 const SPEND_DAILY_OVERAGE = 25.0; // USD
-const LEARNING_PHASE_DAYS = 2;
+// Senior buyer baseline. v3b Senior Buyer Mode supersedes this with Phase B
+// max_days=14 and conversion-based transition. Kept here as defensive minimum
+// for the legacy code path (active when seniorBuyerMode feature gate = off).
+const LEARNING_PHASE_DAYS = 7;
 
 /**
  * Tier 1 hard rules engine.
