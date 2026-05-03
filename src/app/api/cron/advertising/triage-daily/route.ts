@@ -80,6 +80,10 @@ export async function GET(request: Request) {
         apiClient: posthogClient,
         windowStart: yesterday,
         windowEnd: now,
+        // Q4 hybrid attribution: reconciler aligns with Meta's 7d_click window
+        // for apples-to-apples comparison. Ad-set-level callsites (audience-
+        // refresh) default to 14d for ROAS/CPA decisions.
+        attributionWindowDays: 7,
       }),
       fetchStripeAttribution({
         apiClient: stripeClient,

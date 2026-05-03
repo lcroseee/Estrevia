@@ -116,6 +116,69 @@ describe('PosthogFunnelClient', () => {
     })).rejects.toThrow(/PostHog query failed: 401/);
   });
 
+  describe('getFunnel — attribution window', () => {
+    it('defaults to 14d window when filters.ad_id is set', async () => {
+      const fetchImpl = vi.fn(async () => ok({ results: [] }));
+      const client = new PosthogFunnelClient({
+        projectId: 'p1',
+        apiKey: 'k1',
+        host: 'https://eu.posthog.com',
+        fetchImpl,
+      });
+      await client.getFunnel({
+        date_from: '2026-04-01',
+        date_to: '2026-05-01',
+        filters: { ad_id: 'AD_ABC' },
+      });
+      const body = JSON.parse(
+        (fetchImpl.mock.calls[0] as unknown as [string, RequestInit])[1].body as string,
+      );
+      expect(body.query.query).toContain('INTERVAL 14 DAY');
+      expect(body.query.query).toContain("properties.utm_content = 'AD_ABC'");
+      expect(body.query.query).toContain('click_times');
+    });
+
+    it('honours explicit attribution_window_days=7 (reconciler use case)', async () => {
+      const fetchImpl = vi.fn(async () => ok({ results: [] }));
+      const client = new PosthogFunnelClient({
+        projectId: 'p1',
+        apiKey: 'k1',
+        host: 'https://eu.posthog.com',
+        fetchImpl,
+      });
+      await client.getFunnel({
+        date_from: '2026-04-01',
+        date_to: '2026-05-01',
+        filters: { ad_id: 'AD_ABC' },
+        attribution_window_days: 7,
+      });
+      const body = JSON.parse(
+        (fetchImpl.mock.calls[0] as unknown as [string, RequestInit])[1].body as string,
+      );
+      expect(body.query.query).toContain('INTERVAL 7 DAY');
+      expect(body.query.query).not.toContain('INTERVAL 14 DAY');
+    });
+
+    it('does NOT apply attribution window when no ad_id filter is set', async () => {
+      const fetchImpl = vi.fn(async () => ok({ results: [] }));
+      const client = new PosthogFunnelClient({
+        projectId: 'p1',
+        apiKey: 'k1',
+        host: 'https://eu.posthog.com',
+        fetchImpl,
+      });
+      await client.getFunnel({
+        date_from: '2026-04-01',
+        date_to: '2026-05-01',
+      });
+      const body = JSON.parse(
+        (fetchImpl.mock.calls[0] as unknown as [string, RequestInit])[1].body as string,
+      );
+      expect(body.query.query).not.toContain('INTERVAL');
+      expect(body.query.query).not.toContain('click_times');
+    });
+  });
+
   it('translates canonical names to real names in HogQL and back to canonical in results', async () => {
     const fetchImpl = vi.fn(async () =>
       ok({

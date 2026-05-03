@@ -71,18 +71,36 @@ export class PosthogFunnelClient implements PosthogFunnelApi {
     date_from: string;
     date_to: string;
     filters?: { utm_source?: string; ad_id?: string };
+    /**
+     * Q4 hybrid attribution. Default 14 days for ROAS / CPA decisions.
+     * Reconciler callsite passes 7 to align with Meta's 7d_click window.
+     * Only applies when filters.ad_id is set — we restrict events to those
+     * whose distinct_id had an ad-click event within the window of their
+     * first ad-click.
+     */
+    attribution_window_days?: number;
   }): Promise<FunnelSnapshot> {
     const eventList = FUNNEL_EVENTS_REAL.map((e) => `'${e}'`).join(', ');
+    const windowDays = opts.attribution_window_days ?? 14;
 
-    let where = `timestamp >= toDateTime('${opts.date_from}') AND timestamp < toDateTime('${opts.date_to}') AND event IN (${eventList})`;
-    if (opts.filters?.utm_source) {
-      where += ` AND properties.utm_source = '${this.escapeSql(opts.filters.utm_source)}'`;
-    }
+    let query: string;
     if (opts.filters?.ad_id) {
-      where += ` AND properties.utm_content = '${this.escapeSql(opts.filters.ad_id)}'`;
+      // ad-id-attributed query: restrict to distinct_ids whose first event
+      // with utm_content=ad_id falls within the window of the event we
+      // count. Event-level WHERE uses the `e.` alias.
+      const adId = this.escapeSql(opts.filters.ad_id);
+      let eventWhere = `e.timestamp >= toDateTime('${opts.date_from}') AND e.timestamp < toDateTime('${opts.date_to}') AND e.event IN (${eventList})`;
+      if (opts.filters.utm_source) {
+        eventWhere += ` AND e.properties.utm_source = '${this.escapeSql(opts.filters.utm_source)}'`;
+      }
+      query = `WITH click_times AS (SELECT distinct_id, min(timestamp) AS click_ts FROM events WHERE properties.utm_content = '${adId}' GROUP BY distinct_id) SELECT e.event, count() AS c, count(DISTINCT e.distinct_id) AS u FROM events e INNER JOIN click_times ct ON e.distinct_id = ct.distinct_id WHERE ${eventWhere} AND e.timestamp >= ct.click_ts AND e.timestamp <= ct.click_ts + INTERVAL ${windowDays} DAY GROUP BY e.event`;
+    } else {
+      let where = `timestamp >= toDateTime('${opts.date_from}') AND timestamp < toDateTime('${opts.date_to}') AND event IN (${eventList})`;
+      if (opts.filters?.utm_source) {
+        where += ` AND properties.utm_source = '${this.escapeSql(opts.filters.utm_source)}'`;
+      }
+      query = `SELECT event, count() AS c, count(DISTINCT distinct_id) AS u FROM events WHERE ${where} GROUP BY event`;
     }
-
-    const query = `SELECT event, count() AS c, count(DISTINCT distinct_id) AS u FROM events WHERE ${where} GROUP BY event`;
 
     const url = `${this.host}/api/projects/${this.projectId}/query/`;
     const res = await this.fetchImpl(url, {
