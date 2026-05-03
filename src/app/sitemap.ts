@@ -97,13 +97,14 @@ function emitLocalized(
  *   1  /why-sidereal
  *   1  /pricing
  *   2  legal: /privacy, /terms
+ *   2  index hubs: /essays, /signs
  *   6  app pages: /chart, /moon, /hours, /synastry, /tarot, /tree-of-life
  *   78 tarot card pages (/tarot/[cardId])
  *   120 essay pages (/essays/[planet]-in-[sign])
  *   12  sign pages (/signs/[sign])
  *   12  sidereal-dates pages (/sidereal-{sign}-dates)
  * ─────
- *   233 canonical paths × 2 locales = 466 total entries
+ *   235 canonical paths × 2 locales = 470 total entries
  *
  * Note: /s/[id] share pages are noIndex and excluded from sitemap.
  * Note: /sidereal-{sign}-dates public URLs are rewritten internally by
@@ -131,6 +132,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Legal pages — low priority, indexed for trust signals
     ...emitLocalized('/privacy', { lastModified: now, changeFrequency: 'yearly', priority: 0.3 }),
     ...emitLocalized('/terms', { lastModified: now, changeFrequency: 'yearly', priority: 0.3 }),
+    // Index hubs (added T5; T6 will swap lastModified to lastModifiedFor('static', ...))
+    ...emitLocalized('/essays', { lastModified: now, changeFrequency: 'weekly', priority: 0.85 }),
+    ...emitLocalized('/signs', { lastModified: now, changeFrequency: 'monthly', priority: 0.85 }),
   ];
 
   // ── App pages ─────────────────────────────────────────────────────────────
