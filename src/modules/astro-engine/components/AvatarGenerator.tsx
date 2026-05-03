@@ -262,7 +262,7 @@ export function AvatarGenerator({
         ) : state === 'done' ? (
           <>
             <RefreshIcon />
-            {isPro ? t('regenerate') : t('regenerateFree')}
+            {isPro ? t('regenerate') : t('regenerateFree', { limit: quota?.limit ?? 3 })}
           </>
         ) : (
           <>
