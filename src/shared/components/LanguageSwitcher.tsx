@@ -2,6 +2,8 @@
 
 import { useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useRouter, usePathname } from '@/i18n/navigation';
+import type { Locale } from '@/i18n/routing';
 
 const LOCALES = [
   { code: 'en', label: 'EN' },
@@ -9,21 +11,24 @@ const LOCALES = [
 ] as const;
 
 /**
- * Language switcher. Sets NEXT_LOCALE cookie and reloads the page.
- * Compact toggle for header / settings page.
+ * Language switcher. Navigates to the locale-correct URL via next-intl's
+ * router (handles the as-needed prefix: EN at root, ES under /es/...).
+ * The persisted NEXT_LOCALE cookie is what next-intl middleware reads on
+ * future root-path visits to remember the choice.
  */
 export function LanguageSwitcher() {
   const locale = useLocale();
   const t = useTranslations('appShell');
+  const router = useRouter();
+  const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
-  function handleChange(newLocale: string) {
+  function handleChange(newLocale: Locale) {
     if (newLocale === locale) return;
 
     startTransition(() => {
-      // Set cookie and reload to pick up new locale
       document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-      window.location.reload();
+      router.replace(pathname, { locale: newLocale });
     });
   }
 
