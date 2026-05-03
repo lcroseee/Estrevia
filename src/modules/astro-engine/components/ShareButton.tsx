@@ -40,7 +40,7 @@ function interpolate(template: string, vars: Record<string, string>): string {
  * - Per-channel copy text from messages/share.passport.copy.*
  */
 export function ShareButton({ passportId, passport }: ShareButtonProps) {
-  const t = useTranslations('share.passport.copy');
+  const t = useTranslations('share.passport');
   const [shareState, setShareState] = useState<ShareState>('idle');
   const [downloadFormat, setDownloadFormat] = useState<DownloadFormat>('stories');
 
@@ -57,17 +57,17 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
   };
 
   // Per-channel copy text
-  const xCopy        = interpolate(t('x'),            { ...copyVars, url: buildShareUrl(rawUrl, 'x') });
-  const telegramCopy = interpolate(t('telegram'),      { ...copyVars, url: buildShareUrl(rawUrl, 'telegram') });
-  const whatsappCopy = interpolate(t('whatsapp'),      { ...copyVars, url: buildShareUrl(rawUrl, 'whatsapp') });
-  const nativeCopy   = interpolate(t('native_share'),  { ...copyVars, url: buildShareUrl(rawUrl, 'native') });
+  const xCopy        = interpolate(t('copy.x'),            { ...copyVars, url: buildShareUrl(rawUrl, 'x') });
+  const telegramCopy = interpolate(t('copy.telegram'),      { ...copyVars, url: buildShareUrl(rawUrl, 'telegram') });
+  const whatsappCopy = interpolate(t('copy.whatsapp'),      { ...copyVars, url: buildShareUrl(rawUrl, 'whatsapp') });
+  const nativeCopy   = interpolate(t('copy.native_share'),  { ...copyVars, url: buildShareUrl(rawUrl, 'native') });
 
   // Native share sheet (mobile)
   const handleNativeShare = useCallback(async () => {
     if (!navigator.share) return;
     try {
       await navigator.share({
-        title: "My Cosmic Passport",
+        title: t('title'),
         text: nativeCopy,
         url: buildShareUrl(rawUrl, 'native'),
       });
@@ -75,7 +75,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
     } catch {
       // User dismissed the share sheet — not an error
     }
-  }, [rawUrl, nativeCopy, passportId]);
+  }, [rawUrl, nativeCopy, passportId, t]);
 
   // Copy link to clipboard
   const handleCopyLink = useCallback(async () => {
@@ -130,7 +130,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
   return (
     <div
       className="flex flex-col gap-3 w-full"
-      aria-label="Share your Cosmic Passport"
+      aria-label={t('aria.container')}
     >
       {/* Primary action: native share on mobile, copy on desktop */}
       {canNativeShare ? (
@@ -143,10 +143,10 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
             color: '#0A0A0F',
             boxShadow: '0 4px 16px -4px rgba(255,215,0,0.4)',
           }}
-          aria-label="Share your Cosmic Passport via the native share menu"
+          aria-label={t('aria.shareNative')}
         >
           <ShareIcon />
-          Share Passport
+          {t('button.share')}
         </button>
       ) : (
         <button
@@ -162,11 +162,11 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
               ? '0 4px 16px -4px rgba(46,204,113,0.4)'
               : '0 4px 16px -4px rgba(255,215,0,0.4)',
           }}
-          aria-label={shareState === 'copied' ? 'Link copied to clipboard' : 'Copy share link'}
+          aria-label={shareState === 'copied' ? t('aria.linkCopied') : t('aria.copyShareLink')}
           aria-live="polite"
         >
           {shareState === 'copied' ? <CheckIcon /> : <CopyIcon />}
-          {shareState === 'copied' ? 'Copied!' : 'Copy Link'}
+          {shareState === 'copied' ? t('button.copied') : t('button.copyLink')}
         </button>
       )}
 
@@ -183,11 +183,11 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
               border: shareState === 'copied' ? '1px solid rgba(46,204,113,0.3)' : '1px solid rgba(255,255,255,0.08)',
               color: shareState === 'copied' ? '#2ECC71' : 'rgba(255,255,255,0.6)',
             }}
-            aria-label={shareState === 'copied' ? 'Link copied' : 'Copy link'}
+            aria-label={shareState === 'copied' ? t('aria.linkCopiedShort') : t('aria.copyLinkShort')}
             aria-live="polite"
           >
             {shareState === 'copied' ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
-            {shareState === 'copied' ? 'Copied' : 'Copy'}
+            {shareState === 'copied' ? t('button.copiedShort') : t('button.copyShort')}
           </button>
         )}
 
@@ -203,7 +203,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
             color: 'rgba(255,255,255,0.6)',
             textDecoration: 'none',
           }}
-          aria-label="Share on X"
+          aria-label={t('aria.shareOnX')}
           onClick={() => trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'twitter', passport_id: passportId })}
         >
           <XIcon size={14} />
@@ -222,7 +222,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
             color: 'rgba(255,255,255,0.6)',
             textDecoration: 'none',
           }}
-          aria-label="Share on Telegram"
+          aria-label={t('aria.shareOnTelegram')}
           onClick={() => trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'telegram', passport_id: passportId })}
         >
           <TelegramIcon size={14} />
@@ -241,7 +241,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
             color: 'rgba(255,255,255,0.6)',
             textDecoration: 'none',
           }}
-          aria-label="Share on WhatsApp"
+          aria-label={t('aria.shareOnWhatsApp')}
           onClick={() => trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'whatsapp', passport_id: passportId })}
         >
           <WhatsAppIcon size={14} />
@@ -259,7 +259,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
               border: '1px solid rgba(255,255,255,0.08)',
               color: 'rgba(255,255,255,0.6)',
             }}
-            aria-label="Download format"
+            aria-label={t('aria.downloadFormat')}
           >
             <option value="stories">9:16</option>
             <option value="square">1:1</option>
@@ -275,7 +275,7 @@ export function ShareButton({ passportId, passport }: ShareButtonProps) {
               borderLeft: 'none',
               color: 'rgba(255,255,255,0.6)',
             }}
-            aria-label={shareState === 'downloading' ? 'Downloading...' : `Download as ${downloadFormat} PNG`}
+            aria-label={shareState === 'downloading' ? t('button.downloading') : t('aria.downloadAs', { format: downloadFormat })}
           >
             {shareState === 'downloading' ? <SpinnerIcon size={14} /> : <DownloadIcon size={14} />}
             PNG
