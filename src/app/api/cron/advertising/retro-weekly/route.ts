@@ -19,10 +19,13 @@ import { runDailyDropOffCheck, InMemoryDropOffStore } from '@/modules/advertisin
 import { evaluateGates } from '@/modules/advertising/decide/feature-gates';
 import { TelegramBot } from '@/modules/advertising/alerts/telegram-bot';
 import { isDryRun } from '@/modules/advertising/safety/kill-switch';
+import { fetchMetaInsights } from '@/modules/advertising/perceive/meta-insights';
+import { createMetaAdClient } from '@/modules/advertising/meta-graph-api';
 import type { MetaInsightsApi } from '@/modules/advertising/perceive/meta-insights';
 import type { ClaudeClientForBrandVoice, CreativeBundleWithSpend } from '@/modules/advertising/decide/brand-voice-audit';
 import type { DropOffPosthogClient, DropOffClaudeClient } from '@/modules/advertising/alerts/drop-off-monitor';
 import type { GatesDb } from '@/modules/advertising/decide/feature-gates';
+import type { AdMetric } from '@/shared/types/advertising';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,11 +71,35 @@ export async function GET(request: Request) {
     });
 
     // --- Step 3: Evaluate audience activation gates ---
+    // Pull ad-level Meta-Insights for the past 7 days and aggregate into the
+    // shape evaluateGates expects: total_impressions = sum across rows;
+    // days_running = median across active ad-set rows (filter d > 0). Until
+    // these read real values, gates were stuck at 0 / 0 and could never mature
+    // past their `min_impressions_per_creative` (5_000) and `min_days_running`
+    // (14) thresholds. Fetch failures fall back to zeros so the cron still
+    // completes — Sentry already wraps the outer try/catch.
+    const weeklyMetricsDateFrom = weekAgo.toISOString().slice(0, 10);
+    const weeklyMetricsDateTo = now.toISOString().slice(0, 10);
+    const weeklyMetrics = await fetchMetaInsights({
+      apiClient: metaApiClient,
+      dateFrom: weeklyMetricsDateFrom,
+      dateTo: weeklyMetricsDateTo,
+    }).catch((err) => {
+      console.warn(
+        '[retro-weekly] failed to fetch weekly metrics for gates evaluation, using zeros:',
+        err,
+      );
+      return [] as AdMetric[];
+    });
+
+    const total_impressions = weeklyMetrics.reduce(
+      (sum, m) => sum + (m.impressions ?? 0),
+      0,
+    );
+    const days_running = medianDaysRunning(weeklyMetrics);
+
     const updatedGates = await evaluateGates(
-      {
-        total_impressions: 0, // Phase 2: real value from Meta
-        days_running: 0,      // Phase 2: real value from DB
-      },
+      { total_impressions, days_running },
       gatesDb,
     );
 
@@ -161,12 +188,28 @@ export async function GET(request: Request) {
 // ---------------------------------------------------------------------------
 
 function buildMetaApiClient(): MetaInsightsApi {
-  return {
-    getInsights: async (_opts) => {
-      // Phase 2: facebook-nodejs-business-sdk integration
-      return [];
-    },
-  };
+  // Reuse the same Graph API adapter that triage-daily / triage-hourly use
+  // (MetaAdManagementClient). createMetaAdClient() reads META_ACCESS_TOKEN
+  // and META_AD_ACCOUNT_ID from env and throws if missing — production has
+  // both set; tests inject a mock via vi.mock('@/modules/advertising/meta-graph-api').
+  return createMetaAdClient();
+}
+
+/**
+ * Median of `days_running` over rows where `days_running > 0`. For an even
+ * count, returns the upper-middle element (index = floor(n/2)) — picking the
+ * higher of the two middles is a deliberate small-bias toward "more days
+ * running" which is the right side for gate-maturation thresholds.
+ *
+ * Returns 0 when no rows have positive days_running.
+ */
+function medianDaysRunning(metrics: AdMetric[]): number {
+  const sorted = metrics
+    .map((m) => m.days_running ?? 0)
+    .filter((d) => d > 0)
+    .sort((a, b) => a - b);
+  if (sorted.length === 0) return 0;
+  return sorted[Math.floor(sorted.length / 2)];
 }
 
 async function fetchTopCreativesWithSpend(

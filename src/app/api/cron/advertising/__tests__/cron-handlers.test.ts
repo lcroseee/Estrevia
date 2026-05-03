@@ -266,6 +266,9 @@ import { GET as triageDailyGET } from '../triage-daily/route';
 import { GET as retroWeeklyGET } from '../retro-weekly/route';
 import { GET as audienceRefreshGET } from '../audience-refresh/route';
 import { GET as accountHealthWeeklyGET } from '../account-health-weekly/route';
+// Imports of mocked symbols — used by retro-weekly real-aggregates tests below.
+import { evaluateGates } from '@/modules/advertising/decide/feature-gates';
+import { fetchMetaInsights } from '@/modules/advertising/perceive/meta-insights';
 
 // ---------------------------------------------------------------------------
 // Helper to create a Request with optional Authorization header
@@ -610,5 +613,117 @@ describe('triage-hourly — DB injection guard (regression test)', () => {
     // Cleanup
     delete process.env.ADVERTISING_DAILY_SPEND_CAP_USD;
     vi.resetModules();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: retro-weekly — real total_impressions / median days_running
+// (Track 9 — replaces { total_impressions: 0, days_running: 0 } placeholder
+// with real Meta-Insights aggregates so feature gates can auto-mature.)
+// ---------------------------------------------------------------------------
+
+describe('retro-weekly — real total_impressions / median days_running', () => {
+  it('passes summed impressions and median days_running to evaluateGates', async () => {
+    // 3 ads — sum impressions = 4000+6000+2000 = 12000; days_running sorted = [7,14,21]; median = 14
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([
+      {
+        ad_id: 'ad_001', adset_id: 'adset_001', campaign_id: 'campaign_001',
+        date: '2026-04-26', impressions: 4000, clicks: 80, spend_usd: 12.0,
+        ctr: 0.02, cpc: 0.15, cpm: 3.0, frequency: 1.5, reach: 3000,
+        days_running: 21, status: 'ACTIVE',
+      },
+      {
+        ad_id: 'ad_002', adset_id: 'adset_002', campaign_id: 'campaign_002',
+        date: '2026-04-26', impressions: 6000, clicks: 90, spend_usd: 14.0,
+        ctr: 0.015, cpc: 0.16, cpm: 2.5, frequency: 1.3, reach: 4500,
+        days_running: 14, status: 'ACTIVE',
+      },
+      {
+        ad_id: 'ad_003', adset_id: 'adset_003', campaign_id: 'campaign_003',
+        date: '2026-04-26', impressions: 2000, clicks: 30, spend_usd: 6.0,
+        ctr: 0.015, cpc: 0.20, cpm: 3.0, frequency: 1.1, reach: 1800,
+        days_running: 7, status: 'ACTIVE',
+      },
+    ]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await retroWeeklyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(evaluateGates).toHaveBeenCalledWith(
+      expect.objectContaining({
+        total_impressions: 12000,
+        days_running: 14,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('ignores rows with days_running <= 0 when computing median', async () => {
+    // days_running candidates after filter (>0): [7, 28]; median = upper of 2 = 28
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([
+      {
+        ad_id: 'ad_a', adset_id: 'adset_a', campaign_id: 'campaign_a',
+        date: '2026-04-26', impressions: 1500, clicks: 30, spend_usd: 5.0,
+        ctr: 0.02, cpc: 0.16, cpm: 3.3, frequency: 1.2, reach: 1300,
+        days_running: 7, status: 'ACTIVE',
+      },
+      {
+        ad_id: 'ad_b', adset_id: 'adset_b', campaign_id: 'campaign_b',
+        date: '2026-04-26', impressions: 0, clicks: 0, spend_usd: 0,
+        ctr: 0, cpc: 0, cpm: 0, frequency: 0, reach: 0,
+        days_running: 0, status: 'ACTIVE',
+      },
+      {
+        ad_id: 'ad_c', adset_id: 'adset_c', campaign_id: 'campaign_c',
+        date: '2026-04-26', impressions: 3500, clicks: 70, spend_usd: 12.0,
+        ctr: 0.02, cpc: 0.17, cpm: 3.4, frequency: 1.4, reach: 3000,
+        days_running: 28, status: 'ACTIVE',
+      },
+    ]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await retroWeeklyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(evaluateGates).toHaveBeenCalledWith(
+      expect.objectContaining({
+        total_impressions: 5000,
+        days_running: 28,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('passes zeros when Meta returns no insights (degraded fallback)', async () => {
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await retroWeeklyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(evaluateGates).toHaveBeenCalledWith(
+      expect.objectContaining({
+        total_impressions: 0,
+        days_running: 0,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('does not crash on Meta API failure — falls back to zeros', async () => {
+    vi.mocked(fetchMetaInsights).mockRejectedValueOnce(new Error('META rate limit'));
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await retroWeeklyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(evaluateGates).toHaveBeenCalledWith(
+      expect.objectContaining({
+        total_impressions: 0,
+        days_running: 0,
+      }),
+      expect.anything(),
+    );
   });
 });
