@@ -30,6 +30,7 @@ import {
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { getSunInSignRange, type SiderealSign } from '@/modules/astro-engine';
+import { Disclaimer } from '@/shared/components/Disclaimer';
 import { SunSignWidget } from './SunSignWidget';
 import { YearTableAccordion } from './YearTableAccordion';
 
@@ -234,6 +235,9 @@ export default async function SiderealSignDatesPage({
             </Link>
           </li>
         </ul>
+
+        {/* ── Legal disclaimer (CLAUDE.md content-legal-rules: required on all astrology pages) */}
+        <Disclaimer />
 
       </div>
     </>
