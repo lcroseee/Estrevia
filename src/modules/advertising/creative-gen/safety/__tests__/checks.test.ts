@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   personalClaimCheck,
   metaAdPolicyCheck,
@@ -7,9 +7,24 @@ import {
   controversialSymbolCheck,
   runAllChecks,
   isBlocked,
+  newVisionCostAccumulator,
+  recordVisionCall,
 } from '../checks';
 import type { SafetyDeps } from '../checks';
+import type { VisionClient } from '../vision-checker';
 import type { CreativeBundle, GeneratedAsset } from '@/shared/types/advertising';
+
+// ---------------------------------------------------------------------------
+// Vision client helpers (used by brand + symbol check tests)
+// ---------------------------------------------------------------------------
+
+const makeVision = (json: Record<string, unknown>): VisionClient => ({
+  analyzeImage: vi.fn().mockResolvedValue({ json, cost_usd: 0.0002 }),
+});
+
+const makeVisionError = (msg: string): VisionClient => ({
+  analyzeImage: vi.fn().mockRejectedValue(new Error(msg)),
+});
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -182,28 +197,129 @@ describe('ocrTextAccuracyCheck', () => {
 });
 
 // ---------------------------------------------------------------------------
-// brandConsistencyCheck
+// brandConsistencyCheck (Gemini Vision)
 // ---------------------------------------------------------------------------
 describe('brandConsistencyCheck', () => {
-  it('returns passed=true (MVP stub)', async () => {
-    const result = await brandConsistencyCheck(mockBundle());
-    expect(result.passed).toBe(true);
-    expect(result.severity).toBe('info');
-    expect(result.check_name).toBe('brand_consistency');
-    expect(result.reason).toContain('TODO');
+  it('skips with info severity when no visionClient is provided', async () => {
+    const r = await brandConsistencyCheck(mockBundle());
+    expect(r.passed).toBe(true);
+    expect(r.severity).toBe('info');
+    expect(r.check_name).toBe('brand_consistency');
+    expect(r.reason).toMatch(/skipped/i);
+  });
+
+  it('passes when Gemini returns passed=true', async () => {
+    const r = await brandConsistencyCheck(mockBundle(), {
+      visionClient: makeVision({
+        passed: true,
+        dominantColors: ['#FFD700'],
+        reason: 'gold dominant',
+      }),
+    });
+    expect(r).toEqual({
+      check_name: 'brand_consistency',
+      passed: true,
+      severity: 'info',
+      reason: 'gold dominant',
+    });
+  });
+
+  it('warns (passed=false, severity=warning) when Gemini returns passed=false', async () => {
+    const r = await brandConsistencyCheck(mockBundle(), {
+      visionClient: makeVision({
+        passed: false,
+        dominantColors: ['#FF00FF'],
+        reason: 'magenta off-brand',
+      }),
+    });
+    expect(r.passed).toBe(false);
+    expect(r.severity).toBe('warning');
+    expect(r.check_name).toBe('brand_consistency');
+  });
+
+  it('falls back to dominantColors message when reason is missing', async () => {
+    const r = await brandConsistencyCheck(mockBundle(), {
+      visionClient: makeVision({ passed: false, dominantColors: ['#112233', '#445566'] }),
+    });
+    expect(r.reason).toContain('#112233');
+    expect(r.reason).toContain('#445566');
+  });
+
+  it('soft-passes with warning when vision call throws (asymmetric error handling)', async () => {
+    const r = await brandConsistencyCheck(mockBundle(), {
+      visionClient: makeVisionError('rate limit'),
+    });
+    expect(r.passed).toBe(true);
+    expect(r.severity).toBe('warning');
+    expect(r.reason).toMatch(/Vision check failed/);
+    expect(r.reason).toContain('rate limit');
   });
 });
 
 // ---------------------------------------------------------------------------
-// controversialSymbolCheck
+// controversialSymbolCheck (Gemini Vision)
 // ---------------------------------------------------------------------------
 describe('controversialSymbolCheck', () => {
-  it('returns passed=true (MVP stub)', async () => {
-    const result = await controversialSymbolCheck('https://example.com/img.png');
-    expect(result.passed).toBe(true);
-    expect(result.severity).toBe('info');
-    expect(result.check_name).toBe('controversial_symbol');
-    expect(result.reason).toContain('TODO');
+  it('skips with info severity when no visionClient is provided', async () => {
+    const r = await controversialSymbolCheck('https://example.com/img.png');
+    expect(r.passed).toBe(true);
+    expect(r.severity).toBe('info');
+    expect(r.check_name).toBe('controversial_symbol');
+  });
+
+  it('passes when no symbols found', async () => {
+    const r = await controversialSymbolCheck('https://example.com/img.png', {
+      visionClient: makeVision({ found: false }),
+    });
+    expect(r).toEqual({
+      check_name: 'controversial_symbol',
+      passed: true,
+      severity: 'info',
+      reason: undefined,
+    });
+  });
+
+  it('blocks when controversial symbols found', async () => {
+    const r = await controversialSymbolCheck('https://example.com/img.png', {
+      visionClient: makeVision({
+        found: true,
+        items: ['pentagram'],
+        reason: 'inverted star',
+      }),
+    });
+    expect(r.passed).toBe(false);
+    expect(r.severity).toBe('block');
+    expect(r.reason).toContain('pentagram');
+  });
+
+  it('fails (passed=false, severity=warning) when vision throws — fail-closed', async () => {
+    const r = await controversialSymbolCheck('https://example.com/img.png', {
+      visionClient: makeVisionError('quota exceeded'),
+    });
+    expect(r.passed).toBe(false);
+    expect(r.severity).toBe('warning');
+    expect(r.reason).toMatch(/manual review/);
+    expect(r.reason).toContain('quota exceeded');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// VisionCostAccumulator
+// ---------------------------------------------------------------------------
+describe('VisionCostAccumulator', () => {
+  it('starts empty', () => {
+    const acc = newVisionCostAccumulator();
+    expect(acc.total_usd).toBe(0);
+    expect(acc.call_count).toBe(0);
+  });
+
+  it('accumulates cost across multiple calls', () => {
+    const acc = newVisionCostAccumulator();
+    recordVisionCall(acc, { cost_usd: 0.0002 });
+    recordVisionCall(acc, { cost_usd: 0.0002 });
+    recordVisionCall(acc, undefined);
+    expect(acc.total_usd).toBeCloseTo(0.0004, 5);
+    expect(acc.call_count).toBe(2);
   });
 });
 

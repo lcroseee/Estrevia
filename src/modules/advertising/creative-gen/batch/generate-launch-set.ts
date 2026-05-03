@@ -9,6 +9,8 @@ import type {
 } from '@/shared/types/advertising';
 import type { ClaudeClient } from '../safety/checks';
 import { runAllChecks, isBlocked } from '../safety/checks';
+import type { VisionClient } from '../safety/vision-checker';
+import { createGeminiVisionClient } from '../safety/vision-checker';
 import { advertisingCreatives } from '@/shared/lib/schema';
 
 // ---------------------------------------------------------------------------
@@ -27,6 +29,14 @@ export interface BatchDeps {
   hookTemplates: HookTemplate[];
   claudeClient: ClaudeClient;
   db: DbClient;
+  /**
+   * Vision client for brand + controversial-symbol checks. If omitted, the
+   * orchestrator attempts to construct a `GeminiVisionClient` via
+   * `GEMINI_API_KEY`; if that env var is unset, vision checks degrade
+   * gracefully to severity='info' skips. Tests should pass `null` to skip
+   * construction entirely, or a stub `VisionClient` to drive specific paths.
+   */
+  visionClient?: VisionClient | null;
 }
 
 export interface BatchOptions {
@@ -115,6 +125,26 @@ export async function generateLaunchBatch(
   const count_per_locale = opts.count_per_locale ?? 11;
   const locales = opts.locales ?? (['en', 'es'] as const);
 
+  // Resolve vision client: caller-provided wins, else attempt env-based
+  // construction once, else degrade to no vision checks. `null` explicitly
+  // disables construction (used by tests that want skipped checks without
+  // touching `GEMINI_API_KEY`).
+  let visionClient: VisionClient | undefined;
+  if (deps.visionClient === null) {
+    visionClient = undefined;
+  } else if (deps.visionClient !== undefined) {
+    visionClient = deps.visionClient;
+  } else {
+    try {
+      visionClient = createGeminiVisionClient();
+    } catch (err) {
+      console.warn(
+        '[creative-gen] GEMINI_API_KEY not set — vision checks will be skipped:',
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+
   let generated = 0;
   let rejected = 0;
   let total_cost_usd = 0;
@@ -149,6 +179,7 @@ export async function generateLaunchBatch(
       // Run safety checks
       const safetyResults = await runAllChecks(bundle, {
         claudeClient: deps.claudeClient,
+        visionClient,
       });
       bundle.safety_checks = safetyResults;
 

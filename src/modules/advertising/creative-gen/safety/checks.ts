@@ -1,4 +1,5 @@
 import type { CreativeBundle, SafetyCheckResult } from '@/shared/types/advertising';
+import type { VisionClient } from './vision-checker';
 
 // ---------------------------------------------------------------------------
 // Dependency interfaces — injected by callers, mocked in tests
@@ -17,6 +18,11 @@ export interface SafetyDeps {
   claudeClient: ClaudeClient;
   /** Optional — if absent, OCR check is skipped (MVP deferred). */
   ocrClient?: OcrClient;
+  /**
+   * Optional — if absent, brand + symbol vision checks are skipped with
+   * severity='info'. Built via `createGeminiVisionClient()` in production.
+   */
+  visionClient?: VisionClient;
 }
 
 // ---------------------------------------------------------------------------
@@ -119,49 +125,121 @@ export async function ocrTextAccuracyCheck(
 }
 
 // ---------------------------------------------------------------------------
-// 4.1d — Brand consistency check (MVP: stub, TODO real Delta-E impl)
+// 4.1d — Brand consistency check (Gemini Vision)
 // ---------------------------------------------------------------------------
 
+/** Approved Estrevia brand palette: gold, silver, deep purple, dark navy. */
+export const BRAND_PALETTE = ['#FFD700', '#C0C0C0', '#9B8EC4', '#0A0A0F'] as const;
+
+const BRAND_PROMPT = `Does this image use the Estrevia astrology app brand palette? \
+Approved colors: gold (${BRAND_PALETTE[0]}), silver (${BRAND_PALETTE[1]}), \
+deep purple (${BRAND_PALETTE[2]}), dark navy (${BRAND_PALETTE[3]}). \
+The dominant 3-4 colors of the image should match within reasonable tolerance \
+(CIE76 ΔE ≤ 25 — generous for AI-generated variations). \
+Respond JSON: {"passed": boolean, "dominantColors": ["#hex", ...], "reason": "..."}.`;
+
 /**
- * Verifies the creative's visual assets match Estrevia brand colour palette.
- * MVP stub — always passes. Real implementation should compare dominant colours
- * using CIE Delta-E ≤ 10 threshold against approved palette.
- *
- * TODO: integrate sharp/canvas pixel sampling + CIE76 distance check.
+ * Verifies the creative's visual assets match Estrevia brand colour palette
+ * via a Gemini Vision call. Asymmetric error handling: when no vision client
+ * is configured the check is **skipped** (severity='info'); when the vision
+ * call **throws** the check **soft-passes with severity='warning'** — being
+ * off-brand is undesirable but not a Meta policy violation, so the ad
+ * shouldn't be blocked just because Gemini was rate-limited.
  */
 export async function brandConsistencyCheck(
-  _creative: CreativeBundle,
+  creative: CreativeBundle,
+  deps?: { visionClient?: VisionClient },
 ): Promise<SafetyCheckResult> {
-  // Stub — real colour-palette comparison deferred to Phase 2
-  return {
-    check_name: 'brand_consistency',
-    passed: true,
-    severity: 'info',
-    reason: 'Brand consistency check stubbed — colour-palette validation pending (TODO)',
-  };
+  if (!deps?.visionClient) {
+    return {
+      check_name: 'brand_consistency',
+      passed: true,
+      severity: 'info',
+      reason: 'Vision client not configured — check skipped',
+    };
+  }
+  try {
+    const result = await deps.visionClient.analyzeImage(creative.asset.url, BRAND_PROMPT);
+    const json = result.json as {
+      passed: boolean;
+      dominantColors?: string[];
+      reason?: string;
+    };
+    return {
+      check_name: 'brand_consistency',
+      passed: json.passed,
+      severity: json.passed ? 'info' : 'warning',
+      reason: json.reason ?? `dominant colors: ${json.dominantColors?.join(', ') ?? 'unknown'}`,
+    };
+  } catch (err) {
+    // Soft-pass — off-brand is bad but not blocking; surface as warning.
+    return {
+      check_name: 'brand_consistency',
+      passed: true,
+      severity: 'warning',
+      reason: `Vision check failed (degraded): ${err instanceof Error ? err.message : 'unknown'}`,
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
-// 4.1e — Controversial symbol check (MVP: stub, TODO vision model)
+// 4.1e — Controversial symbol check (Gemini Vision)
 // ---------------------------------------------------------------------------
 
+const SYMBOL_PROMPT = `Identify any of the following in this image: \
+pentagrams (5-pointed star inscribed in circle), inverted crosses, swastikas, \
+religious crosses or crescents or stars-of-david, occult/satanic symbols. \
+Innocuous astrological symbols (planet glyphs ☉☽♀♂♃, zodiac signs ♈♉♊, \
+traditional astrology imagery) are ALLOWED — do not flag those. \
+Respond JSON: {"found": boolean, "items": ["item1", ...], "reason": "..."}.`;
+
 /**
- * Detects occult-coded imagery (pentagrams, inverted crosses, etc.) that could
- * trigger Meta's sensitive-content policy.
- * MVP stub — always passes. Real implementation needs a vision model call.
- *
- * TODO: integrate Gemini Vision or Claude vision to scan the image.
+ * Detects occult-coded imagery (pentagrams, inverted crosses, etc.) that
+ * could trigger Meta's sensitive-content policy. Asymmetric error handling
+ * (mirror of brand check): when no vision client is configured the check is
+ * **skipped** (severity='info'); when the vision call **throws** the check
+ * **fails closed** (`passed=false`, severity='warning') because controversial
+ * symbols are a real Meta-policy risk and unverified imagery should be
+ * routed to manual founder review rather than auto-uploaded.
  */
 export async function controversialSymbolCheck(
-  _imageUrl: string,
+  imageUrl: string,
+  deps?: { visionClient?: VisionClient },
 ): Promise<SafetyCheckResult> {
-  // Stub — real vision-based check deferred to Phase 2
-  return {
-    check_name: 'controversial_symbol',
-    passed: true,
-    severity: 'info',
-    reason: 'Controversial symbol check stubbed — vision model scan pending (TODO)',
-  };
+  if (!deps?.visionClient) {
+    return {
+      check_name: 'controversial_symbol',
+      passed: true,
+      severity: 'info',
+      reason: 'Vision client not configured — check skipped',
+    };
+  }
+  try {
+    const result = await deps.visionClient.analyzeImage(imageUrl, SYMBOL_PROMPT);
+    const json = result.json as {
+      found: boolean;
+      items?: string[];
+      reason?: string;
+    };
+    return {
+      check_name: 'controversial_symbol',
+      passed: !json.found,
+      severity: json.found ? 'block' : 'info',
+      reason: json.found
+        ? `Detected: ${json.items?.join(', ') ?? 'unspecified'} — ${json.reason ?? ''}`
+        : undefined,
+    };
+  } catch (err) {
+    // Symbol check failure → fail-closed (warning, NOT block — manual review).
+    return {
+      check_name: 'controversial_symbol',
+      passed: false,
+      severity: 'warning',
+      reason: `Vision check failed — manual review recommended: ${
+        err instanceof Error ? err.message : 'unknown'
+      }`,
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -181,8 +259,8 @@ export async function runAllChecks(
     personalClaimCheck(creative.copy),
     metaAdPolicyCheck(creative, deps),
     ocrTextAccuracyCheck(creative.asset.url, creative.copy, deps),
-    brandConsistencyCheck(creative),
-    controversialSymbolCheck(creative.asset.url),
+    brandConsistencyCheck(creative, { visionClient: deps.visionClient }),
+    controversialSymbolCheck(creative.asset.url, { visionClient: deps.visionClient }),
   ]);
   return results;
 }
@@ -193,4 +271,26 @@ export async function runAllChecks(
  */
 export function isBlocked(results: SafetyCheckResult[]): boolean {
   return results.some((r) => r.severity === 'block');
+}
+
+// ---------------------------------------------------------------------------
+// Vision cost accumulator — read by retro-weekly digest (Track 9)
+// ---------------------------------------------------------------------------
+
+export interface VisionCostAccumulator {
+  total_usd: number;
+  call_count: number;
+}
+
+export function newVisionCostAccumulator(): VisionCostAccumulator {
+  return { total_usd: 0, call_count: 0 };
+}
+
+export function recordVisionCall(
+  acc: VisionCostAccumulator,
+  result: { cost_usd: number } | undefined,
+): void {
+  if (!result) return;
+  acc.total_usd += result.cost_usd;
+  acc.call_count += 1;
 }
