@@ -1189,7 +1189,12 @@
     "freeGeneration": "1 generación gratis",
     "proUnlimited": "Ilimitado con Pro",
     "freeRemaining": "{used} de {limit} avatares gratuitos usados este mes",
-    "freeLimitReached": "Has usado los {limit} avatares gratuitos de este mes. Mejora a Pro para tener acceso ilimitado."
+    "freeLimitReached": "Has usado los {limit} avatares gratuitos de este mes. Mejora a Pro para tener acceso ilimitado.",
+    "regenerateFree": "Regenerar (usa 1 de {limit})",
+    "errorRateLimit": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+    "errorGeneration": "No se pudo generar el avatar. Inténtalo de nuevo.",
+    "proHint": "Mejora a Pro para regeneraciones ilimitadas y 4 estilos.",
+    "download": "Descargar"
   },
   "notifications": {
     "title": "Preferencias de notificaciones",
