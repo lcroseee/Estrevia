@@ -1,8 +1,15 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import createNextIntlPlugin from "next-intl/plugin";
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+  openAnalyzer: false,
+  analyzerMode: 'static',
+});
 
 // ---------------------------------------------------------------------------
 // Security Headers — Content Security Policy
@@ -127,7 +134,7 @@ const nextConfig: NextConfig = {
 // upload (prevents silent auth failures and speeds up local builds).
 const shouldUploadSourceMaps = Boolean(process.env.SENTRY_AUTH_TOKEN);
 
-export default withSentryConfig(withNextIntl(nextConfig), {
+export default withBundleAnalyzer(withSentryConfig(withNextIntl(nextConfig), {
   // ── Project identity ──────────────────────────────────────────────
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
@@ -165,4 +172,4 @@ export default withSentryConfig(withNextIntl(nextConfig), {
 
   // Tunnel Sentry requests through our own domain to bypass ad-blockers
   tunnelRoute: "/monitoring",
-});
+}));
