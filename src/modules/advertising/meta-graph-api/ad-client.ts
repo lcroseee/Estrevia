@@ -205,23 +205,60 @@ export class MetaAdManagementClient extends MetaGraphApiBase {
         ? { flexible_spec: [{ interests: opts.targeting.interests.map((i) => ({ id: i, name: i })) }] }
         : {}),
     };
+
+    const body: Record<string, unknown> = {
+      name: opts.name,
+      campaign_id: opts.campaignId,
+      daily_budget: opts.dailyBudgetCents,
+      optimization_goal: opts.optimizationGoal,
+      billing_event: opts.billingEvent,
+      // LOWEST_COST_WITHOUT_CAP = auto-bid, no upper cost cap.
+      // Optimal for cold start: Meta seeks cheapest events for learning.
+      // Upgrade to COST_CAP/BID_CAP after 30-50 conversions establish baseline.
+      bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
+      targeting,
+      status: opts.status,
+    };
+
+    if (opts.frequencyControlSpecs && opts.frequencyControlSpecs.length > 0) {
+      body.frequency_control_specs = opts.frequencyControlSpecs;
+    }
+
     const res = await this.request<MetaIdResponse>(
       'POST',
       `/${this.adAccountId}/adsets`,
-      {
-        name: opts.name,
-        campaign_id: opts.campaignId,
-        daily_budget: opts.dailyBudgetCents,
-        optimization_goal: opts.optimizationGoal,
-        billing_event: opts.billingEvent,
-        // LOWEST_COST_WITHOUT_CAP = auto-bid, no upper cost cap.
-        // Optimal for cold start: Meta seeks cheapest events for learning.
-        // Upgrade to COST_CAP/BID_CAP after 30-50 conversions establish baseline.
-        bid_strategy: 'LOWEST_COST_WITHOUT_CAP',
-        targeting,
-        status: opts.status,
-      },
+      body,
     );
     return { adset_id: res.id };
+  }
+
+  /**
+   * Generic ad-set update — used to retrofit `frequency_control_specs` onto
+   * existing ad sets (Track 11 migration), or to patch budget / status without
+   * the narrower `updateAdSetBudget` / `pauseAd` helpers. Pass only the fields
+   * you want changed.
+   *
+   * Throws on empty patch — sending an empty POST to /{adset_id} is a Meta
+   * Graph API no-op that wastes a request and hides programmer error.
+   */
+  async updateAdSet(
+    adsetId: string,
+    patch: {
+      frequencyControlSpecs?: CreateAdSetOpts['frequencyControlSpecs'];
+      dailyBudgetCents?: number;
+      status?: 'PAUSED' | 'ACTIVE';
+    },
+  ): Promise<{ id: string; success: true }> {
+    const body: Record<string, unknown> = {};
+    if (patch.frequencyControlSpecs) body.frequency_control_specs = patch.frequencyControlSpecs;
+    if (patch.dailyBudgetCents !== undefined) body.daily_budget = patch.dailyBudgetCents;
+    if (patch.status) body.status = patch.status;
+
+    if (Object.keys(body).length === 0) {
+      throw new Error('updateAdSet: empty patch');
+    }
+
+    await this.request<MetaIdResponse>('POST', `/${adsetId}`, body);
+    return { id: adsetId, success: true };
   }
 }

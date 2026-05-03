@@ -54,6 +54,16 @@ export async function runSetup(opts: SetupOpts): Promise<SetupResult> {
   // LPV filters out drive-by clicks → cleaner pixel learning signal on cold start.
   // LINK_CLICKS optimization counts every click (incl. profile/comments) and
   // pollutes pixel during the critical first-50-events window.
+  //
+  // frequencyControlSpecs={ IMPRESSIONS, 7, 10 }: per-user impression cap
+  // enforced by Meta auction (≤10 imps per user per rolling 7-day window
+  // ≈ 1.4 imp/user/day). Comfortable for astrology niche; lets Meta
+  // accumulate learning signal without burning users on cold start. Tier-1's
+  // aggregate frequency >= 4.0 pause stays as a safety net on top of this.
+  const FREQUENCY_CAP = [
+    { event: 'IMPRESSIONS' as const, interval_days: 7, max_frequency: 10 },
+  ];
+
   const en = await adClient.createAdSet({
     campaignId: campaign_id,
     name: 'EN — Launch — Sidereal interest',
@@ -63,6 +73,7 @@ export async function runSetup(opts: SetupOpts): Promise<SetupResult> {
     optimizationGoal: 'LANDING_PAGE_VIEWS',
     billingEvent: 'IMPRESSIONS',
     status: 'PAUSED',
+    frequencyControlSpecs: FREQUENCY_CAP,
   });
 
   const es = await adClient.createAdSet({
@@ -74,6 +85,7 @@ export async function runSetup(opts: SetupOpts): Promise<SetupResult> {
     optimizationGoal: 'LANDING_PAGE_VIEWS',
     billingEvent: 'IMPRESSIONS',
     status: 'PAUSED',
+    frequencyControlSpecs: FREQUENCY_CAP,
   });
 
   return { campaign_id, adset_id_en: en.adset_id, adset_id_es: es.adset_id };

@@ -64,4 +64,15 @@ export interface CreateAdSetOpts {
   optimizationGoal: 'LINK_CLICKS' | 'LANDING_PAGE_VIEWS';
   billingEvent: 'IMPRESSIONS' | 'LINK_CLICKS';
   status: 'PAUSED';
+  /**
+   * Per-user impression cap enforced by Meta auction (not post-fact agent pause).
+   * MVP value: { event: 'IMPRESSIONS', interval_days: 7, max_frequency: 10 }.
+   * Maps to Meta's `frequency_control_specs` array on POST /{adAccountId}/adsets.
+   * Tier-1's aggregate frequency check still runs on top as a safety net.
+   */
+  frequencyControlSpecs?: Array<{
+    event: 'IMPRESSIONS' | 'REACH';
+    interval_days: number;
+    max_frequency: number;
+  }>;
 }

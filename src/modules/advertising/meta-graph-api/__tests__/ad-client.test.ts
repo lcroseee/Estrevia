@@ -92,6 +92,80 @@ describe('MetaAdManagementClient', () => {
       // a strategy that needs an explicit bid_amount).
       expect(body.bid_strategy).toBe('LOWEST_COST_WITHOUT_CAP');
     });
+
+    it('omits frequency_control_specs when not provided', async () => {
+      const fetchImpl = chainedFetch(ok({ id: 'as_001' }));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      await client.createAdSet({
+        campaignId: 'cmp_1',
+        name: 'no-cap',
+        locale: 'en',
+        dailyBudgetCents: 1400,
+        targeting: { countries: ['US'], ageMin: 18, ageMax: 65 },
+        optimizationGoal: 'LANDING_PAGE_VIEWS',
+        billingEvent: 'IMPRESSIONS',
+        status: 'PAUSED',
+      });
+      const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+      const body = JSON.parse(init.body as string) as Record<string, unknown>;
+      expect(body).not.toHaveProperty('frequency_control_specs');
+    });
+
+    it('passes frequency_control_specs to the API when provided', async () => {
+      const fetchImpl = chainedFetch(ok({ id: 'as_002' }));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      await client.createAdSet({
+        campaignId: 'cmp_1',
+        name: 'capped',
+        locale: 'en',
+        dailyBudgetCents: 1400,
+        targeting: { countries: ['US'], ageMin: 18, ageMax: 65 },
+        optimizationGoal: 'LANDING_PAGE_VIEWS',
+        billingEvent: 'IMPRESSIONS',
+        status: 'PAUSED',
+        frequencyControlSpecs: [{ event: 'IMPRESSIONS', interval_days: 7, max_frequency: 10 }],
+      });
+      const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+      const body = JSON.parse(init.body as string) as Record<string, unknown>;
+      expect(body.frequency_control_specs).toEqual([
+        { event: 'IMPRESSIONS', interval_days: 7, max_frequency: 10 },
+      ]);
+    });
+  });
+
+  describe('updateAdSet', () => {
+    it('throws on empty patch', async () => {
+      const fetchImpl = chainedFetch(ok({ success: true }));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      await expect(client.updateAdSet('as_x', {})).rejects.toThrow(/empty patch/);
+    });
+
+    it('sends frequency_control_specs in POST body when patching cap', async () => {
+      const fetchImpl = chainedFetch(ok({ id: 'as_001' }));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const result = await client.updateAdSet('as_001', {
+        frequencyControlSpecs: [{ event: 'IMPRESSIONS', interval_days: 7, max_frequency: 10 }],
+      });
+      expect(result).toEqual({ id: 'as_001', success: true });
+      const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+      expect(url).toMatch(/\/as_001(\?|$)/);
+      const body = JSON.parse(init.body as string) as Record<string, unknown>;
+      expect(body.frequency_control_specs).toEqual([
+        { event: 'IMPRESSIONS', interval_days: 7, max_frequency: 10 },
+      ]);
+    });
+
+    it('sends daily_budget and status when patching budget + state', async () => {
+      const fetchImpl = chainedFetch(ok({ success: true }));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      await client.updateAdSet('as_002', {
+        dailyBudgetCents: 2000,
+        status: 'ACTIVE',
+      });
+      const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+      const body = JSON.parse(init.body as string) as Record<string, unknown>;
+      expect(body).toEqual({ daily_budget: 2000, status: 'ACTIVE' });
+    });
   });
 
   describe('getInsights', () => {

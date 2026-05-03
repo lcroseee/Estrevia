@@ -23,6 +23,30 @@ describe('runSetup', () => {
     expect(esCall.targeting.countries).not.toContain('AR');
   });
 
+  it('passes frequency_control_specs (10 imps / 7d) to BOTH ad-set calls', async () => {
+    const adClient = {
+      createCampaign: vi.fn(async () => ({ campaign_id: 'cmp_F' })),
+      createAdSet: vi.fn(async (opts) => ({ adset_id: opts.locale === 'en' ? 'as_en_F' : 'as_es_F' })),
+      pauseAd: vi.fn(),
+      updateAdSetBudget: vi.fn(),
+      duplicateAd: vi.fn(),
+    };
+    await runSetup({ adClient, dailyBudgetCentsEn: 1400, dailyBudgetCentsEs: 600 });
+
+    expect(adClient.createAdSet).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        frequencyControlSpecs: [{ event: 'IMPRESSIONS', interval_days: 7, max_frequency: 10 }],
+      }),
+    );
+    expect(adClient.createAdSet).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        frequencyControlSpecs: [{ event: 'IMPRESSIONS', interval_days: 7, max_frequency: 10 }],
+      }),
+    );
+  });
+
   it('reuses existing campaign when reuseCampaignId is set (recovery mode)', async () => {
     const adClient = {
       createCampaign: vi.fn(),
