@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Crimson_Pro } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import { enUS, esES } from "@clerk/localizations";
 import { getLocale, getTranslations } from "next-intl/server";
 import { PostHogProvider } from "@/shared/components/PostHogProvider";
 import { CookieConsent } from "@/shared/components/CookieConsent";
@@ -59,35 +57,36 @@ export default async function RootLayout({
   const tAppShell = await getTranslations('appShell');
 
   return (
-    <ClerkProvider localization={locale === 'es' ? esES : enUS}>
-      <html lang={locale} className="dark">
-        <head>
-          <link rel="manifest" href="/manifest.json" />
-          <link rel="apple-touch-icon" href="/icons/icon.svg" />
-          {/* Preconnect to third-party origins to reduce LCP */}
-          <link rel="preconnect" href="https://cdn.clerk.com" />
-          {/* PostHog host is eu.i.posthog.com — must match PostHogProvider and CSP connect-src */}
-          <link rel="preconnect" href="https://eu.i.posthog.com" />
-          <link rel="dns-prefetch" href="https://cdn.clerk.com" />
-          <link rel="dns-prefetch" href="https://eu.i.posthog.com" />
-        </head>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} antialiased bg-[#0A0A0F] text-white min-h-screen`}
+    // ClerkProvider is intentionally NOT here — it is scoped to (app)/ layout
+    // and sign-in/sign-up route layouts to avoid loading Clerk's ~324 KB bundle
+    // on marketing pages. See src/app/[locale]/(app)/layout.tsx.
+    <html lang={locale} className="dark">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icons/icon.svg" />
+        {/* Preconnect to third-party origins to reduce LCP */}
+        <link rel="preconnect" href="https://cdn.clerk.com" />
+        {/* PostHog host is eu.i.posthog.com — must match PostHogProvider and CSP connect-src */}
+        <link rel="preconnect" href="https://eu.i.posthog.com" />
+        <link rel="dns-prefetch" href="https://cdn.clerk.com" />
+        <link rel="dns-prefetch" href="https://eu.i.posthog.com" />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} antialiased bg-[#0A0A0F] text-white min-h-screen`}
+      >
+        {/* WCAG 2.4.1 — skip navigation link, visible on focus */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-[#0A0A0F] focus:font-medium focus:text-sm"
         >
-          {/* WCAG 2.4.1 — skip navigation link, visible on focus */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-[#0A0A0F] focus:font-medium focus:text-sm"
-          >
-            {tAppShell('skipToContent')}
-          </a>
-          <PostHogProvider>
-            <AnalyticsIdentifier />
-            {children}
-            <CookieConsent />
-          </PostHogProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+          {tAppShell('skipToContent')}
+        </a>
+        <PostHogProvider>
+          <AnalyticsIdentifier />
+          {children}
+          <CookieConsent />
+        </PostHogProvider>
+      </body>
+    </html>
   );
 }
