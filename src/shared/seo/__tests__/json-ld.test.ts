@@ -6,6 +6,7 @@ import {
   faqSchema,
   howToSchema,
   breadcrumbSchema,
+  websiteSchema,
 } from '../json-ld';
 
 // schema-dts types are complex union types — we cast through unknown for test assertions.
@@ -268,5 +269,23 @@ describe('breadcrumbSchema', () => {
     const list = schema.itemListElement as AnySchema[];
     expect(list.length).toBe(1);
     expect(list[0].position).toBe(1);
+  });
+});
+
+describe('websiteSchema', () => {
+  it('returns a valid WebSite schema with site identity fields', () => {
+    const schema = websiteSchema() as unknown as AnySchema;
+    expect(schema['@context']).toBe('https://schema.org');
+    expect(schema['@type']).toBe('WebSite');
+    expect(schema.name).toBeDefined();
+    expect(schema.url).toBeDefined();
+    expect(schema.description).toBeDefined();
+    expect(schema.inLanguage).toEqual(['en-US', 'es']);
+    expect(schema.publisher).toMatchObject({ '@type': 'Organization' });
+  });
+
+  it('omits potentialAction (no /search route in MVP)', () => {
+    const schema = websiteSchema() as unknown as AnySchema;
+    expect(schema).not.toHaveProperty('potentialAction');
   });
 });

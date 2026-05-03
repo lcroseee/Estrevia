@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Link } from '@/i18n/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { createMetadata, JsonLdScript, softwareAppSchema, howToSchema, faqSchema } from '@/shared/seo';
+import { createMetadata, JsonLdScript, softwareAppSchema, websiteSchema, howToSchema, faqSchema } from '@/shared/seo';
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';
 import { LandingAnimations } from './LandingAnimations';
 import { NewFeatureCards } from './NewFeatureCards';
@@ -82,6 +82,7 @@ export default async function LandingPage() {
   return (
     <>
       <JsonLdScript schema={softwareAppSchema()} />
+      <JsonLdScript schema={websiteSchema()} />
       <JsonLdScript schema={howToJsonLd} />
       <JsonLdScript schema={faqJsonLd} />
 

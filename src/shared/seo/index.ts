@@ -13,6 +13,7 @@
  *   breadcrumbSchema()   — BreadcrumbList schema (inject on every page)
  *   organizationSchema() — Organization schema for homepage/pillar pages
  *   softwareAppSchema()  — SoftwareApplication schema for homepage
+ *   websiteSchema()      — WebSite schema for site identity (homepage only)
  *   getRelatedPages()    — returns 3-5 related pages for internal linking
  *   getAllEssaySlugs()   — all 120 essay slugs for sitemap/generateStaticParams
  *   getAllSignSlugs()    — all 12 sign slugs for sitemap/generateStaticParams
@@ -25,6 +26,7 @@ export {
   JsonLdScript,
   organizationSchema,
   softwareAppSchema,
+  websiteSchema,
   articleSchema,
   faqSchema,
   howToSchema,

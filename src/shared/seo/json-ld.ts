@@ -21,13 +21,14 @@ import type {
   WithContext,
   Organization,
   SoftwareApplication,
+  WebSite,
   Article,
   FAQPage,
   HowTo,
   BreadcrumbList,
   Product,
 } from 'schema-dts';
-import { SITE_NAME, SITE_URL } from './constants';
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from './constants';
 
 // ---------------------------------------------------------------------------
 // Organization
@@ -76,6 +77,33 @@ export function softwareAppSchema(): WithContext<SoftwareApplication> {
     },
     description:
       'Sidereal astrology platform — natal charts, planetary hours, esoteric correspondences',
+  };
+}
+
+// ---------------------------------------------------------------------------
+// WebSite (site identity for Google Knowledge Graph + sitelinks)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a generic WebSite schema for Estrevia. Inject this on the homepage
+ * only — other pages have type-specific schemas (Article, Product, etc.).
+ *
+ * potentialAction (SearchAction) intentionally omitted — /search route is not
+ * in the MVP roadmap. Add when /search exists. See spec §6.
+ */
+export function websiteSchema(): WithContext<WebSite> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: SITE_URL,
+    inLanguage: ['en-US', 'es'],
+    description: SITE_DESCRIPTION,
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
   };
 }
 
