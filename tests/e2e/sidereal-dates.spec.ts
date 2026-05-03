@@ -85,9 +85,15 @@ test.describe('/sidereal-aries-dates', () => {
 
   test('year-table accordion section is present', async ({ page }) => {
     await page.goto('/sidereal-aries-dates');
+    // YearTableAccordion renders as a <details>/<summary> — collapsed by default.
+    // Must open the accordion before year cells become role="cell" accessible.
+    const accordionSummary = page.locator('details summary').first();
+    await expect(accordionSummary).toBeVisible({ timeout: 10_000 });
+    await accordionSummary.click();
     // Year-table must contain at least 5 year rows (±3 from current = 7 rows total)
     const yearCells = page.getByRole('cell').filter({ hasText: /^202[0-9]$/ });
     // At build/request time, ±3 years around current year = 7 rows minimum
+    await expect(yearCells.first()).toBeVisible({ timeout: 5_000 });
     const count = await yearCells.count();
     expect(count, 'Year table should have at least 5 year rows').toBeGreaterThanOrEqual(5);
   });
@@ -107,11 +113,12 @@ test.describe('Sun-sign widget — same sign (aries, date 2026-04-25)', () => {
     const dateInput = page.locator('input[type="date"]').first();
     await expect(dateInput).toBeVisible({ timeout: 10_000 });
 
-    // Fill date — April 25, 2026 is sidereal Aries (approx Apr 14 – May 14)
+    // Fill date — April 25, 2026 is sidereal Aries (Apr 14 – May 14 per Swiss Ephemeris)
     await dateInput.fill('2026-04-25');
 
-    // Submit (button inside the widget)
+    // Submit (button inside the widget) — wait for React state update (disabled={!date})
     const submitBtn = page.locator('button[type="submit"]').first();
+    await expect(submitBtn).toBeEnabled({ timeout: 5_000 });
     await submitBtn.click();
 
     // Wait for result — must show "Aries"
@@ -129,6 +136,7 @@ test.describe('Sun-sign widget — same sign (aries, date 2026-04-25)', () => {
     const dateInput = page.locator('input[type="date"]').first();
     await dateInput.fill('2026-04-25');
     const submitBtn = page.locator('button[type="submit"]').first();
+    await expect(submitBtn).toBeEnabled({ timeout: 5_000 });
     await submitBtn.click();
 
     // No "Read about Sun in sidereal" cross-link since result = current page sign
@@ -142,8 +150,9 @@ test.describe('Sun-sign widget — same sign (aries, date 2026-04-25)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Sun-sign widget — cross-sign case: date 2026-08-15 on /sidereal-aries-dates
-//   Expected sidereal sign: Leo (approx Aug 10 – Sep 16)
+// Sun-sign widget — cross-sign case: date 2026-09-01 on /sidereal-aries-dates
+//   Expected sidereal sign: Leo (Aug 17 – Sep 17 per Swiss Ephemeris, Lahiri)
+//   NOTE: 2026-08-15 is sidereal Cancer (Cancer ends Aug 17). Using Sep 1 instead.
 // ---------------------------------------------------------------------------
 
 test.describe('Sun-sign widget — cross-sign (leo date on aries page)', () => {
@@ -155,9 +164,10 @@ test.describe('Sun-sign widget — cross-sign (leo date on aries page)', () => {
     const dateInput = page.locator('input[type="date"]').first();
     await expect(dateInput).toBeVisible({ timeout: 10_000 });
 
-    // Aug 15, 2026 — sidereal Leo (Sun is in sidereal Leo ~Aug 10 – Sep 16)
-    await dateInput.fill('2026-08-15');
+    // Sep 1, 2026 — sidereal Leo (Aug 17 – Sep 17 per Swiss Ephemeris Lahiri ayanamsa)
+    await dateInput.fill('2026-09-01');
     const submitBtn = page.locator('button[type="submit"]').first();
+    await expect(submitBtn).toBeEnabled({ timeout: 5_000 });
     await submitBtn.click();
 
     // Result must contain "Leo"
