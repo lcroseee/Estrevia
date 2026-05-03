@@ -21,13 +21,14 @@ vi.mock('@/modules/astro-engine/components/AvatarGenerator', () => ({
 import { AvatarSection } from '@/modules/astro-engine/components/AvatarSection';
 import { AvatarGenerator } from '@/modules/astro-engine/components/AvatarGenerator';
 import type { PassportData } from '@/modules/astro-engine/passport';
+import { Sign, Element, Planet } from '@/shared/types/astrology';
 
 const fixture: PassportData = {
-  sunSign: 'Leo',
-  moonSign: 'Cancer',
-  ascendantSign: 'Scorpio',
-  element: 'Fire',
-  rulingPlanet: 'Sun',
+  sunSign: Sign.Leo,
+  moonSign: Sign.Cancer,
+  ascendantSign: Sign.Scorpio,
+  element: Element.Fire,
+  rulingPlanet: Planet.Sun,
   rarityPercent: 4.2,
 };
 
