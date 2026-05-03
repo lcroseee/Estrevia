@@ -14,6 +14,7 @@ import { isPremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { checkAndIncrementUsage, decrementUsage } from '@/shared/lib/usage';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { buildAvatarPrompt } from '@/modules/astro-engine/avatar-prompt';
 import type { ApiResponse } from '@/shared/types';
 
 const bodySchema = z.object({
@@ -23,26 +24,6 @@ const bodySchema = z.object({
   element: z.string(),
   style: z.enum(['cosmic', 'tarot', 'geometric', 'nebula']).default('cosmic'),
 });
-
-// Element to color palette mapping
-const ELEMENT_PALETTES: Record<string, string> = {
-  Fire: 'warm reds, oranges, and golds',
-  Earth: 'deep greens, browns, and amber',
-  Air: 'light blues, silvers, and whites',
-  Water: 'deep blues, purples, and teals',
-};
-
-// Style to prompt template mapping
-const STYLE_PROMPTS: Record<string, string> = {
-  cosmic:
-    'Cosmic energy portrait, ethereal starfield, nebula textures, flowing light',
-  tarot:
-    'Mystical tarot card art style, ornate borders, symbolic imagery, illuminated manuscript feel',
-  geometric:
-    'Sacred geometry patterns, precise mathematical forms, golden ratio spirals, crystalline structures',
-  nebula:
-    'Deep space nebula, swirling cosmic gases, stellar birth, vast cosmic scale',
-};
 
 interface AvatarGenerateResponse {
   imageBase64: string;
@@ -157,15 +138,16 @@ export async function POST(
   const { sunSign, moonSign, element, ascendantSign } = parsed;
 
   // ---------------------------------------------------------------------------
-  // 4. Build Imagen prompt
+  // 4. Build Imagen prompt — delegates to a 777-correspondence-aware builder.
+  //    See src/modules/astro-engine/avatar-prompt.ts for the full template.
   // ---------------------------------------------------------------------------
-  const palette = ELEMENT_PALETTES[element] ?? 'cosmic blues and purples';
-  const stylePrompt = STYLE_PROMPTS[style] ?? STYLE_PROMPTS.cosmic;
-  const ascDesc = ascendantSign
-    ? `, outer aura inspired by ${ascendantSign}`
-    : '';
-
-  const prompt = `${stylePrompt}. Abstract cosmic avatar representing ${sunSign} solar energy with ${moonSign} lunar essence${ascDesc}. Color palette: ${palette}. Dark background (#0A0A0F). No text, no face, no human features. Square format, mystical and ethereal.`;
+  const prompt = buildAvatarPrompt({
+    sunSign,
+    moonSign,
+    ascendantSign,
+    element,
+    style,
+  });
 
   // ---------------------------------------------------------------------------
   // 5. Call Gemini Imagen API
