@@ -37,6 +37,7 @@ import type Stripe from 'stripe';
 import { getStripe } from '@/shared/lib/stripe';
 import { getDb } from '@/shared/lib/db';
 import { users, processedStripeEvents } from '@/shared/lib/schema';
+import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 // ---------------------------------------------------------------------------
 // Helper: resolve clerkUserId from a Stripe object
@@ -238,6 +239,43 @@ export async function POST(request: Request): Promise<Response> {
               email: sql`${users.email}`,
             },
           });
+
+        // Fire subscription_started to PostHog so the agent's funnel
+        // reconciler can attribute conversions back to Meta UTMs. Only
+        // fired here (not in customer.subscription.updated) to avoid
+        // counting renewals/plan changes as new conversions.
+        // Idempotency: $insert_id keyed off subscription.id ensures Stripe
+        // retries collapse server-side at PostHog. Wrapped in try/catch:
+        // PostHog being down must never escalate to a 500 (Stripe would
+        // retry → duplicate user upserts).
+        try {
+          const utm = (session.metadata ?? {}) as Record<string, string | undefined>;
+          const amountTotal = session.amount_total ?? 0;
+          const currency = session.currency ?? 'usd';
+          trackServerEvent(clerkUserId, AnalyticsEvent.SUBSCRIPTION_STARTED, {
+            plan,
+            amount_usd: amountTotal / 100, // Stripe sends cents
+            currency,
+            stripe_subscription_id: stripeSubscriptionId,
+            utm_source: utm.utm_source ?? null,
+            utm_content: utm.utm_content ?? null, // ad_id by convention
+            utm_campaign: utm.utm_campaign ?? null,
+            $insert_id: `${stripeSubscriptionId ?? session.id}:subscription_started`,
+          });
+        } catch (phErr) {
+          console.warn(
+            '[stripe-webhook] PostHog subscription_started fire failed (non-fatal)',
+            phErr instanceof Error ? phErr.message : 'unknown',
+          );
+          try {
+            const { captureException } = await import('@sentry/nextjs');
+            captureException(phErr, {
+              tags: { webhook: 'stripe', posthog: 'degraded' },
+            });
+          } catch {
+            // Sentry capture is best-effort.
+          }
+        }
 
         console.info('[stripe-webhook] checkout.session.completed → premium activated', {
           clerkUserId,
