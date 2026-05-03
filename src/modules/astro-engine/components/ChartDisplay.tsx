@@ -181,6 +181,11 @@ export function ChartDisplay() {
   const [isAutoCalculating, setIsAutoCalculating] = useState(hasInitialParams);
   const [autoCalculateError, setAutoCalculateError] = useState<string | null>(null);
 
+  const passport = useMemo(
+    () => (chart ? generatePassport(chart) : null),
+    [chart],
+  );
+
   // Auto-calculate from URL params on mount (enables reload persistence + share links).
   // Reads mountParamsRef so the effect dep array stays empty — intentionally mount-only.
   useEffect(() => {
@@ -309,8 +314,6 @@ export function ChartDisplay() {
     );
   }
 
-  const passport = useMemo(() => generatePassport(chart), [chart]);
-
   const tabs: [Tab, string][] = [
     ['wheel', t('tabWheel')],
     ['table', t('tabTable')],
@@ -430,12 +433,16 @@ export function ChartDisplay() {
       )}
 
       {/* Avatar section — also requires a calculated chart */}
-      <div
-        className="h-px"
-        style={{ background: 'rgba(255,255,255,0.06)' }}
-        aria-hidden="true"
-      />
-      <AvatarSection passport={passport} />
+      {passport && (
+        <>
+          <div
+            className="h-px"
+            style={{ background: 'rgba(255,255,255,0.06)' }}
+            aria-hidden="true"
+          />
+          <AvatarSection passport={passport} />
+        </>
+      )}
     </section>
   );
 }
