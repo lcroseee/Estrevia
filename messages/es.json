@@ -1428,6 +1428,42 @@
         "whatsapp": "Mira lo que me salió 👇 {url}",
         "stories_caption": "Blueprint cósmico desbloqueado 🌌",
         "native_share": "Mi Pasaporte Cósmico — {url}"
+      },
+      "title": "Mi Pasaporte Cósmico",
+      "button": {
+        "share": "Compartir pasaporte",
+        "copyLink": "Copiar enlace",
+        "copyShort": "Copiar",
+        "copied": "¡Copiado!",
+        "copiedShort": "Copiado",
+        "downloading": "Descargando..."
+      },
+      "aria": {
+        "container": "Comparte tu Pasaporte Cósmico",
+        "shareNative": "Comparte tu Pasaporte Cósmico mediante el menú nativo",
+        "shareOnX": "Compartir en X",
+        "shareOnTelegram": "Compartir en Telegram",
+        "shareOnWhatsApp": "Compartir en WhatsApp",
+        "linkCopied": "Enlace copiado al portapapeles",
+        "copyShareLink": "Copiar enlace para compartir",
+        "linkCopiedShort": "Enlace copiado",
+        "copyLinkShort": "Copiar enlace",
+        "downloadFormat": "Formato de descarga",
+        "downloadAs": "Descargar como PNG {format}"
+      },
+      "og": {
+        "eyebrow": "Astrología sideral",
+        "title": "BLUEPRINT CÓSMICO",
+        "titleLine1": "BLUEPRINT",
+        "titleLine2": "CÓSMICO",
+        "label": {
+          "sun": "☉ SOL",
+          "moon": "☽ LUNA",
+          "rising": "↑ ASC"
+        },
+        "rarityLabel": "RAREZA",
+        "ruledBy": "Regido por",
+        "unknown": "Desconocido"
       }
     }
   },
@@ -1679,6 +1715,14 @@
       "whyDifferent": "La astrología tropical inicia Piscis el 18 de febrero, anclado al equinoccio. La astrología sideral lo inicia cuando el Sol entra en la constelación real de Pisces, aproximadamente el 14 de marzo. El desfase de ~24.21° es la precesión acumulada desde ~285 d.C., cuando los dos zodíacos coincidían: ~50.3 segundos de arco/año × 1.740 años ≈ 24.21°. El ayanamsa Lahiri corrige esta diferencia en cada carta que Estrevia calcula, colocando los planetas en sus posiciones estelares verificadas.",
       "annualVariation": "El ayanamsa Lahiri crece ~50.3 segundos de arco por año, desplazando el ingreso a Piscis aproximadamente 20 minutos por década. Para usos cotidianos, la fecha es estable al día. La tabla de 7 años más abajo muestra los datos exactos de Swiss Ephemeris para 2023–2029, incluida la ventana del 13–15 de marzo donde el límite sideral Acuario-Piscis puede determinar el signo solar de quien nació en esa fecha.",
       "readEssayLink": "Sol en Piscis — personalidad y rasgos"
+    }
+  },
+  "astro": {
+    "rarityTier": {
+      "exceptional": "Excepcional",
+      "veryRare": "Muy raro",
+      "rare": "Raro",
+      "uncommon": "Poco común"
     }
   }
 }

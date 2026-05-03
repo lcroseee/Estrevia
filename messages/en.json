@@ -1428,6 +1428,42 @@
         "whatsapp": "Look what I got 👇 {url}",
         "stories_caption": "Cosmic blueprint unlocked 🌌",
         "native_share": "My Cosmic Passport — {url}"
+      },
+      "title": "My Cosmic Passport",
+      "button": {
+        "share": "Share Passport",
+        "copyLink": "Copy Link",
+        "copyShort": "Copy",
+        "copied": "Copied!",
+        "copiedShort": "Copied",
+        "downloading": "Downloading..."
+      },
+      "aria": {
+        "container": "Share your Cosmic Passport",
+        "shareNative": "Share your Cosmic Passport via the native share menu",
+        "shareOnX": "Share on X",
+        "shareOnTelegram": "Share on Telegram",
+        "shareOnWhatsApp": "Share on WhatsApp",
+        "linkCopied": "Link copied to clipboard",
+        "copyShareLink": "Copy share link",
+        "linkCopiedShort": "Link copied",
+        "copyLinkShort": "Copy link",
+        "downloadFormat": "Download format",
+        "downloadAs": "Download as {format} PNG"
+      },
+      "og": {
+        "eyebrow": "Sidereal Astrology",
+        "title": "COSMIC BLUEPRINT",
+        "titleLine1": "COSMIC",
+        "titleLine2": "BLUEPRINT",
+        "label": {
+          "sun": "☉ SUN",
+          "moon": "☽ MOON",
+          "rising": "↑ RISING"
+        },
+        "rarityLabel": "RARITY",
+        "ruledBy": "Ruled by",
+        "unknown": "Unknown"
       }
     }
   },
@@ -1679,6 +1715,14 @@
       "whyDifferent": "Tropical astrology begins Pisces at the February 18 Aquarius-Pisces cusp, anchored to the equinox count. Sidereal astrology begins it when the Sun enters the actual Pisces constellation — approximately March 14. The ~24.21° offset equals Earth's accumulated axial precession since ~285 CE, when the tropical and sidereal zodiacs coincided: ~50.3 arcseconds per year × 1,740 years ≈ 24.21°. The Lahiri ayanamsa corrects for this drift in every chart Estrevia calculates, placing planets at their verified sky positions. In Jyotish tradition, Venus reaches its exaltation at 27° Pisces — making Pisces the sign where Venusian beauty, harmony, and love find their highest expression. The Sun in sidereal Pisces diffuses solar identity through this medium: boundlessness and empathy over assertion and individual will.",
       "annualVariation": "The Lahiri ayanamsa's annual growth of ~50.3 arcseconds moves the Pisces ingress about 20 minutes later each decade. In 2026 the Sun enters sidereal Pisces around March 14 and exits around April 14 — the final sign of the zodiac, completing just before Aries begins the new cycle. Year-to-year variation is a matter of hours. The seven-year table below shows Swiss Ephemeris data for 2023–2029, computed with SEFLG_MOSEPH and Lahiri ayanamsa. The March 13–15 boundary where sidereal Aquarius transitions to Pisces is a one-day window that can shift the entire solar sign interpretation — and the difference between Aquarius's intellectual orientation and Pisces's dissolution of self is substantial.",
       "readEssayLink": "Sun in Pisces — personality and traits"
+    }
+  },
+  "astro": {
+    "rarityTier": {
+      "exceptional": "Exceptional",
+      "veryRare": "Very Rare",
+      "rare": "Rare",
+      "uncommon": "Uncommon"
     }
   }
 }
