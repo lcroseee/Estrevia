@@ -30,6 +30,19 @@ import { mockStripe } from '../mocks/stripe';
 import { mockClaudeApi } from '../mocks/claude';
 import { mockTelegramBot } from '../mocks/telegram';
 
+vi.mock('@/modules/advertising/perceive/recon-state-store', () => ({
+  getReconState: vi.fn().mockResolvedValue({
+    suspended: false,
+    suspendedAt: null,
+    suspendReason: null,
+    autoResumeAt: null,
+    lastDriftPct: null,
+  }),
+  suspend: vi.fn().mockResolvedValue(undefined),
+  resume: vi.fn().mockResolvedValue(undefined),
+  checkAutoResume: vi.fn().mockResolvedValue({ resumed: false }),
+}));
+
 // ---------------------------------------------------------------------------
 // Import the pipeline functions we exercise end-to-end
 // ---------------------------------------------------------------------------
