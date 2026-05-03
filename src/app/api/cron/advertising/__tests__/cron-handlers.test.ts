@@ -174,6 +174,23 @@ vi.mock('@/modules/advertising/perceive/reconciler', () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Mock perceive/recon-state-store — triage-daily calls checkAutoResume()
+// at the start; orchestrator (via decide) calls getReconState().
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/perceive/recon-state-store', () => ({
+  getReconState: vi.fn().mockResolvedValue({
+    suspended: false,
+    suspendedAt: null,
+    suspendReason: null,
+    autoResumeAt: null,
+    lastDriftPct: null,
+  }),
+  suspend: vi.fn().mockResolvedValue(undefined),
+  resume: vi.fn().mockResolvedValue(undefined),
+  checkAutoResume: vi.fn().mockResolvedValue({ resumed: false }),
+}));
+
+// ---------------------------------------------------------------------------
 // Mock orchestrator decide
 // ---------------------------------------------------------------------------
 vi.mock('@/modules/advertising/decide/orchestrator', () => ({
@@ -725,5 +742,77 @@ describe('retro-weekly — real total_impressions / median days_running', () => 
       }),
       expect.anything(),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: triage-daily — reconciler auto-resume gate
+// ---------------------------------------------------------------------------
+//
+// The triage-daily handler MUST call recon-state-store.checkAutoResume() at
+// the top of every run so a 24h-stale suspend automatically clears. These
+// tests pin that contract: the call happens, the summary surfaces the flag,
+// and a non-fatal failure does not break the rest of the pipeline.
+// ---------------------------------------------------------------------------
+
+describe('triage-daily — reconciler auto-resume', () => {
+  it('calls checkAutoResume() on every run', async () => {
+    const reconState = await import('@/modules/advertising/perceive/recon-state-store');
+    const checkAutoResumeMock = vi.mocked(reconState.checkAutoResume);
+    checkAutoResumeMock.mockClear();
+    checkAutoResumeMock.mockResolvedValueOnce({ resumed: false });
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+
+    expect(res.status).toBe(200);
+    expect(checkAutoResumeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('summary.auto_resumed=true when checkAutoResume reports resumed', async () => {
+    const reconState = await import('@/modules/advertising/perceive/recon-state-store');
+    vi.mocked(reconState.checkAutoResume).mockResolvedValueOnce({
+      resumed: true,
+      reason: 'auto_resume_24h_elapsed',
+    });
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    const body = (await res.json()) as {
+      success: boolean;
+      summary: { auto_resumed: boolean };
+    };
+
+    expect(body.success).toBe(true);
+    expect(body.summary.auto_resumed).toBe(true);
+  });
+
+  it('summary.auto_resumed=false on a normal run', async () => {
+    const reconState = await import('@/modules/advertising/perceive/recon-state-store');
+    vi.mocked(reconState.checkAutoResume).mockResolvedValueOnce({ resumed: false });
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    const body = (await res.json()) as {
+      success: boolean;
+      summary: { auto_resumed: boolean };
+    };
+
+    expect(body.success).toBe(true);
+    expect(body.summary.auto_resumed).toBe(false);
+  });
+
+  it('does not abort the pipeline if checkAutoResume() throws', async () => {
+    const reconState = await import('@/modules/advertising/perceive/recon-state-store');
+    vi.mocked(reconState.checkAutoResume).mockRejectedValueOnce(
+      new Error('db unavailable'),
+    );
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { success: boolean };
+    expect(body.success).toBe(true);
   });
 });

@@ -18,6 +18,7 @@ import { fetchMetaInsights } from '@/modules/advertising/perceive/meta-insights'
 import { fetchFunnelSnapshot } from '@/modules/advertising/perceive/posthog-funnel';
 import { fetchStripeAttribution } from '@/modules/advertising/perceive/stripe-attribution';
 import { reconcile } from '@/modules/advertising/perceive/reconciler';
+import { checkAutoResume } from '@/modules/advertising/perceive/recon-state-store';
 import { decide } from '@/modules/advertising/decide/orchestrator';
 import { decideBayesian } from '@/modules/advertising/decide/tier-2-bayesian';
 import { pause } from '@/modules/advertising/act/pause';
@@ -67,6 +68,39 @@ export async function GET(request: Request) {
     const telegramBot = buildTelegramBot();
     const decisionDb = buildDecisionDb();
     const spendCapDb = buildSpendCapDb();
+
+    // Auto-resume check: if the agent has been suspended by a previous
+    // reconciler critical_drift and the 24h window has elapsed, clear the
+    // suspended flag at the top of this run. The next reconcile() further
+    // down may re-suspend if drift is still present.
+    let autoResumed = false;
+    try {
+      const resumeResult = await checkAutoResume();
+      if (resumeResult.resumed) {
+        autoResumed = true;
+        console.info('[triage-daily] reconciler auto-resumed after 24h');
+        try {
+          await telegramBot.sendMessage(
+            `ℹ️ Advertising agent reconciler auto-resumed after 24h. ` +
+              `Next reconcile() will re-suspend if drift persists.`,
+          );
+        } catch (alertErr) {
+          console.error('[triage-daily] auto-resume alert failed:', alertErr);
+        }
+      }
+    } catch (resumeErr) {
+      // Auto-resume check failure is non-fatal — log and continue. The
+      // reconciler will still detect drift and suspend; if already suspended,
+      // the orchestrator gate stays in effect.
+      console.error('[triage-daily] auto-resume check failed:', resumeErr);
+      Sentry.captureException(resumeErr, {
+        tags: {
+          cron: true,
+          route: '/api/cron/advertising/triage-daily',
+          subsystem: 'reconciler',
+        },
+      });
+    }
 
     // --- Step 1: Perceive — pull all data sources in parallel ---
     const [metrics, funnelSnapshot, stripeAttributions] = await Promise.all([
@@ -210,6 +244,7 @@ export async function GET(request: Request) {
     const summary = {
       ran_at: now.toISOString(),
       dry_run: dryRun,
+      auto_resumed: autoResumed,
       metrics_pulled: metrics.length,
       stripe_attributions: stripeAttributions.length,
       reconciliation_status: reconciliation.status,
