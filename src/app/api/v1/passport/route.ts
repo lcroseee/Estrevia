@@ -15,6 +15,7 @@ import type { ApiResponse, PassportResponse } from '@/shared/types';
 // ---------------------------------------------------------------------------
 const createPassportRequestSchema = z.object({
   chartId: z.string().min(1).max(64),
+  locale: z.enum(['en', 'es']).optional().default('en'),
 });
 
 export async function POST(request: Request): Promise<NextResponse<ApiResponse<PassportResponse>>> {
@@ -128,6 +129,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<P
       element: passportData.element,
       rulingPlanet: passportData.rulingPlanet,
       rarityPercent: passportData.rarityPercent,
+      locale: validated.locale,
     });
   } catch (err) {
     try {

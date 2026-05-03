@@ -135,14 +135,31 @@ describe('OG passport route — invalid-locale fallback (R2)', () => {
     const res = await GET(buildRequest(), { params });
 
     expect(res.status).toBe(200);
-    // Fallback to EN
     expect(mocks.mockGetTranslations).toHaveBeenCalledWith(
       expect.objectContaining({ locale: 'en', namespace: 'share.passport.og' }),
     );
-    // Sentry observability tag
     expect(mocks.mockSentryCapture).toHaveBeenCalled();
-    const captured = mocks.mockSentryCapture.mock.calls[0]?.[0];
-    const message = captured instanceof Error ? captured.message : String(captured);
-    expect(message).toMatch(/og_locale_invalid/);
+    const [errorArg, contextArg] = mocks.mockSentryCapture.mock.calls[0] ?? [];
+    const message = errorArg instanceof Error ? errorArg.message : String(errorArg);
+    expect(message).toBe('og_locale_invalid');
+    expect(contextArg).toMatchObject({
+      tags: { og_error: 'locale_invalid' },
+      extra: expect.objectContaining({ rawLocale: 'fr' }),
+    });
+  });
+
+  it('does NOT fire Sentry when locale is undefined (pre-migration transient)', async () => {
+    // Simulate a pre-migration row: locale field absent
+    const { locale: _omit, ...rowWithoutLocale } = baseRow;
+    void _omit;
+    mocks.dbHandle.current = mocks.makeDbMockLocal(rowWithoutLocale);
+
+    const res = await GET(buildRequest(), { params });
+
+    expect(res.status).toBe(200);
+    expect(mocks.mockGetTranslations).toHaveBeenCalledWith(
+      expect.objectContaining({ locale: 'en' }),
+    );
+    expect(mocks.mockSentryCapture).not.toHaveBeenCalled();
   });
 });

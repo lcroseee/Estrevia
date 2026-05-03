@@ -150,8 +150,13 @@ export async function GET(
   // -------------------------------------------------------------------------
   const rawLocale = passport.locale;
   const safeLocale: 'en' | 'es' = rawLocale === 'es' ? 'es' : 'en';
-  if (rawLocale !== 'en' && rawLocale !== 'es') {
-    captureException(new Error(`og_locale_invalid: ${rawLocale}`));
+  // Skip Sentry for undefined (pre-migration transient state — every row would page).
+  // Fire only for unexpected non-undefined values (true row corruption).
+  if (rawLocale !== undefined && rawLocale !== 'en' && rawLocale !== 'es') {
+    captureException(new Error('og_locale_invalid'), {
+      tags: { og_error: 'locale_invalid' },
+      extra: { rawLocale, passportId: id },
+    });
   }
 
   let t: Awaited<ReturnType<typeof getTranslations>>;
@@ -163,7 +168,10 @@ export async function GET(
     ]);
   } catch (err) {
     // Fallback to EN: better an EN preview than a 500 in the viral path.
-    captureException(new Error(`og_i18n_load_failed: ${String(err)}`));
+    captureException(new Error('og_i18n_load_failed'), {
+      tags: { og_error: 'i18n_load_failed' },
+      extra: { safeLocale, originalError: String(err) },
+    });
     [t, tTier] = await Promise.all([
       getTranslations({ locale: 'en', namespace: 'share.passport.og' }),
       getTranslations({ locale: 'en', namespace: 'astro.rarityTier' }),

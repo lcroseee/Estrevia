@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type { ChartResult } from '@/shared/types';
 import type { PassportResponse } from '@/shared/types/api';
 import { BirthDataForm } from './BirthDataForm';
@@ -42,6 +42,7 @@ interface PassportSectionProps {
 
 function PassportSection({ chartId }: PassportSectionProps) {
   const t = useTranslations('chartDisplay');
+  const locale = useLocale();
   const [passport, setPassport] = useState<PassportResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +54,7 @@ function PassportSection({ chartId }: PassportSectionProps) {
       const response = await fetch('/api/v1/passport', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chartId }),
+        body: JSON.stringify({ chartId, locale }),
       });
       const json = await response.json() as { success: boolean; data: PassportResponse | null; error: string | null };
       if (!json.success || !json.data) {
@@ -66,7 +67,7 @@ function PassportSection({ chartId }: PassportSectionProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [chartId, t]);
+  }, [chartId, locale, t]);
 
   if (passport) {
     return (
