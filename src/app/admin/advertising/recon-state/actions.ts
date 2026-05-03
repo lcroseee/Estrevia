@@ -14,8 +14,12 @@
 import { revalidatePath } from 'next/cache';
 import { resume } from '@/modules/advertising/perceive/recon-state-store';
 
-export async function resumeNowAction(): Promise<{ ok: true }> {
+/**
+ * Returns void to satisfy the React `<form action={fn}>` Server-Action
+ * signature `(formData: FormData) => void | Promise<void>`. Caller relies on
+ * `revalidatePath` to refresh the page after the action runs.
+ */
+export async function resumeNowAction(): Promise<void> {
   await resume('founder_manual_override');
   revalidatePath('/admin/advertising/recon-state');
-  return { ok: true };
 }
