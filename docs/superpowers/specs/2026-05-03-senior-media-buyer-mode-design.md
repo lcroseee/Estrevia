@@ -1,9 +1,15 @@
-# Senior Media Buyer Mode — Advertising Agent Redesign (Stage 0 + Autonomous System)
+# Senior Media Buyer Mode — Advertising Agent Redesign (v3b)
 
-**Date:** 2026-05-03 (revised after ground-truth audit)
+**Date:** 2026-05-03 (revised after ground-truth audit, then split into v3a/v3b/v3c)
 **Author:** brainstorming session (founder + assistant)
-**Scope:** complete redesign of advertising agent with mandatory Pixel/CAPI infrastructure + per-ad-set data-maturity-driven autonomous decision-making + auto-calibrating thresholds. Replaces existing Tier-1 hard rules with a 4-phase ad-set lifecycle state machine that self-graduates between behaviors based on accumulated data.
+**Scope:** redesign of advertising agent decide-layer with mandatory Pixel/CAPI infrastructure (Stage 0 of this spec) + per-ad-set data-maturity-driven autonomous decision-making + auto-calibrating thresholds. Replaces existing Tier-1 hard rules with a 4-phase ad-set lifecycle state machine that self-graduates between behaviors based on accumulated data.
 **Status:** approved for plan-writing.
+
+**Depends on:** [v3a Pre-flight Blockers](./2026-05-03-advertising-pre-flight-blockers-design.md) — ALL 9 fixes there must ship and be verified in production before any work on this spec begins. v3a fixes critical infrastructure gaps (audience-refresh stubs, missing safety checks, reconciler safety, attribution windows, defensive constants) that this spec assumes are already production-ready.
+
+**Followed by:** [v3c Future Enhancements](./2026-05-03-advertising-future-enhancements-backlog.md) — observability and advanced features (LCA, factorial testing, CSV export, etc.) deferred from v3a/v3b.
+
+> **Spec versioning:** v1 (initial draft) was overwritten by v2 (post-ground-truth audit), then split into v3a/v3b/v3c after audit revealed 13 not-covered infrastructure gaps. This file is the v3b portion (Senior Buyer Mode logic). v3a (Pre-flight Blockers) and v3c (Backlog) are sibling files. v1 retained in git history at commit `2f89be1^`.
 
 ---
 
