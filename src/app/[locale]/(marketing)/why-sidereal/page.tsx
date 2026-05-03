@@ -12,10 +12,10 @@ import { SITE_URL } from '@/shared/seo/constants';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 import PrecessionDiagramLoader from '@/modules/esoteric/components/PrecessionDiagramLoader';
 
-// Locale-aware: must read cookies/headers per request, so we cannot use
-// `force-static`. We let next-intl render the correct language per visitor.
-// The page is still cacheable downstream via standard Next.js dynamic rendering.
-export const dynamic = 'force-dynamic';
+// ISR: revalidate hourly. Locale resolved from [locale] URL segment,
+// so two cached versions exist (en + es). Same pattern as essays/[slug]
+// which use revalidate=86400 + getLocale() successfully.
+export const revalidate = 3600;
 
 // ---------------------------------------------------------------------------
 // Metadata (kept English-only — SEO concern, not user-facing UI)
