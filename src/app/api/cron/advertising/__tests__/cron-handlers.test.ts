@@ -479,3 +479,136 @@ describe('audience-refresh — specific behaviour', () => {
     return audienceRefreshGET(req);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Tests: DB injection — guards against the null-DB regression
+// ---------------------------------------------------------------------------
+//
+// All tests above mock `pause()` wholesale, so `checkSpendCap` and
+// `logDecision` are never invoked and `deps.db` is never dereferenced.
+// That mocking masked a production bug where buildSpendCapDb() and
+// buildDecisionDb() returned `null as any`, crashing the first real
+// pause attempt with `TypeError: Cannot read properties of null`.
+//
+// This block bypasses the wholesale pause mock by re-importing the real
+// pause module and injecting the mocked Drizzle chain. If anyone ever
+// regresses the factories back to `null`, the .select/.insert call counts
+// here go to zero and the test fails.
+// ---------------------------------------------------------------------------
+
+describe('triage-hourly — DB injection guard (regression test)', () => {
+  it('invokes mockDrizzleDb.select and .insert through the real pause/spend-cap path', async () => {
+    // Restore the real pause implementation for this test only — the wholesale
+    // mock at the top of this file would otherwise prevent deps.db access.
+    vi.unmock('@/modules/advertising/act/pause');
+
+    // Reset module cache so the un-mocked pause is loaded
+    vi.resetModules();
+
+    // Re-mock everything except pause itself — pause must run for real so
+    // it calls checkSpendCap → deps.db.select(), and logDecision →
+    // deps.db.insert(). Both touch our mockDrizzleDb chain; if either is
+    // null the test crashes.
+    vi.doMock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
+    vi.doMock('@/shared/lib/db', () => ({
+      getDb: () => mockDrizzleDb,
+      db: mockDrizzleDb,
+    }));
+    vi.doMock('@/modules/advertising/safety/kill-switch', () => ({
+      assertKillSwitchOff: vi.fn(),
+      isKillSwitchEngaged: vi.fn().mockReturnValue(false),
+      isDryRun: vi.fn().mockReturnValue(false),
+      getStatus: vi.fn().mockReturnValue({ enabled: true, dryRun: false }),
+    }));
+    vi.doMock('@/modules/advertising/alerts/telegram-bot', () => {
+      const mockBot = {
+        sendAlert: vi.fn().mockResolvedValue({ message_id: 1, text: 'ok' }),
+        sendDailyDigest: vi.fn().mockResolvedValue({ message_id: 2, text: 'ok' }),
+        sendMessage: vi.fn().mockResolvedValue({ message_id: 3, text: 'ok' }),
+      };
+      return {
+        TelegramBot: vi.fn().mockImplementation(function () {
+          return mockBot;
+        }),
+        createTelegramBot: vi.fn(() => mockBot),
+      };
+    });
+    vi.doMock('@/modules/advertising/perceive/meta-insights', () => ({
+      fetchMetaInsights: vi.fn().mockResolvedValue([
+        {
+          ad_id: 'ad_pause_001',
+          adset_id: 'adset_001',
+          campaign_id: 'campaign_001',
+          date: '2026-05-03',
+          impressions: 1000,
+          clicks: 1,                 // CTR will trigger Tier 1 pause
+          spend_usd: 5.0,
+          ctr: 0.001,                // 0.1% — well below pause threshold
+          cpc: 5.0,
+          cpm: 5.0,
+          frequency: 1.2,
+          reach: 900,
+          days_running: 5,
+          status: 'ACTIVE',
+        },
+      ]),
+    }));
+    vi.doMock('@/modules/advertising/decide/orchestrator', () => ({
+      decide: vi.fn().mockResolvedValue({
+        decisions: [
+          {
+            ad_id: 'ad_pause_001',
+            action: 'pause',
+            reason: 'tier_1_low_ctr',
+            reasoning_tier: 'tier_1_rules',
+            confidence: 1.0,
+            metrics_snapshot: {},
+            delta_budget_usd: 0,
+          },
+        ],
+        shadowLog: [],
+      }),
+    }));
+    // act-layer: real pause WITH a mocked Meta API client returned by
+    // `getMetaAdClient` so the Meta API is never actually hit.
+    vi.doMock('@/modules/advertising/act', () => ({
+      getMetaAdClient: vi.fn(() => ({
+        pauseAd: vi.fn().mockResolvedValue({ paused: true, ad_id: 'ad_pause_001' }),
+      })),
+    }));
+    // Stub createMetaAdClient too (used as insightsApi by spend-cap)
+    vi.doMock('@/modules/advertising/meta-graph-api', () => ({
+      createMetaAdClient: vi.fn(() => ({
+        getInsights: vi.fn().mockResolvedValue([]),  // real spend-cap path: 0 spent today
+        pauseAd: vi.fn().mockResolvedValue({ paused: true }),
+      })),
+    }));
+    // Required env for spend cap
+    process.env.ADVERTISING_DAILY_SPEND_CAP_USD = '80';
+    process.env.CRON_SECRET = CRON_SECRET;
+    process.env.ADVERTISING_AGENT_ENABLED = 'true';
+
+    // Reset call counts on the shared mockDrizzleDb chain
+    mockDrizzleDb.select.mockClear();
+    mockDrizzleDb.insert.mockClear();
+
+    // Re-import the route after re-mocking
+    const { GET: realTriageHourly } = await import('../triage-hourly/route');
+    const res = await realTriageHourly(makeRequest(`Bearer ${CRON_SECRET}`));
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as { success: boolean; summary: { pauses_applied: number } };
+    expect(body.success).toBe(true);
+    expect(body.summary.pauses_applied).toBe(1);
+
+    // Proof of life: the spend-cap and decision-log paths actually called
+    // into the Drizzle mock. If buildSpendCapDb()/buildDecisionDb() ever
+    // regress back to `null as any`, these counts will be 0.
+    expect(mockDrizzleDb.select).toHaveBeenCalled();
+    expect(mockDrizzleDb.insert).toHaveBeenCalled();
+
+    // Cleanup
+    delete process.env.ADVERTISING_DAILY_SPEND_CAP_USD;
+    vi.resetModules();
+  });
+});
