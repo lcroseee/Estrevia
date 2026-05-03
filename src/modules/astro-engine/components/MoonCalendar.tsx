@@ -288,7 +288,7 @@ export function MoonCalendar() {
 
       {/* Calendar body */}
       {loading && (
-        <div className="flex items-center justify-center py-16" aria-busy="true" aria-label={t('calendar.loadingAria')}>
+        <div className="flex items-center justify-center py-16" role="status" aria-busy="true" aria-label={t('calendar.loadingAria')}>
           <span
             className="inline-block w-5 h-5 rounded-full border border-white/20 border-t-white/60 animate-spin"
             aria-hidden="true"
