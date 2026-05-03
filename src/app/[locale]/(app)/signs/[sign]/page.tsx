@@ -148,10 +148,18 @@ export default async function SignPage({
   const elementLabel = t(`elements.${data.element}` as 'elements.Fire');
   const modalityLabel = t(`modalities.${data.modality}` as 'modalities.Cardinal');
 
-  // JSON-LD schemas — kept English-canonical for SEO consistency across locales.
+  // JSON-LD localized per locale (T3, seo-phase3): /es renders Spanish JSON-LD
+  // so Google can show rich results in ES SERPs.
+  const tSchema = await getTranslations('signDetail.schema');
   const articleLd = articleSchema({
-    title: `Sidereal ${data.sign} — Traits, Dates & Meaning`,
-    description: `Sidereal ${data.sign} (${data.siderealDates}): ${data.element} ${data.modality} ruled by ${data.ruler}. Complete guide to all 10 planetary placements in sidereal ${data.sign}.`,
+    title: tSchema('title', { sign: data.sign }),
+    description: tSchema('description', {
+      sign: data.sign,
+      dates: data.siderealDates,
+      element: elementLabel,
+      modality: modalityLabel,
+      ruler: data.ruler,
+    }),
     url: pageUrl,
     datePublished: '2024-01-01',
     dateModified: today,

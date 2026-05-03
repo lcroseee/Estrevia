@@ -342,6 +342,10 @@
       "Fixed": "Fixed",
       "Mutable": "Mutable"
     },
+    "schema": {
+      "title": "Sidereal {sign} — Traits, Dates & Meaning",
+      "description": "Sidereal {sign} ({dates}): {element} {modality} ruled by {ruler}. Complete guide to all 10 planetary placements in sidereal {sign}."
+    },
     "planets": {
       "sun": "Sun",
       "moon": "Moon",

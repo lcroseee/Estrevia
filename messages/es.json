@@ -342,6 +342,10 @@
       "Fixed": "Fijo",
       "Mutable": "Mutable"
     },
+    "schema": {
+      "title": "{sign} sideral — rasgos, fechas y significado",
+      "description": "{sign} sideral ({dates}): {element} {modality} regido por {ruler}. Guía completa de las 10 posiciones planetarias en {sign} sideral."
+    },
     "planets": {
       "sun": "Sol",
       "moon": "Luna",
