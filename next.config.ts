@@ -127,6 +127,24 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  async rewrites() {
+    // Next.js App Router requires dynamic segments to be the entire folder name.
+    // `sidereal-[sign]-dates/` as a folder does not extract `sign` — only a full-
+    // segment `[sign]/` folder works. So public URLs `/sidereal-{sign}-dates` are
+    // rewritten internally to `/sidereal-dates/{sign}` where the route lives.
+    //
+    // next-intl middleware (localePrefix: 'as-needed') internally prepends the
+    // locale before Next.js routing runs, so we match both the /en/ and /es/
+    // prefixed forms. The browser URL is never changed.
+    return [
+      { source: '/en/sidereal-:sign-dates', destination: '/en/sidereal-dates/:sign' },
+      { source: '/es/sidereal-:sign-dates', destination: '/es/sidereal-dates/:sign' },
+      // Fallback: if next-intl does not prepend a locale for the default locale,
+      // the bare form is also handled.
+      { source: '/sidereal-:sign-dates', destination: '/sidereal-dates/:sign' },
+    ];
+  },
 };
 
 // Upload source maps to Sentry only when an auth token is provided.

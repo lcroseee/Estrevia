@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import type { ApiResponse } from '@/shared/types/api';
 
 interface SunSignResult {
   sign: string;
@@ -57,12 +56,7 @@ export function SunSignWidget({ currentSign, localeStr }: SunSignWidgetProps) {
           console.error('sun-sign API error:', body.error);
         }
       } else {
-        const body = await res.json() as ApiResponse<SunSignResult>;
-        if (body.success && body.data) {
-          setResult(body.data);
-        } else {
-          setError(t('widgetError'));
-        }
+        setResult(await res.json() as SunSignResult);
       }
     } catch {
       setError(t('widgetError'));

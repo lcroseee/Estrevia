@@ -3,7 +3,6 @@ import { Geist, Geist_Mono, Crimson_Pro } from "next/font/google";
 import { getLocale, getTranslations } from "next-intl/server";
 import { PostHogProvider } from "@/shared/components/PostHogProvider";
 import { CookieConsent } from "@/shared/components/CookieConsent";
-import { AnalyticsIdentifier } from "@/shared/components/AnalyticsIdentifier";
 import { SITE_URL } from "@/shared/seo/constants";
 import "./globals.css";
 
@@ -82,7 +81,6 @@ export default async function RootLayout({
           {tAppShell('skipToContent')}
         </a>
         <PostHogProvider>
-          <AnalyticsIdentifier />
           {children}
           <CookieConsent />
         </PostHogProvider>

@@ -5,6 +5,7 @@ import { PlanetaryHourBar } from '@/modules/astro-engine/components/PlanetaryHou
 import { UserMenu } from '@/modules/auth/components/UserMenu';
 import { SubscriptionProvider } from '@/shared/context/SubscriptionProvider';
 import { PostSignupAttribution } from '@/shared/components/PostSignupAttribution';
+import { AnalyticsIdentifier } from '@/shared/components/AnalyticsIdentifier';
 import { MobileNav } from './MobileNav';
 import { DesktopNav } from './DesktopNav';
 
@@ -21,6 +22,9 @@ export default async function AppLayout({
   const { locale } = await params;
   return (
     <ClerkProvider localization={locale === 'es' ? esES : enUS}>
+      {/* AnalyticsIdentifier wires PostHog identification to the Clerk session.
+          Must live inside ClerkProvider so that useUser() is available. */}
+      <AnalyticsIdentifier />
       {/* SubscriptionProvider fetches the user's plan ONCE at this layout
           boundary. Every child component that calls `useSubscription()`
           reads the shared result instead of firing its own request.
