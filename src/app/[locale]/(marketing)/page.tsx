@@ -6,6 +6,7 @@ import { createMetadata, JsonLdScript, softwareAppSchema, howToSchema, faqSchema
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';
 import { LandingAnimations } from './LandingAnimations';
 import { NewFeatureCards } from './NewFeatureCards';
+import { LandingViewTracker } from './LandingViewTracker';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,6 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default async function LandingPage() {
   const t = await getTranslations('landing');
+  const locale = await getLocale();
 
   // Structural data only — text comes from translations by key
   const features = [
@@ -82,6 +84,8 @@ export default async function LandingPage() {
       <JsonLdScript schema={softwareAppSchema()} />
       <JsonLdScript schema={howToJsonLd} />
       <JsonLdScript schema={faqJsonLd} />
+
+      <LandingViewTracker locale={locale as 'en' | 'es'} />
 
       {/* Noise texture overlay — anti-flat-background */}
       <div
