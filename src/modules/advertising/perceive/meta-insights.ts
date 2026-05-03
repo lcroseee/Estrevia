@@ -6,6 +6,12 @@ export interface MetaInsightsApi {
     time_range: { since: string; until: string };
     level: string;
     fields: string[];
+    /**
+     * Per Q4 (hybrid by purpose): Meta is the source for phase detection.
+     * 7d_click only — no view attribution (inflates conversions on awareness
+     * creatives). Pass-through to Meta Marketing API param of the same name.
+     */
+    action_attribution_windows?: Array<'1d_click' | '7d_click' | '1d_view' | '7d_view' | '28d_click'>;
   }): Promise<AdMetric[]>;
 }
 
@@ -47,6 +53,7 @@ export async function fetchMetaInsights(opts: FetchMetaInsightsOptions): Promise
     time_range: { since: dateFrom, until: dateTo },
     level: 'ad' as const,
     fields: [...META_FIELDS],
+    action_attribution_windows: ['7d_click' as const],
   };
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {

@@ -23,6 +23,7 @@ describe('fetchMetaInsights', () => {
       time_range: { since: '2026-04-25', until: '2026-04-26' },
       level: 'ad',
       fields: expect.arrayContaining(['impressions', 'clicks', 'spend', 'ctr', 'cpc', 'frequency']),
+      action_attribution_windows: ['7d_click'],
     });
   });
 
@@ -61,5 +62,24 @@ describe('fetchMetaInsights', () => {
     await expect(fetchMetaInsights({ apiClient: api, dateFrom: '2026-04-25', dateTo: '2026-04-26', retryBaseMs: 0 }))
       .rejects.toMatchObject({ code: 17 });
     expect(api.getInsights).toHaveBeenCalledTimes(3);
+  });
+
+  it('passes action_attribution_windows=["7d_click"] to the Meta API', async () => {
+    // Per Q4 hybrid by purpose: Meta drives phase detection. Use 7d_click only —
+    // no view attribution (which inflates conversions on awareness creatives).
+    const api = mockMetaApi();
+    api.getInsights.mockResolvedValue([]);
+
+    await fetchMetaInsights({
+      apiClient: api,
+      dateFrom: '2026-04-26',
+      dateTo: '2026-05-03',
+    });
+
+    expect(api.getInsights).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action_attribution_windows: ['7d_click'],
+      }),
+    );
   });
 });
