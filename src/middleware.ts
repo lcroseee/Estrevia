@@ -34,8 +34,13 @@ const isProtectedRoute = createRouteMatcher([
  * Redirects any *.vercel.app deployment URL to the canonical estrevia.app domain.
  * Gated on VERCEL_ENV==='production' so preview deploys remain accessible on their
  * vercel.app URL (preview deploys also have NODE_ENV=production — use VERCEL_ENV).
+ *
+ * Skips /api/* paths: API consumers (Vercel cron, webhooks, third-party integrations)
+ * call the deployment URL directly and don't follow 301 redirects — they need a
+ * direct response instead.
  */
 function redirectVercelHostToCanonical(req: NextRequest): NextResponse | null {
+  if (req.nextUrl.pathname.startsWith('/api/')) return null;
   const host = req.headers.get('host') ?? '';
   if (host.endsWith('.vercel.app') && process.env.VERCEL_ENV === 'production') {
     const url = new URL(req.url);
