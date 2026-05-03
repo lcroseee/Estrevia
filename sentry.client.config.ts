@@ -7,10 +7,10 @@ Sentry.init({
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
   environment: process.env.NODE_ENV,
 
-  // Session replay: capture all replays only on errors, not on every session.
-  // This keeps costs low on the free tier while preserving error context.
-  replaysSessionSampleRate: 0,
-  replaysOnErrorSampleRate: 1.0,
+  // Session replay: disabled — replayIntegration() not added, so these options
+  // have no effect and are removed to allow the Replay bundle to be tree-shaken.
+  // Re-enable by adding replayIntegration() to `integrations` and restoring
+  // replaysOnErrorSampleRate: 1.0 (errors only, free-tier safe).
 
   beforeSend: scrubSentryEvent,
 });
