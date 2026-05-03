@@ -36,6 +36,13 @@
       "when": 1777845772275,
       "tag": "0004_white_carlie_cooper",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777847234598,
+      "tag": "0005_dark_tusk",
+      "breakpoints": true
     }
   ]
 }

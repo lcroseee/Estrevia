@@ -55,6 +55,8 @@ export const cosmicPassports = pgTable('cosmic_passports', {
   element: text('element').notNull(),
   rulingPlanet: text('ruling_planet').notNull(),
   rarityPercent: real('rarity_percent').notNull(),
+  // locale: determines OG image language; default 'en' for rows created before T4.
+  locale: text('locale', { enum: ['en', 'es'] }).notNull().default('en'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

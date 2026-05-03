@@ -1,0 +1,1 @@
+ALTER TABLE "cosmic_passports" ADD COLUMN "locale" text DEFAULT 'en' NOT NULL;

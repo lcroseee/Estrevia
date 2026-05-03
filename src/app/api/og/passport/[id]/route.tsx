@@ -5,8 +5,9 @@ import path from 'path';
 import { getDb } from '@/shared/lib/db';
 import { cosmicPassports } from '@/shared/lib/schema';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
-import { getRarityTier } from '@/modules/astro-engine/rarity';
+import { getRarityTier } from '@/shared/lib/rarity';
 import { getTranslations } from 'next-intl/server';
+import { captureException } from '@sentry/nextjs';
 
 // nodejs runtime required: Neon HTTP driver uses Node.js net/tls APIs
 // not available in the Edge runtime.
@@ -144,8 +145,30 @@ export async function GET(
     });
   }
 
-  // T2: Translate rarity tier — locale always 'en' until T4 reads passport.locale.
-  const tTier = await getTranslations({ locale: 'en', namespace: 'astro.rarityTier' });
+  // -------------------------------------------------------------------------
+  // T4: Resolve locale from DB row + load translations
+  // -------------------------------------------------------------------------
+  const rawLocale = passport.locale;
+  const safeLocale: 'en' | 'es' = rawLocale === 'es' ? 'es' : 'en';
+  if (rawLocale !== 'en' && rawLocale !== 'es') {
+    captureException(new Error(`og_locale_invalid: ${rawLocale}`));
+  }
+
+  let t: Awaited<ReturnType<typeof getTranslations>>;
+  let tTier: Awaited<ReturnType<typeof getTranslations>>;
+  try {
+    [t, tTier] = await Promise.all([
+      getTranslations({ locale: safeLocale, namespace: 'share.passport.og' }),
+      getTranslations({ locale: safeLocale, namespace: 'astro.rarityTier' }),
+    ]);
+  } catch (err) {
+    // Fallback to EN: better an EN preview than a 500 in the viral path.
+    captureException(new Error(`og_i18n_load_failed: ${String(err)}`));
+    [t, tTier] = await Promise.all([
+      getTranslations({ locale: 'en', namespace: 'share.passport.og' }),
+      getTranslations({ locale: 'en', namespace: 'astro.rarityTier' }),
+    ]);
+  }
 
   // -------------------------------------------------------------------------
   // Font load
@@ -246,7 +269,7 @@ export async function GET(
           color: 'rgba(167,139,250,0.60)', display: 'flex',
           textTransform: 'uppercase',
         }}>
-          RARITY
+          {t('rarityLabel')}
         </div>
         <div style={{
           fontSize: `${tierPx}px`, fontWeight: 700,
@@ -316,7 +339,7 @@ export async function GET(
         borderRadius: '32px', padding: pad,
       }}>
         <span style={{ fontSize: `${iconPx}px`, color: rulingColor, display: 'flex' }}>{rulingSymbol}</span>
-        <span style={{ fontSize: `${px}px`, color: 'rgba(255,255,255,0.45)', display: 'flex' }}>Ruled by</span>
+        <span style={{ fontSize: `${px}px`, color: 'rgba(255,255,255,0.45)', display: 'flex' }}>{t('ruledBy')}</span>
         <span style={{ fontSize: `${px}px`, color: '#FFFFFF', fontWeight: 600, display: 'flex' }}>{rulingName}</span>
       </div>
     </div>
@@ -373,14 +396,14 @@ export async function GET(
             color: 'rgba(255,255,255,0.32)', display: 'flex',
             textTransform: 'uppercase',
           }}>
-            Sidereal Astrology
+            {t('eyebrow')}
           </div>
           <div style={{
             fontSize: '62px', fontWeight: 700, color: '#FFFFFF',
             letterSpacing: '6px', display: 'flex',
             textTransform: 'uppercase',
           }}>
-            COSMIC BLUEPRINT
+            {t('title')}
           </div>
           <div style={{
             width: '200px', height: '1px',
@@ -398,20 +421,20 @@ export async function GET(
           }}
         >
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <SignCol label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign}
+            <SignCol label={t('label.sun')} glyph={sunGlyph} signName={passport.sunSign}
               color={LUMINARY_COLOR.sun} glyphPx={68} labelPx={16} namePx={22} />
           </div>
           <VDivider h={110} />
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <SignCol label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign}
+            <SignCol label={t('label.moon')} glyph={moonGlyph} signName={passport.moonSign}
               color={LUMINARY_COLOR.moon} glyphPx={68} labelPx={16} namePx={22} />
           </div>
           <VDivider h={110} />
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <SignCol
-              label="↑ RISING"
+              label={t('label.rising')}
               glyph={ascGlyph ?? '–'}
-              signName={passport.ascendantSign ?? 'Unknown'}
+              signName={passport.ascendantSign ?? t('unknown')}
               color={ascGlyph ? LUMINARY_COLOR.asc : 'rgba(255,255,255,0.18)'}
               glyphPx={68} labelPx={16} namePx={22}
             />
@@ -464,21 +487,21 @@ export async function GET(
             color: 'rgba(255,255,255,0.32)', display: 'flex',
             textTransform: 'uppercase',
           }}>
-            Sidereal Astrology
+            {t('eyebrow')}
           </div>
           <div style={{
             fontSize: '72px', fontWeight: 700, color: '#FFFFFF',
             letterSpacing: '5px', display: 'flex',
             textTransform: 'uppercase',
           }}>
-            COSMIC
+            {t('titleLine1')}
           </div>
           <div style={{
             fontSize: '72px', fontWeight: 700, color: '#FFFFFF',
             letterSpacing: '5px', display: 'flex',
             textTransform: 'uppercase',
           }}>
-            BLUEPRINT
+            {t('titleLine2')}
           </div>
           <div style={{
             width: '180px', height: '1px',
@@ -496,20 +519,20 @@ export async function GET(
           }}
         >
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <SignCol label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign}
+            <SignCol label={t('label.sun')} glyph={sunGlyph} signName={passport.sunSign}
               color={LUMINARY_COLOR.sun} glyphPx={96} labelPx={22} namePx={30} />
           </div>
           <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <SignCol label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign}
+            <SignCol label={t('label.moon')} glyph={moonGlyph} signName={passport.moonSign}
               color={LUMINARY_COLOR.moon} glyphPx={96} labelPx={22} namePx={30} />
           </div>
           <div style={{ width: '120px', height: '1px', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <SignCol
-              label="↑ RISING"
+              label={t('label.rising')}
               glyph={ascGlyph ?? '–'}
-              signName={passport.ascendantSign ?? 'Unknown'}
+              signName={passport.ascendantSign ?? t('unknown')}
               color={ascGlyph ? LUMINARY_COLOR.asc : 'rgba(255,255,255,0.18)'}
               glyphPx={96} labelPx={22} namePx={30}
             />
@@ -554,26 +577,26 @@ export async function GET(
         {/* Heading */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 1 }}>
           <div style={{ fontSize: '12px', letterSpacing: '4px', color: 'rgba(255,255,255,0.32)', display: 'flex', textTransform: 'uppercase' }}>
-            Sidereal Astrology
+            {t('eyebrow')}
           </div>
           <div style={{ fontSize: '38px', fontWeight: 700, color: '#FFFFFF', letterSpacing: '5px', display: 'flex', textTransform: 'uppercase' }}>
-            COSMIC BLUEPRINT
+            {t('title')}
           </div>
           <div style={{ width: '140px', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)', display: 'flex' }} />
         </div>
 
         {/* Signs vertical stack */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', zIndex: 1 }}>
-          <SignCol label="☉ SUN" glyph={sunGlyph} signName={passport.sunSign}
+          <SignCol label={t('label.sun')} glyph={sunGlyph} signName={passport.sunSign}
             color={LUMINARY_COLOR.sun} glyphPx={80} labelPx={20} namePx={26} />
           <div style={{ width: '100px', height: '1px', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
-          <SignCol label="☽ MOON" glyph={moonGlyph} signName={passport.moonSign}
+          <SignCol label={t('label.moon')} glyph={moonGlyph} signName={passport.moonSign}
             color={LUMINARY_COLOR.moon} glyphPx={80} labelPx={20} namePx={26} />
           <div style={{ width: '100px', height: '1px', background: 'rgba(255,255,255,0.10)', display: 'flex' }} />
           <SignCol
-            label="↑ RISING"
+            label={t('label.rising')}
             glyph={ascGlyph ?? '–'}
-            signName={passport.ascendantSign ?? 'Unknown'}
+            signName={passport.ascendantSign ?? t('unknown')}
             color={ascGlyph ? LUMINARY_COLOR.asc : 'rgba(255,255,255,0.18)'}
             glyphPx={80} labelPx={20} namePx={26}
           />
