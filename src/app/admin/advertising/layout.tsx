@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: '/admin/advertising/decisions', label: 'Decisions' },
   { href: '/admin/advertising/gates', label: 'Gates' },
   { href: '/admin/advertising/spend', label: 'Spend' },
+  { href: '/admin/advertising/recon-state', label: 'Reconciler' },
 ];
 
 export default async function AdvertisingAdminLayout({
