@@ -13,8 +13,9 @@
 import sharp from 'sharp';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SOURCE = path.join(ROOT, 'public/icons/icon.svg');
 const OUT_DIR = path.join(ROOT, 'public/icons');
 const BG = '#0A0A0F'; // matches public/manifest.json background_color
