@@ -3,6 +3,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { routing } from '@/i18n/routing';
+import { UtmCapture } from '@/shared/components/UtmCapture';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -81,6 +82,7 @@ fbq('track', 'PageView');`}
           </noscript>
         </>
       ) : null}
+      <UtmCapture />
       {children}
     </NextIntlClientProvider>
   );
