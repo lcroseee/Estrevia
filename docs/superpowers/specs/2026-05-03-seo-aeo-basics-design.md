@@ -1,8 +1,27 @@
 # Cluster B — SEO/AEO Basics Design
 
-**Status:** Approved (compressed brainstorm — direct execution per founder request 2026-05-03)
+**Status:** Implemented (Cluster B complete on `main`)
 **Date:** 2026-05-03
 **Source:** May-3 audit, Cluster B (items #1-3; #4 author attribution dropped per founder direction)
+
+**Commits on main:**
+- `a333dc8` feat(seo-aeo/T1): /public/llms.txt for AI crawler citation policy
+- `e7179e8` fix(seo-aeo/T1): correct essay counts + remove broken GitHub link
+- `deb346d` feat(seo-aeo/T2): Atom 1.0 feeds for EN+ES essays + head links
+- `83a2951` feat(seo-aeo/T3): OpenAPI 3.1 spec at /api/v1/docs + robots.txt allow
+
+**Test coverage:** 64 tests passing (17 atom + 6 EN feed route + 4 ES feed route + 8 OpenAPI + 29 metadata regression).
+
+**Architectural note (post-merge):** T2 chose to extend `createMetadata()` in `src/shared/seo/metadata.ts` rather than modify `src/app/[locale]/layout.tsx`. Reason: Next.js shallow-merges `alternates` by subfield, so per-page `alternates.canonical`/`languages` would clobber a layout-level `alternates.types`. Centralizing in `createMetadata()` ensures every page gets the correct feed link automatically. Within the plan's allowed range; documented in the T2 commit message.
+
+**Deferred non-blocking items (from quality reviews):**
+- T2: `toIsoString` TZ safety for non-10-char inputs (currently safe — frontmatter uses `YYYY-MM-DD`)
+- T2: positive test for `alternates.types['application/atom+xml']` set per-locale
+- T2: `FEED_META[locale as 'es'] ?? FEED_META.es` fallback is dead code (only `'es'` reaches that line)
+- T3: declare `Astrology` tag at root (currently used per-operation only)
+- T3: tighten `/api/v1/sidereal/` allow to `/api/v1/sidereal/sun-sign` when more siblings appear
+
+These are nice-to-haves; not blocking deploy.
 
 ## Goal
 
