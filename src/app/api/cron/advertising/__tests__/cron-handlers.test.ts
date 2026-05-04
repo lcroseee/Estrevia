@@ -279,6 +279,41 @@ vi.mock('@/modules/advertising/audiences/refresh-cycle', () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Mock senior-buyer modules called from triage-daily extension (T24)
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/senior-buyer/metric-history', () => ({
+  writeDailySnapshot: vi.fn().mockResolvedValue(undefined),
+  getRange: vi.fn().mockResolvedValue([]),
+  pruneOldSnapshots: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/modules/advertising/senior-buyer/state-store', () => ({
+  listAdSetsByPhase: vi.fn().mockResolvedValue([]),
+  upsertAdSetState: vi.fn().mockResolvedValue(undefined),
+  recordPhaseTransition: vi.fn().mockResolvedValue(undefined),
+  recordMaturityTransition: vi.fn().mockResolvedValue(undefined),
+  getAdSetState: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock('@/modules/advertising/senior-buyer/auto-calibrator', () => ({
+  runDriftTriggeredCalibration: vi.fn().mockResolvedValue(undefined),
+  runWeeklyCalibration: vi.fn().mockResolvedValue({
+    ad_sets_processed: 0,
+    thresholds_updated: 0,
+    approvals_requested: 0,
+    errors: 0,
+  }),
+}));
+
+vi.mock('@/modules/advertising/senior-buyer/data-maturity-classifier', () => ({
+  classifyMaturity: vi.fn().mockReturnValue('COLD_START'),
+}));
+
+vi.mock('@/modules/advertising/senior-buyer/threshold-resolver', () => ({
+  resolveThreshold: vi.fn().mockResolvedValue(50),
+}));
+
+// ---------------------------------------------------------------------------
 // Import route handlers (after mocks are established)
 // ---------------------------------------------------------------------------
 import { GET as triageHourlyGET } from '../triage-hourly/route';
@@ -907,3 +942,214 @@ describe('triage-daily — reconciler auto-resume', () => {
     expect(body.success).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tests: triage-daily — senior-buyer daily extension (T24)
+// ---------------------------------------------------------------------------
+//
+// Pin the contract that triage-daily writes a per-ad-set daily snapshot,
+// invokes drift-triggered calibration on every live ad set, and fires
+// maturity / Phase B→C transitions when classifier output diverges or
+// the conversions threshold is crossed.
+// ---------------------------------------------------------------------------
+
+describe('triage-daily — senior-buyer extension', () => {
+  it('writes one snapshot per ad set and surfaces counters in summary', async () => {
+    const metricHistory = await import('@/modules/advertising/senior-buyer/metric-history');
+    const writeDailySnapshotMock = vi.mocked(metricHistory.writeDailySnapshot);
+    writeDailySnapshotMock.mockClear();
+
+    // Two AdMetric rows under the SAME adset_id collapse into one snapshot.
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([
+      {
+        ad_id: 'ad_aa', adset_id: 'adset_alpha', campaign_id: 'camp_1',
+        date: '2026-05-02', impressions: 1000, clicks: 20, spend_usd: 5.0,
+        ctr: 0.02, cpc: 0.25, cpm: 5.0, frequency: 1.2, reach: 900,
+        days_running: 5, status: 'ACTIVE',
+      },
+      {
+        ad_id: 'ad_ab', adset_id: 'adset_alpha', campaign_id: 'camp_1',
+        date: '2026-05-02', impressions: 500, clicks: 10, spend_usd: 2.5,
+        ctr: 0.02, cpc: 0.25, cpm: 5.0, frequency: 1.4, reach: 450,
+        days_running: 5, status: 'ACTIVE',
+      },
+      {
+        ad_id: 'ad_b', adset_id: 'adset_beta', campaign_id: 'camp_2',
+        date: '2026-05-02', impressions: 800, clicks: 12, spend_usd: 3.0,
+        ctr: 0.015, cpc: 0.25, cpm: 3.75, frequency: 1.1, reach: 750,
+        days_running: 7, status: 'ACTIVE',
+      },
+    ]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as {
+      success: boolean;
+      summary: { senior_buyer: { snapshots_written: number } };
+    };
+    expect(body.success).toBe(true);
+    // One write per unique adset_id (alpha + beta) — ads collapsed.
+    expect(writeDailySnapshotMock).toHaveBeenCalledTimes(2);
+    expect(body.summary.senior_buyer.snapshots_written).toBe(2);
+
+    // The aggregated alpha snapshot should sum both ad rows.
+    const alphaCall = writeDailySnapshotMock.mock.calls.find(
+      (c) => c[0].adSetId === 'adset_alpha',
+    );
+    expect(alphaCall).toBeDefined();
+    expect(alphaCall![0].impressions).toBe(1500);
+    expect(alphaCall![0].clicks).toBe(30);
+    expect(alphaCall![0].spendUsd).toBe(7.5);
+  });
+
+  it('runs drift-triggered calibration for every live ad set in B/C/D', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const calibrator = await import('@/modules/advertising/senior-buyer/auto-calibrator');
+    const liveAdSets = [
+      buildAdSetState({ adSetId: 'as_phase_b', currentPhase: 'B', campaignId: 'c1' }),
+      buildAdSetState({ adSetId: 'as_phase_c', currentPhase: 'C', campaignId: 'c2' }),
+    ];
+    vi.mocked(stateStore.listAdSetsByPhase).mockResolvedValueOnce(liveAdSets);
+    const driftMock = vi.mocked(calibrator.runDriftTriggeredCalibration);
+    driftMock.mockClear();
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(driftMock).toHaveBeenCalledTimes(2);
+    expect(driftMock).toHaveBeenCalledWith('as_phase_b', 'c1');
+    expect(driftMock).toHaveBeenCalledWith('as_phase_c', 'c2');
+
+    const body = (await res.json()) as {
+      summary: { senior_buyer: { drift_calibrations_run: number } };
+    };
+    expect(body.summary.senior_buyer.drift_calibrations_run).toBe(2);
+  });
+
+  it('fires Phase B→C transition when conversions cross resolved threshold', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const resolver = await import('@/modules/advertising/senior-buyer/threshold-resolver');
+    const classifier = await import('@/modules/advertising/senior-buyer/data-maturity-classifier');
+
+    // Two ad sets in Phase B: one above threshold (transitions), one below.
+    vi.mocked(stateStore.listAdSetsByPhase).mockResolvedValueOnce([
+      buildAdSetState({
+        adSetId: 'as_promote', currentPhase: 'B', conversions7dMeta: 60,
+        dataMaturityMode: 'COLD_START',
+      }),
+      buildAdSetState({
+        adSetId: 'as_hold', currentPhase: 'B', conversions7dMeta: 10,
+        dataMaturityMode: 'COLD_START',
+      }),
+    ]);
+    vi.mocked(resolver.resolveThreshold).mockResolvedValue(50);
+    // Maturity stable for both so we isolate the phase transition.
+    vi.mocked(classifier.classifyMaturity).mockReturnValue('COLD_START');
+
+    const recordPhaseTransitionMock = vi.mocked(stateStore.recordPhaseTransition);
+    const upsertAdSetStateMock = vi.mocked(stateStore.upsertAdSetState);
+    recordPhaseTransitionMock.mockClear();
+    upsertAdSetStateMock.mockClear();
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(recordPhaseTransitionMock).toHaveBeenCalledTimes(1);
+    expect(recordPhaseTransitionMock).toHaveBeenCalledWith(
+      'as_promote',
+      'B',
+      'C',
+      expect.stringMatching(/^meta_default_50/),
+      expect.objectContaining({ conversions_7d_meta: 60 }),
+    );
+    // upsertAdSetState was called for the promote ad set with phase=C.
+    expect(
+      upsertAdSetStateMock.mock.calls.some(
+        (c) => c[0].adSetId === 'as_promote' && c[0].currentPhase === 'C',
+      ),
+    ).toBe(true);
+
+    const body = (await res.json()) as {
+      summary: { senior_buyer: { phase_transitions: number } };
+    };
+    expect(body.summary.senior_buyer.phase_transitions).toBe(1);
+  });
+
+  it('fires maturity transition when classifyMaturity returns a new mode', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const classifier = await import('@/modules/advertising/senior-buyer/data-maturity-classifier');
+
+    vi.mocked(stateStore.listAdSetsByPhase).mockResolvedValueOnce([
+      buildAdSetState({
+        adSetId: 'as_grow', currentPhase: 'C',
+        dataMaturityMode: 'COLD_START',
+        conversionsTotalMeta: 200, daysWithPixelData: 30,
+      }),
+    ]);
+    vi.mocked(classifier.classifyMaturity).mockReturnValueOnce('CALIBRATING');
+
+    const recordMaturityTransitionMock = vi.mocked(stateStore.recordMaturityTransition);
+    recordMaturityTransitionMock.mockClear();
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(recordMaturityTransitionMock).toHaveBeenCalledTimes(1);
+    expect(recordMaturityTransitionMock).toHaveBeenCalledWith(
+      'as_grow',
+      'COLD_START',
+      'CALIBRATING',
+      'auto_classify_CALIBRATING',
+      expect.objectContaining({
+        conversions_total_meta: 200,
+        days_with_pixel_data: 30,
+      }),
+    );
+
+    const body = (await res.json()) as {
+      summary: { senior_buyer: { maturity_transitions: number } };
+    };
+    expect(body.summary.senior_buyer.maturity_transitions).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Test fixture for AdSetState used by senior-buyer extension tests.
+// Keeps each test focused by defaulting every field to a sane value.
+// ---------------------------------------------------------------------------
+type AdSetStateFixture = Awaited<
+  ReturnType<typeof import('@/modules/advertising/senior-buyer/state-store').listAdSetsByPhase>
+>[number];
+
+function buildAdSetState(overrides: Partial<AdSetStateFixture> & { adSetId: string }): AdSetStateFixture {
+  const base = {
+    adSetId: overrides.adSetId,
+    campaignId: 'camp_default',
+    locale: 'en',
+    currentPhase: 'B',
+    phaseEnteredAt: new Date('2026-04-01T00:00:00Z'),
+    dataMaturityMode: 'COLD_START',
+    maturityEnteredAt: new Date('2026-04-01T00:00:00Z'),
+    optimizationEvent: 'landing_page_view',
+    conversions7dMeta: 0,
+    conversions14dMeta: 0,
+    conversionsTotalMeta: 0,
+    daysWithPixelData: 0,
+    conversions7dPosthog: 0,
+    roas7d: null,
+    cpa7d: null,
+    frequencyCurrent: null,
+    parentAdSetId: null,
+    duplicatesCount: 0,
+    lastActionTakenAt: null,
+    flaggedForReview: false,
+    flagReason: null,
+    updatedAt: new Date('2026-05-01T00:00:00Z'),
+  };
+  return { ...base, ...overrides } as unknown as AdSetStateFixture;
+}

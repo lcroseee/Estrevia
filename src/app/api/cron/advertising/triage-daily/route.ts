@@ -24,6 +24,16 @@ import { decideBayesian } from '@/modules/advertising/decide/tier-2-bayesian';
 import { pause } from '@/modules/advertising/act/pause';
 import { scale } from '@/modules/advertising/act/scale';
 import { duplicate } from '@/modules/advertising/act/duplicate';
+import { writeDailySnapshot } from '@/modules/advertising/senior-buyer/metric-history';
+import {
+  listAdSetsByPhase,
+  upsertAdSetState,
+  recordPhaseTransition,
+  recordMaturityTransition,
+} from '@/modules/advertising/senior-buyer/state-store';
+import { classifyMaturity } from '@/modules/advertising/senior-buyer/data-maturity-classifier';
+import { runDriftTriggeredCalibration } from '@/modules/advertising/senior-buyer/auto-calibrator';
+import { resolveThreshold } from '@/modules/advertising/senior-buyer/threshold-resolver';
 import { getMetaAdClient } from '@/modules/advertising/act';
 import { createMetaAdClient } from '@/modules/advertising/meta-graph-api';
 import { createPosthogFunnelClient } from '@/modules/advertising/posthog/funnel-client';
@@ -36,7 +46,7 @@ import type { StripeAttributionApi } from '@/modules/advertising/perceive/stripe
 import type { MetaAdClient } from '@/modules/advertising/act/meta-marketing';
 import type { AlertSender, SpendCapDb } from '@/modules/advertising/safety/spend-cap';
 import type { DecisionLogDb } from '@/modules/advertising/audit/decision-log';
-import type { DecisionRecord } from '@/shared/types/advertising';
+import type { AdMetric, DecisionRecord } from '@/shared/types/advertising';
 
 export const dynamic = 'force-dynamic';
 
@@ -125,6 +135,14 @@ export async function GET(request: Request) {
         windowEnd: now,
       }),
     ]);
+
+    // --- Step 1b: Persist daily snapshots + drift-triggered calibration +
+    //              phase / maturity transitions (senior-buyer mode).
+    //
+    // Failures here are non-fatal: we still want decide()/act()/digest to
+    // run even if the new senior-buyer plumbing isn't ready (e.g. no
+    // ad_set_state rows seeded yet during early rollout).
+    const seniorBuyerSummary = await runSeniorBuyerDailyExtension(metrics, todayStr);
 
     // --- Step 2: Reconcile sources (alerts on critical drift) ---
     const reconciliation = await reconcile(metrics, funnelSnapshot, {
@@ -255,6 +273,7 @@ export async function GET(request: Request) {
       scales: scaleCount,
       duplicates: duplicateCount,
       audit_records_written: records.length,
+      senior_buyer: seniorBuyerSummary,
     };
 
     console.info('[cron/advertising/triage-daily] completed', summary);
@@ -322,4 +341,251 @@ function buildDecisionDb(): DecisionLogDb {
 function buildSpendCapDb(): SpendCapDb {
   // Real Drizzle client. Same structural-cast rationale as buildDecisionDb.
   return getDb() as unknown as SpendCapDb;
+}
+
+// ---------------------------------------------------------------------------
+// Senior-buyer daily extension (T24)
+// ---------------------------------------------------------------------------
+
+interface SeniorBuyerDailySummary {
+  snapshots_written: number;
+  drift_calibrations_run: number;
+  maturity_transitions: number;
+  phase_transitions: number;
+  errors: number;
+}
+
+/**
+ * Wraps the senior-buyer daily plumbing in a single helper so the route's
+ * happy-path stays readable. Any failure inside is non-fatal — the rest of
+ * decide() / act() / digest still runs even if the new tables aren't
+ * populated yet (e.g. early rollout before any ad_set_state rows exist).
+ */
+async function runSeniorBuyerDailyExtension(
+  metrics: AdMetric[],
+  todayStr: string,
+): Promise<SeniorBuyerDailySummary> {
+  const summary: SeniorBuyerDailySummary = {
+    snapshots_written: 0,
+    drift_calibrations_run: 0,
+    maturity_transitions: 0,
+    phase_transitions: 0,
+    errors: 0,
+  };
+
+  // 1. Daily snapshot per (adset_id, today). Aggregate sibling ads under the
+  //    same ad set so multiple AdMetric rows collapse into one history row
+  //    rather than racing through onConflictDoUpdate.
+  const aggregated = aggregateMetricsByAdSet(metrics);
+  for (const snap of aggregated.values()) {
+    try {
+      await writeDailySnapshot({
+        adSetId: snap.adSetId,
+        date: todayStr,
+        impressions: snap.impressions,
+        clicks: snap.clicks,
+        spendUsd: snap.spendUsd,
+        ctr: snap.ctr,
+        cpc: snap.cpc,
+        cpm: snap.cpm,
+        frequency: snap.frequency,
+        // PostHog/Stripe joins land in a follow-up cron pass; for MVP we
+        // persist Meta-side metrics only and leave conversions/revenue at 0.
+        conversionsMeta: 0,
+        conversionsPosthog: 0,
+        revenueUsd: 0,
+        roas: null,
+      });
+      summary.snapshots_written += 1;
+    } catch (err) {
+      summary.errors += 1;
+      console.warn(
+        `[triage-daily][senior-buyer] writeDailySnapshot failed for ${snap.adSetId}:`,
+        err,
+      );
+      Sentry.captureException(err, {
+        tags: {
+          cron: true,
+          route: '/api/cron/advertising/triage-daily',
+          subsystem: 'senior-buyer/snapshot',
+        },
+        extra: { ad_set_id: snap.adSetId, date: todayStr },
+      });
+    }
+  }
+
+  // 2. Drift-triggered calibration check across all live ad sets.
+  let liveAdSets: Awaited<ReturnType<typeof listAdSetsByPhase>> = [];
+  try {
+    liveAdSets = await listAdSetsByPhase(['B', 'C', 'D']);
+  } catch (err) {
+    summary.errors += 1;
+    console.warn('[triage-daily][senior-buyer] listAdSetsByPhase failed:', err);
+    Sentry.captureException(err, {
+      tags: {
+        cron: true,
+        route: '/api/cron/advertising/triage-daily',
+        subsystem: 'senior-buyer/list',
+      },
+    });
+    return summary;
+  }
+
+  for (const adSet of liveAdSets) {
+    try {
+      await runDriftTriggeredCalibration(adSet.adSetId, adSet.campaignId);
+      summary.drift_calibrations_run += 1;
+    } catch (err) {
+      summary.errors += 1;
+      console.warn(
+        `[triage-daily][senior-buyer] drift calibration failed for ${adSet.adSetId}:`,
+        err,
+      );
+      Sentry.captureException(err, {
+        tags: {
+          cron: true,
+          route: '/api/cron/advertising/triage-daily',
+          subsystem: 'senior-buyer/drift',
+        },
+        extra: { ad_set_id: adSet.adSetId },
+      });
+    }
+  }
+
+  // 3. Phase + maturity transition checks (Phase B → C, COLD_START →
+  //    CALIBRATING → AUTONOMOUS, etc.). Threshold values resolve per ad
+  //    set so DB overrides win over code defaults.
+  for (const adSet of liveAdSets) {
+    try {
+      // Maturity reclassification — baseline_cv hidden in COLD_START
+      // (insufficient sample), default to 0; auto-calibrator owns the
+      // cv-aware reclassification once it has a real baseline.
+      const newMaturity = classifyMaturity({
+        conversions_total_meta: adSet.conversionsTotalMeta,
+        days_with_pixel_data: adSet.daysWithPixelData,
+        baseline_cv: 0,
+      });
+      if (newMaturity !== adSet.dataMaturityMode) {
+        await recordMaturityTransition(
+          adSet.adSetId,
+          adSet.dataMaturityMode as 'COLD_START' | 'CALIBRATING' | 'AUTONOMOUS',
+          newMaturity,
+          `auto_classify_${newMaturity}`,
+          {
+            conversions_total_meta: adSet.conversionsTotalMeta,
+            days_with_pixel_data: adSet.daysWithPixelData,
+          },
+        );
+        await upsertAdSetState({
+          adSetId: adSet.adSetId,
+          campaignId: adSet.campaignId,
+          locale: adSet.locale,
+          dataMaturityMode: newMaturity,
+        });
+        summary.maturity_transitions += 1;
+      }
+
+      // Phase B → C transition (spec Q5): per-ad-set threshold so founder
+      // overrides win over the 50/7d default.
+      if (adSet.currentPhase === 'B') {
+        const phaseBToCThreshold = await resolveThreshold(
+          'phase_b_to_c_conv_meta_7d',
+          { ad_set_id: adSet.adSetId, campaign_id: adSet.campaignId },
+        );
+        if (adSet.conversions7dMeta >= phaseBToCThreshold) {
+          await recordPhaseTransition(
+            adSet.adSetId,
+            'B',
+            'C',
+            `meta_default_${phaseBToCThreshold}/7d`,
+            { conversions_7d_meta: adSet.conversions7dMeta },
+          );
+          await upsertAdSetState({
+            adSetId: adSet.adSetId,
+            campaignId: adSet.campaignId,
+            locale: adSet.locale,
+            currentPhase: 'C',
+          });
+          summary.phase_transitions += 1;
+        }
+      }
+    } catch (err) {
+      summary.errors += 1;
+      console.warn(
+        `[triage-daily][senior-buyer] transition check failed for ${adSet.adSetId}:`,
+        err,
+      );
+      Sentry.captureException(err, {
+        tags: {
+          cron: true,
+          route: '/api/cron/advertising/triage-daily',
+          subsystem: 'senior-buyer/transitions',
+        },
+        extra: { ad_set_id: adSet.adSetId },
+      });
+    }
+  }
+
+  return summary;
+}
+
+interface AggregatedAdSetSnapshot {
+  adSetId: string;
+  impressions: number;
+  clicks: number;
+  spendUsd: number;
+  ctr: number;
+  cpc: number;
+  cpm: number;
+  frequency: number;
+}
+
+/**
+ * Collapses ad-level Meta Insights rows into one snapshot per ad set.
+ * Sums impressions/clicks/spend, recomputes ratios from those sums so
+ * CTR/CPC/CPM stay arithmetically consistent. Frequency is impression-
+ * weighted across sibling ads.
+ */
+function aggregateMetricsByAdSet(metrics: AdMetric[]): Map<string, AggregatedAdSetSnapshot> {
+  type Acc = AggregatedAdSetSnapshot & { _freqWeightSum: number; _freqAcc: number };
+  const acc = new Map<string, Acc>();
+  for (const m of metrics) {
+    if (!m.adset_id) continue;
+    const existing = acc.get(m.adset_id);
+    if (existing) {
+      existing.impressions += m.impressions;
+      existing.clicks += m.clicks;
+      existing.spendUsd += m.spend_usd;
+      existing._freqAcc += m.frequency * m.impressions;
+      existing._freqWeightSum += m.impressions;
+    } else {
+      acc.set(m.adset_id, {
+        adSetId: m.adset_id,
+        impressions: m.impressions,
+        clicks: m.clicks,
+        spendUsd: m.spend_usd,
+        ctr: 0,
+        cpc: 0,
+        cpm: 0,
+        frequency: 0,
+        _freqAcc: m.frequency * m.impressions,
+        _freqWeightSum: m.impressions,
+      });
+    }
+  }
+
+  const out = new Map<string, AggregatedAdSetSnapshot>();
+  for (const [id, s] of acc) {
+    out.set(id, {
+      adSetId: s.adSetId,
+      impressions: s.impressions,
+      clicks: s.clicks,
+      spendUsd: s.spendUsd,
+      ctr: s.impressions > 0 ? s.clicks / s.impressions : 0,
+      cpc: s.clicks > 0 ? s.spendUsd / s.clicks : 0,
+      cpm: s.impressions > 0 ? (s.spendUsd / s.impressions) * 1000 : 0,
+      frequency: s._freqWeightSum > 0 ? s._freqAcc / s._freqWeightSum : 0,
+    });
+  }
+  return out;
 }
