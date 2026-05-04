@@ -289,6 +289,7 @@ vi.mock('@/modules/advertising/senior-buyer/metric-history', () => ({
 
 vi.mock('@/modules/advertising/senior-buyer/state-store', () => ({
   listAdSetsByPhase: vi.fn().mockResolvedValue([]),
+  listAdSetsByIds: vi.fn().mockResolvedValue([]),
   upsertAdSetState: vi.fn().mockResolvedValue(undefined),
   recordPhaseTransition: vi.fn().mockResolvedValue(undefined),
   recordMaturityTransition: vi.fn().mockResolvedValue(undefined),
@@ -1115,6 +1116,117 @@ describe('triage-daily — senior-buyer extension', () => {
       summary: { senior_buyer: { maturity_transitions: number } };
     };
     expect(body.summary.senior_buyer.maturity_transitions).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: triage-daily — auto-bootstrap of new ad sets (T5)
+// ---------------------------------------------------------------------------
+//
+// Pin the contract that any adset_id appearing in metrics but missing from
+// advertising_ad_set_state gets a Phase A / COLD_START row created before
+// the daily snapshot loop runs. This keeps Phase D-spawned ad sets from
+// stalling at the orchestrator's `state_not_initialised` gate.
+// ---------------------------------------------------------------------------
+
+describe('triage-daily — auto-bootstrap', () => {
+  it('seeds Phase A / COLD_START state for adset_ids missing from state-store', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const upsertAdSetStateMock = vi.mocked(stateStore.upsertAdSetState);
+    const listAdSetsByIdsMock = vi.mocked(stateStore.listAdSetsByIds);
+    upsertAdSetStateMock.mockClear();
+    listAdSetsByIdsMock.mockClear();
+    listAdSetsByIdsMock.mockResolvedValueOnce([]);
+
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([
+      {
+        ad_id: 'ad_new_1', adset_id: 'adset_new', campaign_id: 'camp_phase_d',
+        date: '2026-05-02', impressions: 200, clicks: 4, spend_usd: 1.0,
+        ctr: 0.02, cpc: 0.25, cpm: 5.0, frequency: 1.0, reach: 200,
+        days_running: 1, status: 'ACTIVE',
+      },
+    ]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(upsertAdSetStateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        adSetId: 'adset_new',
+        campaignId: 'camp_phase_d',
+        currentPhase: 'A',
+        dataMaturityMode: 'COLD_START',
+      }),
+    );
+
+    const body = (await res.json()) as {
+      summary: { senior_buyer: { bootstraps_created: number } };
+    };
+    expect(body.summary.senior_buyer.bootstraps_created).toBe(1);
+  });
+
+  it('skips bootstrap for adset_ids already present in state-store', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const upsertAdSetStateMock = vi.mocked(stateStore.upsertAdSetState);
+    const listAdSetsByIdsMock = vi.mocked(stateStore.listAdSetsByIds);
+    upsertAdSetStateMock.mockClear();
+    listAdSetsByIdsMock.mockClear();
+    listAdSetsByIdsMock.mockResolvedValueOnce([
+      buildAdSetState({ adSetId: 'adset_known', currentPhase: 'B' }),
+    ]);
+
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([
+      {
+        ad_id: 'ad_known', adset_id: 'adset_known', campaign_id: 'camp_known',
+        date: '2026-05-02', impressions: 1000, clicks: 20, spend_usd: 5.0,
+        ctr: 0.02, cpc: 0.25, cpm: 5.0, frequency: 1.2, reach: 900,
+        days_running: 5, status: 'ACTIVE',
+      },
+    ]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    // No bootstrap upsert for the already-known ad set. (Other unrelated
+    // upsertAdSetState calls — e.g. maturity reclassification — fire only
+    // when classifyMaturity diverges; default mock returns 'COLD_START',
+    // matching the fixture's mode so no transition fires.)
+    const bootstrapCalls = upsertAdSetStateMock.mock.calls.filter(
+      (c) => c[0].adSetId === 'adset_known' && c[0].currentPhase === 'A',
+    );
+    expect(bootstrapCalls.length).toBe(0);
+
+    const body = (await res.json()) as {
+      summary: { senior_buyer: { bootstraps_created: number } };
+    };
+    expect(body.summary.senior_buyer.bootstraps_created).toBe(0);
+  });
+
+  it('runs no bootstrap calls when metrics array is empty', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const upsertAdSetStateMock = vi.mocked(stateStore.upsertAdSetState);
+    const listAdSetsByIdsMock = vi.mocked(stateStore.listAdSetsByIds);
+    upsertAdSetStateMock.mockClear();
+    listAdSetsByIdsMock.mockClear();
+
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    expect(listAdSetsByIdsMock).not.toHaveBeenCalled();
+    expect(upsertAdSetStateMock).not.toHaveBeenCalled();
+
+    const body = (await res.json()) as {
+      success: boolean;
+      summary: { senior_buyer: { bootstraps_created: number; errors: number } };
+    };
+    expect(body.success).toBe(true);
+    expect(body.summary.senior_buyer.bootstraps_created).toBe(0);
+    expect(body.summary.senior_buyer.errors).toBe(0);
   });
 });
 
