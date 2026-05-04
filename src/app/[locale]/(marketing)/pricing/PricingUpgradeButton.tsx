@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { readUtmCookie } from '@/shared/lib/utm-cookie';
 
 /**
  * Client component — handles the checkout flow.
@@ -26,10 +27,11 @@ export function PricingUpgradeButton({
     trackEvent(AnalyticsEvent.PAYWALL_TRIAL_CLICKED, { plan, source: 'pricing' });
 
     try {
+      const utmFields = readUtmCookie();
       const res = await fetch('/api/v1/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, ...(utmFields ?? {}) }),
       });
 
       const contentType = res.headers.get('content-type') ?? '';

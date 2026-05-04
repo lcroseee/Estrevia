@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { postJson } from '@/shared/lib/apiFetch';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { readUtmCookie } from '@/shared/lib/utm-cookie';
 
 type Plan = 'pro_monthly' | 'pro_annual';
 
@@ -49,9 +50,10 @@ export function CheckoutStartClient() {
     trackEvent(AnalyticsEvent.CHECKOUT_AUTO_STARTED, { plan, returnUrl, attempt });
 
     (async () => {
+      const utmFields = readUtmCookie();
       const result = await postJson<CheckoutResponse>(
         '/api/v1/stripe/checkout',
-        { plan, returnUrl },
+        { plan, returnUrl, ...(utmFields ?? {}) },
       );
       if (cancelled) return;
 

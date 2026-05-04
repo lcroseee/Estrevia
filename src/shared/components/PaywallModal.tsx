@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { readUtmCookie } from '@/shared/lib/utm-cookie';
 
 interface PaywallModalProps {
   open: boolean;
@@ -90,10 +91,11 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
     trackEvent(AnalyticsEvent.PAYWALL_TRIAL_CLICKED, { plan, returnUrl: returnUrl ?? null });
 
     try {
+      const utmFields = readUtmCookie();
       const res = await fetch('/api/v1/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, returnUrl }),
+        body: JSON.stringify({ plan, returnUrl, ...(utmFields ?? {}) }),
       });
 
       // Detect auth failure before attempting JSON.parse.
