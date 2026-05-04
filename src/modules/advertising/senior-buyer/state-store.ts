@@ -144,7 +144,7 @@ export async function recordMaturityTransition(
   });
 }
 
-function stripUndefined<T extends Record<string, unknown>>(o: T): Partial<T> {
+function stripUndefined<T extends object>(o: T): Partial<T> {
   const out: Partial<T> = {};
   for (const k of Object.keys(o) as Array<keyof T>) {
     if (o[k] !== undefined) out[k] = o[k];
