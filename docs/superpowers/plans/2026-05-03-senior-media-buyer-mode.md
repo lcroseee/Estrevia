@@ -7,10 +7,10 @@
 > **Do NOT begin Wave 0 until v3a (Pre-flight Blockers) is fully shipped to production AND verified stable for ≥48 hours of clean cron runs.** Specifically:
 >
 > 1. v3a plan (`docs/superpowers/plans/2026-05-03-advertising-pre-flight-blockers.md`) is fully executed and deployed to `main`.
-> 2. `npm run advertising:verify-prod-state` reports 0 errors against current `.env.production`.
+> 2. `npm run advertising:verify-prod-state` reports 0 errors against current `.env.production`. **Note:** local `.env.production` file is masked by Vercel CLI for encrypted vars — verify against Vercel dashboard or by direct Meta API probe.
 > 3. The 4 advertising crons (triage-hourly, triage-daily, retro-weekly, audience-refresh) have run for 48h+ without new Sentry alerts in `subsystem: 'audiences' | 'creative-gen-safety' | 'reconciler'`.
 > 4. `audience-refresh` cron is producing non-zero `total_audiences` and zero `failed_audiences`.
-> 5. The two production ad sets show `frequency_control_specs={IMPRESSIONS, 7d, 10}` in Meta Ads Manager (Track 11 of v3a complete).
+> 5. ~~The two production ad sets show `frequency_control_specs={IMPRESSIONS, 7d, 10}` in Meta Ads Manager (Track 11 of v3a complete).~~ **DEFERRED-BY-DESIGN.** v3a Track 11 was rejected by Meta API (`code: 100, subcode: 1815198`): `frequency_control_specs` requires `optimization_goal=REACH/IMPRESSIONS`, but production ad sets optimize `LANDING_PAGE_VIEWS`. Per `docs/advertising/frequency-cap-gap-v3a.md`, this gate is satisfied opportunistically by v3b Q11 hybrid event switch — when per-ad-set `user_registered` reaches ≥50/week, v3b's data-maturity classifier graduates optimization to `Lead` (a deliberate spec-mandated reset moment), at which point frequency cap can be retrofit. Tier-1 aggregate `FREQUENCY_CAP=4.0` continues to bound runaway frequency in the meantime.
 >
 > v3a fixes critical infrastructure that this spec assumes is production-ready: real audience-refresh implementations, vision-based safety checks, hybrid attribution windows, reconciler global suspend, defensive `LEARNING_PHASE_DAYS=7`, and verified env state. v3b's Stage 0 (Pixel + CAPI) and senior-buyer logic will malfunction or produce unsafe decisions if any of these are still stubs.
 
