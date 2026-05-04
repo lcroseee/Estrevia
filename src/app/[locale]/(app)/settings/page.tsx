@@ -7,9 +7,12 @@
  */
 
 import type { Metadata } from 'next';
+import { eq } from 'drizzle-orm';
 import { createMetadata } from '@/shared/seo';
 import { getCurrentUser } from '@/modules/auth/lib/helpers';
 import { getSubscriptionDetails } from '@/modules/auth/lib/premium';
+import { getDb } from '@/shared/lib/db';
+import { users } from '@/shared/lib/schema';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { SettingsPortalButton } from './SettingsPortalButton';
@@ -35,7 +38,15 @@ export default async function SettingsPage() {
     redirect('/sign-in?redirect_url=/settings');
   }
 
-  const sub = await getSubscriptionDetails(user.userId);
+  const [sub, userPrefs] = await Promise.all([
+    getSubscriptionDetails(user.userId),
+    getDb()
+      .select({ marketingEmailOptIn: users.marketingEmailOptIn })
+      .from(users)
+      .where(eq(users.id, user.userId))
+      .limit(1)
+      .then((rows) => rows[0] ?? { marketingEmailOptIn: true }),
+  ]);
   const t = await getTranslations('settings');
 
   // Determine plan display name — use tier (not isPremium alone) so past_due
@@ -179,8 +190,8 @@ export default async function SettingsPage() {
           </div>
         </section>
 
-        {/* Language + Notifications — client components */}
-        <SettingsClientSections />
+        {/* Language + Email Preferences + Notifications — client components */}
+        <SettingsClientSections initialMarketingEmailOptIn={userPrefs.marketingEmailOptIn} />
 
         {/* Account section */}
         <section aria-labelledby="account-heading" className="mb-8">

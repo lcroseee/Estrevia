@@ -995,7 +995,12 @@
     "deleteAccount": "Delete Account",
     "deleteWarning": "This action cannot be undone. All your data will be permanently deleted.",
     "deleteConfirm": "Delete My Account",
-    "exportData": "Export Data"
+    "exportData": "Export Data",
+    "email": {
+      "title": "Email Preferences",
+      "marketingOptInLabel": "Receive marketing emails",
+      "marketingOptInDesc": "Re-engagement updates, new features, and cosmic insights. Unsubscribe any time."
+    }
   },
   "synastry": {
     "title": "Synastry",
@@ -1724,5 +1729,15 @@
       "rare": "Rare",
       "uncommon": "Uncommon"
     }
+  },
+  "unsubscribe": {
+    "missingToken": "No unsubscribe link found",
+    "missingTokenBody": "This link appears to be incomplete. Manage your email preferences in your account settings.",
+    "invalidToken": "Link expired or invalid",
+    "invalidTokenBody": "This unsubscribe link has expired or is invalid. Manage your email preferences in your account settings.",
+    "error": "Something went wrong",
+    "errorBody": "We could not process your request. Please try again or manage your preferences in settings.",
+    "success": "You've been unsubscribed",
+    "successBody": "You will no longer receive marketing emails from Estrevia. You can resubscribe at any time in your account settings."
   }
 }

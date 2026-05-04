@@ -33,9 +33,10 @@
  * Env requirement: STRIPE_SECRET_KEY must be set for DELETE flow to work.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { clerkClient } from '@clerk/nextjs/server';
+import { z } from 'zod';
 import { requireAuth } from '@/modules/auth/lib/helpers';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
@@ -332,6 +333,113 @@ export async function DELETE(): Promise<
       },
       error: null,
     },
+    { status: 200 },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/v1/user/account
+//
+// Returns user account preferences including marketingEmailOptIn.
+// ---------------------------------------------------------------------------
+
+interface AccountPrefsResponse {
+  marketingEmailOptIn: boolean;
+}
+
+export async function GET(): Promise<NextResponse<ApiResponse<AccountPrefsResponse>>> {
+  let userId: string;
+  try {
+    const user = await requireAuth();
+    userId = user.userId;
+  } catch (err) {
+    if (err instanceof Response) return err as never;
+    throw err;
+  }
+
+  const db = getDb();
+  const [row] = await db
+    .select({ marketingEmailOptIn: users.marketingEmailOptIn })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!row) {
+    return NextResponse.json(
+      { success: false, data: null, error: 'USER_NOT_FOUND' },
+      { status: 404 },
+    );
+  }
+
+  return NextResponse.json(
+    { success: true, data: { marketingEmailOptIn: row.marketingEmailOptIn }, error: null },
+    { status: 200 },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PUT /api/v1/user/account
+//
+// Updates user account preferences.
+// Accepts: { marketingEmailOptIn?: boolean }
+// ---------------------------------------------------------------------------
+
+const putAccountSchema = z.object({
+  marketingEmailOptIn: z.boolean().optional(),
+});
+
+interface AccountUpdateResponse {
+  updated: boolean;
+}
+
+export async function PUT(
+  request: NextRequest,
+): Promise<NextResponse<ApiResponse<AccountUpdateResponse>>> {
+  let userId: string;
+  try {
+    const user = await requireAuth();
+    userId = user.userId;
+  } catch (err) {
+    if (err instanceof Response) return err as never;
+    throw err;
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { success: false, data: null, error: 'INVALID_JSON' },
+      { status: 400 },
+    );
+  }
+
+  const parsed = putAccountSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, data: null, error: 'VALIDATION_ERROR' },
+      { status: 400 },
+    );
+  }
+
+  const { marketingEmailOptIn } = parsed.data;
+
+  // Nothing to update — all fields are optional; at least one must be present.
+  if (marketingEmailOptIn === undefined) {
+    return NextResponse.json(
+      { success: false, data: null, error: 'NO_FIELDS_TO_UPDATE' },
+      { status: 400 },
+    );
+  }
+
+  const db = getDb();
+  await db
+    .update(users)
+    .set({ ...(marketingEmailOptIn !== undefined && { marketingEmailOptIn }) })
+    .where(eq(users.id, userId));
+
+  return NextResponse.json(
+    { success: true, data: { updated: true }, error: null },
     { status: 200 },
   );
 }

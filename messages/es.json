@@ -995,7 +995,12 @@
     "deleteAccount": "Eliminar cuenta",
     "deleteWarning": "Esta acción no se puede deshacer. Todos tus datos serán eliminados permanentemente.",
     "deleteConfirm": "Eliminar mi cuenta",
-    "exportData": "Exportar datos"
+    "exportData": "Exportar datos",
+    "email": {
+      "title": "Preferencias de correo",
+      "marketingOptInLabel": "Recibir correos de marketing",
+      "marketingOptInDesc": "Actualizaciones de reactivación, nuevas funciones e ideas cósmicas. Cancela tu suscripción cuando quieras."
+    }
   },
   "synastry": {
     "title": "Sinastría",
@@ -1724,5 +1729,15 @@
       "rare": "Raro",
       "uncommon": "Poco común"
     }
+  },
+  "unsubscribe": {
+    "missingToken": "No se encontró el enlace para cancelar la suscripción",
+    "missingTokenBody": "Este enlace parece incompleto. Administra tus preferencias de correo en la configuración de tu cuenta.",
+    "invalidToken": "Enlace expirado o inválido",
+    "invalidTokenBody": "Este enlace para cancelar la suscripción ha expirado o no es válido. Administra tus preferencias de correo en la configuración de tu cuenta.",
+    "error": "Algo salió mal",
+    "errorBody": "No pudimos procesar tu solicitud. Inténtalo de nuevo o administra tus preferencias en la configuración.",
+    "success": "Se canceló tu suscripción",
+    "successBody": "Ya no recibirás correos de marketing de Estrevia. Puedes volver a suscribirte en cualquier momento desde la configuración de tu cuenta."
   }
 }
