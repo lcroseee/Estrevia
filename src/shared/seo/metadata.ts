@@ -143,6 +143,14 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
   const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
   const ogLocaleAlternate = locale === 'es' ? 'en_US' : 'es_ES';
 
+  // Per-locale Atom feed link surfaced in <head> via metadata.alternates.types.
+  // EN feed lives at root /feed.xml; ES feed at /es/feed.xml. Injecting here
+  // (rather than at layout level) ensures every page advertises the correct
+  // feed even when individual pages override `alternates` with their own
+  // canonical/languages — Next.js shallow-merges alternates by subfield.
+  const baseUrl = SITE_URL.replace(/\/$/, '');
+  const feedUrl = locale === 'es' ? `${baseUrl}/es/feed.xml` : `${baseUrl}/feed.xml`;
+
   const metadata: Metadata = {
     title: pageTitle,
     description: pageDescription,
@@ -150,6 +158,9 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
     alternates: {
       canonical: canonicalUrl,
       languages: hreflangLanguages,
+      types: {
+        'application/atom+xml': feedUrl,
+      },
     },
     openGraph: {
       title: pageTitle,
