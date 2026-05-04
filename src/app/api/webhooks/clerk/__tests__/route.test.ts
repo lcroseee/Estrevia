@@ -82,14 +82,47 @@ describe('POST /api/webhooks/clerk — user_registered firing', () => {
     expect(res.status).toBe(200);
 
     expect(mocks.trackServerEvent).toHaveBeenCalledTimes(1);
+    // T18 (v3b): properties also include `email` so T11's analytics extension
+    // can hash + forward it to Meta CAPI for Custom Audience matching.
     expect(mocks.trackServerEvent).toHaveBeenCalledWith(
       'user_2abc123',
       'user_registered',
       {
         source: 'clerk_webhook',
         email_domain: 'example.com',
+        email: 'alice@example.com',
         $insert_id: 'user_2abc123:user_registered',
       },
+    );
+  });
+
+  it('forwards CAPI-required fields ($insert_id + email) for T11 to fire CAPI Lead', async () => {
+    // T18: This wire-up test asserts the CAPI-relevant inputs land in the
+    // trackServerEvent properties bag. The actual Pixel/CAPI fire happens
+    // inside trackServerEvent (extended in T11) and is covered by
+    // src/shared/lib/__tests__/analytics-capi.test.ts. Here we lock in the
+    // contract: webhook → trackServerEvent must include event_id (via
+    // $insert_id) + plaintext email (hashed downstream at the CAPI boundary).
+    mocks.verify.mockReturnValue({
+      type: 'user.created',
+      data: {
+        id: 'user_test_clerk_id',
+        email_addresses: [{ email_address: 'capi-target@example.com' }],
+      },
+    });
+
+    const res = await POST(makeReq({}));
+    expect(res.status).toBe(200);
+
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith(
+      'user_test_clerk_id',
+      'user_registered',
+      expect.objectContaining({
+        // event_id reused by T11 wrapper as the CAPI dedupe key (matches fbq)
+        $insert_id: 'user_test_clerk_id:user_registered',
+        // plaintext email forwarded for CAPI hashing — never logged here
+        email: 'capi-target@example.com',
+      }),
     );
   });
 
@@ -125,7 +158,7 @@ describe('POST /api/webhooks/clerk — user_registered firing', () => {
     expect(mocks.onConflictDoNothing).toHaveBeenCalled();
   });
 
-  it('handles email without @ gracefully (email_domain=null)', async () => {
+  it('handles email without @ gracefully (email_domain=null, email=undefined)', async () => {
     mocks.verify.mockReturnValue({
       type: 'user.created',
       data: {
@@ -139,7 +172,9 @@ describe('POST /api/webhooks/clerk — user_registered firing', () => {
     expect(mocks.trackServerEvent).toHaveBeenCalledWith(
       'user_2no_email',
       'user_registered',
-      expect.objectContaining({ email_domain: null }),
+      // T18: empty email coerces to undefined so T11's CAPI wrapper skips
+      // the user_data.em hash rather than hashing an empty string.
+      expect.objectContaining({ email_domain: null, email: undefined }),
     );
   });
 });

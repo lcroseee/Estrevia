@@ -100,10 +100,17 @@ export async function POST(req: Request) {
       // from PostHog's $insert_id dedup — same event from a Clerk retry
       // collapses server-side. Wrapped in try/catch: PostHog being down must
       // never escalate to a 500 (Clerk would retry → duplicate users).
+      //
+      // T18 (v3b): trackServerEvent ALSO fires Meta CAPI Lead via T11's
+      // analytics extension. The `email` is hashed at the CAPI boundary
+      // (meta-capi/index.ts:hashPII) — never leaves this process plaintext.
+      // The `$insert_id` is reused as the CAPI event_id, deduping with the
+      // browser-side fbq Lead event using the same id.
       try {
         trackServerEvent(data.id, AnalyticsEvent.USER_REGISTERED, {
           source: 'clerk_webhook',
           email_domain: emailDomain,
+          email: email || undefined, // for CAPI hashing in T11 wrapper (Custom Audience match)
           $insert_id: `${data.id}:user_registered`,
         });
       } catch (phErr) {

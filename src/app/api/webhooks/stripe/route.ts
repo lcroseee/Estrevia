@@ -248,18 +248,31 @@ export async function POST(request: Request): Promise<Response> {
         // retries collapse server-side at PostHog. Wrapped in try/catch:
         // PostHog being down must never escalate to a 500 (Stripe would
         // retry → duplicate user upserts).
+        //
+        // T18 (v3b): trackServerEvent ALSO fires Meta CAPI Subscribe via
+        // T11's analytics extension. `value` (in `amount_usd`) + `currency`
+        // + `predicted_ltv` are forwarded as CAPI custom_data for Meta's
+        // value-based bidding. `email` (when present) is hashed at the CAPI
+        // boundary. The `$insert_id` is reused as the CAPI event_id for
+        // dedupe with browser-side fbq Subscribe.
+        // predicted_ltv: hardcoded $30 LTV per spec; auto-calibrated in
+        // v3b month 6+ via the agent's funnel reconciler.
         try {
           const utm = (session.metadata ?? {}) as Record<string, string | undefined>;
           const amountTotal = session.amount_total ?? 0;
           const currency = session.currency ?? 'usd';
+          const customerEmail = session.customer_details?.email ?? undefined;
           trackServerEvent(clerkUserId, AnalyticsEvent.SUBSCRIPTION_STARTED, {
             plan,
             amount_usd: amountTotal / 100, // Stripe sends cents
+            value: amountTotal / 100,      // CAPI custom_data.value (mirrors amount_usd)
             currency,
+            predicted_ltv: 30,             // CAPI custom_data.predicted_ltv (LTV-based bidding)
             stripe_subscription_id: stripeSubscriptionId,
             utm_source: utm.utm_source ?? null,
             utm_content: utm.utm_content ?? null, // ad_id by convention
             utm_campaign: utm.utm_campaign ?? null,
+            email: customerEmail,          // for CAPI hashing in T11 wrapper
             $insert_id: `${stripeSubscriptionId ?? session.id}:subscription_started`,
           });
         } catch (phErr) {

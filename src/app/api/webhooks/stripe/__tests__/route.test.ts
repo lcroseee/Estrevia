@@ -123,6 +123,7 @@ describe('POST /api/webhooks/stripe — subscription_started firing', () => {
             utm_campaign: 'launch',
           },
           customer: 'cus_test_001',
+          customer_details: { email: 'paid-user@example.com' },
           subscription: 'sub_test_001',
           amount_total: 999,   // $9.99 in cents
           currency: 'usd',
@@ -144,19 +145,111 @@ describe('POST /api/webhooks/stripe — subscription_started firing', () => {
     expect(res.status).toBe(200);
 
     expect(mockTrackServerEvent).toHaveBeenCalledTimes(1);
+    // T18 (v3b): properties also include `value`, `predicted_ltv`, and
+    // `email` so T11's analytics extension can forward CAPI Subscribe with
+    // value-based bidding signals + Custom Audience matching.
     expect(mockTrackServerEvent).toHaveBeenCalledWith(
       'user_2checkout_001',
       'subscription_started',
       expect.objectContaining({
         plan: 'pro_monthly',
         amount_usd: 9.99,
+        value: 9.99,                // CAPI custom_data.value
         currency: 'usd',
+        predicted_ltv: 30,          // CAPI custom_data.predicted_ltv
         stripe_subscription_id: 'sub_test_001',
         utm_source: 'meta',
         utm_content: 'ad_001',
         utm_campaign: 'launch',
+        email: 'paid-user@example.com', // for CAPI hashing in T11 wrapper
         $insert_id: 'sub_test_001:subscription_started',
       }),
+    );
+  });
+
+  it('forwards CAPI-required fields ($insert_id + value + currency + email) for T11 to fire CAPI Subscribe', async () => {
+    // T18: Wire-up test — locks in the contract that the webhook hands T11's
+    // analytics extension everything it needs to fire a CAPI Subscribe event
+    // matching the browser-side fbq Subscribe (deduped via event_id).
+    // Actual CAPI fire is tested in src/shared/lib/__tests__/analytics-capi.test.ts.
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_test_capi_001',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_capi',
+          mode: 'subscription',
+          metadata: { clerkUserId: 'user_test_clerk_id' },
+          customer: 'cus_test_capi',
+          customer_details: { email: 'capi-target@example.com' },
+          subscription: 'sub_test_capi',
+          amount_total: 4999,  // $49.99 annual
+          currency: 'usd',
+        },
+      },
+    });
+    mockSubscriptionsRetrieve.mockResolvedValue({
+      id: 'sub_test_capi',
+      status: 'active',
+      trial_end: null,
+      items: {
+        data: [
+          { current_period_end: 1735689600, price: { id: 'price_pro_monthly_test' } },
+        ],
+      },
+    });
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+
+    expect(mockTrackServerEvent).toHaveBeenCalledWith(
+      'user_test_clerk_id',
+      'subscription_started',
+      expect.objectContaining({
+        // Dedupe key reused as CAPI event_id (matches browser fbq Subscribe)
+        $insert_id: 'sub_test_capi:subscription_started',
+        // Value-based bidding signals
+        value: 49.99,
+        currency: 'usd',
+        predicted_ltv: 30,
+        // Plaintext email forwarded for CAPI hashing — never logged here
+        email: 'capi-target@example.com',
+      }),
+    );
+  });
+
+  it('omits email when Stripe omits customer_details (no field forced)', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_test_no_email',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_no_email',
+          mode: 'subscription',
+          metadata: { clerkUserId: 'user_no_email' },
+          customer: 'cus_no_email',
+          // No customer_details — older sessions or incomplete objects
+          subscription: 'sub_no_email',
+          amount_total: 999,
+          currency: 'usd',
+        },
+      },
+    });
+    mockSubscriptionsRetrieve.mockResolvedValue({
+      id: 'sub_no_email',
+      status: 'active',
+      trial_end: null,
+      items: { data: [{ current_period_end: 1735689600, price: { id: 'price_pro_monthly_test' } }] },
+    });
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+
+    // email defaults to undefined so T11's CAPI wrapper skips user_data.em
+    expect(mockTrackServerEvent).toHaveBeenCalledWith(
+      'user_no_email',
+      'subscription_started',
+      expect.objectContaining({ email: undefined, predicted_ltv: 30 }),
     );
   });
 
