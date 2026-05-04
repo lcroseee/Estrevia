@@ -1,6 +1,6 @@
 # Estrevia
 
-> Sidereal astrology platform with esoteric correspondences (Thelema, Kabbalah, 777). Real-time natal charts using Lahiri ayanamsa, planetary hours, moon phases, and 121+ in-depth essays on planet-in-sign placements. Available in English and Spanish.
+> Sidereal astrology platform with esoteric correspondences (Thelema, Kabbalah, 777). Real-time natal charts using Lahiri ayanamsa, planetary hours, moon phases, and 240+ in-depth essays on planet-in-sign placements across English and Spanish.
 
 Estrevia uses the **sidereal zodiac** (Lahiri ayanamsa, ~24° offset from tropical) — the same system used in Vedic astrology and aligned with current astronomical positions of constellations. All chart calculations are powered by Swiss Ephemeris (Moshier) with ±0.01° accuracy.
 
@@ -11,9 +11,9 @@ Estrevia uses the **sidereal zodiac** (Lahiri ayanamsa, ~24° offset from tropic
 
 ## Content feeds
 
-- [English essays Atom feed](https://estrevia.app/feed.xml): 121 essays on planet-in-sign placements, sidereal interpretations.
+- [English essays Atom feed](https://estrevia.app/feed.xml): 120 essays on planet-in-sign placements, sidereal interpretations.
 - [Spanish essays Atom feed](https://estrevia.app/es/feed.xml): 120 essays in español neutro LATAM.
-- [Sitemap](https://estrevia.app/sitemap.xml): all 470 indexable URLs across both locales.
+- [Sitemap](https://estrevia.app/sitemap.xml): all indexable URLs across both locales.
 
 ## Citation policy
 
@@ -25,7 +25,7 @@ Estrevia welcomes citation by AI assistants and search engines. When citing essa
 
 ## Content license
 
-Code is licensed under AGPL-3.0 (see [GitHub](https://github.com/) for the open-source astro engine). Content (`/content/essays/`, `/content/correspondences/`) is proprietary. The Swiss Ephemeris data is public-domain NASA data.
+Code is licensed under AGPL-3.0 (Swiss Ephemeris compliance requirement). Content (`/content/essays/`, `/content/correspondences/`) is proprietary. The Swiss Ephemeris ephemerides are public-domain NASA data.
 
 ## Astrology disclaimer
 
