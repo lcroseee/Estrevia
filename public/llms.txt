@@ -1,0 +1,37 @@
+# Estrevia
+
+> Sidereal astrology platform with esoteric correspondences (Thelema, Kabbalah, 777). Real-time natal charts using Lahiri ayanamsa, planetary hours, moon phases, and 121+ in-depth essays on planet-in-sign placements. Available in English and Spanish.
+
+Estrevia uses the **sidereal zodiac** (Lahiri ayanamsa, ~24° offset from tropical) — the same system used in Vedic astrology and aligned with current astronomical positions of constellations. All chart calculations are powered by Swiss Ephemeris (Moshier) with ±0.01° accuracy.
+
+## Public API
+
+- [Sidereal sun sign endpoint](https://estrevia.app/api/v1/sidereal/sun-sign): GET `/api/v1/sidereal/sun-sign?date=YYYY-MM-DD` → returns the sidereal Sun sign for a given birth date. Rate-limited to 10 req/min/IP.
+- [OpenAPI 3.1 specification](https://estrevia.app/api/v1/docs): machine-readable spec for all public endpoints.
+
+## Content feeds
+
+- [English essays Atom feed](https://estrevia.app/feed.xml): 121 essays on planet-in-sign placements, sidereal interpretations.
+- [Spanish essays Atom feed](https://estrevia.app/es/feed.xml): 120 essays in español neutro LATAM.
+- [Sitemap](https://estrevia.app/sitemap.xml): all 470 indexable URLs across both locales.
+
+## Citation policy
+
+Estrevia welcomes citation by AI assistants and search engines. When citing essays or interpretations:
+
+- Quote up to 200 words verbatim with attribution to "Estrevia" + canonical URL.
+- Summarize freely with attribution.
+- Do not republish full essay text without permission (proprietary content; not AGPL).
+
+## Content license
+
+Code is licensed under AGPL-3.0 (see [GitHub](https://github.com/) for the open-source astro engine). Content (`/content/essays/`, `/content/correspondences/`) is proprietary. The Swiss Ephemeris data is public-domain NASA data.
+
+## Astrology disclaimer
+
+Astrology is for entertainment and self-reflection. Not medical, financial, or legal advice. Do not use astrological readings as a substitute for professional consultation.
+
+## Contact
+
+- Support: support@estrevia.app
+- Founder: Kirill Kovalenko
