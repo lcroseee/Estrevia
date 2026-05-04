@@ -4,11 +4,23 @@
  * Client-side: uses posthog-js (lazy, respects cookie consent).
  * Server-side: uses posthog-node for server events (API routes, Server Actions).
  *
+ * Server-side events ALSO fire to Meta Conversions API in parallel when the
+ * event maps to a Meta standard event (see `meta-capi/event-mapper.ts`). The
+ * `$insert_id` property — when present — is used as both the PostHog dedupe id
+ * and the CAPI `event_id`, ensuring client/server CAPI dedupe matches the
+ * Pixel `eventID` set on the same browser session.
+ *
  * Guard every client call with `typeof window !== 'undefined'` — this module
  * is imported in both RSC and Client Component contexts.
  */
-
 import { waitUntil } from '@vercel/functions';
+
+import { sendCapiEvent } from '@/modules/advertising/meta-capi';
+import { mapEstreviaToMeta } from '@/modules/advertising/meta-capi/event-mapper';
+import type {
+  CapiCustomData,
+  EstreviaEvent,
+} from '@/modules/advertising/meta-capi/types';
 
 // ---------------------------------------------------------------------------
 // Client-side helpers
@@ -61,7 +73,7 @@ export function resetUser(): void {
 }
 
 // ---------------------------------------------------------------------------
-// Server-side helpers (posthog-node)
+// Server-side helpers (posthog-node + Meta CAPI)
 // ---------------------------------------------------------------------------
 
 type PostHogNodeClient = {
@@ -92,12 +104,45 @@ function getServerClient(): PostHogNodeClient | null {
   return _serverClient;
 }
 
+const ESTREVIA_EVENT_NAMES = new Set<EstreviaEvent>([
+  'landing_view',
+  'chart_calculated',
+  'passport_reshared',
+  'user_registered',
+  'paywall_opened',
+  'subscription_started',
+]);
+
+function isEstreviaEvent(name: string): name is EstreviaEvent {
+  return ESTREVIA_EVENT_NAMES.has(name as EstreviaEvent);
+}
+
+/**
+ * Distil the optional CAPI `custom_data` fields out of an arbitrary PostHog
+ * properties bag. Only well-typed Meta-known fields pass through; everything
+ * else is dropped to avoid leaking unexpected payloads.
+ */
+function propertiesToCustomData(props?: Record<string, unknown>): CapiCustomData | undefined {
+  if (!props) return undefined;
+  const cd: CapiCustomData = {};
+  if (typeof props.value === 'number') cd.value = props.value;
+  if (typeof props.currency === 'string') cd.currency = props.currency;
+  if (typeof props.predicted_ltv === 'number') cd.predicted_ltv = props.predicted_ltv;
+  if (Array.isArray(props.content_ids)) cd.content_ids = props.content_ids as string[];
+  if (typeof props.content_type === 'string') cd.content_type = props.content_type;
+  return Object.keys(cd).length > 0 ? cd : undefined;
+}
+
 /**
  * Track an event server-side. Use in Route Handlers and Server Actions.
  * `distinctId` is the Clerk user ID or a temporary anonymous ID.
  *
  * Uses waitUntil() from @vercel/functions so the Vercel Function stays alive
  * until posthog-node flushes, preventing event loss on cold starts.
+ *
+ * Also fires to Meta CAPI (fire-and-forget) when the event maps to a Meta
+ * standard event. The `$insert_id` PostHog property — when present — is used
+ * as the CAPI `event_id` for client/server dedupe.
  */
 export function trackServerEvent(
   distinctId: string,
@@ -105,14 +150,33 @@ export function trackServerEvent(
   properties?: Record<string, unknown>,
 ): void {
   const client = getServerClient();
-  if (!client) return;
+  if (client) {
+    client.capture({ distinctId, event: name, properties });
 
-  client.capture({ distinctId, event: name, properties });
+    // Keep the serverless function alive until posthog flushes the event.
+    // Without this, Vercel may terminate the function before the batch is sent.
+    const flushPromise = Promise.resolve().then(() => client.shutdown());
+    waitUntil(flushPromise);
+  }
 
-  // Keep the serverless function alive until posthog flushes the event.
-  // Without this, Vercel may terminate the function before the batch is sent.
-  const flushPromise = Promise.resolve().then(() => client.shutdown());
-  waitUntil(flushPromise);
+  // Also fire to Meta CAPI when the event maps to a CAPI conversion. CAPI
+  // failures are silent (sendCapiEvent never throws) so PostHog success is
+  // never blocked on CAPI availability.
+  if (isEstreviaEvent(name)) {
+    const mapped = mapEstreviaToMeta(name);
+    if (mapped.capi) {
+      const email = typeof properties?.email === 'string' ? properties.email : undefined;
+      const event_id = typeof properties?.$insert_id === 'string' ? properties.$insert_id : undefined;
+      const capiPromise = sendCapiEvent(
+        mapped.capi,
+        { external_id_raw: distinctId, email },
+        propertiesToCustomData(properties),
+        event_id ? { event_id } : {},
+      );
+      // Keep the function alive for CAPI flush, same pattern as PostHog above.
+      waitUntil(capiPromise);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
