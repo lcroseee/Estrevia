@@ -258,6 +258,9 @@ vi.mock('@/modules/advertising/alerts/drop-off-monitor', () => {
 
 vi.mock('@/modules/advertising/decide/feature-gates', () => ({
   evaluateGates: vi.fn().mockResolvedValue([]),
+  // currentMode is read by triage-hourly to branch decide() onto the senior-buyer
+  // phase-evaluator. Default 'off' = legacy Tier 1 path; tests can override.
+  currentMode: vi.fn().mockResolvedValue('off'),
 }));
 
 // ---------------------------------------------------------------------------
@@ -283,9 +286,10 @@ import { GET as triageDailyGET } from '../triage-daily/route';
 import { GET as retroWeeklyGET } from '../retro-weekly/route';
 import { GET as audienceRefreshGET } from '../audience-refresh/route';
 import { GET as accountHealthWeeklyGET } from '../account-health-weekly/route';
-// Imports of mocked symbols — used by retro-weekly real-aggregates tests below.
-import { evaluateGates } from '@/modules/advertising/decide/feature-gates';
+// Imports of mocked symbols — used by retro-weekly + senior-buyer integration tests below.
+import { evaluateGates, currentMode } from '@/modules/advertising/decide/feature-gates';
 import { fetchMetaInsights } from '@/modules/advertising/perceive/meta-insights';
+import { decide } from '@/modules/advertising/decide/orchestrator';
 
 // ---------------------------------------------------------------------------
 // Helper to create a Request with optional Authorization header
@@ -424,6 +428,93 @@ describe('triage-hourly — error handling', () => {
     // from 401 which is wrong/missing header). This was tested above.
     // For future: when orchestrator is wired, mock it to throw and verify 500.
     expect(true).toBe(true); // placeholder — see above note
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: triage-hourly — seniorBuyerMode integration (v3b T23)
+// ---------------------------------------------------------------------------
+//
+// When the seniorBuyerMode feature gate is 'on', the route reads it from DB
+// and forwards it to decide() via the gates argument. v3b T22 rewrites
+// decide() to branch on this gate and dispatch through the senior-buyer
+// phase-evaluator. These tests pin the route's contract — that it loads the
+// gate and propagates it — without requiring T22 to be merged. The deeper
+// "routing field" assertion lives in the orchestrator/phase-evaluator tests.
+// ---------------------------------------------------------------------------
+
+describe('triage-hourly — seniorBuyerMode integration', () => {
+  it('seniorBuyerMode=off: passes empty gates and surfaces "off" in summary', async () => {
+    vi.mocked(currentMode).mockResolvedValueOnce('off');
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageHourlyGET(req);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      success: boolean;
+      summary: { senior_buyer_mode: string };
+    };
+    expect(body.success).toBe(true);
+    expect(body.summary.senior_buyer_mode).toBe('off');
+
+    // No seniorBuyerMode gate forwarded — legacy Tier 1 path inside decide().
+    expect(decide).toHaveBeenCalledWith(
+      expect.any(Array),
+      [],
+      expect.any(Object),
+    );
+  });
+
+  it('triage-hourly under seniorBuyerMode=on routes through phase-evaluator', async () => {
+    // currentMode returns the gate state from DB; cast widens existing Mode
+    // union (T22 extends it with 'on').
+    vi.mocked(currentMode).mockResolvedValueOnce(
+      'on' as unknown as Awaited<ReturnType<typeof currentMode>>,
+    );
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageHourlyGET(req);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      success: boolean;
+      summary: { senior_buyer_mode: string };
+    };
+    expect(body.success).toBe(true);
+    expect(body.summary.senior_buyer_mode).toBe('on');
+
+    // The orchestrator (T22) reads gates.find(g => g.feature_id === 'seniorBuyerMode'),
+    // so we assert the gate row is forwarded with mode='on'. Once T22 lands,
+    // decide() dispatches through the senior-buyer phase-evaluator and emits a
+    // `routing` field; that deeper assertion lives in the orchestrator tests.
+    expect(decide).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.arrayContaining([
+        expect.objectContaining({
+          feature_id: 'seniorBuyerMode',
+          mode: 'on',
+        }),
+      ]),
+      expect.any(Object),
+    );
+  });
+
+  it('falls back to "off" when the gate read throws (DB unavailable)', async () => {
+    vi.mocked(currentMode).mockRejectedValueOnce(new Error('db unavailable'));
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageHourlyGET(req);
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      success: boolean;
+      summary: { senior_buyer_mode: string };
+    };
+    expect(body.success).toBe(true);
+    expect(body.summary.senior_buyer_mode).toBe('off');
+    // Pipeline still runs — gate failure must not cascade.
+    expect(decide).toHaveBeenCalled();
   });
 });
 
