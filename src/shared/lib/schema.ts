@@ -1,4 +1,5 @@
-import { pgTable, text, serial, real, jsonb, timestamp, boolean, date, unique, integer, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, real, jsonb, timestamp, boolean, date, unique, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import type { ChartResult } from '@/shared/types/astrology';
 
 // ---------------------------------------------------------------------------
@@ -309,6 +310,102 @@ export const advertisingReconState = pgTable('advertising_recon_state', {
 });
 
 // ---------------------------------------------------------------------------
+// advertising_ad_set_state — current phase + maturity + counters per ad set
+// ---------------------------------------------------------------------------
+export const advertisingAdSetState = pgTable('advertising_ad_set_state', {
+  adSetId: text('ad_set_id').primaryKey(),
+  campaignId: text('campaign_id').notNull(),
+  locale: text('locale').notNull(),
+  currentPhase: text('current_phase').notNull().default('A'),         // 'A' | 'B' | 'C' | 'D' | 'PAUSED' | 'RETIRED'
+  phaseEnteredAt: timestamp('phase_entered_at', { withTimezone: true }).notNull().defaultNow(),
+  dataMaturityMode: text('data_maturity_mode').notNull().default('COLD_START'),  // 'COLD_START' | 'CALIBRATING' | 'AUTONOMOUS'
+  maturityEnteredAt: timestamp('maturity_entered_at', { withTimezone: true }).notNull().defaultNow(),
+  optimizationEvent: text('optimization_event').notNull().default('landing_page_view'),
+  conversions7dMeta: integer('conversions_7d_meta').notNull().default(0),
+  conversions14dMeta: integer('conversions_14d_meta').notNull().default(0),
+  conversionsTotalMeta: integer('conversions_total_meta').notNull().default(0),
+  daysWithPixelData: integer('days_with_pixel_data').notNull().default(0),
+  conversions7dPosthog: integer('conversions_7d_posthog').notNull().default(0),
+  roas7d: real('roas_7d'),
+  cpa7d: real('cpa_7d'),
+  frequencyCurrent: real('frequency_current'),
+  parentAdSetId: text('parent_ad_set_id'),
+  duplicatesCount: integer('duplicates_count').notNull().default(0),
+  lastActionTakenAt: timestamp('last_action_taken_at', { withTimezone: true }),
+  flaggedForReview: boolean('flagged_for_review').notNull().default(false),
+  flagReason: text('flag_reason'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  byCurrentPhase: index('idx_ad_set_state_current_phase').on(table.currentPhase),
+  byDataMaturity: index('idx_ad_set_state_data_maturity').on(table.dataMaturityMode),
+  byParent: index('idx_ad_set_state_parent').on(table.parentAdSetId),
+  flagged: index('idx_ad_set_state_flagged').on(table.flaggedForReview).where(sql`${table.flaggedForReview} = true`),
+}));
+
+// ---------------------------------------------------------------------------
+// advertising_ad_set_metric_history — daily snapshot for baselines + comparable-window
+// ---------------------------------------------------------------------------
+export const advertisingAdSetMetricHistory = pgTable('advertising_ad_set_metric_history', {
+  id: text('id').primaryKey(),
+  adSetId: text('ad_set_id').notNull(),
+  date: text('date').notNull(),                       // YYYY-MM-DD UTC
+  dayOfWeek: integer('day_of_week').notNull(),        // 0-6 for Tue-vs-Tue queries
+  impressions: integer('impressions').notNull(),
+  clicks: integer('clicks').notNull(),
+  spendUsd: real('spend_usd').notNull(),
+  ctr: real('ctr').notNull(),
+  cpc: real('cpc').notNull(),
+  cpm: real('cpm').notNull(),
+  frequency: real('frequency').notNull(),
+  conversionsMeta: integer('conversions_meta').notNull(),
+  conversionsPosthog: integer('conversions_posthog').notNull(),
+  revenueUsd: real('revenue_usd').notNull().default(0),
+  roas: real('roas'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  byAdSetDate: uniqueIndex('uq_metric_history_adset_date').on(table.adSetId, table.date),
+  byAdSetDow: index('idx_metric_history_adset_dow').on(table.adSetId, table.dayOfWeek),
+}));
+
+// ---------------------------------------------------------------------------
+// advertising_ad_set_phase_transitions — append-only audit log
+// ---------------------------------------------------------------------------
+export const advertisingAdSetPhaseTransitions = pgTable('advertising_ad_set_phase_transitions', {
+  id: text('id').primaryKey(),
+  adSetId: text('ad_set_id').notNull(),
+  transitionKind: text('transition_kind').notNull(),  // 'phase' | 'maturity'
+  fromValue: text('from_value').notNull(),
+  toValue: text('to_value').notNull(),
+  reason: text('reason').notNull(),
+  metricSnapshot: jsonb('metric_snapshot').notNull(),
+  triggeredAt: timestamp('triggered_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  byAdSet: index('idx_phase_transitions_adset').on(table.adSetId, table.triggeredAt),
+}));
+
+// ---------------------------------------------------------------------------
+// advertising_thresholds — DB-stored thresholds with code-default fallback (Q17)
+// ---------------------------------------------------------------------------
+export const advertisingThresholds = pgTable('advertising_thresholds', {
+  id: text('id').primaryKey(),
+  scope: text('scope').notNull(),                     // 'global' | 'campaign' | 'ad_set'
+  scopeId: text('scope_id'),                          // NULL for global; campaign_id or ad_set_id otherwise
+  metricName: text('metric_name').notNull(),
+  value: real('value').notNull(),
+  source: text('source').notNull(),                   // 'default' | 'auto_calibrated' | 'founder_override'
+  effectiveFrom: timestamp('effective_from', { withTimezone: true }).notNull(),
+  baselineMetricSnapshot: jsonb('baseline_metric_snapshot'),
+  changedBy: text('changed_by').notNull(),            // 'system_calibrator' | 'founder' | 'migration'
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  byScope: uniqueIndex('uq_thresholds_scope_metric_eff').on(
+    table.scope, table.scopeId, table.metricName, table.effectiveFrom,
+  ),
+  byLookup: index('idx_thresholds_lookup').on(table.scope, table.scopeId, table.metricName, table.effectiveFrom),
+}));
+
+// ---------------------------------------------------------------------------
 // Type aliases
 // ---------------------------------------------------------------------------
 export type User = typeof users.$inferSelect;
@@ -328,3 +425,7 @@ export type AdvertisingSpendDaily = typeof advertisingSpendDaily.$inferSelect;
 export type AdvertisingAudience = typeof advertisingAudiences.$inferSelect;
 export type AdvertisingShadowComparison = typeof advertisingShadowComparisons.$inferSelect;
 export type AdvertisingReconState = typeof advertisingReconState.$inferSelect;
+export type AdvertisingAdSetState = typeof advertisingAdSetState.$inferSelect;
+export type AdvertisingAdSetMetricHistory = typeof advertisingAdSetMetricHistory.$inferSelect;
+export type AdvertisingAdSetPhaseTransition = typeof advertisingAdSetPhaseTransitions.$inferSelect;
+export type AdvertisingThreshold = typeof advertisingThresholds.$inferSelect;
