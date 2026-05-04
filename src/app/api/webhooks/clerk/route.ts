@@ -2,8 +2,8 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import type { WebhookEvent } from '@clerk/nextjs/server';
 import { getDb } from '@/shared/lib/db';
-import { users } from '@/shared/lib/schema';
-import { eq } from 'drizzle-orm';
+import { users, natalCharts } from '@/shared/lib/schema';
+import { eq, and } from 'drizzle-orm';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 /**
@@ -13,9 +13,10 @@ import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
  * Raw body must be used for verification — do NOT call req.json() before verify().
  *
  * Events handled:
- *   user.created  → insert row into `users` table
+ *   user.created  → insert row into `users` table (with locale from unsafe_metadata),
+ *                   then send welcome email (best-effort, idempotent via sent_emails)
  *   user.updated  → update email in `users` table
- *   user.deleted  → delete row from `users` table (cascade removes charts etc.)
+ *   user.deleted  → send account deletion email BEFORE cascade delete
  *
  * Security: rejects any request that fails svix signature verification with 401.
  * NEVER log decrypted PII — only user IDs and event types are logged.
@@ -82,12 +83,18 @@ export async function POST(req: Request) {
     if (eventType === 'user.created') {
       const email = data.email_addresses[0]?.email_address ?? '';
       const emailDomain = email.includes('@') ? email.split('@')[1] : null;
+      // Defensive cast — unsafe_metadata is typed as unknown by Clerk
+      const locale =
+        (data.unsafe_metadata as Record<string, unknown> | null)?.locale === 'es'
+          ? 'es' as const
+          : 'en' as const;
 
       await db
         .insert(users)
         .values({
           id: data.id,
           email,
+          locale,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -127,6 +134,39 @@ export async function POST(req: Request) {
           // Sentry capture is best-effort.
         }
       }
+
+      // Welcome email — best-effort; idempotent via sent_emails UNIQUE index.
+      // Dynamic import keeps cold-start path minimal. Email failure must not
+      // fail the webhook — Clerk would retry and create a duplicate user.
+      try {
+        const { sendWelcomeEmail } = await import('@/shared/lib/email');
+        // Check if the user already has a saved natal chart (edge case:
+        // chart was created before account, e.g. via anonymous flow).
+        const charts = await db
+          .select({ id: natalCharts.id })
+          .from(natalCharts)
+          .where(and(eq(natalCharts.userId, data.id), eq(natalCharts.status, 'saved')))
+          .limit(1);
+        await sendWelcomeEmail({
+          userId: data.id,
+          email,
+          locale,
+          hasSavedChart: charts.length > 0,
+        });
+      } catch (emailErr) {
+        console.error(
+          '[clerk-webhook] welcome email failed (non-fatal)',
+          emailErr instanceof Error ? emailErr.message : 'unknown',
+        );
+        try {
+          const { captureException } = await import('@sentry/nextjs');
+          captureException(emailErr, {
+            tags: { webhook: 'clerk', email_type: 'welcome' },
+          });
+        } catch {
+          // Sentry capture is best-effort.
+        }
+      }
     }
 
     if (eventType === 'user.updated') {
@@ -141,6 +181,36 @@ export async function POST(req: Request) {
 
     if (eventType === 'user.deleted') {
       if (data.id) {
+        // Read email + locale BEFORE cascade delete — once the row is gone
+        // we cannot send the goodbye email.
+        const userRows = await db
+          .select({ email: users.email, locale: users.locale })
+          .from(users)
+          .where(eq(users.id, data.id))
+          .limit(1);
+
+        if (userRows.length > 0) {
+          const { email, locale } = userRows[0];
+          try {
+            const { sendAccountDeletionEmail } = await import('@/shared/lib/email');
+            await sendAccountDeletionEmail({ userId: data.id, email, locale });
+          } catch (emailErr) {
+            // Best-effort — do not block the deletion if email fails.
+            console.error(
+              '[clerk-webhook] account_deletion email failed (non-fatal)',
+              emailErr instanceof Error ? emailErr.message : 'unknown',
+            );
+            try {
+              const { captureException } = await import('@sentry/nextjs');
+              captureException(emailErr, {
+                tags: { webhook: 'clerk', email_type: 'account_deletion' },
+              });
+            } catch {
+              // Sentry capture is best-effort.
+            }
+          }
+        }
+
         await db.delete(users).where(eq(users.id, data.id));
         console.info('[clerk-webhook] user.deleted', { userId: data.id });
       }

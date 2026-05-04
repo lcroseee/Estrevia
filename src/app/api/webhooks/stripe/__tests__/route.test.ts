@@ -21,6 +21,9 @@ const {
   mockSelectFrom,
   mockSelect,
   mockTrackServerEvent,
+  mockSendPurchaseConfirmationEmail,
+  mockSendSubscriptionCanceledEmail,
+  mockSendTrialEndingEmail,
 } = vi.hoisted(() => {
   const mockReturning = vi.fn().mockResolvedValue([{ eventId: 'evt_test_001' }]);
   const mockOnConflictDoNothing = vi.fn(() => ({ returning: mockReturning }));
@@ -53,6 +56,9 @@ const {
     mockSelectFrom,
     mockSelect,
     mockTrackServerEvent: vi.fn(),
+    mockSendPurchaseConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+    mockSendSubscriptionCanceledEmail: vi.fn().mockResolvedValue(undefined),
+    mockSendTrialEndingEmail: vi.fn().mockResolvedValue(undefined),
   };
 });
 
@@ -82,6 +88,13 @@ vi.mock('@/shared/lib/analytics', () => ({
 
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
 
+// Email helpers — mocked so no real Resend calls happen in tests
+vi.mock('@/shared/lib/email', () => ({
+  sendPurchaseConfirmationEmail: mockSendPurchaseConfirmationEmail,
+  sendSubscriptionCanceledEmail: mockSendSubscriptionCanceledEmail,
+  sendTrialEndingEmail: mockSendTrialEndingEmail,
+}));
+
 import { POST } from '../route';
 
 function makeReq(): Request {
@@ -97,9 +110,16 @@ beforeEach(() => {
   mockConstructEvent.mockReset();
   mockSubscriptionsRetrieve.mockReset();
   mockTrackServerEvent.mockReset();
+  mockSendPurchaseConfirmationEmail.mockReset();
+  mockSendSubscriptionCanceledEmail.mockReset();
+  mockSendTrialEndingEmail.mockReset();
   vi.clearAllMocks();
   // Re-prime the dedup return path
   mockReturning.mockResolvedValue([{ eventId: 'evt_test_001' }]);
+  // Default: no user row for email queries
+  mockSelectLimit.mockResolvedValue([]);
+  mockSendPurchaseConfirmationEmail.mockResolvedValue(undefined);
+  mockSendSubscriptionCanceledEmail.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -323,6 +343,140 @@ describe('POST /api/webhooks/stripe — subscription_started firing', () => {
     mockTrackServerEvent.mockImplementationOnce(() => {
       throw new Error('PostHog timeout');
     });
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T3: Purchase confirmation + cancellation email tests
+// ---------------------------------------------------------------------------
+describe('POST /api/webhooks/stripe — T3 email hookups', () => {
+  it('checkout.session.completed sends purchase confirmation email with correct plan name', async () => {
+    // Pro Annual — price has interval='year'
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_purchase_annual',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_annual_001',
+          mode: 'subscription',
+          metadata: { clerkUserId: 'user_annual_001' },
+          customer: 'cus_annual_001',
+          customer_details: { email: 'buyer@example.com' },
+          subscription: 'sub_annual_001',
+          amount_total: 4999,
+          currency: 'usd',
+        },
+      },
+    });
+    mockSubscriptionsRetrieve.mockResolvedValue({
+      id: 'sub_annual_001',
+      status: 'active',
+      trial_end: null,
+      items: {
+        data: [{
+          current_period_end: 1767225600, // 2026-01-01
+          price: {
+            id: 'price_pro_annual_test',
+            recurring: { interval: 'year' },
+          },
+        }],
+      },
+    });
+    // Mock user row for email query
+    mockSelectLimit.mockResolvedValue([
+      { email: 'buyer@example.com', locale: 'en' },
+    ]);
+    process.env.STRIPE_PRICE_ID_PRO_ANNUAL = 'price_pro_annual_test';
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+
+    expect(mockSendPurchaseConfirmationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user_annual_001',
+        email: 'buyer@example.com',
+        locale: 'en',
+        plan: 'pro_annual',
+        subscriptionId: 'sub_annual_001',
+      }),
+    );
+    delete process.env.STRIPE_PRICE_ID_PRO_ANNUAL;
+  });
+
+  it('subscription.deleted sends cancellation email with formatted accessEndDate', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_cancel_001',
+      type: 'customer.subscription.deleted',
+      data: {
+        object: {
+          id: 'sub_cancel_001',
+          status: 'canceled',
+          metadata: { clerkUserId: 'user_cancel_001' },
+          customer: 'cus_cancel_001',
+          trial_end: null,
+          items: {
+            data: [{
+              current_period_end: 1767225600, // ~2026-01-01
+              price: { id: 'price_pro_monthly_test', recurring: { interval: 'month' } },
+            }],
+          },
+        },
+      },
+    });
+    // Mock user row for cancellation email query
+    mockSelectLimit.mockResolvedValue([
+      { email: 'canceler@example.com', locale: 'es' },
+    ]);
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+
+    expect(mockSendSubscriptionCanceledEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user_cancel_001',
+        email: 'canceler@example.com',
+        locale: 'es',
+        subscriptionId: 'sub_cancel_001',
+      }),
+    );
+    // accessEndDate must be a non-empty string
+    const callArgs = mockSendSubscriptionCanceledEmail.mock.calls[0][0];
+    expect(typeof callArgs.accessEndDate).toBe('string');
+    expect(callArgs.accessEndDate.length).toBeGreaterThan(0);
+  });
+
+  it('purchase confirmation email failure does not fail the webhook — returns 200', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_purchase_email_fail',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_fail_001',
+          mode: 'subscription',
+          metadata: { clerkUserId: 'user_fail_001' },
+          customer: 'cus_fail_001',
+          customer_details: { email: 'fail@example.com' },
+          subscription: 'sub_fail_001',
+          amount_total: 999,
+          currency: 'usd',
+        },
+      },
+    });
+    mockSubscriptionsRetrieve.mockResolvedValue({
+      id: 'sub_fail_001',
+      status: 'active',
+      trial_end: null,
+      items: {
+        data: [{ current_period_end: 1767225600, price: { id: 'price_pro_monthly_test' } }],
+      },
+    });
+    mockSelectLimit.mockResolvedValue([
+      { email: 'fail@example.com', locale: 'en' },
+    ]);
+    mockSendPurchaseConfirmationEmail.mockRejectedValueOnce(new Error('Resend error'));
 
     const res = await POST(makeReq());
     expect(res.status).toBe(200);

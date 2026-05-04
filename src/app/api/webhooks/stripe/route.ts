@@ -290,6 +290,48 @@ export async function POST(request: Request): Promise<Response> {
           }
         }
 
+        // Send purchase confirmation email — best-effort, idempotent via Resend key.
+        // Must not throw: user has paid, email is secondary.
+        try {
+          const { sendPurchaseConfirmationEmail } = await import('@/shared/lib/email');
+          const userRow = await db
+            .select({ email: users.email, locale: users.locale })
+            .from(users)
+            .where(eq(users.id, clerkUserId))
+            .limit(1);
+          if (userRow.length > 0 && stripeSubscriptionId && expiresAt) {
+            const locale = userRow[0].locale;
+            // Determine plan from interval rather than price ID — more future-proof.
+            // We already have the `sub` object in scope if subscription was retrieved above.
+            const confirmPlan: 'pro_monthly' | 'pro_annual' = plan === 'pro_annual'
+              ? 'pro_annual'
+              : 'pro_monthly';
+            const nextChargeDate = expiresAt.toLocaleDateString(
+              locale === 'es' ? 'es' : 'en-US',
+              { year: 'numeric', month: 'long', day: 'numeric' },
+            );
+            await sendPurchaseConfirmationEmail({
+              userId: clerkUserId,
+              email: userRow[0].email,
+              locale,
+              plan: confirmPlan,
+              nextChargeDate,
+              subscriptionId: stripeSubscriptionId,
+            });
+          }
+        } catch (emailErr) {
+          console.error(
+            '[stripe-webhook] purchase confirmation email failed (non-fatal)',
+            emailErr instanceof Error ? emailErr.message : 'unknown',
+          );
+          try {
+            const { captureException } = await import('@sentry/nextjs');
+            captureException(emailErr, { tags: { webhook: 'stripe', email_type: 'purchase_confirmation' } });
+          } catch {
+            // Sentry capture is best-effort.
+          }
+        }
+
         console.info('[stripe-webhook] checkout.session.completed → premium activated', {
           clerkUserId,
           stripeCustomerId,
@@ -388,6 +430,45 @@ export async function POST(request: Request): Promise<Response> {
               updatedAt: new Date(),
             },
           });
+
+        // Send cancellation confirmation email — best-effort.
+        // accessEndDate = current_period_end (access continues until then).
+        try {
+          const { sendSubscriptionCanceledEmail } = await import('@/shared/lib/email');
+          const userRow = await db
+            .select({ email: users.email, locale: users.locale })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+          if (userRow.length > 0) {
+            const locale = userRow[0].locale;
+            const periodEnd = getSubscriptionPeriodEnd(sub);
+            const accessEndDate = periodEnd
+              ? new Date(periodEnd * 1000).toLocaleDateString(
+                  locale === 'es' ? 'es' : 'en-US',
+                  { year: 'numeric', month: 'long', day: 'numeric' },
+                )
+              : '';
+            await sendSubscriptionCanceledEmail({
+              userId,
+              email: userRow[0].email,
+              locale,
+              accessEndDate,
+              subscriptionId: sub.id,
+            });
+          }
+        } catch (emailErr) {
+          console.error(
+            '[stripe-webhook] subscription canceled email failed (non-fatal)',
+            emailErr instanceof Error ? emailErr.message : 'unknown',
+          );
+          try {
+            const { captureException } = await import('@sentry/nextjs');
+            captureException(emailErr, { tags: { webhook: 'stripe', email_type: 'subscription_canceled' } });
+          } catch {
+            // Sentry capture is best-effort.
+          }
+        }
 
         console.info('[stripe-webhook] subscription.deleted → downgraded to free', { userId });
         break;

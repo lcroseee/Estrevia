@@ -1,21 +1,15 @@
+'use client';
+
 import { SignUp, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
-import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
-import { createMetadata } from '@/shared/seo';
+import { useLocale } from 'next-intl';
 
 // Clerk catch-all route for sign-up. Symmetrical to /sign-in.
-export async function generateMetadata(): Promise<Metadata> {
-  const tMeta = await getTranslations('pageMeta.signUp');
-  return createMetadata({
-    title: tMeta('title'),
-    description: tMeta('description'),
-    path: '/sign-up',
-    locale: 'en',
-    noIndex: true,
-  });
-}
-
+// Client component so useLocale() can pass the current locale to Clerk's
+// unsafeMetadata, which the user.created webhook reads to persist locale
+// and send the welcome email in the correct language.
 export default function SignUpPage() {
+  const locale = useLocale();
+
   return (
     <div className="flex items-center justify-center min-h-[70vh] px-4 py-10">
       <ClerkLoading>
@@ -23,6 +17,7 @@ export default function SignUpPage() {
       </ClerkLoading>
       <ClerkLoaded>
         <SignUp
+          unsafeMetadata={{ locale }}
           appearance={{
             variables: {
               colorPrimary: '#FFD700',
