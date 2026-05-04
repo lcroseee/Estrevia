@@ -131,6 +131,16 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
           moon: data.data.chart.planets?.find((p) => p.planet === 'Moon')?.sign ?? null,
           is_authenticated: isSignedIn ?? false,
         });
+
+        // Pixel companion — Meta Pixel ViewContent (CAPI fires from server-side via trackEvent path)
+        if (typeof window !== 'undefined' && (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq) {
+          (window as unknown as { fbq: (...args: unknown[]) => void }).fbq(
+            'track',
+            'ViewContent',
+            { content_type: 'natal_chart' },
+            // eventID enables dedupe with CAPI (when CAPI fires for chart_calculated — currently CAPI off for this event)
+          );
+        }
       } catch (err) {
         const message =
           err instanceof Error ? err.message : t('calcFailed');
