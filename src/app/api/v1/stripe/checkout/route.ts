@@ -23,6 +23,12 @@ import type { ApiResponse } from '@/shared/types';
 
 const checkoutBodySchema = z.object({
   plan: z.enum(['pro_monthly', 'pro_annual']).default('pro_annual'),
+  utm_source: z.string().optional(),
+  utm_medium: z.string().optional(),
+  utm_campaign: z.string().optional(),
+  utm_content: z.string().optional(),
+  utm_term: z.string().optional(),
+  utm_click_timestamp: z.string().datetime().optional(),
 });
 
 interface CheckoutResponse {
@@ -57,15 +63,22 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   }
 
   // ---------------------------------------------------------------------------
-  // 3. Parse plan from request body
+  // 3. Parse plan + UTM attribution fields from request body
   // ---------------------------------------------------------------------------
   let plan: 'pro_monthly' | 'pro_annual' = 'pro_annual';
+  let utm: Record<string, string> = {};
   try {
     const body = await request.json();
     const parsed = checkoutBodySchema.parse(body);
     plan = parsed.plan;
+    // Strip plan and undefined values — Stripe rejects undefined metadata values
+    utm = Object.fromEntries(
+      Object.entries(parsed).filter(
+        (entry): entry is [string, string] => entry[0] !== 'plan' && entry[1] !== undefined,
+      ),
+    );
   } catch {
-    // Default to pro_annual if body is empty or invalid
+    // Default to pro_annual with no UTM if body is absent or invalid
     plan = 'pro_annual';
   }
 
@@ -160,12 +173,14 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
         : { customer_email: email }),
       // Attach Clerk userId to the Stripe customer for webhook reconciliation
       client_reference_id: userId,
-      metadata: { clerkUserId: userId },
+      metadata: { clerkUserId: userId, ...utm },
       // 3-day free trial only for first-time subscribers (no stripeCustomerId yet).
       // Returning subscribers skip the trial to prevent revenue leak.
+      // UTM fields duplicated here so the subscription itself carries attribution
+      // data (stripe-attribution.ts reads from subscription.metadata).
       subscription_data: {
         ...(stripeCustomerId ? {} : { trial_period_days: 3 }),
-        metadata: { clerkUserId: userId },
+        metadata: { clerkUserId: userId, ...utm },
       },
       success_url: `${appUrl}/settings?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/pricing`,
