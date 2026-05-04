@@ -27,6 +27,7 @@ import { duplicate } from '@/modules/advertising/act/duplicate';
 import { writeDailySnapshot } from '@/modules/advertising/senior-buyer/metric-history';
 import {
   listAdSetsByPhase,
+  listAdSetsByIds,
   upsertAdSetState,
   recordPhaseTransition,
   recordMaturityTransition,
@@ -348,6 +349,7 @@ function buildSpendCapDb(): SpendCapDb {
 // ---------------------------------------------------------------------------
 
 interface SeniorBuyerDailySummary {
+  bootstraps_created: number;
   snapshots_written: number;
   drift_calibrations_run: number;
   maturity_transitions: number;
@@ -366,12 +368,73 @@ async function runSeniorBuyerDailyExtension(
   todayStr: string,
 ): Promise<SeniorBuyerDailySummary> {
   const summary: SeniorBuyerDailySummary = {
+    bootstraps_created: 0,
     snapshots_written: 0,
     drift_calibrations_run: 0,
     maturity_transitions: 0,
     phase_transitions: 0,
     errors: 0,
   };
+
+  // 0. Auto-bootstrap defensive seed: any adset_id seen in metrics but
+  //    missing from advertising_ad_set_state gets a Phase A / COLD_START
+  //    row created. New ad sets emerging from Phase D duplicate are spec'd
+  //    to enter at Phase A; this also covers manual ad sets the founder
+  //    spun up outside the agent without seeding state.
+  const adSetIds = uniqueAdSetIds(metrics);
+  if (adSetIds.length > 0) {
+    let existingIds: Set<string> = new Set();
+    try {
+      const existing = await listAdSetsByIds(adSetIds);
+      existingIds = new Set(existing.map((s) => s.adSetId));
+    } catch (err) {
+      summary.errors += 1;
+      console.warn('[triage-daily][senior-buyer] listAdSetsByIds failed:', err);
+      Sentry.captureException(err, {
+        tags: {
+          cron: true,
+          route: '/api/cron/advertising/triage-daily',
+          subsystem: 'senior-buyer/bootstrap',
+        },
+      });
+    }
+
+    const seeded = new Set<string>();
+    for (const metric of metrics) {
+      if (!metric.adset_id) continue;
+      if (existingIds.has(metric.adset_id)) continue;
+      if (seeded.has(metric.adset_id)) continue;
+      seeded.add(metric.adset_id);
+      try {
+        await upsertAdSetState({
+          adSetId: metric.adset_id,
+          campaignId: metric.campaign_id,
+          // TODO: Meta Insights doesn't return ad-set locale; default 'en'.
+          // The next phase-evaluator pass will overwrite via upsert once
+          // an authoritative source (ad set name parser, founder seed,
+          // or Stripe attribution) supplies a real locale.
+          locale: 'en',
+          currentPhase: 'A',
+          dataMaturityMode: 'COLD_START',
+        });
+        summary.bootstraps_created += 1;
+      } catch (err) {
+        summary.errors += 1;
+        console.warn(
+          `[triage-daily][senior-buyer] bootstrap failed for ${metric.adset_id}:`,
+          err,
+        );
+        Sentry.captureException(err, {
+          tags: {
+            cron: true,
+            route: '/api/cron/advertising/triage-daily',
+            subsystem: 'senior-buyer/bootstrap',
+          },
+          extra: { ad_set_id: metric.adset_id, campaign_id: metric.campaign_id },
+        });
+      }
+    }
+  }
 
   // 1. Daily snapshot per (adset_id, today). Aggregate sibling ads under the
   //    same ad set so multiple AdMetric rows collapse into one history row
@@ -527,6 +590,14 @@ async function runSeniorBuyerDailyExtension(
   }
 
   return summary;
+}
+
+function uniqueAdSetIds(metrics: AdMetric[]): string[] {
+  const ids = new Set<string>();
+  for (const m of metrics) {
+    if (m.adset_id) ids.add(m.adset_id);
+  }
+  return Array.from(ids);
 }
 
 interface AggregatedAdSetSnapshot {

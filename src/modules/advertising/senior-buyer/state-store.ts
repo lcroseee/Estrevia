@@ -104,6 +104,15 @@ export async function listAdSetsByPhase(phases: Phase[]): Promise<AdSetState[]> 
     .where(inArray(advertisingAdSetState.currentPhase, phases));
 }
 
+export async function listAdSetsByIds(ids: string[]): Promise<AdSetState[]> {
+  if (ids.length === 0) return [];
+  const db = getDb();
+  return await db
+    .select()
+    .from(advertisingAdSetState)
+    .where(inArray(advertisingAdSetState.adSetId, ids));
+}
+
 export async function recordPhaseTransition(
   adSetId: string,
   from: Phase,
