@@ -32,6 +32,17 @@ export interface MetaAdActOps {
   duplicateAd(adId: string, overrides?: Record<string, unknown>): Promise<{ ad_id: string }>;
   createCampaign(opts: CreateCampaignOpts): Promise<{ campaign_id: string }>;
   createAdSet(opts: CreateAdSetOpts): Promise<{ adset_id: string }>;
+  /** Phase D — replace creative on existing ad. LEARNING_RESET semantic. */
+  replaceAdCreative(
+    adId: string,
+    creativeId: string,
+  ): Promise<{ ad_id: string; new_creative_id: string }>;
+  /** Phase D — duplicate an ad set with new params. HIGH_RISK; gated by approval-router. */
+  duplicateAdSetWithChanges(opts: {
+    sourceAdSetId: string;
+    newAudience?: string;
+    newBudgetCents: number;
+  }): Promise<{ ad_set_id: string }>;
 }
 
 function readEnv(): { accessToken: string; adAccountId: string } {

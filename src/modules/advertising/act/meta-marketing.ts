@@ -42,6 +42,25 @@ export interface MetaAdClient {
 
   /** Creates a new ad set inside a campaign and returns its ID. */
   createAdSet(opts: CreateAdSetOpts): Promise<{ adset_id: string }>;
+
+  /**
+   * Phase D — replaces the creative on an existing ad without touching budget,
+   * audience, or optimization. LEARNING_RESET semantic for approval-router.
+   */
+  replaceAdCreative(
+    adId: string,
+    creativeId: string,
+  ): Promise<{ ad_id: string; new_creative_id: string }>;
+
+  /**
+   * Phase D — duplicates an ad set with overrides for budget / audience.
+   * HIGH_RISK; gated by approval-router (Telegram approval blocks).
+   */
+  duplicateAdSetWithChanges(opts: {
+    sourceAdSetId: string;
+    newAudience?: string;
+    newBudgetCents: number;
+  }): Promise<{ ad_set_id: string }>;
 }
 
 export interface CreateCampaignOpts {

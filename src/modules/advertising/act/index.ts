@@ -10,6 +10,16 @@ export type { ScaleDeps } from './scale';
 export { duplicate } from './duplicate';
 export type { DuplicateDeps } from './duplicate';
 
+export { refreshCreative } from './refresh-creative';
+export type { RefreshCreativeDeps } from './refresh-creative';
+
+export { proposeNewAdSet } from './propose-new-ad-set';
+export type {
+  ProposeNewAdSetDeps,
+  ProposeNewAdSetDecision,
+  ApprovalSender,
+} from './propose-new-ad-set';
+
 export type { MetaAdClient } from './meta-marketing';
 
 // ---------------------------------------------------------------------------
@@ -41,6 +51,14 @@ const noOpActClient: MetaAdActOps = {
   async createAdSet(opts) {
     console.info('[act/getMetaAdClient][no-op] createAdSet', opts.name);
     return { adset_id: 'no-op-adset' };
+  },
+  async replaceAdCreative(adId, creativeId) {
+    console.info('[act/getMetaAdClient][no-op] replaceAdCreative', adId, creativeId);
+    return { ad_id: adId, new_creative_id: creativeId };
+  },
+  async duplicateAdSetWithChanges(opts) {
+    console.info('[act/getMetaAdClient][no-op] duplicateAdSetWithChanges', opts.sourceAdSetId);
+    return { ad_set_id: `no-op-copy-of-${opts.sourceAdSetId}` };
   },
 };
 

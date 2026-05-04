@@ -21,6 +21,12 @@ const { createMetaAdClientSpy } = vi.hoisted(() => {
     duplicateAd: vi.fn().mockResolvedValue({ ad_id: 'real_new' }),
     createCampaign: vi.fn().mockResolvedValue({ campaign_id: 'real_campaign' }),
     createAdSet: vi.fn().mockResolvedValue({ adset_id: 'real_adset' }),
+    replaceAdCreative: vi
+      .fn()
+      .mockResolvedValue({ ad_id: 'real_ad', new_creative_id: 'real_creative' }),
+    duplicateAdSetWithChanges: vi
+      .fn()
+      .mockResolvedValue({ ad_set_id: 'real_new_adset' }),
   };
   return { createMetaAdClientSpy: vi.fn(() => mockRealClient) };
 });

@@ -261,4 +261,58 @@ export class MetaAdManagementClient extends MetaGraphApiBase {
     await this.request<MetaIdResponse>('POST', `/${adsetId}`, body);
     return { id: adsetId, success: true };
   }
+
+  /**
+   * Replaces the creative on an existing ad WITHOUT touching budget, audience,
+   * or optimization. Maps to `POST /{ad_id}` with `{creative: {creative_id}}`.
+   *
+   * NOTE (v3b T9): stub — body shape and response parsing are scoped for T22's
+   * Meta API extension to fully validate. Match the `updateAdSet` pattern when
+   * filling in: send only the fields Meta accepts, throw on empty patch.
+   */
+  async replaceAdCreative(
+    adId: string,
+    creativeId: string,
+  ): Promise<{ ad_id: string; new_creative_id: string }> {
+    await this.request<MetaIdResponse>('POST', `/${adId}`, {
+      creative: { creative_id: creativeId },
+    });
+    return { ad_id: adId, new_creative_id: creativeId };
+  }
+
+  /**
+   * Duplicates an ad set with optional overrides for budget / audience.
+   * Used by the Phase D `propose_new_ad_set` act-type AFTER founder approval.
+   *
+   * Maps to `POST /{adset_id}/copies` with override fields. Real Meta semantics:
+   * Meta's deep-copy of an ad set creates a new ad set in the same campaign,
+   * and any field passed in the body overrides the source value on the clone.
+   *
+   * NOTE (v3b T9): stub — T22 should verify Meta's exact override semantics for
+   * `targeting` (audience) and `daily_budget` on `/copies`. The body shape below
+   * is the documented contract; double-check before going live.
+   */
+  async duplicateAdSetWithChanges(opts: {
+    sourceAdSetId: string;
+    newAudience?: string;
+    newBudgetCents: number;
+  }): Promise<{ ad_set_id: string }> {
+    const body: Record<string, unknown> = {
+      deep_copy: true,
+      status_option: 'PAUSED',
+      daily_budget: opts.newBudgetCents,
+    };
+    if (opts.newAudience) {
+      // Audience override is documented as `targeting` on /copies — but the
+      // exact shape (custom audience id vs full spec) needs T22 verification.
+      body.targeting = { custom_audiences: [{ id: opts.newAudience }] };
+    }
+    const res = await this.request<MetaCopyResponse & { copied_adset_id?: string }>(
+      'POST',
+      `/${opts.sourceAdSetId}/copies`,
+      body,
+    );
+    const newId = res.copied_adset_id ?? res.copied_ad_id ?? '';
+    return { ad_set_id: newId };
+  }
 }

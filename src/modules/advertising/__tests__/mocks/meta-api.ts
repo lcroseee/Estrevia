@@ -10,6 +10,13 @@ export const mockMetaApi = () => ({
   duplicateAd: vi.fn().mockResolvedValue({ ad_id: 'ad_new_001' }),
   createCampaign: vi.fn().mockResolvedValue({ campaign_id: 'mock_campaign_1' }),
   createAdSet: vi.fn().mockResolvedValue({ adset_id: 'mock_adset_1' }),
+  // MetaAdActOps — Phase D additions
+  replaceAdCreative: vi
+    .fn()
+    .mockResolvedValue({ ad_id: 'ad_001', new_creative_id: 'cr_new_001' }),
+  duplicateAdSetWithChanges: vi
+    .fn()
+    .mockResolvedValue({ ad_set_id: 'adset_new_001' }),
   // MetaAdClient extras
   getAccountStatus: vi.fn().mockResolvedValue({ status: 'ACTIVE', disapproval_rate: 0.02 }),
   // MetaApiClient upload methods

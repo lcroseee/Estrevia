@@ -2,7 +2,9 @@ import type { AdMetric } from './perceive';
 
 export type DecisionAction =
   | 'pause' | 'scale_up' | 'scale_down'
-  | 'maintain' | 'duplicate' | 'hold';
+  | 'maintain' | 'duplicate' | 'hold'
+  // Phase D senior-buyer actions
+  | 'refresh_creative' | 'propose_new_ad_set';
 
 export type DecisionTier = 'tier_1_rules' | 'tier_2_bayesian' | 'tier_3_anomaly';
 
