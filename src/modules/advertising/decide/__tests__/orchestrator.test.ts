@@ -12,12 +12,39 @@ vi.mock('@/modules/advertising/perceive/recon-state-store', () => ({
   }),
 }));
 
+// Senior-buyer dependencies — mocked at module-load so the orchestrator
+// import succeeds without booting the DB. Per-test overrides via
+// `vi.mocked(...).mockReturnValueOnce`/`mockResolvedValueOnce`.
+vi.mock('@/modules/advertising/senior-buyer/state-store', () => ({
+  listAdSetsByPhase: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('@/modules/advertising/senior-buyer/data-maturity-classifier', () => ({
+  classifyMaturity: vi.fn().mockReturnValue('AUTONOMOUS'),
+}));
+vi.mock('@/modules/advertising/senior-buyer/phase-evaluator', () => ({
+  evaluatePhase: vi.fn().mockResolvedValue({
+    ad_id: 'ad_test_001',
+    action: 'maintain',
+    reason: 'phase_evaluator_stub',
+  }),
+}));
+vi.mock('@/modules/advertising/senior-buyer/approval-router', () => ({
+  route: vi.fn().mockResolvedValue({
+    type: 'execute_immediately',
+    reason: 'reversible_action',
+  }),
+}));
+
 import { decide } from '../orchestrator';
-import type { DecideDeps, Tier2DecideFn } from '../orchestrator';
+import type { DecideDeps, Tier2DecideFn, RoutedDecision } from '../orchestrator';
 import type { AdDecision, FeatureGate } from '@/shared/types/advertising';
 import { mockAdMetric } from '../../__tests__/fixtures';
 import { mockClaudeApi } from '../../__tests__/mocks/claude';
 import { getReconState } from '@/modules/advertising/perceive/recon-state-store';
+import { listAdSetsByPhase } from '@/modules/advertising/senior-buyer/state-store';
+import { classifyMaturity } from '@/modules/advertising/senior-buyer/data-maturity-classifier';
+import { evaluatePhase } from '@/modules/advertising/senior-buyer/phase-evaluator';
+import { route as approvalRoute } from '@/modules/advertising/senior-buyer/approval-router';
 import type { Baseline } from '../tier-3-anomaly';
 
 // ------- Fixtures -------
@@ -365,5 +392,247 @@ describe('decide (orchestrator)', () => {
     // Tier 1 pause path runs normally — frequency 5.0 triggers pause
     expect(decisions[0].action).toBe('pause');
     expect(decisions[0].reasoning_tier).toBe('tier_1_rules');
+  });
+
+  // --- Senior buyer mode (Track 22) ---
+
+  /**
+   * Build a minimal persisted ad-set-state row that satisfies
+   * `AdvertisingAdSetState` for tests. Drizzle's inferred type is wide; we
+   * cover the fields the orchestrator actually reads, plus a few defaults to
+   * keep the structural typecheck happy.
+   */
+  function makeAdSetState(overrides: Partial<{
+    adSetId: string;
+    campaignId: string;
+    locale: string;
+    currentPhase: 'A' | 'B' | 'C' | 'D' | 'PAUSED' | 'RETIRED';
+    dataMaturityMode: 'COLD_START' | 'CALIBRATING' | 'AUTONOMOUS';
+    conversionsTotalMeta: number;
+    daysWithPixelData: number;
+    cpa7d: number | null;
+    roas7d: number | null;
+    frequencyCurrent: number | null;
+  }> = {}) {
+    return {
+      adSetId: 'adset_test_001',
+      campaignId: 'campaign_test_001',
+      locale: 'en',
+      currentPhase: 'C' as const,
+      phaseEnteredAt: new Date(),
+      dataMaturityMode: 'AUTONOMOUS' as const,
+      maturityEnteredAt: new Date(),
+      optimizationEvent: 'landing_page_view',
+      conversions7dMeta: 0,
+      conversions14dMeta: 0,
+      conversionsTotalMeta: 100,
+      daysWithPixelData: 30,
+      conversions7dPosthog: 0,
+      roas7d: 2.0 as number | null,
+      cpa7d: 5.0 as number | null,
+      frequencyCurrent: 1.5 as number | null,
+      parentAdSetId: null,
+      duplicatesCount: 0,
+      lastActionTakenAt: null,
+      flaggedForReview: false,
+      flagReason: null,
+      updatedAt: new Date(),
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    // Reset the senior-buyer mocks so per-test setup is deterministic.
+    vi.mocked(listAdSetsByPhase).mockReset().mockResolvedValue([]);
+    vi.mocked(classifyMaturity).mockReset().mockReturnValue('AUTONOMOUS');
+    vi.mocked(evaluatePhase).mockReset().mockResolvedValue({
+      ad_id: 'ad_test_001',
+      action: 'maintain',
+      reason: 'phase_evaluator_stub',
+    });
+    vi.mocked(approvalRoute).mockReset().mockResolvedValue({
+      type: 'execute_immediately',
+      reason: 'reversible_action',
+    });
+  });
+
+  it('seniorBuyerMode=off (default): falls through to Tier 1 path (regression)', async () => {
+    // Frequency over threshold should still trigger Tier 1 pause when senior-buyer is off.
+    const metric = mockAdMetric({ ad_id: 'ad_legacy', days_running: 7, frequency: 5.0 });
+    const deps = makeDeps({ claudeClient: claude });
+    const { decisions } = await decide([metric], [], deps);
+
+    expect(decisions[0].action).toBe('pause');
+    expect(decisions[0].reasoning_tier).toBe('tier_1_rules');
+    // Senior-buyer collaborators must NOT have been called.
+    expect(evaluatePhase).not.toHaveBeenCalled();
+    expect(approvalRoute).not.toHaveBeenCalled();
+    expect(listAdSetsByPhase).not.toHaveBeenCalled();
+  });
+
+  it('seniorBuyerMode=on (via gate): calls evaluatePhase + approvalRoute', async () => {
+    const metric = mockAdMetric({ ad_id: 'ad_sb_001', adset_id: 'adset_sb_001' });
+    const state = makeAdSetState({ adSetId: 'adset_sb_001' });
+    vi.mocked(listAdSetsByPhase).mockResolvedValueOnce([state]);
+    vi.mocked(evaluatePhase).mockResolvedValueOnce({
+      ad_id: 'ad_sb_001',
+      action: 'maintain',
+      reason: 'phase_c_steady',
+    });
+    vi.mocked(approvalRoute).mockResolvedValueOnce({
+      type: 'execute_immediately',
+      reason: 'reversible_action',
+    });
+
+    const gate = makeGate('seniorBuyerMode', 'active_auto');
+    // Cast through the senior-buyer overload by sneaking the literal `'on'`
+    // mode in via the gate (deps stays the legacy shape).
+    const { decisions, shadowLog } = await decide([metric], [gate], {
+      ...makeDeps({ claudeClient: claude }),
+      senior_buyer_mode: 'on' as const,
+    });
+
+    expect(listAdSetsByPhase).toHaveBeenCalledOnce();
+    expect(evaluatePhase).toHaveBeenCalledOnce();
+    expect(approvalRoute).toHaveBeenCalledOnce();
+
+    expect(decisions).toHaveLength(1);
+    expect((decisions as RoutedDecision[])[0]).toEqual({
+      ad_id: 'ad_sb_001',
+      action: 'maintain',
+      reason: 'phase_c_steady',
+      routing: 'execute_immediately',
+    });
+    expect(shadowLog).toEqual([]);
+  });
+
+  it('seniorBuyerMode=on (via deps): explicit override beats gate absence', async () => {
+    const metric = mockAdMetric({ ad_id: 'ad_sb_002', adset_id: 'adset_sb_002' });
+    vi.mocked(listAdSetsByPhase).mockResolvedValueOnce([
+      makeAdSetState({ adSetId: 'adset_sb_002', currentPhase: 'B' }),
+    ]);
+
+    const { decisions } = await decide([metric], [], {
+      ...makeDeps({ claudeClient: claude }),
+      senior_buyer_mode: 'on' as const,
+    });
+
+    expect(evaluatePhase).toHaveBeenCalledOnce();
+    expect(approvalRoute).toHaveBeenCalledOnce();
+    expect((decisions as RoutedDecision[])[0].routing).toBe('execute_immediately');
+  });
+
+  it('seniorBuyerMode=on: ad with no state row → "state_not_initialised", no evaluator call', async () => {
+    const metric = mockAdMetric({ ad_id: 'ad_new', adset_id: 'adset_new' });
+    // listAdSetsByPhase returns empty by default — no state row for this ad set.
+    const { decisions } = await decide([metric], [], {
+      ...makeDeps({ claudeClient: claude }),
+      senior_buyer_mode: 'on' as const,
+    });
+
+    expect(decisions).toHaveLength(1);
+    expect(decisions[0]).toMatchObject({
+      ad_id: 'ad_new',
+      action: 'hold',
+      reason: 'state_not_initialised',
+      routing: 'execute_immediately',
+    });
+    expect(evaluatePhase).not.toHaveBeenCalled();
+    expect(approvalRoute).not.toHaveBeenCalled();
+  });
+
+  it('seniorBuyerMode=on: refreshed maturity is forwarded to approval-router', async () => {
+    const metric = mockAdMetric({ ad_id: 'ad_sb_003', adset_id: 'adset_sb_003' });
+    const persisted = makeAdSetState({
+      adSetId: 'adset_sb_003',
+      currentPhase: 'C',
+      // Persisted as AUTONOMOUS but the maturity classifier just downgraded it
+      // to CALIBRATING — the orchestrator must pass the *fresh* mode through.
+      dataMaturityMode: 'AUTONOMOUS',
+    });
+    vi.mocked(listAdSetsByPhase).mockResolvedValueOnce([persisted]);
+    vi.mocked(classifyMaturity).mockReturnValueOnce('CALIBRATING');
+
+    await decide([metric], [], {
+      ...makeDeps({ claudeClient: claude }),
+      senior_buyer_mode: 'on' as const,
+    });
+
+    expect(approvalRoute).toHaveBeenCalledOnce();
+    const [, routerState] = vi.mocked(approvalRoute).mock.calls[0]!;
+    expect(routerState).toMatchObject({
+      ad_set_id: 'adset_sb_003',
+      data_maturity_mode: 'CALIBRATING',
+      current_phase: 'C',
+    });
+  });
+
+  it('seniorBuyerMode=on: reconciler suspend short-circuits to emergency pauses (no evaluator call)', async () => {
+    vi.mocked(getReconState).mockResolvedValueOnce({
+      suspended: true,
+      suspendedAt: new Date(),
+      suspendReason: 'critical_drift',
+      autoResumeAt: new Date(Date.now() + 24 * 3600 * 1000),
+      lastDriftPct: 0.5,
+    });
+
+    const metric = mockAdMetric({
+      ad_id: 'ad_sb_disapproved',
+      adset_id: 'adset_sb_disapproved',
+      days_running: 7,
+      status: 'DISAPPROVED',
+    });
+    const { decisions } = await decide([metric], [], {
+      ...makeDeps({ claudeClient: claude }),
+      senior_buyer_mode: 'on' as const,
+    });
+
+    // Same emergency-pause shape both modes — publisher contract preserved.
+    expect(decisions).toHaveLength(1);
+    expect(decisions[0]).toMatchObject({
+      ad_id: 'ad_sb_disapproved',
+      action: 'pause',
+      reason: 'reconciler_suspended_disapproved_ad_emergency_pause',
+    });
+    // Senior-buyer pipeline must NOT execute under suspend.
+    expect(listAdSetsByPhase).not.toHaveBeenCalled();
+    expect(evaluatePhase).not.toHaveBeenCalled();
+    expect(approvalRoute).not.toHaveBeenCalled();
+  });
+
+  it('seniorBuyerMode=on: reconciler suspend with no DISAPPROVED ads returns empty', async () => {
+    vi.mocked(getReconState).mockResolvedValueOnce({
+      suspended: true,
+      suspendedAt: new Date(),
+      suspendReason: 'critical_drift',
+      autoResumeAt: new Date(Date.now() + 24 * 3600 * 1000),
+      lastDriftPct: 0.5,
+    });
+
+    const metric = mockAdMetric({ ad_id: 'ad_sb_active', status: 'ACTIVE' });
+    const { decisions, shadowLog } = await decide([metric], [], {
+      ...makeDeps({ claudeClient: claude }),
+      senior_buyer_mode: 'on' as const,
+    });
+
+    expect(decisions).toEqual([]);
+    expect(shadowLog).toEqual([]);
+    expect(listAdSetsByPhase).not.toHaveBeenCalled();
+  });
+
+  it('seniorBuyerMode gate in shadow/off mode does NOT activate senior-buyer path', async () => {
+    const metric = mockAdMetric({ ad_id: 'ad_legacy_2', days_running: 7, frequency: 5.0 });
+    const offGate = makeGate('seniorBuyerMode', 'off');
+    const shadowGate = makeGate('seniorBuyerMode', 'shadow');
+
+    for (const gate of [offGate, shadowGate]) {
+      vi.mocked(listAdSetsByPhase).mockClear();
+      vi.mocked(evaluatePhase).mockClear();
+      const { decisions } = await decide([metric], [gate], makeDeps({ claudeClient: claude }));
+      expect(decisions[0].action).toBe('pause');
+      expect(decisions[0].reasoning_tier).toBe('tier_1_rules');
+      expect(evaluatePhase).not.toHaveBeenCalled();
+      expect(listAdSetsByPhase).not.toHaveBeenCalled();
+    }
   });
 });

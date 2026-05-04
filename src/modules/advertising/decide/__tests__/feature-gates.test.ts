@@ -368,17 +368,18 @@ describe('currentMode', () => {
 // ---- seedGates --------------------------------------------------------------
 
 describe('seedGates', () => {
-  it('inserts all 4 default gates into empty DB', async () => {
+  it('inserts all 5 default gates into empty DB', async () => {
     const db = makeMockDb([]);
     await seedGates(db as GatesDb);
     const rows = await db.select().from(advertisingFeatureGates);
-    expect(rows).toHaveLength(4);
+    expect(rows).toHaveLength(5);
     const ids = rows.map((r) => r.featureId).sort();
     expect(ids).toEqual([
       'anomalyDetection',
       'bayesianDecisions',
       'exclusionsCampaigns',
       'retargetingCampaigns',
+      'seniorBuyerMode',
     ]);
   });
 
@@ -401,6 +402,7 @@ describe('seedGates', () => {
     expect(byId['anomalyDetection']).toBe('shadow');
     expect(byId['retargetingCampaigns']).toBe('off');
     expect(byId['exclusionsCampaigns']).toBe('off');
+    expect(byId['seniorBuyerMode']).toBe('off');
   });
 
   it('sets empty currentState for all seeded gates', async () => {
@@ -416,8 +418,14 @@ describe('seedGates', () => {
 // ---- featureGatesConfig -----------------------------------------------------
 
 describe('featureGatesConfig static config', () => {
-  it('has exactly 4 feature gates defined', () => {
-    expect(Object.keys(featureGatesConfig)).toHaveLength(4);
+  it('has exactly 5 feature gates defined', () => {
+    expect(Object.keys(featureGatesConfig)).toHaveLength(5);
+  });
+
+  it('seniorBuyerMode: initial_mode=off, no activation criteria (manual flip)', () => {
+    const c = featureGatesConfig['seniorBuyerMode'];
+    expect(c.initial_mode).toBe('off');
+    expect(c.activate_when).toEqual({});
   });
 
   it('bayesianDecisions: initial_mode=shadow, min_impressions=5000, min_days=14, agreement=0.7', () => {

@@ -94,6 +94,24 @@ export const featureGatesConfig: Record<string, FeatureGateConfig> = {
       min_audience_size: 100,
     },
   },
+  /**
+   * Senior Buyer Mode — replaces Tier-1 hard rules with the 4-phase
+   * per-ad-set state machine + Q12 approval-router.
+   *
+   * `mode` semantics for this gate (mapped onto the existing `Mode` union):
+   *   - 'off'             → orchestrator stays on legacy Tier 1/2/3 path
+   *   - 'shadow'          → not used (no shadow eval defined for senior-buyer)
+   *   - 'active_proposal' → on; ops uses approval routing (default once enabled)
+   *   - 'active_auto'     → on; same routing — kept for forward parity
+   *
+   * Initial mode 'off' until Stage 0 (Pixel + CAPI) is verified live in
+   * production (v3b prerequisite). No automatic activation criteria — flip
+   * via founder override after manual sign-off.
+   */
+  seniorBuyerMode: {
+    initial_mode: 'off',
+    activate_when: {},
+  },
 };
 
 // ---- Approval count needed to transition active_proposal → active_auto ------
