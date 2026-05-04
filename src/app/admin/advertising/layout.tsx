@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/admin/advertising/spend', label: 'Spend' },
   { href: '/admin/advertising/thresholds', label: 'Thresholds' },
   { href: '/admin/advertising/recon-state', label: 'Reconciler' },
+  { href: '/admin/advertising/ad-set-state', label: 'Ad Set State' },
 ];
 
 export default async function AdvertisingAdminLayout({
