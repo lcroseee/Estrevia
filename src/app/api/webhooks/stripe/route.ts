@@ -424,7 +424,7 @@ export async function POST(request: Request): Promise<Response> {
           typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
 
         const rows = await db
-          .select({ email: users.email })
+          .select({ id: users.id, email: users.email, locale: users.locale })
           .from(users)
           .where(eq(users.stripeCustomerId, customerId))
           .limit(1);
@@ -432,7 +432,12 @@ export async function POST(request: Request): Promise<Response> {
         if (rows[0]?.email) {
           const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : new Date();
           const { sendTrialEndingEmail } = await import('@/shared/lib/email');
-          await sendTrialEndingEmail(rows[0].email, trialEnd);
+          await sendTrialEndingEmail({
+            userId: rows[0].id,
+            email: rows[0].email,
+            locale: (rows[0].locale ?? 'en') as 'en' | 'es',
+            trialEnd,
+          });
         }
 
         console.info('[stripe-webhook] trial_will_end → email sent', { customerId });

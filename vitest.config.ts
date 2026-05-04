@@ -8,6 +8,9 @@ export default defineConfig({
       '@/modules': path.resolve(__dirname, './src/modules'),
       '@/shared': path.resolve(__dirname, './src/shared'),
       '@/content': path.resolve(__dirname, './content'),
+      // server-only throws in vitest (node env). Alias to a no-op so server
+      // modules can be tested without Next.js bundler context.
+      'server-only': path.resolve(__dirname, './src/shared/test-utils/server-only-mock.ts'),
     },
   },
   test: {
