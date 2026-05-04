@@ -3,6 +3,43 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import createIntlMiddleware from 'next-intl/middleware';
 import { routing } from '@/i18n/routing';
 
+// ---------------------------------------------------------------------------
+// lastSeenAt throttled update (fire-and-forget, never blocks the request)
+// ---------------------------------------------------------------------------
+const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Updates users.last_seen_at if it is NULL or older than 24 hours.
+ * The WHERE clause (isNull OR lt cutoff) ensures 0-row matches when fresh,
+ * avoiding a separate SELECT round-trip.
+ *
+ * All errors are swallowed — analytics writes must never block auth flow.
+ */
+async function updateLastSeenIfNeeded(userId: string): Promise<void> {
+  try {
+    const { getDb } = await import('@/shared/lib/db');
+    const { users } = await import('@/shared/lib/schema');
+    const { eq, and, or, isNull, lt } = await import('drizzle-orm');
+    const db = getDb();
+    const cutoff = new Date(Date.now() - TWENTY_FOUR_HOURS_MS);
+    await db
+      .update(users)
+      .set({ lastSeenAt: new Date() })
+      .where(
+        and(
+          eq(users.id, userId),
+          or(isNull(users.lastSeenAt), lt(users.lastSeenAt, cutoff)),
+        ),
+      );
+  } catch (err) {
+    // Never block the request on analytics writes
+    console.warn(
+      '[middleware] lastSeenAt update failed',
+      err instanceof Error ? err.message : 'unknown',
+    );
+  }
+}
+
 const intlMiddleware = createIntlMiddleware(routing);
 
 // Routes that require authentication — all others are public by default.
@@ -73,6 +110,18 @@ export default clerkMiddleware(async (auth, req) => {
       const signInUrl = new URL('/sign-in', req.url);
       signInUrl.searchParams.set('redirect_url', req.url);
       return NextResponse.redirect(signInUrl);
+    }
+  }
+
+  // 2b) Throttled lastSeenAt update — fire-and-forget for all authed requests.
+  //     We call auth() a second time here; Clerk v6 caches the result within
+  //     the same middleware invocation so this is a no-op clock read.
+  //     The DB update is fire-and-forget — errors are caught inside the helper
+  //     and NEVER allowed to propagate or delay the response.
+  {
+    const { userId } = await auth();
+    if (userId) {
+      void updateLastSeenIfNeeded(userId);
     }
   }
 

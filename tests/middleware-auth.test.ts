@@ -215,3 +215,216 @@ describe('middleware behavior — unauthenticated API request', () => {
     expect(response).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Part 3: lastSeenAt update (T4 — email-retention)
+// ---------------------------------------------------------------------------
+// These tests verify that the throttled lastSeenAt update fires for authed
+// requests and never blocks the response on DB errors.
+//
+// Strategy: mock the dynamic imports inside updateLastSeenIfNeeded so we can
+// spy on db.update calls without touching the actual DB.
+
+describe('middleware — lastSeenAt update (T4)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  // -------------------------------------------------------------------------
+  // Test 1: authenticated request → db.update called with lastSeenAt
+  // -------------------------------------------------------------------------
+  it('calls db.update with lastSeenAt for an authenticated request', async () => {
+    const updateSetWhereMock = vi.fn().mockResolvedValue(undefined);
+    const updateSetMock = vi.fn().mockReturnValue({ where: updateSetWhereMock });
+    const updateMock = vi.fn().mockReturnValue({ set: updateSetMock });
+
+    vi.doMock('@/shared/lib/db', () => ({
+      getDb: () => ({ update: updateMock }),
+    }));
+    vi.doMock('@/shared/lib/schema', () => ({
+      users: { id: 'id', lastSeenAt: 'last_seen_at' },
+    }));
+    vi.doMock('drizzle-orm', () => ({
+      eq: vi.fn((col: unknown, val: unknown) => ({ col, val, op: 'eq' })),
+      and: vi.fn((...args: unknown[]) => ({ args, op: 'and' })),
+      or: vi.fn((...args: unknown[]) => ({ args, op: 'or' })),
+      isNull: vi.fn((col: unknown) => ({ col, op: 'isNull' })),
+      lt: vi.fn((col: unknown, val: unknown) => ({ col, val, op: 'lt' })),
+    }));
+
+    // Auth mock: returns authenticated user for this test
+    vi.doMock('@clerk/nextjs/server', () => {
+      const createRouteMatcher = (patterns: string[]) =>
+        (req: { nextUrl: { pathname: string } }) =>
+          patterns.some((p) =>
+            new RegExp(
+              '^' +
+                p
+                  .replace(/:\w+\*/g, '.*')
+                  .replace(/:\w+\+/g, '.+')
+                  .replace(/:\w+\([^)]+\)/g, '[^/]+')
+                  .replace(/:\w+/g, '[^/]+') +
+                '$',
+            ).test(req.nextUrl.pathname),
+          );
+
+      const clerkMiddleware = (
+        handler: (
+          auth: () => Promise<{ userId: string | null }>,
+          req: unknown,
+        ) => unknown,
+      ) => async (req: unknown) => {
+        const auth = () => Promise.resolve({ userId: 'user_lastseen_test' });
+        return handler(auth, req);
+      };
+
+      return { clerkMiddleware, createRouteMatcher };
+    });
+
+    const { default: middleware } = await import('@/middleware');
+
+    const url = 'http://localhost:3000/api/v1/stripe/checkout';
+    const req = new Request(url, { method: 'GET' });
+    Object.defineProperty(req, 'nextUrl', { value: new URL(url), writable: false });
+
+    await (middleware as (req: unknown) => Promise<Response | undefined>)(req);
+
+    // Fire-and-forget — give the promise a microtask tick to run
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(updateMock).toHaveBeenCalled();
+    expect(updateSetMock).toHaveBeenCalledWith(
+      expect.objectContaining({ lastSeenAt: expect.any(Date) }),
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // Test 2: the WHERE clause ensures stale check (0 rows when fresh = correct)
+  //   We only verify that the WHERE is constructed — no error expected
+  // -------------------------------------------------------------------------
+  it('constructs WHERE with isNull OR lt cutoff (throttle logic)', async () => {
+    const updateSetWhereMock = vi.fn().mockResolvedValue(undefined);
+    const updateSetMock = vi.fn().mockReturnValue({ where: updateSetWhereMock });
+    const updateMock = vi.fn().mockReturnValue({ set: updateSetMock });
+
+    const andMock = vi.fn((...args: unknown[]) => ({ args, op: 'and' }));
+    const orMock = vi.fn((...args: unknown[]) => ({ args, op: 'or' }));
+    const isNullMock = vi.fn((col: unknown) => ({ col, op: 'isNull' }));
+    const ltMock = vi.fn((col: unknown, val: unknown) => ({ col, val, op: 'lt' }));
+
+    vi.doMock('@/shared/lib/db', () => ({
+      getDb: () => ({ update: updateMock }),
+    }));
+    vi.doMock('@/shared/lib/schema', () => ({
+      users: { id: 'id', lastSeenAt: 'last_seen_at' },
+    }));
+    vi.doMock('drizzle-orm', () => ({
+      eq: vi.fn((col: unknown, val: unknown) => ({ col, val, op: 'eq' })),
+      and: andMock,
+      or: orMock,
+      isNull: isNullMock,
+      lt: ltMock,
+    }));
+
+    vi.doMock('@clerk/nextjs/server', () => {
+      const createRouteMatcher = (patterns: string[]) =>
+        (req: { nextUrl: { pathname: string } }) =>
+          patterns.some((p) =>
+            new RegExp(
+              '^' +
+                p
+                  .replace(/:\w+\*/g, '.*')
+                  .replace(/:\w+\+/g, '.+')
+                  .replace(/:\w+\([^)]+\)/g, '[^/]+')
+                  .replace(/:\w+/g, '[^/]+') +
+                '$',
+            ).test(req.nextUrl.pathname),
+          );
+      const clerkMiddleware = (
+        handler: (auth: () => Promise<{ userId: string | null }>, req: unknown) => unknown,
+      ) => async (req: unknown) => {
+        const auth = () => Promise.resolve({ userId: 'user_throttle_test' });
+        return handler(auth, req);
+      };
+      return { clerkMiddleware, createRouteMatcher };
+    });
+
+    const { default: middleware } = await import('@/middleware');
+
+    const url = 'http://localhost:3000/api/v1/stripe/portal';
+    const req = new Request(url, { method: 'GET' });
+    Object.defineProperty(req, 'nextUrl', { value: new URL(url), writable: false });
+
+    await (middleware as (req: unknown) => Promise<Response | undefined>)(req);
+    await new Promise((r) => setTimeout(r, 10));
+
+    // The OR clause must be constructed with isNull + lt
+    expect(isNullMock).toHaveBeenCalled();
+    expect(ltMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.any(Date),
+    );
+    expect(orMock).toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // Test 3: DB error in updateLastSeenIfNeeded MUST NOT block the response
+  // -------------------------------------------------------------------------
+  it('does not block or error the request when db.update throws', async () => {
+    vi.doMock('@/shared/lib/db', () => ({
+      getDb: () => ({
+        update: vi.fn(() => {
+          throw new Error('DB connection refused');
+        }),
+      }),
+    }));
+    vi.doMock('@/shared/lib/schema', () => ({
+      users: { id: 'id', lastSeenAt: 'last_seen_at' },
+    }));
+    vi.doMock('drizzle-orm', () => ({
+      eq: vi.fn(),
+      and: vi.fn(),
+      or: vi.fn(),
+      isNull: vi.fn(),
+      lt: vi.fn(),
+    }));
+
+    vi.doMock('@clerk/nextjs/server', () => {
+      const createRouteMatcher = (patterns: string[]) =>
+        (req: { nextUrl: { pathname: string } }) =>
+          patterns.some((p) =>
+            new RegExp(
+              '^' +
+                p
+                  .replace(/:\w+\*/g, '.*')
+                  .replace(/:\w+\+/g, '.+')
+                  .replace(/:\w+\([^)]+\)/g, '[^/]+')
+                  .replace(/:\w+/g, '[^/]+') +
+                '$',
+            ).test(req.nextUrl.pathname),
+          );
+      const clerkMiddleware = (
+        handler: (auth: () => Promise<{ userId: string | null }>, req: unknown) => unknown,
+      ) => async (req: unknown) => {
+        const auth = () => Promise.resolve({ userId: 'user_dberror_test' });
+        return handler(auth, req);
+      };
+      return { clerkMiddleware, createRouteMatcher };
+    });
+
+    const { default: middleware } = await import('@/middleware');
+
+    const url = 'http://localhost:3000/api/v1/stripe/portal';
+    const req = new Request(url, { method: 'GET' });
+    Object.defineProperty(req, 'nextUrl', { value: new URL(url), writable: false });
+
+    // Must not throw — DB error is swallowed inside updateLastSeenIfNeeded
+    await expect(
+      (middleware as (req: unknown) => Promise<Response | undefined>)(req),
+    ).resolves.not.toThrow();
+
+    // Give the fire-and-forget promise a tick to settle
+    await new Promise((r) => setTimeout(r, 10));
+    // If we reach here, the test passes (no unhandled rejection)
+  });
+});

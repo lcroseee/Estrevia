@@ -13,6 +13,10 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/cron/re-engagement",
+      "schedule": "0 9 * * *"
+    },
+    {
       "path": "/api/cron/advertising/triage-hourly",
       "schedule": "0 * * * *"
     },
