@@ -24,6 +24,10 @@ export const users = pgTable('users', {
   currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  locale: text('locale', { enum: ['en', 'es'] }).notNull().default('en'),
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
+  marketingEmailOptIn: boolean('marketing_email_opt_in').notNull().default(true),
+  emailUndeliverable: boolean('email_undeliverable').notNull().default(false),
 });
 
 // ---------------------------------------------------------------------------
@@ -404,6 +408,36 @@ export const advertisingThresholds = pgTable('advertising_thresholds', {
   ),
   byLookup: index('idx_thresholds_lookup').on(table.scope, table.scopeId, table.metricName, table.effectiveFrom),
 }));
+
+// ---------------------------------------------------------------------------
+// sent_emails — idempotency + audit log for all outbound emails
+// ---------------------------------------------------------------------------
+export const sentEmails = pgTable('sent_emails', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  emailType: text('email_type', {
+    enum: [
+      'welcome',
+      'purchase_confirmation',
+      'subscription_canceled',
+      'account_deletion',
+      'trial_ending',
+      're_engagement_28d',
+    ],
+  }).notNull(),
+  resendMessageId: text('resend_message_id'),
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('sent_emails_oneshot_idx')
+    .on(table.userId, table.emailType)
+    .where(sql`${table.emailType} IN ('welcome', 'account_deletion')`),
+  index('sent_emails_user_type_idx')
+    .on(table.userId, table.emailType, table.sentAt),
+]);
+
+export type SentEmail = typeof sentEmails.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Type aliases
