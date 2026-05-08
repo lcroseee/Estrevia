@@ -273,7 +273,7 @@ export async function POST(request: Request): Promise<Response> {
             utm_content: utm.utm_content ?? null, // ad_id by convention
             utm_campaign: utm.utm_campaign ?? null,
             email: customerEmail,          // for CAPI hashing in T11 wrapper
-            $insert_id: `${stripeSubscriptionId ?? session.id}:subscription_started`,
+            $insert_id: `${session.id}:subscription_started`,
           });
         } catch (phErr) {
           console.warn(

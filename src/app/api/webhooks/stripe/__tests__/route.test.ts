@@ -182,7 +182,7 @@ describe('POST /api/webhooks/stripe — subscription_started firing', () => {
         utm_content: 'ad_001',
         utm_campaign: 'launch',
         email: 'paid-user@example.com', // for CAPI hashing in T11 wrapper
-        $insert_id: 'sub_test_001:subscription_started',
+        $insert_id: 'cs_test_001:subscription_started',
       }),
     );
   });
@@ -227,7 +227,7 @@ describe('POST /api/webhooks/stripe — subscription_started firing', () => {
       'subscription_started',
       expect.objectContaining({
         // Dedupe key reused as CAPI event_id (matches browser fbq Subscribe)
-        $insert_id: 'sub_test_capi:subscription_started',
+        $insert_id: 'cs_test_capi:subscription_started',
         // Value-based bidding signals
         value: 49.99,
         currency: 'usd',
