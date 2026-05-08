@@ -17,5 +17,15 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     exclude: ['tests/e2e/**', 'node_modules/**', '.claude/worktrees/**'],
+    environmentOptions: {
+      jsdom: {
+        url: 'http://localhost/',
+      },
+    },
+    // Restore a proper in-memory Storage for jsdom tests.
+    // Node 25 ships a native globalThis.localStorage stub that lacks
+    // .clear() / .setItem() when --localstorage-file is absent, breaking
+    // any test that exercises window.localStorage.
+    setupFiles: ['./src/shared/test-utils/jsdom-setup.ts'],
   },
 });
