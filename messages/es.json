@@ -980,6 +980,20 @@
     "noCharge": "No se te cobrará hasta el {date}",
     "alreadyPro": "Ya tienes acceso Pro"
   },
+  "emailGate": {
+    "title": "Mira tu carta sideral",
+    "subtitle": "Ingresa tu email para ver la carta que calculamos.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "submitCta": "Ver mi carta",
+    "submittingCta": "Cargando…",
+    "dismissCta": "Saltar por ahora",
+    "privacyText": "Al enviar, aceptas recibir tu carta y consejos ocasionales de astrología. Puedes cancelar la suscripción en cualquier momento.",
+    "errInvalidEmail": "Por favor ingresa un email válido",
+    "errRateLimited": "Demasiados intentos. Intenta de nuevo en un minuto.",
+    "errNetwork": "Problema de conexión. Intenta de nuevo.",
+    "errGeneric": "Algo salió mal. Intenta de nuevo."
+  },
   "settings": {
     "title": "Ajustes",
     "subscription": "Suscripción",

@@ -980,6 +980,20 @@
     "noCharge": "You won't be charged until {date}",
     "alreadyPro": "You already have Pro access"
   },
+  "emailGate": {
+    "title": "See your sidereal chart",
+    "subtitle": "Enter your email to reveal the chart we just calculated for you.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "submitCta": "See My Chart",
+    "submittingCta": "Loading…",
+    "dismissCta": "Skip for now",
+    "privacyText": "By submitting, you agree to receive your chart and occasional astrology insights. Unsubscribe anytime.",
+    "errInvalidEmail": "Please enter a valid email",
+    "errRateLimited": "Too many attempts. Try again in a minute.",
+    "errNetwork": "Connection issue. Try again.",
+    "errGeneric": "Something went wrong. Try again."
+  },
   "settings": {
     "title": "Settings",
     "subscription": "Subscription",
