@@ -4,8 +4,9 @@ import { Link } from '@/i18n/navigation';
 import { PlanetaryHourBar } from '@/modules/astro-engine/components/PlanetaryHourBar';
 import { UserMenu } from '@/modules/auth/components/UserMenu';
 import { SubscriptionProvider } from '@/shared/context/SubscriptionProvider';
-import { PostSignupAttribution } from '@/shared/components/PostSignupAttribution';
 import { AnalyticsIdentifier } from '@/shared/components/AnalyticsIdentifier';
+import { MetaPixelSubscribeEmitter } from '@/shared/components/MetaPixelSubscribeEmitter';
+import { PostSignupAttribution } from '@/shared/components/PostSignupAttribution';
 import { MobileNav } from './MobileNav';
 import { DesktopNav } from './DesktopNav';
 
@@ -31,6 +32,8 @@ export default async function AppLayout({
           Only mounted for authenticated (app) routes — public `/s/[id]`
           and marketing pages do not see this provider. */}
       <SubscriptionProvider>
+        {/* Emits Meta Pixel Subscribe event when Stripe redirects with ?session_id */}
+        <MetaPixelSubscribeEmitter />
         {/* V08-2: reads estrevia_passport_ref cookie post-signup and calls attribution API */}
         <PostSignupAttribution />
         <div className="flex flex-col min-h-screen bg-[#0A0A0F]">
