@@ -24,6 +24,7 @@ export const MAPPING_TABLE: Record<EstreviaEvent, MappedEvent> = {
   chart_calculated: { pixel: 'ViewContent', capi: 'ViewContent' },
   passport_reshared: { pixel: 'Share', capi: 'Share' },
   user_registered: { pixel: 'Lead', capi: 'Lead' },
+  email_lead_submitted: { pixel: 'Lead', capi: 'Lead' },
   paywall_opened: { pixel: 'InitiateCheckout', capi: 'InitiateCheckout' },
   subscription_started: { pixel: null, capi: 'Subscribe' },
 };

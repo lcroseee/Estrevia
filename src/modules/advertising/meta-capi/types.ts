@@ -67,5 +67,6 @@ export type EstreviaEvent =
   | 'chart_calculated'
   | 'passport_reshared'
   | 'user_registered'
+  | 'email_lead_submitted'
   | 'paywall_opened'
   | 'subscription_started';

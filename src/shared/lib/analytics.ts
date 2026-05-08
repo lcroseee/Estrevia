@@ -109,6 +109,7 @@ const ESTREVIA_EVENT_NAMES = new Set<EstreviaEvent>([
   'chart_calculated',
   'passport_reshared',
   'user_registered',
+  'email_lead_submitted',
   'paywall_opened',
   'subscription_started',
 ]);
@@ -211,6 +212,10 @@ export const AnalyticsEvent = {
   USER_SIGNED_UP: 'user_signed_up',
   USER_SIGNED_IN: 'user_signed_in',
   USER_REGISTERED: 'user_registered',
+  // Email gate — anonymous email-capture funnel
+  EMAIL_LEAD_SUBMITTED: 'email_lead_submitted',
+  EMAIL_LEAD_RESUBMITTED: 'email_lead_resubmitted', // PostHog only — no CAPI
+  EMAIL_GATE_DISMISSED: 'email_gate_dismissed',     // PostHog only — no CAPI
   // Conversion funnel — paywall → sign-up → checkout → Stripe
   PAYWALL_OPENED: 'paywall_opened',
   PAYWALL_TRIAL_CLICKED: 'paywall_trial_clicked',
