@@ -131,6 +131,11 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(30, '1m'),
     prefix: 'rl:user/subscription',
   }),
+  leads: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1h'),
+    prefix: 'rl:leads',
+  }),
   'support/contact': new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(3, '5m'),
