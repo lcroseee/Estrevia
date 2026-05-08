@@ -27,28 +27,30 @@ type FbqGlobal = (
  */
 export function MetaPixelLeadEmitter(): null {
   const { isLoaded, isSignedIn, user } = useUser();
+  const userId = user?.id ?? null;
+  const createdAtMs = user?.createdAt ? new Date(user.createdAt).getTime() : null;
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !user) return;
+    if (!isLoaded || !isSignedIn || !userId || createdAtMs === null) return;
     if (typeof window === 'undefined') return;
 
     const fbq = (window as unknown as { fbq?: FbqGlobal }).fbq;
     if (typeof fbq !== 'function') return;
 
     try {
-      const ageMs = Date.now() - new Date(user.createdAt).getTime();
+      const ageMs = Date.now() - createdAtMs;
       if (!Number.isFinite(ageMs) || ageMs > FRESH_SIGNUP_WINDOW_MS) return;
 
-      const key = `${STORAGE_PREFIX}${user.id}`;
+      const key = `${STORAGE_PREFIX}${userId}`;
       if (window.localStorage.getItem(key)) return;
 
-      fbq('track', 'Lead', {}, { eventID: `${user.id}:user_registered` });
+      fbq('track', 'Lead', {}, { eventID: `${userId}:user_registered` });
       window.localStorage.setItem(key, '1');
     } catch {
       // localStorage may throw in private mode / restricted contexts.
       // Silent fail — better to skip than risk firing without idempotency.
     }
-  }, [isLoaded, isSignedIn, user]);
+  }, [isLoaded, isSignedIn, userId, createdAtMs]);
 
   return null;
 }
