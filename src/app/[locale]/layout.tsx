@@ -3,6 +3,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { routing } from '@/i18n/routing';
+import { MetaPixelLeadEmitter } from '@/shared/components/MetaPixelLeadEmitter';
 import { UtmCapture } from '@/shared/components/UtmCapture';
 
 export function generateStaticParams() {
@@ -83,6 +84,7 @@ fbq('track', 'PageView');`}
         </>
       ) : null}
       <UtmCapture />
+      <MetaPixelLeadEmitter />
       {children}
     </NextIntlClientProvider>
   );
