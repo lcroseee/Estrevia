@@ -22,10 +22,12 @@ export default defineConfig({
         url: 'http://localhost/',
       },
     },
-    // Restore a proper in-memory Storage for jsdom tests.
-    // Node 25 ships a native globalThis.localStorage stub that lacks
-    // .clear() / .setItem() when --localstorage-file is absent, breaking
-    // any test that exercises window.localStorage.
+    // Restore a proper in-memory Storage for jsdom tests. Node 25 ships
+    // a native globalThis.localStorage stub that lacks .clear() / .setItem()
+    // when --localstorage-file is absent, and it leaks into the per-file
+    // jsdom environment, breaking any test that exercises window.localStorage.
+    // setupFiles run *inside* each test file's environment (jsdom-aware), so
+    // the polyfill targets `window` only when window exists.
     setupFiles: ['./src/shared/test-utils/jsdom-setup.ts'],
   },
 });
