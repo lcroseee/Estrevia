@@ -21,8 +21,11 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { EmailGateModal } from '@/shared/components/EmailGateModal';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
 import { TimePickerField } from './TimePickerField';
@@ -148,6 +151,11 @@ const HERO_CALC_STYLES = `
 // ── Component ─────────────────────────────────────────────────────────────────
 export function HeroCalculator() {
   const t = useTranslations('heroCalc');
+  const locale = useLocale() as 'en' | 'es';
+  const { isSignedIn } = useUser();
+  const searchParams = useSearchParams();
+  const [gateOpen, setGateOpen] = useState(false);
+  const [gateBypassed, setGateBypassed] = useState(false);
   const [form, setForm] = useState<FormState>({
     date: '',
     time: '',
@@ -194,6 +202,19 @@ export function HeroCalculator() {
     return errs;
   }, [form, t]);
 
+  const shouldShowGate = useCallback((): boolean => {
+    if (isSignedIn) return false;
+    if (searchParams?.get('no_gate') === '1') return false;
+    if (gateBypassed) return false;
+    if (typeof window === 'undefined') return false;
+    try {
+      if (window.localStorage.getItem('email_gate_passed')) return false;
+    } catch {
+      /* private mode — fall through, gate shows */
+    }
+    return true;
+  }, [isSignedIn, searchParams, gateBypassed]);
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -235,11 +256,15 @@ export function HeroCalculator() {
           return;
         }
 
-        setResult({
+        const heroResult = {
           sunSign: sunPlanet.sign,
           sunDegree: sunPlanet.signDegree,
           chartId: json.data.chartId,
-        });
+        };
+        setResult(heroResult);
+        if (shouldShowGate()) {
+          setGateOpen(true);
+        }
       } catch (err) {
         if (process.env.NODE_ENV !== 'production') {
           console.error('[HeroCalculator] submit failed:', err);
@@ -252,7 +277,7 @@ export function HeroCalculator() {
         setIsLoading(false);
       }
     },
-    [form, validate, t]
+    [form, validate, t, shouldShowGate]
   );
 
   // ── Result card ──────────────────────────────────────────────────────────
@@ -264,73 +289,88 @@ export function HeroCalculator() {
     return (
       <>
         <style>{HERO_CALC_STYLES}</style>
-        <div
-          key="result"
-          className="w-full hc-result-card"
-          role="region"
-          aria-label={t('resultAria')}
-          aria-live="polite"
-        >
-          {/* Result display */}
+        {gateOpen && (
+          <EmailGateModal
+            open={gateOpen}
+            chartId={result.chartId}
+            locale={locale}
+            onSubmitted={() => { setGateOpen(false); setGateBypassed(true); }}
+            onDismiss={() => { setGateOpen(false); setGateBypassed(true); }}
+          />
+        )}
+        {!gateOpen && (
           <div
-            className="relative rounded-2xl border border-white/8 overflow-hidden p-6 sm:p-8 text-center"
-            style={{ background: 'rgba(255,255,255,0.03)' }}
+            key="result"
+            className="w-full hc-result-card"
+            role="region"
+            aria-label={t('resultAria')}
+            aria-live="polite"
           >
-            {/* Subtle element-colored glow */}
+            {/* Result display */}
             <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `radial-gradient(ellipse 60% 40% at 50% 0%, ${signInfo?.color ?? '#FFD700'}18 0%, transparent 70%)`,
-              }}
-              aria-hidden="true"
-            />
-
-            <div className="relative">
-              <p className="text-xs tracking-[0.2em] uppercase text-white/40 mb-3">
-                {t('resultEyebrow')}
-              </p>
-
+              className="relative rounded-2xl border border-white/8 overflow-hidden p-6 sm:p-8 text-center"
+              style={{ background: 'rgba(255,255,255,0.03)' }}
+            >
+              {/* Subtle element-colored glow */}
               <div
-                className="text-6xl mb-2 hc-result-glyph"
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `radial-gradient(ellipse 60% 40% at 50% 0%, ${signInfo?.color ?? '#FFD700'}18 0%, transparent 70%)`,
+                }}
                 aria-hidden="true"
-              >
-                {glyph}
+              />
+
+              <div className="relative">
+                <p className="text-xs tracking-[0.2em] uppercase text-white/40 mb-3">
+                  {t('resultEyebrow')}
+                </p>
+
+                <div
+                  className="text-6xl mb-2 hc-result-glyph"
+                  aria-hidden="true"
+                >
+                  {glyph}
+                </div>
+
+                <h3
+                  className="text-3xl sm:text-4xl font-light text-white mb-1 hc-result-heading"
+                  style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
+                >
+                  {result.sunSign}
+                </h3>
+
+                <p
+                  className="text-sm text-white/40 mb-1 hc-result-meta"
+                  style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
+                >
+                  {t('elementSign', { degree: result.sunDegree, element: elementLabel })}
+                </p>
               </div>
+            </div>
 
-              <h3
-                className="text-3xl sm:text-4xl font-light text-white mb-1 hc-result-heading"
-                style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
+            {/* CTAs */}
+            <div className="mt-4 flex flex-col sm:flex-row items-center gap-3 hc-result-ctas">
+              <Link
+                href={`/chart?chartId=${result.chartId}`}
+                className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] transition-colors"
               >
-                {result.sunSign}
-              </h3>
-
-              <p
-                className="text-sm text-white/40 mb-1 hc-result-meta"
-                style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}
+                {t('seeFullChart')}
+                <span aria-hidden="true">→</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setResult(null);
+                  setGateOpen(false);
+                  setGateBypassed(false);
+                }}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/12 text-sm text-white/50 hover:text-white/80 hover:border-white/25 transition-colors"
               >
-                {t('elementSign', { degree: result.sunDegree, element: elementLabel })}
-              </p>
+                {t('tryAnother')}
+              </button>
             </div>
           </div>
-
-          {/* CTAs */}
-          <div className="mt-4 flex flex-col sm:flex-row items-center gap-3 hc-result-ctas">
-            <Link
-              href={`/chart?chartId=${result.chartId}`}
-              className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#FFD700] text-[#0A0A0F] text-sm font-semibold tracking-wide hover:bg-[#FFE033] transition-colors"
-            >
-              {t('seeFullChart')}
-              <span aria-hidden="true">→</span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => setResult(null)}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-white/12 text-sm text-white/50 hover:text-white/80 hover:border-white/25 transition-colors"
-            >
-              {t('tryAnother')}
-            </button>
-          </div>
-        </div>
+        )}
       </>
     );
   }
