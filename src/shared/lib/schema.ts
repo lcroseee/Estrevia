@@ -440,6 +440,41 @@ export const sentEmails = pgTable('sent_emails', {
 export type SentEmail = typeof sentEmails.$inferSelect;
 
 // ---------------------------------------------------------------------------
+// email_leads — anonymous email captures from the email-gate funnel
+//
+// Created when an anonymous visitor submits email after chart-calc.
+// `email` is UNIQUE — INSERT ON CONFLICT DO NOTHING enforces idempotency.
+// `email` is NOT encrypted: per CLAUDE.md, PII = birth date/time/location;
+// email is auth-tier (already plaintext in `users.email`). GDPR consent is
+// captured in the modal copy + handled by the `/unsubscribe` flow
+// (extension to flip `unsubscribed_at` is a separate spec).
+// ---------------------------------------------------------------------------
+export const emailLeads = pgTable('email_leads', {
+  id: text('id').primaryKey(), // nanoid
+  email: text('email').notNull().unique(),
+  chartId: text('chart_id'),
+  locale: text('locale', { enum: ['en', 'es'] }).notNull().default('en'),
+  source: text('source').notNull().default('hero_calculator'),
+  utmSource: text('utm_source'),
+  utmMedium: text('utm_medium'),
+  utmCampaign: text('utm_campaign'),
+  utmContent: text('utm_content'),
+  utmTerm: text('utm_term'),
+  anonymousId: text('anonymous_id'),
+  ipAddressHash: text('ip_address_hash'),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  convertedToUserId: text('converted_to_user_id'),
+  convertedAt: timestamp('converted_at', { withTimezone: true }),
+  // Preparatory column — not used in this spec; populated by follow-up
+  // /unsubscribe extension.
+  unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+}, (table) => [
+  index('email_leads_created_at_idx').on(table.createdAt),
+  index('email_leads_converted_to_user_id_idx').on(table.convertedToUserId),
+]);
+
+// ---------------------------------------------------------------------------
 // Type aliases
 // ---------------------------------------------------------------------------
 export type User = typeof users.$inferSelect;
@@ -463,3 +498,4 @@ export type AdvertisingAdSetState = typeof advertisingAdSetState.$inferSelect;
 export type AdvertisingAdSetMetricHistory = typeof advertisingAdSetMetricHistory.$inferSelect;
 export type AdvertisingAdSetPhaseTransition = typeof advertisingAdSetPhaseTransitions.$inferSelect;
 export type AdvertisingThreshold = typeof advertisingThresholds.$inferSelect;
+export type EmailLead = typeof emailLeads.$inferSelect;
