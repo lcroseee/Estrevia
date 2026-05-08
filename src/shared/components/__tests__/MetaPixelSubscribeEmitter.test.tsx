@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({
 import { MetaPixelSubscribeEmitter } from '../MetaPixelSubscribeEmitter';
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.restoreAllMocks();
   window.localStorage.clear();
   setSearchParams('');
   delete (window as unknown as { fbq?: unknown }).fbq;
@@ -81,13 +81,11 @@ describe('MetaPixelSubscribeEmitter', () => {
   it('tolerates localStorage throwing (silent fail, no fire)', async () => {
     setSearchParams('session_id=cs_test_throws');
     const fbq = makeFbqMock();
-    const origGetItem = window.localStorage.getItem.bind(window.localStorage);
     vi.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
       throw new Error('localStorage disabled');
     });
     render(<MetaPixelSubscribeEmitter />);
     await new Promise((r) => setTimeout(r, 0));
     expect(fbq).not.toHaveBeenCalled();
-    vi.spyOn(window.localStorage, 'getItem').mockImplementation(origGetItem);
   });
 });

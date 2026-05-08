@@ -20,7 +20,7 @@ vi.mock('@clerk/nextjs', () => ({
 import { MetaPixelLeadEmitter } from '../MetaPixelLeadEmitter';
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.restoreAllMocks();
   window.localStorage.clear();
   // Default: no fbq present (Pixel disabled)
   delete (window as unknown as { fbq?: unknown }).fbq;
@@ -113,13 +113,11 @@ describe('MetaPixelLeadEmitter', () => {
     const user = freshUser('user_ls_throws');
     setUseUserReturn({ isLoaded: true, isSignedIn: true, user });
     const fbq = makeFbqMock();
-    const origGetItem = window.localStorage.getItem.bind(window.localStorage);
     vi.spyOn(window.localStorage, 'getItem').mockImplementation(() => {
       throw new Error('localStorage disabled');
     });
     render(<MetaPixelLeadEmitter />);
     await new Promise((r) => setTimeout(r, 0));
     expect(fbq).not.toHaveBeenCalled();
-    vi.spyOn(window.localStorage, 'getItem').mockImplementation(origGetItem);
   });
 });
