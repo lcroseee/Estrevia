@@ -9,11 +9,6 @@ vi.mock('next-intl', () => ({
   useLocale: () => 'en',
 }));
 
-let useUserReturn: { isSignedIn: boolean } = { isSignedIn: false };
-vi.mock('@clerk/nextjs', () => ({
-  useUser: () => useUserReturn,
-}));
-
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) =>
     React.createElement('a', props, children),
@@ -93,7 +88,6 @@ async function fillFormAndSubmit() {
 }
 
 beforeEach(() => {
-  useUserReturn = { isSignedIn: false };
   searchParamsValue = new URLSearchParams();
   window.localStorage.clear();
   lastModalProps = null;
@@ -105,7 +99,7 @@ beforeEach(() => {
 
 describe('HeroCalculator gate state machine', () => {
   it('mounts EmailGateModal with open=true after chart-calc when anonymous + no flag set', async () => {
-    render(<HeroCalculator />);
+    render(<HeroCalculator isSignedIn={false} />);
     await fillFormAndSubmit();
     await waitFor(() => {
       expect(screen.getByTestId('gate-modal')).toBeTruthy();
@@ -115,8 +109,7 @@ describe('HeroCalculator gate state machine', () => {
   });
 
   it('does NOT mount the modal when user is signed in', async () => {
-    useUserReturn = { isSignedIn: true };
-    render(<HeroCalculator />);
+    render(<HeroCalculator isSignedIn={true} />);
     await fillFormAndSubmit();
     await waitFor(() => {
       expect(screen.getByText('Leo')).toBeTruthy();
@@ -126,7 +119,7 @@ describe('HeroCalculator gate state machine', () => {
 
   it('does NOT mount the modal when localStorage flag is already set', async () => {
     window.localStorage.setItem('email_gate_passed', '1');
-    render(<HeroCalculator />);
+    render(<HeroCalculator isSignedIn={false} />);
     await fillFormAndSubmit();
     await waitFor(() => {
       expect(screen.getByText('Leo')).toBeTruthy();
@@ -136,7 +129,7 @@ describe('HeroCalculator gate state machine', () => {
 
   it('does NOT mount the modal when ?no_gate=1 is set', async () => {
     searchParamsValue = new URLSearchParams('no_gate=1');
-    render(<HeroCalculator />);
+    render(<HeroCalculator isSignedIn={false} />);
     await fillFormAndSubmit();
     await waitFor(() => {
       expect(screen.getByText('Leo')).toBeTruthy();
@@ -145,7 +138,7 @@ describe('HeroCalculator gate state machine', () => {
   });
 
   it('on modal onSubmitted closes the gate and reveals the chart result', async () => {
-    render(<HeroCalculator />);
+    render(<HeroCalculator isSignedIn={false} />);
     await fillFormAndSubmit();
     await waitFor(() => expect(screen.getByTestId('gate-modal')).toBeTruthy());
     expect(screen.queryByText('Leo')).toBeNull();
@@ -161,7 +154,7 @@ describe('HeroCalculator gate state machine', () => {
   });
 
   it('on modal onDismiss closes the gate and reveals the chart result', async () => {
-    render(<HeroCalculator />);
+    render(<HeroCalculator isSignedIn={false} />);
     await fillFormAndSubmit();
     await waitFor(() => expect(screen.getByTestId('gate-modal')).toBeTruthy());
 

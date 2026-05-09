@@ -21,7 +21,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useUser } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
@@ -149,10 +148,13 @@ const HERO_CALC_STYLES = `
 `;
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function HeroCalculator() {
+// `isSignedIn` is passed in from the server (Clerk's `auth()` in the parent
+// page) instead of `useUser()` so this client component does not require a
+// `<ClerkProvider>` ancestor. The marketing route group intentionally omits
+// ClerkProvider to keep its bundle ~324 KB lighter — see (app)/layout.tsx.
+export function HeroCalculator({ isSignedIn }: { isSignedIn: boolean }) {
   const t = useTranslations('heroCalc');
   const locale = useLocale() as 'en' | 'es';
-  const { isSignedIn } = useUser();
   const searchParams = useSearchParams();
   const [gateOpen, setGateOpen] = useState(false);
   const [gateBypassed, setGateBypassed] = useState(false);

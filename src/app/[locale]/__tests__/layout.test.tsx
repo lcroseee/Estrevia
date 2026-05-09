@@ -25,14 +25,6 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-// MetaPixelLeadEmitter calls useUser() from @clerk/nextjs. In SSR unit tests
-// there is no ClerkProvider, so we stub the hook to return a safe default
-// (not loaded, not signed in). The component renders null — this is sufficient
-// to confirm it mounts without throwing.
-vi.mock('@clerk/nextjs', () => ({
-  useUser: () => ({ isLoaded: false, isSignedIn: false, user: null }),
-}));
-
 // next/script with strategy="afterInteractive" defers injection to the client
 // and emits no body during SSR. For this smoke test we only care that the
 // inline body the layout passes contains the Pixel init / PageView calls, so

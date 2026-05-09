@@ -5,6 +5,7 @@ import { PlanetaryHourBar } from '@/modules/astro-engine/components/PlanetaryHou
 import { UserMenu } from '@/modules/auth/components/UserMenu';
 import { SubscriptionProvider } from '@/shared/context/SubscriptionProvider';
 import { AnalyticsIdentifier } from '@/shared/components/AnalyticsIdentifier';
+import { MetaPixelLeadEmitter } from '@/shared/components/MetaPixelLeadEmitter';
 import { MetaPixelSubscribeEmitter } from '@/shared/components/MetaPixelSubscribeEmitter';
 import { PostSignupAttribution } from '@/shared/components/PostSignupAttribution';
 import { MobileNav } from './MobileNav';
@@ -32,7 +33,11 @@ export default async function AppLayout({
           Only mounted for authenticated (app) routes — public `/s/[id]`
           and marketing pages do not see this provider. */}
       <SubscriptionProvider>
-        {/* Emits Meta Pixel Subscribe event when Stripe redirects with ?session_id */}
+        {/* Both Pixel emitters need Clerk's useUser, so they live inside
+            ClerkProvider. Lead fires on fresh sign-up post-redirect; Subscribe
+            fires on Stripe ?session_id return. Marketing pages do not host
+            sign-up or checkout flows, so emitters are scoped to (app)/. */}
+        <MetaPixelLeadEmitter />
         <MetaPixelSubscribeEmitter />
         {/* V08-2: reads estrevia_passport_ref cookie post-signup and calls attribution API */}
         <PostSignupAttribution />

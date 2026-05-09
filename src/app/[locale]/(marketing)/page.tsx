@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { auth } from '@clerk/nextjs/server';
 import { Link } from '@/i18n/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, softwareAppSchema, websiteSchema, howToSchema, faqSchema } from '@/shared/seo';
@@ -33,6 +34,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LandingPage() {
   const t = await getTranslations('landing');
   const locale = await getLocale();
+  // Read auth state on the server via Clerk middleware context. HeroCalculator
+  // is a client component without a ClerkProvider ancestor (marketing tree
+  // intentionally omits it for bundle size), so we cannot call useUser() there.
+  const { userId } = await auth();
+  const isSignedIn = !!userId;
 
   // Structural data only — text comes from translations by key
   const features = [
@@ -153,7 +159,7 @@ export default async function LandingPage() {
               data-animate="fade-up-3"
             >
               <Suspense fallback={<CalculatorSkeleton />}>
-                <HeroCalculator />
+                <HeroCalculator isSignedIn={isSignedIn} />
               </Suspense>
             </div>
 
