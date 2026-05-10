@@ -17,7 +17,8 @@ export interface GeneratedAsset {
   id: string;
   kind: 'image' | 'video';
   generator: 'imagen-4-fast' | 'imagen-4-ultra' | 'nano-banana-2'
-    | 'ideogram-3' | 'veo-3-1-lite' | 'runway-gen-4' | 'satori';
+    | 'ideogram-3' | 'veo-3-1-lite' | 'runway-gen-4' | 'satori'
+    | 'canva';
   prompt_used: string;
   url: string; // Vercel Blob URL
   width: number;

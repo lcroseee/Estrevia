@@ -19,7 +19,8 @@
     "advertising:verify-prod-state": "tsx scripts/advertising/verify-prod-state.ts",
     "advertising:generate-launch-batch": "tsx scripts/advertising/generate-launch-batch.ts",
     "advertising:publish-approved": "tsx scripts/advertising/publish-approved.ts",
-    "advertising:migrate-frequency-caps": "tsx scripts/advertising/migrate-frequency-caps.ts"
+    "advertising:migrate-frequency-caps": "tsx scripts/advertising/migrate-frequency-caps.ts",
+    "advertising:seed-canva-anchors": "tsx scripts/advertising/seed-canva-anchor-creatives.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
