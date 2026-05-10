@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import type { GeneratedAsset } from '@/shared/types/advertising';
 import { publishApprovedService } from '../publish-approved-service';
 
 interface TestRow {
@@ -10,7 +11,7 @@ interface TestRow {
   assetKind: 'image' | 'video';
   hookTemplateId: string;
   metaAdId: string | null;
-  generator: string;
+  generator: GeneratedAsset['generator'];
 }
 
 function makeDeps(rows: TestRow[]) {

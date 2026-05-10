@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { uploadApprovedCreative, buildTrackingParams } from '../meta-upload';
+import { uploadApprovedCreative, buildTrackingParams, isAiGenerated } from '../meta-upload';
 import type { UploadDeps } from '../meta-upload';
 import type { CreativeBundle, GeneratedAsset } from '@/shared/types/advertising';
 
@@ -184,6 +184,25 @@ describe('uploadApprovedCreative', () => {
     const callArg = (deps.metaApi.uploadCreative as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(callArg.tracking.utm_campaign).toBe('estrevia_launch_es');
     expect(callArg.locale).toBe('es');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isAiGenerated
+// ---------------------------------------------------------------------------
+describe('isAiGenerated', () => {
+  it('returns false for satori (deterministic templating)', () => {
+    expect(isAiGenerated('satori')).toBe(false);
+  });
+  it.each([
+    'imagen-4-fast' as const,
+    'imagen-4-ultra' as const,
+    'nano-banana-2' as const,
+    'ideogram-3' as const,
+    'veo-3-1-lite' as const,
+    'runway-gen-4' as const,
+  ])('returns true for AI generator: %s', (g) => {
+    expect(isAiGenerated(g)).toBe(true);
   });
 });
 

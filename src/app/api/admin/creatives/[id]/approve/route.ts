@@ -20,6 +20,8 @@ import { requireAdmin } from '@/app/admin/lib/admin-auth';
 import { getDb } from '@/shared/lib/db';
 import { advertisingCreatives } from '@/shared/lib/schema';
 import { MetaUploadClient } from '@/modules/advertising/meta-graph-api/upload-client';
+import { isAiGenerated } from '@/modules/advertising/creative-gen/upload/meta-upload';
+import type { GeneratedAsset } from '@/shared/types/advertising';
 
 // ---------------------------------------------------------------------------
 // Tracking helpers
@@ -100,7 +102,12 @@ export async function POST(
     );
   }
 
-  const row = updated[0]!;
+  const row = {
+    ...updated[0]!,
+    locale: updated[0]!.locale as 'en' | 'es',
+    assetKind: updated[0]!.assetKind as 'image' | 'video',
+    generator: updated[0]!.generator as GeneratedAsset['generator'],
+  };
 
   // 3. Upload to Meta Ads as a paused ad
   const metaToken = process.env.META_ACCESS_TOKEN;
@@ -123,7 +130,7 @@ export async function POST(
       cta: row.cta,
       locale: row.locale,
       tracking,
-      is_ai_generated: row.generator !== 'satori',
+      is_ai_generated: isAiGenerated(row.generator),
     });
 
     // 4. Mark as uploaded — ad is live on Meta (paused)

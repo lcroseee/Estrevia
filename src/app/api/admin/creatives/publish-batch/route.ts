@@ -21,6 +21,8 @@ import { getDb } from '@/shared/lib/db';
 import { advertisingCreatives } from '@/shared/lib/schema';
 import { createMetaUploadClient } from '@/modules/advertising/meta-graph-api';
 import type { TrackingParams } from '@/modules/advertising/creative-gen/upload/meta-upload';
+import { isAiGenerated } from '@/modules/advertising/creative-gen/upload/meta-upload';
+import type { GeneratedAsset } from '@/shared/types/advertising';
 import {
   publishApprovedService,
   type ApprovedRow,
@@ -76,6 +78,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         ...r,
         locale: r.locale as 'en' | 'es',
         assetKind: r.assetKind as 'image' | 'video',
+        generator: r.generator as GeneratedAsset['generator'],
       }));
     },
 
@@ -87,7 +90,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         cta: row.cta,
         locale: row.locale,
         tracking,
-        is_ai_generated: row.generator !== 'satori',
+        is_ai_generated: isAiGenerated(row.generator),
       });
     },
 

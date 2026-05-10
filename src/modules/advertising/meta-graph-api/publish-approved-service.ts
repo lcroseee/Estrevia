@@ -1,5 +1,7 @@
 // src/modules/advertising/meta-graph-api/publish-approved-service.ts
 
+import type { GeneratedAsset } from '@/shared/types/advertising';
+
 export interface ApprovedRow {
   id: string;
   copy: string;
@@ -9,7 +11,7 @@ export interface ApprovedRow {
   assetKind: 'image' | 'video';
   hookTemplateId: string;
   metaAdId: string | null;
-  generator: string;
+  generator: GeneratedAsset['generator'];
 }
 
 export interface PublishApprovedDeps {
