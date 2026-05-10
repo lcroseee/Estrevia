@@ -13,6 +13,7 @@ export interface MetaApiClient {
     cta: string;
     locale: string;
     tracking: TrackingParams;
+    is_ai_generated: boolean;
   }): Promise<{ creative_id: string; ad_id: string }>;
 }
 
@@ -96,6 +97,7 @@ export async function uploadApprovedCreative(
     cta: bundle.cta,
     locale: bundle.locale,
     tracking,
+    is_ai_generated: bundle.asset.generator !== 'satori',
   });
 
   // Persist upload result to DB

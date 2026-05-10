@@ -11,6 +11,7 @@ export class MetaUploadClient extends MetaGraphApiBase implements MetaApiClient 
     copy: string;
     cta: string;
     locale: string;
+    is_ai_generated: boolean;
     tracking: {
       utm_source: string;
       utm_medium: string;
@@ -54,6 +55,10 @@ export class MetaUploadClient extends MetaGraphApiBase implements MetaApiClient 
       `/${this.adAccountId}/adcreatives`,
       {
         name: `creative_${opts.tracking.utm_content}`,
+        // AI Content Label disclosure (Meta March 2026 rule).
+        // Locked shape A: top-level creative_source='AI_GENERATED'. Spread-conditional
+        // so the field is omitted entirely (not 'NOT_AI_GENERATED') for Satori uploads.
+        ...(opts.is_ai_generated ? { creative_source: 'AI_GENERATED' } : {}),
         object_story_spec: {
           page_id: pageId,
           link_data: {

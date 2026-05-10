@@ -10,6 +10,7 @@ interface TestRow {
   assetKind: 'image' | 'video';
   hookTemplateId: string;
   metaAdId: string | null;
+  generator: string;
 }
 
 function makeDeps(rows: TestRow[]) {
@@ -27,8 +28,8 @@ function makeDeps(rows: TestRow[]) {
 describe('publishApprovedService', () => {
   it('uploads all rows with null meta_ad_id', async () => {
     const rows: TestRow[] = [
-      { id: 'a', copy: 'c1', cta: 'x', locale: 'en', assetUrl: 'u1', assetKind: 'image', hookTemplateId: 'en-authority-1', metaAdId: null },
-      { id: 'b', copy: 'c2', cta: 'x', locale: 'es', assetUrl: 'u2', assetKind: 'image', hookTemplateId: 'es-rarity-1', metaAdId: null },
+      { id: 'a', copy: 'c1', cta: 'x', locale: 'en', assetUrl: 'u1', assetKind: 'image', hookTemplateId: 'en-authority-1', metaAdId: null, generator: 'satori' },
+      { id: 'b', copy: 'c2', cta: 'x', locale: 'es', assetUrl: 'u2', assetKind: 'image', hookTemplateId: 'es-rarity-1', metaAdId: null, generator: 'satori' },
     ];
     const deps = makeDeps(rows);
     const result = await publishApprovedService({ ...deps });
@@ -43,7 +44,7 @@ describe('publishApprovedService', () => {
 
   it('skips rows with existing Meta ad found via search guard', async () => {
     const rows: TestRow[] = [
-      { id: 'a', copy: 'c1', cta: 'x', locale: 'en', assetUrl: 'u1', assetKind: 'image', hookTemplateId: 'en-authority-1', metaAdId: null },
+      { id: 'a', copy: 'c1', cta: 'x', locale: 'en', assetUrl: 'u1', assetKind: 'image', hookTemplateId: 'en-authority-1', metaAdId: null, generator: 'satori' },
     ];
     const deps = {
       ...makeDeps(rows),
@@ -58,8 +59,8 @@ describe('publishApprovedService', () => {
 
   it('continues past one failure, counts failed', async () => {
     const rows: TestRow[] = [
-      { id: 'a', copy: 'c1', cta: 'x', locale: 'en', assetUrl: 'u1', assetKind: 'image', hookTemplateId: 'h1', metaAdId: null },
-      { id: 'b', copy: 'c2', cta: 'x', locale: 'es', assetUrl: 'u2', assetKind: 'image', hookTemplateId: 'h2', metaAdId: null },
+      { id: 'a', copy: 'c1', cta: 'x', locale: 'en', assetUrl: 'u1', assetKind: 'image', hookTemplateId: 'h1', metaAdId: null, generator: 'satori' },
+      { id: 'b', copy: 'c2', cta: 'x', locale: 'es', assetUrl: 'u2', assetKind: 'image', hookTemplateId: 'h2', metaAdId: null, generator: 'satori' },
     ];
     const deps = makeDeps(rows);
     deps.uploadCreative = vi.fn(async (r) => {
@@ -74,7 +75,7 @@ describe('publishApprovedService', () => {
   it('honors limit parameter', async () => {
     const rows: TestRow[] = Array.from({ length: 5 }, (_, i) => ({
       id: `r${i}`, copy: 'c', cta: 'x', locale: 'en' as const,
-      assetUrl: 'u', assetKind: 'image' as const, hookTemplateId: 'h', metaAdId: null,
+      assetUrl: 'u', assetKind: 'image' as const, hookTemplateId: 'h', metaAdId: null, generator: 'satori',
     }));
     const deps = makeDeps(rows);
     const result = await publishApprovedService({ ...deps, limit: 2 });
@@ -83,7 +84,7 @@ describe('publishApprovedService', () => {
 
   it('dryRun does not call uploadCreative or markUploaded', async () => {
     const rows: TestRow[] = [
-      { id: 'a', copy: 'c1', cta: 'x', locale: 'en', assetUrl: 'u1', assetKind: 'image', hookTemplateId: 'h', metaAdId: null },
+      { id: 'a', copy: 'c1', cta: 'x', locale: 'en', assetUrl: 'u1', assetKind: 'image', hookTemplateId: 'h', metaAdId: null, generator: 'satori' },
     ];
     const deps = makeDeps(rows);
     const result = await publishApprovedService({ ...deps, dryRun: true });

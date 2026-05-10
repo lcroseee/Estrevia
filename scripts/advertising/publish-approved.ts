@@ -48,6 +48,7 @@ async function main() {
           assetKind: advertisingCreatives.assetKind,
           hookTemplateId: advertisingCreatives.hookTemplateId,
           metaAdId: advertisingCreatives.metaAdId,
+          generator: advertisingCreatives.generator,
         })
         .from(advertisingCreatives)
         .where(and(
@@ -64,7 +65,12 @@ async function main() {
     async uploadCreative(row) {
       const tracking = buildTracking(row);
       return uploadClient!.uploadCreative({
-        asset_url: row.assetUrl, copy: row.copy, cta: row.cta, locale: row.locale, tracking,
+        asset_url: row.assetUrl,
+        copy: row.copy,
+        cta: row.cta,
+        locale: row.locale,
+        tracking,
+        is_ai_generated: row.generator !== 'satori',
       });
     },
 

@@ -90,6 +90,7 @@ export async function POST(
       cta: advertisingCreatives.cta,
       locale: advertisingCreatives.locale,
       hookTemplateId: advertisingCreatives.hookTemplateId,
+      generator: advertisingCreatives.generator,
     });
 
   if (updated.length === 0) {
@@ -122,6 +123,7 @@ export async function POST(
       cta: row.cta,
       locale: row.locale,
       tracking,
+      is_ai_generated: row.generator !== 'satori',
     });
 
     // 4. Mark as uploaded — ad is live on Meta (paused)

@@ -9,6 +9,7 @@ export interface ApprovedRow {
   assetKind: 'image' | 'video';
   hookTemplateId: string;
   metaAdId: string | null;
+  generator: string;
 }
 
 export interface PublishApprovedDeps {

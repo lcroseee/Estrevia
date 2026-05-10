@@ -51,6 +51,7 @@ describe('MetaUploadClient.uploadCreative', () => {
       copy: 'Sidereal accuracy',
       cta: 'Calculate your chart',
       locale: 'en',
+      is_ai_generated: false,
       tracking: {
         utm_source: 'meta', utm_medium: 'image',
         utm_campaign: 'estrevia_launch_en', utm_content: 'cb_1', utm_term: 'identity_reveal',
@@ -91,6 +92,7 @@ describe('MetaUploadClient.uploadCreative', () => {
     const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
     await client.uploadCreative({
       asset_url: 'https://blob/y.png', copy: 'x', cta: 'Calcula', locale: 'es',
+      is_ai_generated: false,
       tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'estrevia_launch_es', utm_content: 'b', utm_term: 'authority' },
     });
     const adsBody = JSON.parse(
@@ -109,6 +111,7 @@ describe('MetaUploadClient.uploadCreative', () => {
     const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
     await client.uploadCreative({
       asset_url: 'https://blob/z.png', copy: 'x', cta: 'Try', locale: 'en',
+      is_ai_generated: false,
       tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'estrevia_launch_en', utm_content: 'cb', utm_term: 'rarity' },
     });
     const creativeBody = JSON.parse(
@@ -131,6 +134,7 @@ describe('MetaUploadClient.uploadCreative', () => {
     await expect(
       client.uploadCreative({
         asset_url: 'https://blob/x.png', copy: 'x', cta: 'y', locale: 'en',
+        is_ai_generated: false,
         tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'cb', utm_term: 't' },
       }),
     ).rejects.toThrow();
@@ -145,6 +149,7 @@ describe('MetaUploadClient.uploadCreative', () => {
     await expect(
       client.uploadCreative({
         asset_url: 'https://blob/missing.png', copy: 'x', cta: 'y', locale: 'en',
+        is_ai_generated: false,
         tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'cb', utm_term: 't' },
       }),
     ).rejects.toThrow(/Failed to download asset/);
@@ -157,6 +162,7 @@ describe('MetaUploadClient.uploadCreative', () => {
     await expect(
       client.uploadCreative({
         asset_url: 'u', copy: 'c', cta: 'x', locale: 'en',
+        is_ai_generated: false,
         tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'b', utm_term: 't' },
       }),
     ).rejects.toThrow(/META_LAUNCH_ADSET_ID_EN/);
@@ -172,6 +178,7 @@ describe('MetaUploadClient.uploadCreative', () => {
     await expect(
       client.uploadCreative({
         asset_url: 'https://blob/x.png', copy: 'c', cta: 'x', locale: 'en',
+        is_ai_generated: false,
         tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'b', utm_term: 't' },
       }),
     ).rejects.toThrow(/META_PAGE_ID/);
@@ -187,11 +194,52 @@ describe('MetaUploadClient.uploadCreative', () => {
     const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
     await client.uploadCreative({
       asset_url: 'https://blob/p.png', copy: 'x', cta: 'x', locale: 'en',
+      is_ai_generated: false,
       tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'cb', utm_term: 't' },
     });
     const creativeBody = JSON.parse(
       ((fetchImpl.mock.calls[2] as unknown as [string, RequestInit])[1]).body as string,
     );
     expect(creativeBody.object_story_spec.page_id).toBe(PAGE_ID);
+  });
+
+  it('sets AI Content Label field when is_ai_generated=true', async () => {
+    const fetchImpl = chainedFetch(
+      assetResponse(),
+      new Response(JSON.stringify({ images: { bytes: { hash: 'h' } } })),
+      new Response(JSON.stringify({ id: 'cr_ai' })),
+      new Response(JSON.stringify({ id: 'ad_ai' })),
+    );
+    const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+    await client.uploadCreative({
+      asset_url: 'https://blob/x.png', copy: 'x', cta: 'x', locale: 'en',
+      is_ai_generated: true,
+      tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'cb', utm_term: 't' },
+    });
+    const creativeBody = JSON.parse(
+      ((fetchImpl.mock.calls[2] as unknown as [string, RequestInit])[1]).body as string,
+    );
+    // Locked shape A (Step 1): top-level creative_source='AI_GENERATED' on AdCreative POST body.
+    expect(creativeBody.creative_source).toBe('AI_GENERATED');
+  });
+
+  it('omits AI Content Label field when is_ai_generated=false', async () => {
+    const fetchImpl = chainedFetch(
+      assetResponse(),
+      new Response(JSON.stringify({ images: { bytes: { hash: 'h' } } })),
+      new Response(JSON.stringify({ id: 'cr_no_ai' })),
+      new Response(JSON.stringify({ id: 'ad_no_ai' })),
+    );
+    const client = new MetaUploadClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+    await client.uploadCreative({
+      asset_url: 'https://blob/x.png', copy: 'x', cta: 'x', locale: 'en',
+      is_ai_generated: false,
+      tracking: { utm_source: 'meta', utm_medium: 'image', utm_campaign: 'c', utm_content: 'cb', utm_term: 't' },
+    });
+    const creativeBody = JSON.parse(
+      ((fetchImpl.mock.calls[2] as unknown as [string, RequestInit])[1]).body as string,
+    );
+    // Locked shape A (Step 1): field omitted entirely (not 'NOT_AI_GENERATED') for non-AI creatives.
+    expect(creativeBody.creative_source).toBeUndefined();
   });
 });

@@ -79,6 +79,7 @@ describe('integration: full upload flow through factory client', () => {
       copy: 'c',
       cta: 'x',
       locale: 'en',
+      is_ai_generated: false,
       tracking: {
         utm_source: 'meta',
         utm_medium: 'image',
