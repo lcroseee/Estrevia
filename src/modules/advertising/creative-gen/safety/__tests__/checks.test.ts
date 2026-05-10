@@ -9,6 +9,7 @@ import {
   isBlocked,
   newVisionCostAccumulator,
   recordVisionCall,
+  BRAND_PALETTE,
 } from '../checks';
 import type { SafetyDeps } from '../checks';
 import type { VisionClient } from '../vision-checker';
@@ -402,5 +403,114 @@ describe('isBlocked', () => {
       { check_name: 'a', passed: false, severity: 'warning' as const, reason: 'minor' },
     ];
     expect(isBlocked(results)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Patch 01 — bilingual brand-policy hardening
+// ---------------------------------------------------------------------------
+describe('personalClaimCheck — Patch 01 bilingual brand-policy hardening', () => {
+  it.each([
+    // EN fortune-telling beyond second person
+    ['fate awaits all of us'],
+    ['this is your destiny'],
+    ['what awaits you in the cosmos'],
+    ['predict your future'],
+    ['ancient mystics could foretell this'],
+    // ES predictive
+    ['predice tu futuro de manera precisa'],
+    ['mira tu futuro en las estrellas'],
+    ['descubre tu destino'],
+    ['te espera una semana intensa'],
+    ['adivina tu signo'],
+    // EN absolutism
+    ['all aries are stubborn'],
+    ['every leo loves attention'],
+    ['every person with this placement experiences chaos'],
+    // ES absolutism — masculine + feminine
+    ['todos los aries son impulsivos'],
+    ['todas las leo son extrovertidas'],
+    // ES "usted" form
+    ['usted recibirá grandes cambios'],
+    // Translated sign names that diverge from Latin
+    ['Tauro es leal'],
+    ['Géminis tiene dos caras'],
+    ['Escorpio es intenso'],
+    ['Sagitario ama viajar'],
+    ['Capricornio es disciplinado'],
+    ['Acuario es independiente'],
+    ['Piscis es soñador'],
+  ])('blocks: %s', async (copy) => {
+    const result = await personalClaimCheck(copy);
+    expect(result.passed).toBe(false);
+    expect(result.severity).toBe('block');
+  });
+
+  it.each([
+    // CRITICAL: Latin canonical forms required by CLAUDE.md i18n rules — must NOT be blocked
+    ['Cáncer es emocional'],          // Cáncer is the canonical Latin form in ES
+    ['Virgo placement matters'],      // Virgo is identical EN/ES, canonical
+    ['Aries can be impulsive at times'],  // No "all"/"every" → not absolutist
+    ['explore your sidereal placements'], // Reflection, not prediction
+  ])('passes Latin canonical sign names: %s', async (copy) => {
+    const result = await personalClaimCheck(copy);
+    expect(result.passed).toBe(true);
+    expect(result.severity).toBe('info');
+  });
+});
+
+describe('META_POLICY_PROMPT — Patch 01 brand-voice extensions', () => {
+  it('includes fluff-phrase forbidden examples', async () => {
+    const deps = makeDeps();
+    await metaAdPolicyCheck(mockBundle(), deps);
+    const [promptArg] = (deps.claudeClient.moderationCheck as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(promptArg).toMatch(/cosmic dance/);
+    expect(promptArg).toMatch(/stars whisper/);
+    expect(promptArg).toMatch(/celestial tapestry/);
+  });
+
+  it('includes apologizing-language clause', async () => {
+    const deps = makeDeps();
+    await metaAdPolicyCheck(mockBundle(), deps);
+    const [promptArg] = (deps.claudeClient.moderationCheck as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(promptArg).toMatch(/some believe/);
+    expect(promptArg).toMatch(/according to astrologers/);
+    expect(promptArg).toMatch(/whether you believe/);
+  });
+
+  it('includes Title Case + Book of Thoth + Eshelman clauses', async () => {
+    const deps = makeDeps();
+    await metaAdPolicyCheck(mockBundle(), deps);
+    const [promptArg] = (deps.claudeClient.moderationCheck as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(promptArg).toMatch(/Title Case/);
+    expect(promptArg).toMatch(/Book of Thoth/);
+    expect(promptArg).toMatch(/Eshelman/);
+  });
+
+  it('mentions tropical-astrology mocking is forbidden', async () => {
+    const deps = makeDeps();
+    await metaAdPolicyCheck(mockBundle(), deps);
+    const [promptArg] = (deps.claudeClient.moderationCheck as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(promptArg).toMatch(/mocking tropical astrology/);
+  });
+});
+
+describe('BRAND_PALETTE — Patch 01 canonical palette', () => {
+  it('matches docs/design.md canonical four colors in canonical order', () => {
+    expect([...BRAND_PALETTE]).toEqual(['#0A0A0F', '#12121A', '#F0F0F5', '#FFD700']);
+  });
+
+  it('BRAND_PROMPT names colors consistent with new palette indices', async () => {
+    const visionClient = makeVision({ passed: true, dominantColors: [] });
+    await brandConsistencyCheck(mockBundle(), { visionClient });
+    const [, prompt] = (visionClient.analyzeImage as ReturnType<typeof vi.fn>).mock.calls[0];
+    // Stale labels must be gone
+    expect(prompt).not.toMatch(/silver \(#/);
+    expect(prompt).not.toMatch(/deep purple/);
+    // New labels paired with correct hex
+    expect(prompt).toMatch(/deep space \(#0A0A0F\)/i);
+    expect(prompt).toMatch(/dark navy \(#12121A\)/i);
+    expect(prompt).toMatch(/ivory \(#F0F0F5\)/i);
+    expect(prompt).toMatch(/gold \(#FFD700\)/i);
   });
 });

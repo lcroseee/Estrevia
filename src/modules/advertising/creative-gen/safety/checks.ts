@@ -36,6 +36,37 @@ const PERSONAL_CLAIM_PATTERNS: RegExp[] = [
   /\byour future\b/i,
   /\byou deserve\b/i,
   /\byou know that\b/i,
+  // EN fortune-telling beyond second person
+  /\bfate\b/i,
+  /\bdestiny\b/i,
+  /\bwhat awaits you\b/i,
+  /\bawaits you\b/i,
+  /\bpredict your\b/i,
+  /\bforetell\b/i,
+  // ES (LATAM neutro) predictive forms
+  /\bpredice tu\b/i,
+  /\btu futuro\b/i,
+  /\btu destino\b/i,
+  /\bte espera\b/i,
+  /\badivina\b/i,
+  // Absolutism — sign-level (EN)
+  /\b(all|every) (aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces)\b/i,
+  /\bevery person with this\b/i,
+  // Absolutism — sign-level (ES, signs stay in Latin form), masculine + feminine
+  /\btodos los (aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces)\b/i,
+  /\btodas las (aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces)\b/i,
+  // Spanish "usted" form (Estrevia uses "tú"/LATAM neutro)
+  /\busted\b/i,
+  // Translated sign names that DIVERGE from Latin (must stay in Latin form per
+  // CLAUDE.md i18n rules). \bcáncer\b and \bvirgo\b are intentionally EXCLUDED —
+  // Cáncer and Virgo are the canonical Latin forms required in EN and ES.
+  /\btauro\b/i,
+  /\bgéminis\b/i,
+  /\bescorpio\b/i,
+  /\bsagitario\b/i,
+  /\bcapricornio\b/i,
+  /\bacuario\b/i,
+  /\bpiscis\b/i,
 ];
 
 /**
@@ -64,7 +95,13 @@ export async function personalClaimCheck(copy: string): Promise<SafetyCheckResul
 const META_POLICY_PROMPT = (copy: string) =>
   `Does this ad copy violate Meta's ad policy? Copy: "${copy}". ` +
   `Check for: personal attribute claims, predictive language, fortune-telling, ` +
-  `sensational health/wealth promises, exposed body parts, sensitive content. ` +
+  `sensational health/wealth promises, exposed body parts, sensitive content, ` +
+  `fluff phrases ("cosmic dance", "stars whisper", "celestial tapestry"), ` +
+  `apologizing for astrology ("some believe", "according to astrologers", "whether you believe"), ` +
+  `mocking tropical astrology (Estrevia differentiates by accuracy, not by attacking it), ` +
+  `Title Case in headings (must be sentence case), ` +
+  `Book of Thoth content or paraphrasing (copyright until 2039 — only Liber 777 from 1909 is public domain), ` +
+  `direct quotation of James Eshelman (living author). ` +
   `Reply JSON: { "passed": boolean, "reason": string }.`;
 
 /**
@@ -128,12 +165,20 @@ export async function ocrTextAccuracyCheck(
 // 4.1d — Brand consistency check (Gemini Vision)
 // ---------------------------------------------------------------------------
 
-/** Approved Estrevia brand palette: gold, silver, deep purple, dark navy. */
-export const BRAND_PALETTE = ['#FFD700', '#C0C0C0', '#9B8EC4', '#0A0A0F'] as const;
+/**
+ * Estrevia core palette per docs/design.md.
+ * Order: background, surface, text-primary, accent.
+ */
+export const BRAND_PALETTE = [
+  '#0A0A0F',  // Deep Space — primary background
+  '#12121A',  // Dark Navy — surface
+  '#F0F0F5',  // Ivory — primary text
+  '#FFD700',  // Gold — accent
+] as const;
 
-const BRAND_PROMPT = `Does this image use the Estrevia astrology app brand palette? \
-Approved colors: gold (${BRAND_PALETTE[0]}), silver (${BRAND_PALETTE[1]}), \
-deep purple (${BRAND_PALETTE[2]}), dark navy (${BRAND_PALETTE[3]}). \
+const BRAND_PROMPT = `Does this image use the Estrevia astrology brand palette? \
+Approved colors: deep space (${BRAND_PALETTE[0]}), dark navy (${BRAND_PALETTE[1]}), \
+ivory (${BRAND_PALETTE[2]}), gold (${BRAND_PALETTE[3]}). \
 The dominant 3-4 colors of the image should match within reasonable tolerance \
 (CIE76 ΔE ≤ 25 — generous for AI-generated variations). \
 Respond JSON: {"passed": boolean, "dominantColors": ["#hex", ...], "reason": "..."}.`;

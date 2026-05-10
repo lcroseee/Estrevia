@@ -27,7 +27,7 @@ const makeTemplateEs = (overrides?: Partial<HookTemplate>): HookTemplate =>
     id: 'tpl-002',
     name: 'Identity Reveal ES',
     locale: 'es',
-    copy_template: 'Tu sol sidéreo está en Escorpio.',
+    copy_template: 'Tu sol sidéreo está en Scorpio.',
     ...overrides,
   });
 
