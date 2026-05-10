@@ -323,6 +323,89 @@ export const hooksEs: HookTemplate[] = [
       'citar fuente Swiss Ephemeris',
     ],
   },
+  // ---------------------------------------------------------------------------
+  // ARQUETIPO: lead_magnet
+  // Hook directo, CTA fuerte, imperativo "tú": calcula, mapea.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'es-lead-magnet-1',
+    name: 'Lead Magnet — Carta Sideral Gratis',
+    archetype: 'lead_magnet',
+    copy_template:
+      'Tu carta natal sideral, sin costo. Calculada con precisión védica al ±0.01° contra Swiss Ephemeris. Sin generalizaciones de signo solar.',
+    visual_mood:
+      'Rueda fotorrealista de carta natal sideral, líneas finas en oro pálido sobre fondo azul marino profundo a negro. Doce sectores, glifos planetarios en grados precisos, líneas radiales finas, estética de placa de observatorio. Halo suave sobre la rueda. Espacio negativo vacío en la parte inferior para overlay del CTA. SIN texto, SIN etiquetas, SIN clipart místico, SIN bolas de cristal. Composición vertical 9:16.',
+    duration_sec: 12,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'afirmación de carta gratuita es veraz al producto — aceptable',
+      '±0.01° cita Swiss Ephemeris / Moshier',
+      'sin predicciones personales',
+      'sin lenguaje adivinatorio',
+      'forma "tú" — nunca "usted"',
+      'nombres de signos en forma latina (Aries, Taurus, ...) — no traducir',
+    ],
+  },
+  {
+    id: 'es-lead-magnet-2',
+    name: 'Lead Magnet — Mapea Tu Cielo',
+    archetype: 'lead_magnet',
+    copy_template:
+      'Mapea tu cielo real en 90 segundos. Posiciones siderales, calibradas a donde los planetas están esta noche.',
+    visual_mood:
+      'Cielo nocturno fotorrealista con banda sutil de la Vía Láctea. Tres planetas visibles con precisión matemática (Saturno con anillos, Júpiter con bandas crema, Marte rojo profundo). Espacio negativo vacío en la parte inferior. SIN UI, SIN texto, SIN dashboards. Composición vertical 9:16.',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1'],
+    locale: 'es',
+    policy_constraints: [
+      'enmarque de acción del producto — aceptable',
+      'sin afirmaciones personales sobre el espectador',
+      'sin adivinación',
+      'forma "tú"',
+    ],
+  },
+  {
+    id: 'es-lead-magnet-3',
+    name: 'Lead Magnet — No Es Horóscopo',
+    archetype: 'lead_magnet',
+    copy_template:
+      'No es horóscopo. Es tu carta natal real, mapeada al cielo verdadero — no al promedio del calendario.',
+    visual_mood:
+      'Comparación de pantalla dividida: lado izquierdo un recorte de horóscopo de periódico genérico atenuado; lado derecho una rueda sideral precisa en líneas oro pálido sobre azul marino profundo a negro. Vertical 9:16. SIN texto en la imagen, SIN logos. Parte inferior vacía para overlay del CTA.',
+    duration_sec: 18,
+    aspect_ratios: ['9:16', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'enmarque comparativo es factual — aceptable',
+      'no se burla de astrología tropical por nombre (solo contrasta enfoques)',
+      'sin afirmaciones personales',
+      'forma "tú"',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // ADICIÓN AL ARQUETIPO: rarity (variante Pasaporte Cósmico)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'es-rarity-7',
+    name: 'Rarity — Tu Pasaporte Cósmico',
+    archetype: 'rarity',
+    copy_template:
+      'Tu Pasaporte Cósmico. Sol, Luna y Ascendente en sus signos siderales reales — una tarjeta compartible.',
+    visual_mood:
+      'Una sola tarjeta luminosa de identidad astrológica centrada, ligeramente inclinada, estética de pase de observatorio antiguo. La cara de la tarjeta muestra una rueda circular de carta sideral en líneas oro pálido con doce sectores, formas simbólicas abstractas (sin escritura legible), pequeños puntos dorados marcando posiciones planetarias. Geometría sutil de nodos del Árbol de la Vida como marca de agua en esquina — NO imágenes del Tarot Thoth de Frieda Harris. Fondo azul marino profundo a negro con estrellas dispersas. SIN bolas de cristal, SIN tarot, SIN clipart místico. SIN texto en la imagen. Composición vertical 9:16.',
+    duration_sec: 12,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'descripción de producto — aceptable',
+      'geometría del Árbol de la Vida es esquemática simbólica, no Tarot Thoth de Harris (copyright hasta 2064)',
+      'sin afirmaciones personales sobre el espectador',
+      'sin adivinación',
+      'forma "tú"',
+      'nombres de signos en forma latina',
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------

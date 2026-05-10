@@ -124,3 +124,45 @@ describe('hooks-es', () => {
     }
   });
 });
+
+describe('Patch 02 — lead_magnet archetype + new templates (ES)', () => {
+  it.each([
+    'es-rarity-7',
+    'es-lead-magnet-1',
+    'es-lead-magnet-2',
+    'es-lead-magnet-3',
+  ])('contains %s', (id) => {
+    const t = hooksEs.find(h => h.id === id);
+    expect(t).toBeDefined();
+    expect(t?.locale).toBe('es');
+    expect(t?.policy_constraints.length).toBeGreaterThan(0);
+  });
+
+  it('es-lead-magnet templates use lead_magnet archetype', () => {
+    for (const id of ['es-lead-magnet-1', 'es-lead-magnet-2', 'es-lead-magnet-3']) {
+      const t = hooksEs.find(h => h.id === id);
+      expect(t?.archetype).toBe('lead_magnet');
+    }
+  });
+
+  it('es-rarity-7 uses rarity archetype', () => {
+    const t = hooksEs.find(h => h.id === 'es-rarity-7');
+    expect(t?.archetype).toBe('rarity');
+  });
+
+  it('new ES templates do not contain "usted"', () => {
+    for (const id of ['es-rarity-7', 'es-lead-magnet-1', 'es-lead-magnet-2', 'es-lead-magnet-3']) {
+      const t = hooksEs.find(h => h.id === id);
+      expect(t?.copy_template).not.toMatch(/\busted\b/i);
+    }
+  });
+
+  it('new ES templates do not contain translated sign names that diverge from Latin', () => {
+    for (const id of ['es-rarity-7', 'es-lead-magnet-1', 'es-lead-magnet-2', 'es-lead-magnet-3']) {
+      const t = hooksEs.find(h => h.id === id);
+      expect(t?.copy_template).not.toMatch(
+        /\b(tauro|géminis|escorpio|sagitario|capricornio|acuario|piscis)\b/i,
+      );
+    }
+  });
+});

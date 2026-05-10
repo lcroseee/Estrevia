@@ -90,3 +90,29 @@ describe('hooks-en', () => {
     }
   });
 });
+
+describe('Patch 02 — lead_magnet archetype + new templates', () => {
+  it.each([
+    'en-rarity-7',
+    'en-lead-magnet-1',
+    'en-lead-magnet-2',
+    'en-lead-magnet-3',
+  ])('contains %s', (id) => {
+    const t = hooksEn.find(h => h.id === id);
+    expect(t).toBeDefined();
+    expect(t?.locale).toBe('en');
+    expect(t?.policy_constraints.length).toBeGreaterThan(0);
+  });
+
+  it('en-lead-magnet templates use lead_magnet archetype', () => {
+    for (const id of ['en-lead-magnet-1', 'en-lead-magnet-2', 'en-lead-magnet-3']) {
+      const t = hooksEn.find(h => h.id === id);
+      expect(t?.archetype).toBe('lead_magnet');
+    }
+  });
+
+  it('en-rarity-7 uses rarity archetype (Cosmic Passport variant)', () => {
+    const t = hooksEn.find(h => h.id === 'en-rarity-7');
+    expect(t?.archetype).toBe('rarity');
+  });
+});

@@ -324,6 +324,84 @@ export const hooksEn: HookTemplate[] = [
       'cite Swiss Ephemeris source',
     ],
   },
+  // ---------------------------------------------------------------------------
+  // ARCHETYPE: lead_magnet
+  // Direct-response hook for cold audience → trial signup.
+  // Imperative framing ("calculate", "map") — instruction, not personal claim.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'en-lead-magnet-1',
+    name: 'Lead Magnet — Free Sidereal Chart',
+    archetype: 'lead_magnet',
+    copy_template:
+      'Your sidereal birth chart, free. Calculated to ±0.01° against the Swiss Ephemeris. No sun-sign guesswork.',
+    visual_mood:
+      'Photorealistic sidereal birth chart wheel, fine pale-gold linework on deep navy-to-black background. Twelve sectors, planetary glyphs at precise degrees, thin radial lines, observatory plate aesthetic. Soft halo above wheel. Empty negative space at the bottom for CTA overlay. NO text, NO labels, NO mystic clipart, NO crystal balls. Vertical 9:16 composition.',
+    duration_sec: 12,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'free chart claim is product-truthful — acceptable',
+      '±0.01° accuracy cites Swiss Ephemeris / Moshier',
+      'no personal predictions',
+      'no fortune-telling language',
+    ],
+  },
+  {
+    id: 'en-lead-magnet-2',
+    name: 'Lead Magnet — Map Your Sky',
+    archetype: 'lead_magnet',
+    copy_template:
+      'Map your real sky in 90 seconds. Sidereal positions, calibrated to where the planets actually are tonight.',
+    visual_mood:
+      'Photorealistic deep night sky with subtle Milky Way band. Three planets visible with mathematical precision (Saturn with rings, Jupiter cream-banded, Mars deep red). Empty negative space at the bottom. NO UI, NO text, NO data dashboards. Vertical 9:16 composition.',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1'],
+    locale: 'en',
+    policy_constraints: [
+      'product-action framing — acceptable',
+      'no personal claims about the viewer',
+      'no fortune-telling',
+    ],
+  },
+  {
+    id: 'en-lead-magnet-3',
+    name: 'Lead Magnet — Not a Horoscope',
+    archetype: 'lead_magnet',
+    copy_template:
+      "Not a horoscope. The actual sidereal chart, calibrated to the real sky — not the calendar's average.",
+    visual_mood:
+      'Split-screen comparison: left side a generic horoscope newspaper clipping aesthetic faded out; right side a precise sidereal chart wheel in pale-gold linework on deep navy-to-black. Vertical 9:16. NO text in image, NO logos. Empty bottom for CTA overlay.',
+    duration_sec: 18,
+    aspect_ratios: ['9:16', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'comparative framing is factual — acceptable',
+      'does not mock tropical astrology by name (just contrasts approaches)',
+      'no personal claims about the viewer',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // ADDITION TO ARCHETYPE: rarity (Cosmic Passport variant from Canva)
+  // ---------------------------------------------------------------------------
+  {
+    id: 'en-rarity-7',
+    name: 'Rarity — Your Cosmic Passport',
+    archetype: 'rarity',
+    copy_template:
+      'Your Cosmic Passport. Sun, Moon, and Ascendant in their actual sidereal signs — a single shareable card.',
+    visual_mood:
+      'A single luminous astrological identity card centered, slightly tilted, vintage observatory pass aesthetic. Card face shows a circular sidereal chart wheel in pale-gold linework with twelve sectors, abstract symbolic forms (no readable script), small bright golden dots marking planetary positions. Subtle Tree-of-Life node geometry as corner watermark — NOT Frieda Harris Thoth deck imagery. Deep navy-to-black background with sparse stars. NO crystal balls, NO tarot, NO mystical clipart. NO text in image. Vertical 9:16 composition.',
+    duration_sec: 12,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'product description — acceptable',
+      'Tree-of-Life geometry is symbolic schematic, not Frieda Harris Thoth (copyright until 2064)',
+      'no personal claims about the viewer',
+      'no fortune-telling',
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
