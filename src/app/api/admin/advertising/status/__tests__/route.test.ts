@@ -11,6 +11,12 @@ const dbWhereMock = vi.fn(() => ({ orderBy: dbOrderByMock }));
 const dbFromMock = vi.fn(() => ({ where: dbWhereMock }));
 const dbSelectMock = vi.fn(() => ({ from: dbFromMock }));
 
+const getLatestBrandVoiceRunMock = vi.fn();
+
+vi.mock('@/modules/advertising/decide/brand-voice-store', () => ({
+  getLatestBrandVoiceRun: getLatestBrandVoiceRunMock,
+}));
+
 vi.mock('@/modules/advertising/perceive', () => ({
   fetchMetaInsights: fetchMetaInsightsMock,
 }));
@@ -69,6 +75,7 @@ beforeEach(() => {
     autoResumeAt: null,
     lastDriftPct: null,
   });
+  getLatestBrandVoiceRunMock.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -194,17 +201,52 @@ describe('GET /api/admin/advertising/status — aggregateFatigued', () => {
 });
 
 describe('GET /api/admin/advertising/status — brand_voice + reconciler branches', () => {
-  it('include=brand_voice returns not_implemented stub', async () => {
+  it('include=brand_voice returns no_data with disabled reason when scorer flag unset', async () => {
+    delete process.env.BRAND_VOICE_SCORER_ENABLED;
+    getLatestBrandVoiceRunMock.mockResolvedValueOnce(null);
     const { GET } = await import('../route');
     const req = new Request('http://localhost/api/admin/advertising/status?include=brand_voice', {
       headers: { Authorization: 'Bearer test-bearer' },
     });
     const res = await GET(req);
     const body = await res.json();
-    expect(body.brand_voice).toEqual({
-      status: 'not_implemented',
-      reason: 'Phase 4 dependency (real ClaudeBrandVoiceClient + new advertising_audits table)',
+    expect(body.brand_voice.status).toBe('no_data');
+    expect(body.brand_voice.reason).toMatch(/disabled/);
+  });
+
+  it('include=brand_voice returns no_data with enabled-but-empty reason when flag on but DB empty', async () => {
+    process.env.BRAND_VOICE_SCORER_ENABLED = 'true';
+    getLatestBrandVoiceRunMock.mockResolvedValueOnce(null);
+    const { GET } = await import('../route');
+    const req = new Request('http://localhost/api/admin/advertising/status?include=brand_voice', {
+      headers: { Authorization: 'Bearer test-bearer' },
     });
+    const res = await GET(req);
+    const body = await res.json();
+    expect(body.brand_voice.status).toBe('no_data');
+    expect(body.brand_voice.reason).toMatch(/enabled but no audit run/);
+  });
+
+  it('include=brand_voice returns ok + run_id + scores + flagged_count when DB has data', async () => {
+    getLatestBrandVoiceRunMock.mockResolvedValueOnce({
+      run_id: 'run-abc',
+      reviewed_at: new Date('2026-05-10T10:00:00Z'),
+      scores: [
+        { ad_id: 'a1', depth: 8, scientific: 7, respectful: 9, no_manipulation: true,  overall: 8.2, needs_review: false, reviewed_by_claude_at: new Date('2026-05-10T10:00:00Z') },
+        { ad_id: 'a2', depth: 5, scientific: 6, respectful: 7, no_manipulation: false, overall: 5.4, needs_review: true,  reviewed_by_claude_at: new Date('2026-05-10T10:00:00Z') },
+      ],
+    });
+    const { GET } = await import('../route');
+    const req = new Request('http://localhost/api/admin/advertising/status?include=brand_voice', {
+      headers: { Authorization: 'Bearer test-bearer' },
+    });
+    const res = await GET(req);
+    const body = await res.json();
+    expect(body.brand_voice.status).toBe('ok');
+    expect(body.brand_voice.run_id).toBe('run-abc');
+    expect(body.brand_voice.reviewed_at).toBe('2026-05-10T10:00:00.000Z');
+    expect(body.brand_voice.scores).toHaveLength(2);
+    expect(body.brand_voice.flagged_count).toBe(1);
   });
 
   it('include=reconciler exposes suspended/suspended_at/last_drift_pct (no last_run)', async () => {

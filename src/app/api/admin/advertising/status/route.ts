@@ -32,6 +32,7 @@ import { getDb } from '@/shared/lib/db';
 import { advertisingDecisions } from '@/shared/lib/schema';
 import { fetchMetaInsights } from '@/modules/advertising/perceive';
 import { getReconState } from '@/modules/advertising/perceive/recon-state-store';
+import { getLatestBrandVoiceRun } from '@/modules/advertising/decide/brand-voice-store';
 import { createMetaAdClient } from '@/modules/advertising/meta-graph-api';
 import type { AdMetric } from '@/shared/types/advertising';
 
@@ -249,19 +250,37 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   // 5. Brand-voice scorer results
   //
-  // Brand voice scoring is computed transiently inside the `retro-weekly`
-  // cron via `auditTopCreatives()` and is NOT persisted (verified at HEAD
-  // `81aba89`: no `advertising_audits` table, no `brand_voice_overall`
-  // column on `advertisingCreatives.safetyChecks`).
-  //
-  // Phase 4 dependency: real `ClaudeBrandVoiceClient` (currently mocked at
-  // `src/app/api/cron/advertising/retro-weekly/route.ts:270-283`) plus a
-  // new `advertising_audits` table.
+  // Reads the latest weekly Claude audit run from advertising_brand_voice_scores.
+  // Status is one of:
+  //   - 'no_data'  : table empty (scorer disabled OR enabled but cron not yet run)
+  //   - 'ok'       : returns run_id + reviewed_at + scores[] + flagged_count
   if (include.brand_voice) {
-    result.brand_voice = {
-      status: 'not_implemented',
-      reason: 'Phase 4 dependency (real ClaudeBrandVoiceClient + new advertising_audits table)',
-    };
+    const latest = await getLatestBrandVoiceRun();
+    if (latest === null) {
+      result.brand_voice = {
+        status: 'no_data',
+        reason:
+          process.env.BRAND_VOICE_SCORER_ENABLED === 'true'
+            ? 'Scorer enabled but no audit run has completed yet'
+            : 'Scorer disabled (set BRAND_VOICE_SCORER_ENABLED=true to start scoring)',
+      };
+    } else {
+      result.brand_voice = {
+        status: 'ok',
+        run_id: latest.run_id,
+        reviewed_at: latest.reviewed_at.toISOString(),
+        scores: latest.scores.map((s) => ({
+          ad_id: s.ad_id,
+          depth: s.depth,
+          scientific: s.scientific,
+          respectful: s.respectful,
+          no_manipulation: s.no_manipulation,
+          overall: s.overall,
+          needs_review: s.needs_review,
+        })),
+        flagged_count: latest.scores.filter((s) => s.needs_review).length,
+      };
+    }
   }
 
   // 6. Reconciler state — Meta vs PostHog drift

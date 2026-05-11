@@ -15,6 +15,8 @@ import { NextResponse } from 'next/server';
 import { assertCronAuth } from '@/shared/lib/cron-auth';
 import { getDb } from '@/shared/lib/db';
 import { auditTopCreatives } from '@/modules/advertising/decide/brand-voice-audit';
+import { saveBrandVoiceScores } from '@/modules/advertising/decide/brand-voice-store';
+import { ClaudeBrandVoiceClient } from '@/modules/advertising/creative-gen/clients';
 import { runDailyDropOffCheck, InMemoryDropOffStore } from '@/modules/advertising/alerts/drop-off-monitor';
 import { evaluateGates } from '@/modules/advertising/decide/feature-gates';
 import { TelegramBot } from '@/modules/advertising/alerts/telegram-bot';
@@ -25,7 +27,7 @@ import type { MetaInsightsApi } from '@/modules/advertising/perceive/meta-insigh
 import type { ClaudeClientForBrandVoice, CreativeBundleWithSpend } from '@/modules/advertising/decide/brand-voice-audit';
 import type { DropOffPosthogClient, DropOffClaudeClient } from '@/modules/advertising/alerts/drop-off-monitor';
 import type { GatesDb } from '@/modules/advertising/decide/feature-gates';
-import type { AdMetric } from '@/shared/types/advertising';
+import type { AdMetric, BrandVoiceScore } from '@/shared/types/advertising';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,8 +56,13 @@ export async function GET(request: Request) {
 
     // --- Step 1: Brand-voice audit of top creatives ---
     const creatives = await fetchTopCreativesWithSpend(metaApiClient, weekAgo, now);
-    const brandVoiceScores =
-      creatives.length > 0 ? await auditTopCreatives(creatives, claudeForBrandVoice) : [];
+    let brandVoiceScores: BrandVoiceScore[] = [];
+    if (claudeForBrandVoice !== null && creatives.length > 0) {
+      brandVoiceScores = await auditTopCreatives(creatives, claudeForBrandVoice);
+      if (brandVoiceScores.length > 0) {
+        await saveBrandVoiceScores(brandVoiceScores);
+      }
+    }
 
     const needsReviewCount = brandVoiceScores.filter((s) => s.needs_review).length;
 
@@ -267,19 +274,15 @@ function buildPosthogClient(): DropOffPosthogClient {
   };
 }
 
-function buildClaudeForBrandVoice(): ClaudeClientForBrandVoice {
-  return {
-    brandVoiceScore: async (_adId: string, _copy: string) => {
-      // Phase 2: real Claude API call for brand voice scoring
-      return {
-        depth: 7,
-        scientific: 7,
-        respectful: 8,
-        no_manipulation: true,
-        overall: 7.6,
-      };
-    },
-  };
+export function buildClaudeForBrandVoice(): ClaudeClientForBrandVoice | null {
+  if (process.env.BRAND_VOICE_SCORER_ENABLED !== 'true') {
+    return null;
+  }
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY is not set — required for ClaudeBrandVoiceClient when BRAND_VOICE_SCORER_ENABLED=true');
+  }
+  return new ClaudeBrandVoiceClient({ anthropicApiKey: apiKey });
 }
 
 function buildClaudeForDropOff(): DropOffClaudeClient {
