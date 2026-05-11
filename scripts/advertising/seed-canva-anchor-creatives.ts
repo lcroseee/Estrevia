@@ -1,7 +1,7 @@
 /**
- * One-off seed: insert 6 Canva-generated brand-anchor creatives (feed
- * format, 1080x1350) into advertising_creatives table as pre-approved
- * evergreen records.
+ * One-off seed: insert 12 Canva-generated brand-anchor creatives
+ * (6 feed 1080x1350 + 6 stories 1080x1920) into advertising_creatives
+ * as pre-approved evergreen records.
  *
  * Idempotent — uses fixed IDs so re-running is a no-op.
  *
@@ -10,13 +10,8 @@
  *   npm run advertising:seed-canva-anchors -- --dry-run   # preview only
  *
  * Prerequisites:
- *   - Canva feed PNGs uploaded to Vercel Blob (URLs in ANCHOR_BLOBS_FEED)
+ *   - All 12 Canva PNGs uploaded to Vercel Blob (URLs in ANCHOR_BLOBS)
  *   - Patch 02 applied: 'lead_magnet' archetype + es/en-rarity-7 templates
- *
- * Deferred:
- *   - 6 stories anchors (1080x1920) — preserved in ANCHORS_STORIES_PENDING
- *     but NOT seeded. Canva Story-format designs missing from Brand Kit
- *     kAGT_ANQrn8. Promote into seed() once designs created.
  */
 
 import 'dotenv/config';
@@ -35,27 +30,13 @@ const PRE_APPROVED_CHECKS: SafetyCheckResult[] = [
   { check_name: 'controversial_symbol', passed: true, severity: 'info', reason: 'Manual founder review' },
 ];
 
-const ANCHOR_BLOBS_FEED = {
+const ANCHOR_BLOBS = {
   feed_es_accuracy:   'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/feed_es_accuracy.png',
   feed_es_passport:   'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/feed_es_passport.png',
   feed_es_freechart:  'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/feed_es_freechart.png',
   feed_en_accuracy:   'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/feed_en_accuracy.png',
   feed_en_passport:   'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/feed_en_passport.png',
   feed_en_freechart:  'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/feed_en_freechart.png',
-} as const;
-
-/**
- * Story-format Blob URLs.
- *
- * NOTE: The Story-format Canva designs (1080x1920) are MISSING from Brand
- * Kit kAGT_ANQrn8. Only Feed-format designs (1080x1350) exist. These URLs
- * resolve to HTTP 404 as of 2026-05-10. The records below are preserved
- * so that copy/CTA/hookTemplateId pairings are not lost — once the founder
- * creates Story-format designs in Canva and uploads the PNGs to these
- * exact Blob keys, `ANCHORS_STORIES_PENDING` can be promoted into the
- * seed() loop. Until then, do NOT run the seed against stories.
- */
-const ANCHOR_BLOBS_STORIES_PENDING = {
   story_es_accuracy:  'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/story_es_accuracy.png',
   story_es_passport:  'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/story_es_passport.png',
   story_es_freechart: 'https://zproaddipyjwfa81.public.blob.vercel-storage.com/advertising/canva-anchors/story_es_freechart.png',
@@ -80,12 +61,12 @@ interface AnchorRecord {
   approvedAt: Date;
 }
 
-export const ANCHORS_FEED: AnchorRecord[] = [
+export const ANCHORS: AnchorRecord[] = [
   // ---- Feed (1080x1350) ----
   {
     id: 'anchor-2026-05-10-es-accuracy-feed',
     hookTemplateId: 'es-identity-reveal-7-anchor',
-    assetUrl: ANCHOR_BLOBS_FEED.feed_es_accuracy,
+    assetUrl: ANCHOR_BLOBS.feed_es_accuracy,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -100,7 +81,7 @@ export const ANCHORS_FEED: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-es-passport-feed',
     hookTemplateId: 'es-rarity-7',
-    assetUrl: ANCHOR_BLOBS_FEED.feed_es_passport,
+    assetUrl: ANCHOR_BLOBS.feed_es_passport,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -115,7 +96,7 @@ export const ANCHORS_FEED: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-es-freechart-feed',
     hookTemplateId: 'es-lead-magnet-1',
-    assetUrl: ANCHOR_BLOBS_FEED.feed_es_freechart,
+    assetUrl: ANCHOR_BLOBS.feed_es_freechart,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -130,7 +111,7 @@ export const ANCHORS_FEED: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-en-accuracy-feed',
     hookTemplateId: 'en-identity-reveal-7-anchor',
-    assetUrl: ANCHOR_BLOBS_FEED.feed_en_accuracy,
+    assetUrl: ANCHOR_BLOBS.feed_en_accuracy,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -145,7 +126,7 @@ export const ANCHORS_FEED: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-en-passport-feed',
     hookTemplateId: 'en-rarity-7',
-    assetUrl: ANCHOR_BLOBS_FEED.feed_en_passport,
+    assetUrl: ANCHOR_BLOBS.feed_en_passport,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -160,7 +141,7 @@ export const ANCHORS_FEED: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-en-freechart-feed',
     hookTemplateId: 'en-lead-magnet-1',
-    assetUrl: ANCHOR_BLOBS_FEED.feed_en_freechart,
+    assetUrl: ANCHOR_BLOBS.feed_en_freechart,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -172,18 +153,11 @@ export const ANCHORS_FEED: AnchorRecord[] = [
     approvedBy: FOUNDER_EMAIL,
     approvedAt: APPROVED_AT,
   },
-];
-
-/**
- * Stories records — NOT iterated by seed() until Canva designs created.
- * See header comment on ANCHOR_BLOBS_STORIES_PENDING above for rationale.
- */
-export const ANCHORS_STORIES_PENDING: AnchorRecord[] = [
   // ---- Stories (1080x1920) ----
   {
     id: 'anchor-2026-05-10-es-accuracy-stories',
     hookTemplateId: 'es-identity-reveal-7-anchor',
-    assetUrl: ANCHOR_BLOBS_STORIES_PENDING.story_es_accuracy,
+    assetUrl: ANCHOR_BLOBS.story_es_accuracy,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -198,7 +172,7 @@ export const ANCHORS_STORIES_PENDING: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-es-passport-stories',
     hookTemplateId: 'es-rarity-7',
-    assetUrl: ANCHOR_BLOBS_STORIES_PENDING.story_es_passport,
+    assetUrl: ANCHOR_BLOBS.story_es_passport,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -213,7 +187,7 @@ export const ANCHORS_STORIES_PENDING: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-es-freechart-stories',
     hookTemplateId: 'es-lead-magnet-1',
-    assetUrl: ANCHOR_BLOBS_STORIES_PENDING.story_es_freechart,
+    assetUrl: ANCHOR_BLOBS.story_es_freechart,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -228,7 +202,7 @@ export const ANCHORS_STORIES_PENDING: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-en-accuracy-stories',
     hookTemplateId: 'en-identity-reveal-7-anchor',
-    assetUrl: ANCHOR_BLOBS_STORIES_PENDING.story_en_accuracy,
+    assetUrl: ANCHOR_BLOBS.story_en_accuracy,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -243,7 +217,7 @@ export const ANCHORS_STORIES_PENDING: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-en-passport-stories',
     hookTemplateId: 'en-rarity-7',
-    assetUrl: ANCHOR_BLOBS_STORIES_PENDING.story_en_passport,
+    assetUrl: ANCHOR_BLOBS.story_en_passport,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -258,7 +232,7 @@ export const ANCHORS_STORIES_PENDING: AnchorRecord[] = [
   {
     id: 'anchor-2026-05-10-en-freechart-stories',
     hookTemplateId: 'en-lead-magnet-1',
-    assetUrl: ANCHOR_BLOBS_STORIES_PENDING.story_en_freechart,
+    assetUrl: ANCHOR_BLOBS.story_en_freechart,
     assetKind: 'image',
     generator: 'canva',
     costUsd: 0,
@@ -274,21 +248,20 @@ export const ANCHORS_STORIES_PENDING: AnchorRecord[] = [
 
 export async function seed(opts: { dryRun?: boolean } = {}): Promise<void> {
   const db = getDb();
-  console.log(`Seeding ${ANCHORS_FEED.length} anchor creatives (feed only)…`);
+  console.log(`Seeding ${ANCHORS.length} anchor creatives…`);
   if (opts.dryRun) {
     console.log('--- DRY RUN — no INSERT performed ---');
-    console.log(JSON.stringify(ANCHORS_FEED, null, 2));
-    console.log(`WOULD SKIP: ${ANCHORS_STORIES_PENDING.length} stories anchors (deferred — see ANCHOR_BLOBS_STORIES_PENDING note)`);
+    console.log(JSON.stringify(ANCHORS, null, 2));
     return;
   }
-  for (const anchor of ANCHORS_FEED) {
+  for (const anchor of ANCHORS) {
     await db
       .insert(advertisingCreatives)
       .values(anchor)
       .onConflictDoNothing();
     console.log(`  ✓ ${anchor.id}`);
   }
-  console.log('Done. Stories anchors deferred until Canva designs created.');
+  console.log('Done.');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -20,16 +20,15 @@ beforeEach(() => {
 });
 
 describe('seed-canva-anchor-creatives', () => {
-  it('exports 6 feed anchors and 6 deferred story anchors (12 total)', async () => {
-    const { ANCHORS_FEED, ANCHORS_STORIES_PENDING } = await import('../seed-canva-anchor-creatives');
-    expect(ANCHORS_FEED).toHaveLength(6);
-    expect(ANCHORS_STORIES_PENDING).toHaveLength(6);
+  it('exports 12 anchors', async () => {
+    const { ANCHORS } = await import('../seed-canva-anchor-creatives');
+    expect(ANCHORS).toHaveLength(12);
   });
 
-  it('inserts only 6 feed records when seed() runs (stories deferred)', async () => {
+  it('inserts 12 records when seed() runs', async () => {
     const { seed } = await import('../seed-canva-anchor-creatives');
     await seed();
-    expect(insertSpy).toHaveBeenCalledTimes(6);
+    expect(insertSpy).toHaveBeenCalledTimes(12);
   });
 
   it('seed() with dryRun=true performs no INSERTs', async () => {
@@ -38,9 +37,9 @@ describe('seed-canva-anchor-creatives', () => {
     expect(insertSpy).not.toHaveBeenCalled();
   });
 
-  it('every anchor (feed + stories) has status=approved, generator=canva, costUsd=0', async () => {
-    const { ANCHORS_FEED, ANCHORS_STORIES_PENDING } = await import('../seed-canva-anchor-creatives');
-    for (const a of [...ANCHORS_FEED, ...ANCHORS_STORIES_PENDING]) {
+  it('every anchor has status=approved, generator=canva, costUsd=0', async () => {
+    const { ANCHORS } = await import('../seed-canva-anchor-creatives');
+    for (const a of ANCHORS) {
       expect(a.status).toBe('approved');
       expect(a.generator).toBe('canva');
       expect(a.costUsd).toBe(0);
@@ -48,8 +47,8 @@ describe('seed-canva-anchor-creatives', () => {
   });
 
   it('every anchor has all five safety checks pre-passed with severity=info', async () => {
-    const { ANCHORS_FEED, ANCHORS_STORIES_PENDING } = await import('../seed-canva-anchor-creatives');
-    for (const a of [...ANCHORS_FEED, ...ANCHORS_STORIES_PENDING]) {
+    const { ANCHORS } = await import('../seed-canva-anchor-creatives');
+    for (const a of ANCHORS) {
       expect(a.safetyChecks).toHaveLength(5);
       const names = a.safetyChecks.map((c: { check_name: string }) => c.check_name);
       expect(names).toEqual(expect.arrayContaining([
@@ -66,22 +65,21 @@ describe('seed-canva-anchor-creatives', () => {
     }
   });
 
-  it('6 anchors have locale=en and 6 have locale=es across both arrays', async () => {
-    const { ANCHORS_FEED, ANCHORS_STORIES_PENDING } = await import('../seed-canva-anchor-creatives');
-    const all = [...ANCHORS_FEED, ...ANCHORS_STORIES_PENDING];
-    expect(all.filter((a) => a.locale === 'en')).toHaveLength(6);
-    expect(all.filter((a) => a.locale === 'es')).toHaveLength(6);
+  it('6 anchors have locale=en and 6 have locale=es', async () => {
+    const { ANCHORS } = await import('../seed-canva-anchor-creatives');
+    expect(ANCHORS.filter((a) => a.locale === 'en')).toHaveLength(6);
+    expect(ANCHORS.filter((a) => a.locale === 'es')).toHaveLength(6);
   });
 
-  it('anchor IDs are unique across feed + stories', async () => {
-    const { ANCHORS_FEED, ANCHORS_STORIES_PENDING } = await import('../seed-canva-anchor-creatives');
-    const ids = [...ANCHORS_FEED, ...ANCHORS_STORIES_PENDING].map((a) => a.id);
+  it('all 12 anchor IDs are unique', async () => {
+    const { ANCHORS } = await import('../seed-canva-anchor-creatives');
+    const ids = ANCHORS.map((a) => a.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('every assetUrl is a Vercel Blob URL', async () => {
-    const { ANCHORS_FEED, ANCHORS_STORIES_PENDING } = await import('../seed-canva-anchor-creatives');
-    for (const a of [...ANCHORS_FEED, ...ANCHORS_STORIES_PENDING]) {
+    const { ANCHORS } = await import('../seed-canva-anchor-creatives');
+    for (const a of ANCHORS) {
       expect(a.assetUrl).toMatch(/blob\.vercel-storage\.com/);
     }
   });
