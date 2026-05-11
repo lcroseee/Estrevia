@@ -211,6 +211,28 @@ export const advertisingDecisions = pgTable('advertising_decisions', {
 ]);
 
 // ---------------------------------------------------------------------------
+// advertising_brand_voice_scores  — weekly Claude audit results, append-only.
+// Rows from one audit run share a run_id. /status?include=brand_voice reads
+// the most recent run by reviewedByClaudeAt.
+// ---------------------------------------------------------------------------
+export const advertisingBrandVoiceScores = pgTable('advertising_brand_voice_scores', {
+  id: text('id').primaryKey(), // nanoid
+  runId: text('run_id').notNull(),
+  adId: text('ad_id').notNull(),
+  depth: real('depth').notNull(),
+  scientific: real('scientific').notNull(),
+  respectful: real('respectful').notNull(),
+  noManipulation: boolean('no_manipulation').notNull(),
+  overall: real('overall').notNull(),
+  needsReview: boolean('needs_review').notNull(),
+  reviewedByClaudeAt: timestamp('reviewed_by_claude_at', { withTimezone: true }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('abv_run_id_idx').on(table.runId),
+  index('abv_reviewed_at_idx').on(table.reviewedByClaudeAt),
+]);
+
+// ---------------------------------------------------------------------------
 // advertising_creatives  — generated creative bundles awaiting review/upload
 // ---------------------------------------------------------------------------
 export const advertisingCreatives = pgTable('advertising_creatives', {

@@ -64,6 +64,13 @@
       "when": 1778203614841,
       "tag": "0008_careful_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778460271556,
+      "tag": "0009_ambitious_lady_mastermind",
+      "breakpoints": true
     }
   ]
 }
