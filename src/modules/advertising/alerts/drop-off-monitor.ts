@@ -270,7 +270,7 @@ export async function runDailyDropOffCheck(
 
   // Send Telegram alert
   const message = formatAlertMessage(dateStr, alerts, llmContext);
-  await telegram.sendAlert('warning', message);
+  await telegram.sendAlert('warning', message, { tier: 2 });
 
   return {
     status: 'alert_sent',
