@@ -4,15 +4,17 @@ Inventory of files in this directory:
 
 | File | Status | Purpose |
 |---|---|---|
-| `04-cowork-visibility-layer-revised.md` | active | Patch 04 (revised). **Apply this.** Supersedes the original Patch 04 from the prior Cowork session output (not committed in this repo). |
-| `06-next-claude-code-session.md` | partially executed | Claude Code follow-up brief. Phases 1–3 completed 2026-05-10; Phase 4 deferred. |
+| `04-cowork-visibility-layer-revised.md` | applied | Patch 04 (revised). Applied via SP2 plan (commits `b1cace0`, `586005b`, `9a2ce43`). |
+| `06-next-claude-code-session.md` | superseded | Claude Code follow-up brief. Phases 1–3 done 2026-05-10; Phase 4 shipped via SP3 (commits `7bba792`, `5cdd1ec`, `183f3a8`). |
+| `07-post-sp2-sp3-followups.md` | **active** | Handoff after SP2+SP3 ship. Founder ops + 1 Cowork-doable code task + SP1 blocked status. |
 | `README.md` | this file | Inventory + apply order. |
 
 ## Apply order (future sessions)
 
-1. **Patch 04 (revised)** — apply diffs from `04-cowork-visibility-layer-revised.md` to `src/` after founder review. Creates `/api/admin/advertising/status` + `/api/admin/advertising/digest` routes; refactors digest builder; extends `sendAlert` with optional tier arg.
-2. **Phase 4 — `ClaudeBrandVoiceClient`** — see handoff `06-next-claude-code-session.md` § Phase 4. Implement after Patch 04 (the `/status?include=brand_voice` route depends on the real storage location identified during Phase 3 sub-agent verification — currently mock-only, no DB persistence).
-3. **Stories anchors** — only after Canva Story-format designs created in Brand Kit `kAGT_ANQrn8`. Then promote `ANCHORS_STORIES_PENDING` → `ANCHORS_FEED` in `scripts/advertising/seed-canva-anchor-creatives.ts` and re-run the seed.
+1. ~~**Patch 04 (revised)**~~ — DONE via SP2 plan (`b1cace0`, `586005b`, `9a2ce43`).
+2. ~~**Phase 4 — `ClaudeBrandVoiceClient`**~~ — DONE via SP3 plan (`7bba792`, `5cdd1ec`, `183f3a8`).
+3. **Post-ship follow-ups** — read `07-post-sp2-sp3-followups.md`. Founder ops (prod migration `0009`, Vercel env vars, scheduled task, flag flips) + 1 Cowork code task (tier-2 `sendAlert` marking).
+4. **Stories anchors** — still blocked. Only after Canva Story-format designs created in Brand Kit `kAGT_ANQrn8` and PNGs exported to `tmp/canva-stories-2026-05-10/`. Then main Claude Code session executes `docs/superpowers/plans/2026-05-10-stories-reseed.md`.
 
 ## Related session artifacts
 
