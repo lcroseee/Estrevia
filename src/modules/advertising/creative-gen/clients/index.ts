@@ -9,3 +9,6 @@ export type {
 
 export { ClaudeSafetyClient } from './claude-safety-client';
 export type { ClaudeSafetyClientDeps, ModerationResult } from './claude-safety-client';
+
+export { ClaudeBrandVoiceClient } from './claude-brand-voice-client';
+export type { ClaudeBrandVoiceClientDeps } from './claude-brand-voice-client';
