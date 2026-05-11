@@ -127,8 +127,28 @@ export class TelegramBot {
 
   /**
    * Sends a severity-labelled alert message to the founder.
+   *
+   * Tier gating (added in Patch 04):
+   *   tier 1 (default) — always sends, regardless of env flag.
+   *   tier 2           — suppressed when ADVERTISING_TIER2_VIA_DIGEST=true.
+   *                      Returns null so callers can handle the no-op case.
+   *
+   * Overload signatures keep the return type non-nullable for every existing
+   * 2-arg caller and for explicit `{ tier: 1 }` callers; only `{ tier: 2 }`
+   * callers see `TelegramMessage | null`, matching the runtime semantics.
    */
-  async sendAlert(severity: AlertSeverity, message: string): Promise<TelegramMessage> {
+  async sendAlert(severity: AlertSeverity, message: string): Promise<TelegramMessage>;
+  async sendAlert(severity: AlertSeverity, message: string, opts: { tier: 1 }): Promise<TelegramMessage>;
+  async sendAlert(severity: AlertSeverity, message: string, opts: { tier: 2 }): Promise<TelegramMessage | null>;
+  async sendAlert(
+    severity: AlertSeverity,
+    message: string,
+    opts: { tier?: 1 | 2 } = {},
+  ): Promise<TelegramMessage | null> {
+    const tier = opts.tier ?? 1;
+    if (tier === 2 && process.env.ADVERTISING_TIER2_VIA_DIGEST === 'true') {
+      return null;
+    }
     const icons: Record<AlertSeverity, string> = {
       info: 'ℹ️',
       warning: '⚠️',

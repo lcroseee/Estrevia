@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TelegramBot, createTelegramBot } from '../telegram-bot';
 import type { DailyDigestReport, FetchFn, TelegramApiResponse, TelegramMessage, TelegramUpdate } from '../telegram-bot';
 
@@ -396,5 +396,51 @@ describe('TelegramBot.sendDailyDigest (refactored)', () => {
     const body = JSON.parse(lastCall[1].body as string);
     expect(body.parse_mode).toBe('Markdown');
     expect(body.text).toBe('rendered text');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sendAlert tier classification (Patch 04 Component 4)
+// ---------------------------------------------------------------------------
+
+describe('TelegramBot.sendAlert tier gating', () => {
+  const originalEnv = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it('two-arg call defaults to tier 1 and always sends regardless of flag', async () => {
+    process.env.ADVERTISING_TIER2_VIA_DIGEST = 'true'; // even with flag on
+    const fetchFn = makeFetchFn([sendMessageOk()]);
+    const bot = makeBot(fetchFn);
+    const result = await bot.sendAlert('warning', 'rolling baseline crossed');
+    expect(result).not.toBeNull();
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('three-arg with tier=2 returns null when ADVERTISING_TIER2_VIA_DIGEST=true', async () => {
+    process.env.ADVERTISING_TIER2_VIA_DIGEST = 'true';
+    const fetchFn = makeFetchFn([sendMessageOk()]);
+    const bot = makeBot(fetchFn);
+    const result = await bot.sendAlert('info', 'minor drift', { tier: 2 });
+    expect(result).toBeNull();
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('three-arg with tier=2 sends when ADVERTISING_TIER2_VIA_DIGEST is unset or "false"', async () => {
+    delete process.env.ADVERTISING_TIER2_VIA_DIGEST;
+    const fetchFn = makeFetchFn([sendMessageOk()]);
+    const bot = makeBot(fetchFn);
+    const result = await bot.sendAlert('info', 'minor drift', { tier: 2 });
+    expect(result).not.toBeNull();
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+
+    process.env.ADVERTISING_TIER2_VIA_DIGEST = 'false';
+    const fetchFn2 = makeFetchFn([sendMessageOk()]);
+    const bot2 = makeBot(fetchFn2);
+    const result2 = await bot2.sendAlert('info', 'minor drift', { tier: 2 });
+    expect(result2).not.toBeNull();
+    expect(fetchFn2).toHaveBeenCalledTimes(1);
   });
 });
