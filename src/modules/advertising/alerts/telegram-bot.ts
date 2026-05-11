@@ -15,6 +15,8 @@
  */
 
 import type { AdDecision, BrandVoiceScore } from '@/shared/types/advertising';
+import { buildDigestData } from './digest-builder';
+import { formatTelegram } from './digest-renderers';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,53 +109,19 @@ export class TelegramBot {
 
   /**
    * Sends a formatted daily digest to the founder.
-   * Format: date header + decisions summary + spend + optional shadow log + action item
+   *
+   * If `report` is omitted, builds it from current state via
+   * `buildDigestData()`. Callers that need to attach optional
+   * `brand_voice_scores` / `shadow_log_summary` / `founder_action_required`
+   * fields should pre-build the report and pass it in.
+   *
+   * Rendering is delegated to `formatTelegram()` — the same shape is
+   * exposed at GET /api/admin/advertising/digest via `formatMarkdown()`,
+   * so the Telegram push and the Cowork pull never drift.
    */
-  async sendDailyDigest(report: DailyDigestReport): Promise<TelegramMessage> {
-    const lines: string[] = [];
-
-    lines.push(`📊 *Advertising Daily Digest — ${report.date}*`);
-    lines.push('');
-
-    // Spend + impressions overview
-    lines.push(`💰 Spend: $${report.spend_total_usd.toFixed(2)} | 👁 Impressions: ${report.impressions_total.toLocaleString()}`);
-    lines.push('');
-
-    // Decisions summary
-    if (report.decisions.length > 0) {
-      lines.push('*Decisions taken:*');
-      for (const d of report.decisions) {
-        const icon = d.action === 'pause' ? '⏸' : d.action === 'scale_up' ? '📈' : d.action === 'maintain' ? '✅' : '→';
-        lines.push(`${icon} \`${d.ad_id}\` — ${d.action} (${d.reason})`);
-      }
-      lines.push('');
-    } else {
-      lines.push('_No decisions taken today._');
-      lines.push('');
-    }
-
-    // Brand voice scores if provided
-    if (report.brand_voice_scores && report.brand_voice_scores.length > 0) {
-      const needsReview = report.brand_voice_scores.filter((s) => s.needs_review);
-      if (needsReview.length > 0) {
-        lines.push(`⚠️ *Brand voice review needed:* ${needsReview.map((s) => s.ad_id).join(', ')}`);
-        lines.push('');
-      }
-    }
-
-    // Shadow log summary
-    if (report.shadow_log_summary) {
-      lines.push('*Shadow mode log:*');
-      lines.push(report.shadow_log_summary);
-      lines.push('');
-    }
-
-    // Founder action required
-    if (report.founder_action_required) {
-      lines.push(`🚨 *Action required:* ${report.founder_action_required}`);
-    }
-
-    const text = lines.join('\n');
+  async sendDailyDigest(report?: DailyDigestReport): Promise<TelegramMessage> {
+    const data = report ?? (await buildDigestData());
+    const text = formatTelegram(data);
     return this.sendMessage(text, { parse_mode: 'Markdown' });
   }
 

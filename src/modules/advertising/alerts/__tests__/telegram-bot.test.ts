@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TelegramBot, createTelegramBot } from '../telegram-bot';
 import type { DailyDigestReport, FetchFn, TelegramApiResponse, TelegramMessage, TelegramUpdate } from '../telegram-bot';
-import { mockAdMetric } from '../../__tests__/fixtures';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -112,96 +111,14 @@ describe('TelegramBot.sendAlert', () => {
   });
 });
 
-describe('TelegramBot.sendDailyDigest', () => {
-  it('formats digest with date header, spend, impressions, and decisions', async () => {
-    const fetchFn = makeFetchFn([sendMessageOk()]);
-    const bot = makeBot(fetchFn);
-
-    const metric = mockAdMetric();
-    const report: DailyDigestReport = {
-      date: '2026-04-26',
-      decisions: [
-        {
-          ad_id: metric.ad_id,
-          action: 'pause',
-          reason: 'frequency_cap_exceeded: 4.5',
-          reasoning_tier: 'tier_1_rules',
-          confidence: 1.0,
-          metrics_snapshot: metric,
-        },
-      ],
-      spend_total_usd: 18.40,
-      impressions_total: 5247,
-    };
-
-    await bot.sendDailyDigest(report);
-
-    const [, init] = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
-    const body = JSON.parse(init.body as string);
-    expect(body.text).toContain('2026-04-26');
-    expect(body.text).toContain('$18.40');
-    expect(body.text).toContain('5,247');
-    expect(body.text).toContain('ad_test_001');
-    expect(body.text).toContain('pause');
-  });
-
-  it('includes shadow log when provided', async () => {
-    const fetchFn = makeFetchFn([sendMessageOk()]);
-    const bot = makeBot(fetchFn);
-
-    const report: DailyDigestReport = {
-      date: '2026-04-26',
-      decisions: [],
-      spend_total_usd: 0,
-      impressions_total: 0,
-      shadow_log_summary: 'Would have paused 2 ads',
-    };
-
-    await bot.sendDailyDigest(report);
-
-    const [, init] = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
-    const body = JSON.parse(init.body as string);
-    expect(body.text).toContain('Would have paused 2 ads');
-  });
-
-  it('includes founder action when provided', async () => {
-    const fetchFn = makeFetchFn([sendMessageOk()]);
-    const bot = makeBot(fetchFn);
-
-    const report: DailyDigestReport = {
-      date: '2026-04-26',
-      decisions: [],
-      spend_total_usd: 0,
-      impressions_total: 0,
-      founder_action_required: 'Review campaign budget',
-    };
-
-    await bot.sendDailyDigest(report);
-
-    const [, init] = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
-    const body = JSON.parse(init.body as string);
-    expect(body.text).toContain('Review campaign budget');
-    expect(body.text).toContain('Action required');
-  });
-
-  it('notes no decisions when decisions array is empty', async () => {
-    const fetchFn = makeFetchFn([sendMessageOk()]);
-    const bot = makeBot(fetchFn);
-
-    const report: DailyDigestReport = {
-      date: '2026-04-26',
-      decisions: [],
-      spend_total_usd: 0,
-      impressions_total: 0,
-    };
-
-    await bot.sendDailyDigest(report);
-
-    const [, init] = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
-    const body = JSON.parse(init.body as string);
-    expect(body.text).toContain('No decisions taken today');
-  });
-});
+// NOTE: Pre-refactor `TelegramBot.sendDailyDigest` inline-rendering tests
+// were removed in Commit B of Sub-project 2 (Cowork visibility apply).
+// Their behavioral coverage moved to `digest-renderers.test.ts` because the
+// rendering logic moved to `digest-renderers.ts`. The bot's delegation
+// contract is covered by the new `TelegramBot.sendDailyDigest (refactored)`
+// describe block at the bottom of this file. See
+// `.cowork-meta/cowork-visibility-apply-20260511T005122Z/01-plan-deviation.md`
+// for the deviation note.
 
 describe('TelegramBot.requestApproval — LOW_RISK auto-approve timeout', () => {
   it('auto-approves with timed_out=true when no callback received within timeout', async () => {
@@ -415,5 +332,69 @@ describe('createTelegramBot', () => {
 
     delete process.env.TELEGRAM_BOT_TOKEN;
     delete process.env.TELEGRAM_FOUNDER_CHAT_ID;
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sendDailyDigest after refactor — uses buildDigestData + formatTelegram
+// ---------------------------------------------------------------------------
+
+import { buildDigestData as _buildDigestDataReal } from '../digest-builder';
+import { formatTelegram as _formatTelegramReal } from '../digest-renderers';
+
+vi.mock('../digest-builder', () => ({
+  buildDigestData: vi.fn(),
+}));
+
+vi.mock('../digest-renderers', () => ({
+  formatTelegram: vi.fn(),
+}));
+
+describe('TelegramBot.sendDailyDigest (refactored)', () => {
+  const builderMock = vi.mocked(_buildDigestDataReal);
+  const formatMock = vi.mocked(_formatTelegramReal);
+
+  beforeEach(() => {
+    builderMock.mockReset();
+    formatMock.mockReset();
+  });
+
+  it('with no arg, calls buildDigestData() then formatTelegram()', async () => {
+    const fakeReport: DailyDigestReport = { date: '2026-05-10', decisions: [], spend_total_usd: 0, impressions_total: 0 };
+    builderMock.mockResolvedValueOnce(fakeReport);
+    formatMock.mockReturnValueOnce('rendered text');
+
+    const fetchFn = makeFetchFn([sendMessageOk()]);
+    const bot = makeBot(fetchFn);
+    await bot.sendDailyDigest();
+
+    expect(builderMock).toHaveBeenCalledTimes(1);
+    expect(formatMock).toHaveBeenCalledWith(fakeReport);
+  });
+
+  it('with explicit report arg, bypasses buildDigestData()', async () => {
+    const fakeReport: DailyDigestReport = { date: '2026-05-10', decisions: [], spend_total_usd: 0, impressions_total: 0 };
+    formatMock.mockReturnValueOnce('rendered text');
+
+    const fetchFn = makeFetchFn([sendMessageOk()]);
+    const bot = makeBot(fetchFn);
+    await bot.sendDailyDigest(fakeReport);
+
+    expect(builderMock).not.toHaveBeenCalled();
+    expect(formatMock).toHaveBeenCalledWith(fakeReport);
+  });
+
+  it('passes formatted text to sendMessage with Markdown parse_mode', async () => {
+    formatMock.mockReturnValueOnce('rendered text');
+    const fetchFn = makeFetchFn([sendMessageOk()]);
+    const bot = makeBot(fetchFn);
+    await bot.sendDailyDigest({ date: '2026-05-10', decisions: [], spend_total_usd: 0, impressions_total: 0 });
+
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    // The body sent to Telegram includes the parse_mode and the rendered text.
+    const lastCall = (fetchFn as ReturnType<typeof vi.fn>).mock.calls[0];
+    const body = JSON.parse(lastCall[1].body as string);
+    expect(body.parse_mode).toBe('Markdown');
+    expect(body.text).toBe('rendered text');
   });
 });
