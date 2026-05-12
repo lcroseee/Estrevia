@@ -406,6 +406,116 @@ export const hooksEs: HookTemplate[] = [
       'nombres de signos en forma latina',
     ],
   },
+  // ---------------------------------------------------------------------------
+  // ARCHETYPE: reciprocity
+  // Carta gratuita sin registro — español neutro LATAM, no "usted".
+  // ---------------------------------------------------------------------------
+  {
+    id: 'es-reciprocity-1',
+    name: 'Reciprocidad — Carta Gratuita, Sin Registro',
+    archetype: 'reciprocity',
+    copy_template:
+      'Una carta natal sidérea, calculada desde donde los planetas realmente aparecen en el cielo. Gratis, sin registro.',
+    visual_mood: 'inviting cosmic gradient with gentle star field, no human figures',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'español neutro LATAM — no "usted"',
+      'factual offer — no fortune-telling',
+      'landing page must actually deliver free chart',
+    ],
+  },
+  {
+    id: 'es-reciprocity-2',
+    name: 'Reciprocidad — Efemérides Abiertas',
+    archetype: 'reciprocity',
+    copy_template:
+      'El mismo algoritmo Swiss Ephemeris que usan los astrónomos profesionales — abierto como calculadora de carta gratuita.',
+    visual_mood: 'cosmic gradient with subtle astronomical instruments, no faces',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'español neutro LATAM — no "usted"',
+      'Swiss Ephemeris is a real library — accurate claim',
+      'no fortune-telling',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // ARCHETYPE: peer_discovery
+  // Social proof — gated por PEER_DISCOVERY_ENABLED, español neutro LATAM.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'es-peer-discovery-1',
+    name: 'Descubrimiento — Miles de Cartas Sidéreas',
+    archetype: 'peer_discovery',
+    copy_template:
+      'Miles han calculado su carta natal sidérea en las últimas semanas. La mayoría de apps populares siguen usando posiciones tropicales estandarizadas hace más de 2.000 años.',
+    visual_mood: 'discovery-revelation gradient with subtle star field, no human faces',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'requires PEER_DISCOVERY_ENABLED=true env var',
+      'español neutro LATAM — no "usted"',
+      'cantidad cualitativa solamente ("miles") — respaldada por ≥2000 PostHog events',
+      'no manipulative scarcity',
+    ],
+  },
+  {
+    id: 'es-peer-discovery-2',
+    name: 'Descubrimiento — Practicantes Siderales',
+    archetype: 'peer_discovery',
+    copy_template:
+      'Muchos practicantes siderales descubren que su signo solar tropical difiere de la posición calculada esta noche.',
+    visual_mood: 'cosmic gradient with subtle constellation outlines',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'requires PEER_DISCOVERY_ENABLED=true env var',
+      'español neutro LATAM — no "usted"',
+      'cualitativo ("muchos") — sin número específico',
+      'factual astronomical claim only',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // ARCHETYPE: accuracy_gap
+  // Aversión a la pérdida — deriva tropical como costo, español neutro LATAM.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'es-accuracy-gap-1',
+    name: 'Brecha de Precisión — Precesión Axial',
+    archetype: 'accuracy_gap',
+    copy_template:
+      'La precesión axial de ~24° entre la astrología tropical antigua y el cielo de esta noche no ha llegado a la mayoría de apps populares de signo solar.',
+    visual_mood: 'historical-to-modern transition; star precession diagram acceptable',
+    duration_sec: 18,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'español neutro LATAM — no "usted"',
+      'factual astronomical figure (24°)',
+      'no mocking tropical astrology',
+    ],
+  },
+  {
+    id: 'es-accuracy-gap-2',
+    name: 'Brecha de Precisión — Antes de Galileo',
+    archetype: 'accuracy_gap',
+    copy_template:
+      'Las apps de signo solar tropical fueron estandarizadas antes de Galileo. El cálculo sidéreo usa las estrellas como están esta noche.',
+    visual_mood: 'split-screen historical-to-modern transition',
+    duration_sec: 18,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'es',
+    policy_constraints: [
+      'español neutro LATAM — no "usted"',
+      'factual historical anchor (Galileo)',
+      'no mocking tropical astrology',
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
