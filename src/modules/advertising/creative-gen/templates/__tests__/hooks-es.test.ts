@@ -123,6 +123,45 @@ describe('hooks-es', () => {
       expect(h.visual_mood, `${h.id} visual_mood leaks social-app UI`).not.toMatch(forbidden);
     }
   });
+
+  it('contains the reciprocity archetype with at least 2 templates', () => {
+    const reciprocityHooks = hooksEs.filter(h => h.archetype === 'reciprocity');
+    expect(reciprocityHooks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('reciprocity ES templates have non-empty policy_constraints', () => {
+    const reciprocityHooks = hooksEs.filter(h => h.archetype === 'reciprocity');
+    for (const h of reciprocityHooks) {
+      expect(h.policy_constraints.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('contains the peer_discovery archetype with at least 2 templates', () => {
+    const peerHooks = hooksEs.filter(h => h.archetype === 'peer_discovery');
+    expect(peerHooks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('peer_discovery ES templates declare env-gate in policy_constraints', () => {
+    const peerHooks = hooksEs.filter(h => h.archetype === 'peer_discovery');
+    for (const h of peerHooks) {
+      const hasGateNote = h.policy_constraints.some(c =>
+        c.includes('PEER_DISCOVERY_ENABLED'),
+      );
+      expect(hasGateNote, `${h.id} missing env-gate constraint`).toBe(true);
+    }
+  });
+
+  it('contains the accuracy_gap archetype with at least 2 templates', () => {
+    const gapHooks = hooksEs.filter(h => h.archetype === 'accuracy_gap');
+    expect(gapHooks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('accuracy_gap ES templates have non-empty policy_constraints', () => {
+    const gapHooks = hooksEs.filter(h => h.archetype === 'accuracy_gap');
+    for (const h of gapHooks) {
+      expect(h.policy_constraints.length).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('Patch 02 — lead_magnet archetype + new templates (ES)', () => {
