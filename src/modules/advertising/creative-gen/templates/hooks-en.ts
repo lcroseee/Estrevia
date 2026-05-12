@@ -402,6 +402,119 @@ export const hooksEn: HookTemplate[] = [
       'no fortune-telling',
     ],
   },
+  // ---------------------------------------------------------------------------
+  // ARCHETYPE: reciprocity
+  // Frames Estrevia as offering reciprocal value (free chart, no signup).
+  // Third-person / impersonal per Meta policy. No fortune-telling.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'en-reciprocity-1',
+    name: 'Reciprocity — Free Chart, No Signup',
+    archetype: 'reciprocity',
+    copy_template:
+      'A sidereal natal chart, calculated from where the planets actually appear in the sky. Free, no signup.',
+    visual_mood: 'inviting cosmic gradient with gentle star field, no human figures',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'factual offer — no fortune-telling, no predictive language',
+      'landing page must actually deliver free chart (no post-click signup wall)',
+      'no second-person personal claims about viewer',
+    ],
+  },
+  {
+    id: 'en-reciprocity-2',
+    name: 'Reciprocity — Open-source Ephemeris',
+    archetype: 'reciprocity',
+    copy_template:
+      'The same Swiss Ephemeris algorithm professional astronomers use — opened up as a free chart calculator.',
+    visual_mood: 'cosmic gradient with subtle astronomical instruments, no faces',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'Swiss Ephemeris is a real open-source library — accurate claim, cite at landing page',
+      'no fortune-telling',
+      'no second-person personal claims',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // ARCHETYPE: peer_discovery
+  // Social proof — qualitative count only ("thousands", "many"). Env-gated:
+  // emission blocked until PostHog chart_calculated events ≥ 2000.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'en-peer-discovery-1',
+    name: 'Peer Discovery — Thousands of Sidereal Charts',
+    archetype: 'peer_discovery',
+    copy_template:
+      'Thousands have run their sidereal natal chart in the last weeks. Most popular apps still use tropical positions standardised over 2,000 years ago.',
+    visual_mood: 'discovery-revelation gradient with subtle star field, no human faces',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'requires PEER_DISCOVERY_ENABLED=true env var',
+      'qualitative count only ("thousands") — backed by ≥2000 PostHog chart_calculated events',
+      'no manipulative scarcity, no fake urgency',
+      'no mocking tropical astrology — historical framing only',
+    ],
+  },
+  {
+    id: 'en-peer-discovery-2',
+    name: 'Peer Discovery — Sidereal Practitioners Report',
+    archetype: 'peer_discovery',
+    copy_template:
+      'Many sidereal practitioners report their tropical sun sign differs from the position calculated tonight.',
+    visual_mood: 'cosmic gradient with subtle constellation outlines',
+    duration_sec: 15,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'requires PEER_DISCOVERY_ENABLED=true env var',
+      'qualitative count only ("many") — never a specific number',
+      'no personal claims about viewer',
+      'factual astronomical claim only',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // ARCHETYPE: accuracy_gap
+  // Loss aversion — frames stale-tropical as cost. Factual / historical only,
+  // no mocking. No env gate.
+  // ---------------------------------------------------------------------------
+  {
+    id: 'en-accuracy-gap-1',
+    name: 'Accuracy Gap — Axial Precession',
+    archetype: 'accuracy_gap',
+    copy_template:
+      "The ~24° axial precession between ancient tropical astrology and tonight's sky never made it into most popular sun-sign apps.",
+    visual_mood: 'historical-to-modern transition; star precession diagram acceptable',
+    duration_sec: 18,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'factual astronomical figure (24°) — verified',
+      'no mocking tropical astrology — historical framing only',
+      'no fortune-telling, no predictive language',
+    ],
+  },
+  {
+    id: 'en-accuracy-gap-2',
+    name: 'Accuracy Gap — Before Galileo',
+    archetype: 'accuracy_gap',
+    copy_template:
+      'Tropical sun-sign apps were standardised before Galileo. Sidereal calculation uses the stars as they are tonight.',
+    visual_mood: 'split-screen historical-to-modern transition',
+    duration_sec: 18,
+    aspect_ratios: ['9:16', '1:1', '4:5'],
+    locale: 'en',
+    policy_constraints: [
+      'factual historical anchor (Galileo died 1642)',
+      'no mocking tropical astrology — historical framing only',
+      'no fortune-telling',
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
