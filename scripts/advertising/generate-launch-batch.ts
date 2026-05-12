@@ -5,7 +5,7 @@ import type {
   ImageGenerator,
   VideoGenerator,
 } from '@/shared/types/advertising';
-import { allHooks } from '@/modules/advertising/creative-gen/templates';
+import { getEligibleHooks } from '@/modules/advertising/creative-gen/templates';
 import { generateLaunchBatch } from '@/modules/advertising/creative-gen/batch';
 import type { BatchDeps, BatchSummary, DbClient } from '@/modules/advertising/creative-gen/batch';
 import type { ClaudeClient } from '@/modules/advertising/creative-gen/safety/checks';
@@ -136,7 +136,10 @@ const STUB_VIDEO_GEN: VideoGenerator = {
 };
 
 export async function runBatch(opts: RunBatchOpts): Promise<RunBatchSummary> {
-  const imageOnlyHooks = stripDurationFromHooks(allHooks);
+  const imageOnlyHooks = stripDurationFromHooks([
+    ...getEligibleHooks('en'),
+    ...getEligibleHooks('es'),
+  ]);
 
   const aggregate: RunBatchSummary = {
     generated: 0,
