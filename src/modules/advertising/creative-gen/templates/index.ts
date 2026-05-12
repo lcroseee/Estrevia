@@ -35,3 +35,31 @@ export function getHooksByArchetype(
   const source = locale ? getHooksByLocale(locale) : allHooks;
   return source.filter(h => h.archetype === archetype);
 }
+
+/**
+ * Returns hook templates for a locale, filtering out archetypes that are
+ * env-gated until prerequisites are met.
+ *
+ * Currently the only env-gated archetype is `peer_discovery`, which requires
+ * verifiable social-proof backing (≥2000 PostHog `chart_calculated` events).
+ * Founder flips `PEER_DISCOVERY_ENABLED=true` in Vercel env after manual
+ * confirmation.
+ *
+ * Fail-safe: any value other than the literal string 'true' keeps the gate
+ * closed.
+ *
+ * @param locale Target locale.
+ * @param env    Environment record; defaults to `process.env`. Injectable for tests.
+ */
+export function getEligibleHooks(
+  locale: 'en' | 'es',
+  env: { PEER_DISCOVERY_ENABLED?: string } = process.env as {
+    PEER_DISCOVERY_ENABLED?: string;
+  },
+): HookTemplate[] {
+  const all = getHooksByLocale(locale);
+  const peerDiscoveryEnabled = env.PEER_DISCOVERY_ENABLED === 'true';
+  return peerDiscoveryEnabled
+    ? all
+    : all.filter(h => h.archetype !== 'peer_discovery');
+}
