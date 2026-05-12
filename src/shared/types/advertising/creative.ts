@@ -1,5 +1,6 @@
 export type HookArchetype = 'identity_reveal' | 'authority' | 'rarity'
-  | 'identity_continuation' | 'paywall_nudge' | 'lead_magnet';
+  | 'identity_continuation' | 'paywall_nudge' | 'lead_magnet'
+  | 'reciprocity' | 'peer_discovery' | 'accuracy_gap';
 
 export interface HookTemplate {
   id: string;
