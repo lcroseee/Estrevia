@@ -3,13 +3,15 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 import { postJson } from '@/shared/lib/apiFetch';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
 import { Link } from '@/i18n/navigation';
 import { getCardName, getCardDescription, getCardKeywords } from './tarotLocalize';
+import { PaywallCta } from '@/shared/components/PaywallCta';
+import { PaywallModal } from '@/shared/components/PaywallModal';
 
 interface DrawnCard {
   cardId: string;
@@ -40,7 +42,9 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
   const [interpretation, setInterpretation] = useState<string | null>(null);
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [interpretError, setInterpretError] = useState<string | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleDraw = useCallback(() => {
     setIsDrawing(true);
@@ -83,7 +87,8 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
   }, [allCards]);
 
   const handleInterpret = useCallback(async () => {
-    if (!isPro || drawnCards.length === 0) return;
+    if (!isPro) return;
+    if (drawnCards.length === 0) return;
     setIsInterpreting(true);
     setInterpretError(null);
 
@@ -129,20 +134,6 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
 
   if (subLoading) {
     return <div className="h-52 flex items-center justify-center"><div className="w-28 h-44 rounded-lg bg-white/4 animate-pulse" /></div>;
-  }
-
-  if (!isPro) {
-    return (
-      <div className="rounded-xl border border-white/8 p-6 text-center space-y-3" style={{ background: 'rgba(255,255,255,0.025)' }}>
-        <p className="text-sm text-white/50">{t('proRequired')}</p>
-        <Link
-          href="/settings"
-          className="inline-block px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-br from-[#FFD700]/90 to-[#FF8C00]/80 text-black hover:shadow-lg hover:shadow-[#FFD700]/20 transition-all"
-        >
-          {t('upgradeToPro')}
-        </Link>
-      </div>
-    );
   }
 
   return (
@@ -251,6 +242,15 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
         </motion.div>
       )}
 
+      {/* Paywall CTA for free users after all cards revealed */}
+      {!isPro && revealedCount === 3 && (
+        <PaywallCta
+          trigger="three-card"
+          variant="card"
+          onClick={() => setPaywallOpen(true)}
+        />
+      )}
+
       {/* Card detail modal */}
       <AnimatePresence>
         {selectedCard && (() => {
@@ -318,6 +318,13 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
           );
         })()}
       </AnimatePresence>
+
+      <PaywallModal
+        open={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        returnUrl={pathname}
+        triggerContext="three-card"
+      />
     </div>
   );
 }
