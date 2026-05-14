@@ -59,6 +59,7 @@ export function EssayPageClient({ children }: EssayPageClientProps) {
         open={paywallOpen}
         onClose={() => setPaywallOpen(false)}
         returnUrl={typeof window !== 'undefined' ? window.location.pathname : undefined}
+        triggerContext="essay"
       />
     </>
   );
