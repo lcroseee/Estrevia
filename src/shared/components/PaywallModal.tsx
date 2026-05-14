@@ -5,11 +5,13 @@ import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { readUtmCookie } from '@/shared/lib/utm-cookie';
+import type { PaywallTrigger } from '@/shared/types/paywall';
 
 interface PaywallModalProps {
   open: boolean;
   onClose: () => void;
   returnUrl?: string;
+  triggerContext?: PaywallTrigger;
 }
 
 const PRO_FEATURES = [
@@ -25,6 +27,13 @@ const PRO_FEATURES = [
   'prioritySupport',
 ] as const;
 
+function triggerToKey(trigger: PaywallTrigger): string {
+  return trigger
+    .split('-')
+    .map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
+}
+
 function formatTrialEndDate(): string {
   const d = new Date();
   d.setDate(d.getDate() + 3);
@@ -35,7 +44,7 @@ function formatTrialEndDate(): string {
   });
 }
 
-export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
+export function PaywallModal({ open, onClose, returnUrl, triggerContext }: PaywallModalProps) {
   const t = useTranslations('paywall');
   const tp = useTranslations('pricing');
   const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_annual');
@@ -44,10 +53,18 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
+  const headline =
+    triggerContext && triggerContext !== 'generic' && t.has(`contextualTitles.${triggerToKey(triggerContext)}`)
+      ? t(`contextualTitles.${triggerToKey(triggerContext)}` as 'contextualTitles.essay')
+      : t('title');
+
   // Track paywall open (conversion-funnel entry)
   useEffect(() => {
-    if (open) trackEvent(AnalyticsEvent.PAYWALL_OPENED, { returnUrl: returnUrl ?? null });
-  }, [open, returnUrl]);
+    if (open) trackEvent(AnalyticsEvent.PAYWALL_OPENED, {
+      trigger: triggerContext ?? 'generic',
+      returnUrl: returnUrl ?? null,
+    });
+  }, [open, returnUrl, triggerContext]);
 
   // Escape key closes the modal (WCAG 2.1.2)
   useEffect(() => {
@@ -88,7 +105,11 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
     if (loading) return;
     setLoading(true);
     setError(null);
-    trackEvent(AnalyticsEvent.PAYWALL_TRIAL_CLICKED, { plan, returnUrl: returnUrl ?? null });
+    trackEvent(AnalyticsEvent.PAYWALL_TRIAL_CLICKED, {
+      plan,
+      trigger: triggerContext ?? 'generic',
+      returnUrl: returnUrl ?? null,
+    });
 
     try {
       const utmFields = readUtmCookie();
@@ -116,7 +137,11 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
         // extra clicks between sign-up and payment.
         const target = returnUrl ?? window.location.pathname;
         const checkoutStart = `/checkout/start?plan=${plan}&return=${encodeURIComponent(target)}`;
-        trackEvent(AnalyticsEvent.CHECKOUT_AUTH_REDIRECT, { plan, returnUrl: target });
+        trackEvent(AnalyticsEvent.CHECKOUT_AUTH_REDIRECT, {
+          plan,
+          trigger: triggerContext ?? 'generic',
+          returnUrl: target,
+        });
         window.location.href = `/sign-up?redirect_url=${encodeURIComponent(checkoutStart)}`;
         return;
       }
@@ -135,7 +160,10 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
         return;
       }
 
-      trackEvent(AnalyticsEvent.CHECKOUT_STRIPE_REDIRECTED, { plan });
+      trackEvent(AnalyticsEvent.CHECKOUT_STRIPE_REDIRECTED, {
+        plan,
+        trigger: triggerContext ?? 'generic',
+      });
       window.location.href = data.data.url;
     } catch {
       // fetch() itself threw — genuine network failure (offline, DNS, timeout).
@@ -179,7 +207,7 @@ export function PaywallModal({ open, onClose, returnUrl }: PaywallModalProps) {
               className="text-2xl font-light text-white mb-1"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
             >
-              {t('title')}
+              {headline}
             </h2>
             <p className="text-sm text-white/45">{t('subtitle')}</p>
           </div>
