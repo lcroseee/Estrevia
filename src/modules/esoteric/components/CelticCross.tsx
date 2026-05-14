@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { useSubscription } from '@/shared/hooks/useSubscription';
+import { postJson } from '@/shared/lib/apiFetch';
+import { PaywallCta } from '@/shared/components/PaywallCta';
+import { PaywallModal } from '@/shared/components/PaywallModal';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
-import { Link } from '@/i18n/navigation';
 import { getCardName, getCardDescription, getCardKeywords } from './tarotLocalize';
 
 interface DrawnCard {
@@ -65,10 +68,15 @@ export function CelticCross({ allCards }: CelticCrossProps) {
   const locale = useLocale();
   const prefersReduced = useReducedMotion();
   const { isPro, isLoading: subLoading } = useSubscription();
+  const pathname = usePathname();
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   const [revealedCount, setRevealedCount] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
   const [selectedCard, setSelectedCard] = useState<DrawnCard | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [interpretation, setInterpretation] = useState<string | null>(null);
+  const [isInterpreting, setIsInterpreting] = useState(false);
+  const [interpretError, setInterpretError] = useState<string | null>(null);
 
   const handleDraw = useCallback(() => {
     setIsDrawing(true);
@@ -104,22 +112,60 @@ export function CelticCross({ allCards }: CelticCrossProps) {
     }
   }, [allCards]);
 
+  useEffect(() => {
+    if (!isPro) return;
+    if (drawnCards.length !== 10) return;
+    if (revealedCount !== 10) return;
+    if (interpretation) return;
+    if (isInterpreting) return;
+
+    setIsInterpreting(true);
+    setInterpretError(null);
+
+    const payload = {
+      spreadType: 'celtic_cross',
+      cards: drawnCards.map((dc) => {
+        const cardData = allCards.find((c) => c.id === dc.cardId);
+        const pos = POSITIONS.find((p) => p.id === dc.positionId);
+        return {
+          position: pos?.key ?? `position-${dc.positionId}`,
+          cardId: dc.cardId,
+          cardName: cardData ? getCardName(cardData, locale) : dc.cardId,
+          reversed: dc.reversed,
+        };
+      }),
+    };
+
+    void postJson<{ success: boolean; data: { interpretation: string } | null }>(
+      '/api/v1/tarot/interpret',
+      payload,
+    ).then((result) => {
+      setIsInterpreting(false);
+      switch (result.kind) {
+        case 'ok':
+          if (result.data.success && result.data.data?.interpretation) {
+            setInterpretation(result.data.data.interpretation);
+          }
+          break;
+        case 'auth-required':
+          setInterpretError(t('interpretProRequired'));
+          break;
+        case 'error':
+          if (result.status === 403) {
+            setInterpretError(t('interpretProRequired'));
+          } else {
+            setInterpretError(t('interpretError'));
+          }
+          break;
+        case 'network-error':
+          setInterpretError(t('interpretNetworkError'));
+          break;
+      }
+    });
+  }, [isPro, drawnCards, revealedCount, interpretation, isInterpreting, allCards, locale, t]);
+
   if (subLoading) {
     return <div className="h-64 flex items-center justify-center"><div className="w-20 h-32 rounded-lg bg-white/4 animate-pulse" /></div>;
-  }
-
-  if (!isPro) {
-    return (
-      <div className="rounded-xl border border-white/8 p-6 text-center space-y-3" style={{ background: 'rgba(255,255,255,0.025)' }}>
-        <p className="text-sm text-white/50">{t('proRequired')}</p>
-        <Link
-          href="/settings"
-          className="inline-block px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-br from-[#FFD700]/90 to-[#FF8C00]/80 text-black hover:shadow-lg hover:shadow-[#FFD700]/20 transition-all"
-        >
-          {t('upgradeToPro')}
-        </Link>
-      </div>
-    );
   }
 
   return (
@@ -212,6 +258,44 @@ export function CelticCross({ allCards }: CelticCrossProps) {
         ) : null}
       </div>
 
+      {/* Interpretation (Pro) or PaywallCta (free) — shown after all 10 cards revealed */}
+      {revealedCount === 10 && (
+        <>
+          {isPro ? (
+            <section aria-labelledby="celtic-interpretation-heading" className="space-y-3 max-w-2xl mx-auto">
+              <h3
+                id="celtic-interpretation-heading"
+                className="text-sm font-medium text-white/60 uppercase tracking-wider"
+              >
+                {t('interpretation')}
+              </h3>
+              {isInterpreting && (
+                <p className="text-sm text-white/45">{t('interpreting')}</p>
+              )}
+              {interpretation && (
+                <p
+                  className="text-sm text-white/70 leading-relaxed whitespace-pre-line"
+                  style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}
+                >
+                  {interpretation}
+                </p>
+              )}
+              {interpretError && (
+                <p className="text-xs text-red-400" role="alert">
+                  {interpretError}
+                </p>
+              )}
+            </section>
+          ) : (
+            <PaywallCta
+              trigger="celtic-cross"
+              variant="card"
+              onClick={() => setPaywallOpen(true)}
+            />
+          )}
+        </>
+      )}
+
       {/* Card detail modal */}
       <AnimatePresence>
         {selectedCard && (() => {
@@ -276,6 +360,13 @@ export function CelticCross({ allCards }: CelticCrossProps) {
           );
         })()}
       </AnimatePresence>
+
+      <PaywallModal
+        open={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        returnUrl={pathname}
+        triggerContext="celtic-cross"
+      />
     </div>
   );
 }
