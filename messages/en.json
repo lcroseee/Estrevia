@@ -978,7 +978,22 @@
     "features": "Everything in Free, plus:",
     "trialCta": "Start 3-Day Free Trial",
     "noCharge": "You won't be charged until {date}",
-    "alreadyPro": "You already have Pro access"
+    "alreadyPro": "You already have Pro access",
+    "contextualTitles": {
+      "celticCross": "Unlock your Celtic Cross reading",
+      "threeCard": "See the full 3-card story",
+      "synastryAi": "Get the AI relationship analysis",
+      "essay": "Unlock the full essay"
+    },
+    "cta": {
+      "eyebrow": "Locked behind Star",
+      "subline": {
+        "celticCross": "Get the full interpretation tying all 10 cards into one narrative.",
+        "threeCard": "Get the LLM reading that connects past, present, and future.",
+        "synastryAi": "Get a detailed analysis of how your charts interact."
+      },
+      "ctaLabel": "Start 3-Day Free Trial"
+    }
   },
   "emailGate": {
     "title": "See your sidereal chart",

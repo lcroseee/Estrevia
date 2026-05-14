@@ -978,7 +978,22 @@
     "features": "Todo en Gratis, más:",
     "trialCta": "Comenzar prueba de 3 días",
     "noCharge": "No se te cobrará hasta el {date}",
-    "alreadyPro": "Ya tienes acceso Pro"
+    "alreadyPro": "Ya tienes acceso Pro",
+    "contextualTitles": {
+      "celticCross": "Desbloquea tu lectura de la Cruz Celta",
+      "threeCard": "Descubre la historia completa de las 3 cartas",
+      "synastryAi": "Obtén el análisis de compatibilidad con IA",
+      "essay": "Desbloquea el ensayo completo"
+    },
+    "cta": {
+      "eyebrow": "Bloqueado tras Star",
+      "subline": {
+        "celticCross": "Obtén la interpretación completa que conecta las 10 cartas en una narrativa.",
+        "threeCard": "Obtén la lectura que conecta pasado, presente y futuro.",
+        "synastryAi": "Obtén un análisis detallado de cómo interactúan tus cartas."
+      },
+      "ctaLabel": "Comienza tu prueba gratis de 3 días"
+    }
   },
   "emailGate": {
     "title": "Mira tu carta sideral",
