@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { BirthDataFormStandalone } from './BirthDataFormStandalone';
 import { SynastryResult } from './SynastryResult';
+import { PaywallCta } from '@/shared/components/PaywallCta';
+import { PaywallModal } from '@/shared/components/PaywallModal';
 import { useSubscription } from '@/shared/hooks/useSubscription';
 import { postJson } from '@/shared/lib/apiFetch';
 import type { SynastryScores } from '@/modules/astro-engine/synastry-scoring';
@@ -69,6 +71,8 @@ export function SynastryClient() {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const handleCalculate = useCallback(async () => {
     // Validate both forms
@@ -227,12 +231,11 @@ export function SynastryClient() {
             )}
 
             {!isPro && (
-              <p className="text-xs text-white/40">
-                {t('aiAnalysis')} &mdash; Pro feature.{' '}
-                <a href="/pricing" className="text-[#FFD700]/70 hover:text-[#FFD700]">
-                  {t('upgradeCta')}
-                </a>
-              </p>
+              <PaywallCta
+                trigger="synastry-ai"
+                variant="inline"
+                onClick={() => setPaywallOpen(true)}
+              />
             )}
 
             {aiAnalysis && (
@@ -251,6 +254,12 @@ export function SynastryClient() {
             )}
           </section>
         </div>
+        <PaywallModal
+          open={paywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          returnUrl={pathname}
+          triggerContext="synastry-ai"
+        />
       </div>
     );
   }
