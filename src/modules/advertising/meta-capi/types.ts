@@ -11,6 +11,10 @@ export interface CapiUserData {
   external_id?: string;
   /** SHA-256 hash of lowercase + trimmed email. */
   em?: string;
+  /** Plain `_fbc` cookie value (fb.1.<ts>.<fbclid>). NOT hashed — Meta API spec. */
+  fbc?: string;
+  /** Plain `_fbp` cookie value (fb.1.<ts>.<random>). NOT hashed — Meta API spec. */
+  fbp?: string;
   /** Request IP, plain (Meta hashes server-side). */
   client_ip_address?: string;
   /** Request User-Agent, plain. */

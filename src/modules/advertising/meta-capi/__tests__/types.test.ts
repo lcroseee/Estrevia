@@ -18,4 +18,15 @@ describe('meta-capi types', () => {
     expect(u.external_id).toBeDefined();
     expect(u.em).toBeUndefined();
   });
+
+  it('CapiUserData accepts fbc + fbp as optional plaintext fields', () => {
+    const u: CapiUserData = {
+      em: 'hashed',
+      external_id: 'hashed_uid',
+      fbc: 'fb.1.1714867200.AbCdEf123',
+      fbp: 'fb.1.1714867200.987654321',
+    };
+    expect(u.fbc).toBe('fb.1.1714867200.AbCdEf123');
+    expect(u.fbp).toBe('fb.1.1714867200.987654321');
+  });
 });

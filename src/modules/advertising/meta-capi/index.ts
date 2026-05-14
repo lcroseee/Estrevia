@@ -61,6 +61,10 @@ export interface SendCapiInput {
   external_id?: string;
   client_ip_address?: string;
   client_user_agent?: string;
+  /** Plain `_fbc` cookie value verbatim. NOT hashed — Meta API spec. */
+  fbc?: string;
+  /** Plain `_fbp` cookie value verbatim. NOT hashed — Meta API spec. */
+  fbp?: string;
 }
 
 export interface SendCapiOptions {
@@ -101,6 +105,8 @@ export async function sendCapiEvent(
       external_id: user.external_id ?? (user.external_id_raw ? hashPII(user.external_id_raw) : undefined),
       client_ip_address: user.client_ip_address,
       client_user_agent: user.client_user_agent,
+      fbc: user.fbc,
+      fbp: user.fbp,
     },
     custom_data,
     event_source_url: opts.event_source_url,

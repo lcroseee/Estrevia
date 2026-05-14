@@ -61,6 +61,29 @@ describe('sendCapiEvent', () => {
     await sendCapiEvent('Lead', { email: 'a@x.com' });
     expect(mockSendEvent).not.toHaveBeenCalled();
   });
+
+  it('passes fbc + fbp through to user_data verbatim (no hashing)', async () => {
+    await sendCapiEvent('Lead', {
+      email: 'alice@example.com',
+      external_id_raw: 'user_42',
+      fbc: 'fb.1.1714867200.AbCdEf123',
+      fbp: 'fb.1.1714867200.987654321',
+      client_ip_address: '203.0.113.42',
+      client_user_agent: 'Mozilla/5.0 test-ua',
+    });
+    const payload = mockSendEvent.mock.calls[0][0] as CapiEventPayload;
+    expect(payload.user_data.fbc).toBe('fb.1.1714867200.AbCdEf123');
+    expect(payload.user_data.fbp).toBe('fb.1.1714867200.987654321');
+    expect(payload.user_data.client_ip_address).toBe('203.0.113.42');
+    expect(payload.user_data.client_user_agent).toBe('Mozilla/5.0 test-ua');
+  });
+
+  it('omits fbc/fbp from user_data when caller does not supply them (backward-compat)', async () => {
+    await sendCapiEvent('Lead', { email: 'a@x.com' });
+    const payload = mockSendEvent.mock.calls[0][0] as CapiEventPayload;
+    expect(payload.user_data.fbc).toBeUndefined();
+    expect(payload.user_data.fbp).toBeUndefined();
+  });
 });
 
 describe('hashPII', () => {

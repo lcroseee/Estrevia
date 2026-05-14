@@ -64,11 +64,20 @@ const ContentSecurityPolicy = [
   // PostHog EU uses a dedicated ingest subdomain `eu.i.posthog.com` and asset
   // subdomain `eu-assets.i.posthog.com` — wildcard `*.posthog.com` does NOT
   // cover the `i.posthog.com` third-level hosts, they must be listed explicitly
-  // www.facebook.com receives fbq() event POSTs (Meta Pixel browser-side).
-  "connect-src 'self' https://api.clerk.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://*.ingest.sentry.io https://*.sentry.io https://api.stripe.com https://vitals.vercel-insights.com https://vercel.live wss://vercel.live https://www.facebook.com",
+  //
+  // Meta Pixel delivers events through up to 4 redundant channels. We allowlist
+  // all of them so attribution survives Safari ITP, Chrome ETP, ORB and 3p-cookie
+  // restrictions:
+  //   1. https://www.facebook.com         — direct fbq() POST (`/tr/` endpoint)
+  //   2. https://*.facebook.com           — Privacy Sandbox API + auxiliary fb subdomains
+  //   3. https://*.facebook.net           — connect.facebook.net XHR endpoint
+  //   4. https://*.datah04.com            — CAPI Gateway (capig.* first-party host for our Pixel)
+  // The matching frame-src and form-action entries below cover the iframe and
+  // form-POST fallback channels for resilient capture in older browsers.
+  "connect-src 'self' https://api.clerk.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://*.ingest.sentry.io https://*.sentry.io https://api.stripe.com https://vitals.vercel-insights.com https://vercel.live wss://vercel.live https://www.facebook.com https://*.facebook.com https://*.facebook.net https://*.datah04.com",
 
   // Frames: Stripe (3D Secure) + Clerk (OAuth callbacks, dev modal) + production Clerk instance
-  "frame-src https://js.stripe.com https://*.stripe.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://vercel.live",
+  "frame-src https://js.stripe.com https://*.stripe.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://vercel.live https://www.facebook.com",
 
   // Workers: self + blob (Next.js service worker / PWA)
   "worker-src 'self' blob:",
@@ -83,7 +92,7 @@ const ContentSecurityPolicy = [
   // Stripe Checkout posts back to our domain via the redirect URL we supply,
   // but the hosted form itself submits to checkout.stripe.com — allow it so
   // the Stripe SDK's internal <form action="..."> pattern is not blocked.
-  "form-action 'self' https://checkout.stripe.com",
+  "form-action 'self' https://checkout.stripe.com https://www.facebook.com",
 
   // Frame ancestors: none (equivalent to X-Frame-Options DENY)
   "frame-ancestors 'none'",

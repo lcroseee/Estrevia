@@ -168,11 +168,22 @@ export function trackServerEvent(
     if (mapped.capi) {
       const email = typeof properties?.email === 'string' ? properties.email : undefined;
       const event_id = typeof properties?.$insert_id === 'string' ? properties.$insert_id : undefined;
+      const fbc = typeof properties?.fbc === 'string' ? properties.fbc : undefined;
+      const fbp = typeof properties?.fbp === 'string' ? properties.fbp : undefined;
+      const client_ip_address = typeof properties?.client_ip_address === 'string'
+        ? properties.client_ip_address : undefined;
+      const client_user_agent = typeof properties?.client_user_agent === 'string'
+        ? properties.client_user_agent : undefined;
+      const event_source_url = typeof properties?.event_source_url === 'string'
+        ? properties.event_source_url : undefined;
       const capiPromise = sendCapiEvent(
         mapped.capi,
-        { external_id_raw: distinctId, email },
+        { external_id_raw: distinctId, email, fbc, fbp, client_ip_address, client_user_agent },
         propertiesToCustomData(properties),
-        event_id ? { event_id } : {},
+        {
+          ...(event_id ? { event_id } : {}),
+          ...(event_source_url ? { event_source_url } : {}),
+        },
       );
       // Keep the function alive for CAPI flush, same pattern as PostHog above.
       waitUntil(capiPromise);

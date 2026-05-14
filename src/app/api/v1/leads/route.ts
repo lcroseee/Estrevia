@@ -27,6 +27,10 @@ const bodySchema = z.object({
   utm_content: z.string().max(128).optional(),
   utm_term: z.string().max(128).optional(),
   anonymous_id: z.string().max(128).optional(),
+  /** Meta `_fbc` cookie value verbatim — for CAPI ad-click attribution. */
+  fbc: z.string().max(256).optional(),
+  /** Meta `_fbp` cookie value verbatim — for cross-page Pixel dedupe. */
+  fbp: z.string().max(256).optional(),
 });
 
 function sha256(s: string): string {
@@ -147,6 +151,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<L
 
   if (wasNew) {
     const distinctId = input.anonymous_id ?? `lead_${leadId}`;
+    const referer = request.headers.get('referer') ?? undefined;
     trackServerEvent(distinctId, AnalyticsEvent.EMAIL_LEAD_SUBMITTED, {
       email: input.email,
       $insert_id: eventId,
@@ -157,6 +162,13 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<L
       utm_term: input.utm_term,
       source: 'hero_calculator',
       locale: input.locale,
+      // Attribution properties — extracted by analytics.ts:trackServerEvent into
+      // CAPI user_data (fbc/fbp/IP/UA) and opts (event_source_url).
+      fbc: input.fbc,
+      fbp: input.fbp,
+      client_ip_address: ip !== 'anonymous' ? ip : undefined,
+      client_user_agent: userAgent ?? undefined,
+      event_source_url: referer,
     });
   }
 

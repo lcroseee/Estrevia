@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { readUtmCookie } from '@/shared/lib/utm-cookie';
+import { readMetaCookies } from '@/shared/lib/meta-cookies';
 
 interface EmailGateModalProps {
   open: boolean;
@@ -117,6 +118,7 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
     setLoading(true);
     try {
       const utm = readUtmCookie() ?? {};
+      const meta = readMetaCookies();
       const anonymous_id = getDistinctId();
       const res = await fetch('/api/v1/leads', {
         method: 'POST',
@@ -127,6 +129,7 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
           locale,
           anonymous_id,
           ...utm,
+          ...meta,
         }),
       });
 

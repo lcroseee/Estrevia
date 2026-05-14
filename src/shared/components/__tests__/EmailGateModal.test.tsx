@@ -12,6 +12,11 @@ beforeEach(() => {
   window.localStorage.clear();
   delete (window as unknown as { fbq?: unknown }).fbq;
   delete (window as unknown as { posthog?: unknown }).posthog;
+  // Reset cookies between tests — jsdom does not auto-clear them
+  document.cookie.split(';').forEach((c) => {
+    const k = c.split('=')[0]?.trim();
+    if (k) document.cookie = `${k}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+  });
 });
 
 function makeFbqMock() {
@@ -164,5 +169,53 @@ describe('EmailGateModal', () => {
     fireEvent.change(screen.getByLabelText('emailLabel'), { target: { value: 'ls@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'submitCta' }));
     await waitFor(() => expect(baseProps.onSubmitted).toHaveBeenCalled());
+  });
+
+  it('submits with fbc + fbp read from document.cookie in the request body', async () => {
+    makePosthogMock();
+    makeFbqMock();
+    // Set Meta cookies before render
+    document.cookie = '_fbc=fb.1.1714867200.AbCdEf123';
+    document.cookie = '_fbp=fb.1.1714867200.987654321';
+
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(
+      JSON.stringify({ success: true, data: { leadId: 'lead_m', eventId: 'lead_m:email_lead_submitted', wasNew: true }, error: null }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    ));
+
+    render(<EmailGateModal {...baseProps} />);
+    fireEvent.change(screen.getByLabelText('emailLabel'), { target: { value: 'cookies@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'submitCta' }));
+    await waitFor(() => expect(baseProps.onSubmitted).toHaveBeenCalled());
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/v1/leads',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    const init = fetchSpy.mock.calls[0]![1] as RequestInit;
+    const body = JSON.parse(init.body as string) as Record<string, unknown>;
+    expect(body.email).toBe('cookies@example.com');
+    expect(body.fbc).toBe('fb.1.1714867200.AbCdEf123');
+    expect(body.fbp).toBe('fb.1.1714867200.987654321');
+  });
+
+  it('omits fbc/fbp from request body when cookies are absent', async () => {
+    makePosthogMock();
+    makeFbqMock();
+    // No _fbc / _fbp cookies set
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(
+      JSON.stringify({ success: true, data: { leadId: 'lead_n', eventId: 'lead_n:email_lead_submitted', wasNew: true }, error: null }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    ));
+
+    render(<EmailGateModal {...baseProps} />);
+    fireEvent.change(screen.getByLabelText('emailLabel'), { target: { value: 'nocookies@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'submitCta' }));
+    await waitFor(() => expect(baseProps.onSubmitted).toHaveBeenCalled());
+
+    const init = fetchSpy.mock.calls[0]![1] as RequestInit;
+    const body = JSON.parse(init.body as string) as Record<string, unknown>;
+    expect(body.fbc).toBeUndefined();
+    expect(body.fbp).toBeUndefined();
   });
 });

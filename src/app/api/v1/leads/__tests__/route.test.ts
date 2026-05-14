@@ -180,4 +180,63 @@ describe('POST /api/v1/leads', () => {
     expect(row!.ip_address_hash).toMatch(/^[a-f0-9]{64}$/);
     expect(row!.ip_address_hash).not.toBe('198.51.100.7');
   });
+
+  it('forwards fbc/fbp from body + IP/UA/referer from headers to trackServerEvent', async () => {
+    const POST = await importPOST();
+    await POST(makeRequest(
+      {
+        email: 'attrib@example.com',
+        chartId: 'chart_a',
+        locale: 'en',
+        fbc: 'fb.1.1714867200.AbCdEf123',
+        fbp: 'fb.1.1714867200.987654321',
+      },
+      {
+        'x-forwarded-for': '203.0.113.42',
+        'user-agent': 'Mozilla/5.0 attrib-ua',
+        'referer': 'https://estrevia.app/es',
+      },
+    ));
+    expect(trackMock).toHaveBeenCalledTimes(1);
+    const [, , props] = trackMock.mock.calls[0] as [string, string, Record<string, unknown>];
+    expect(props.fbc).toBe('fb.1.1714867200.AbCdEf123');
+    expect(props.fbp).toBe('fb.1.1714867200.987654321');
+    expect(props.client_ip_address).toBe('203.0.113.42');
+    expect(props.client_user_agent).toBe('Mozilla/5.0 attrib-ua');
+    expect(props.event_source_url).toBe('https://estrevia.app/es');
+  });
+
+  it('accepts a body without fbc/fbp (backward-compat) and forwards undefined attribution', async () => {
+    const POST = await importPOST();
+    await POST(makeRequest({
+      email: 'noattrib@example.com',
+      locale: 'en',
+    }));
+    expect(trackMock).toHaveBeenCalledTimes(1);
+    const [, , props] = trackMock.mock.calls[0] as [string, string, Record<string, unknown>];
+    expect(props.fbc).toBeUndefined();
+    expect(props.fbp).toBeUndefined();
+    expect(props.event_source_url).toBeUndefined();
+  });
+
+  it('does NOT forward client_ip_address when x-forwarded-for is absent', async () => {
+    const POST = await importPOST();
+    await POST(makeRequest(
+      { email: 'noip@example.com', locale: 'en' },
+      // Override default headers — drop x-forwarded-for completely
+      // (makeRequest still merges 'x-forwarded-for' default — so override here)
+    ));
+    // makeRequest sets x-forwarded-for=203.0.113.42 by default. To test the
+    // anonymous branch, send a request without that header.
+    const reqNoIp = new Request('https://test.local/api/v1/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'noip2@example.com', locale: 'en' }),
+    });
+    trackMock.mockClear();
+    await POST(reqNoIp);
+    expect(trackMock).toHaveBeenCalledTimes(1);
+    const [, , props] = trackMock.mock.calls[0] as [string, string, Record<string, unknown>];
+    expect(props.client_ip_address).toBeUndefined();
+  });
 });
