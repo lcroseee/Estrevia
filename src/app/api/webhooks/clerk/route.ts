@@ -2,8 +2,8 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import type { WebhookEvent } from '@clerk/nextjs/server';
 import { getDb } from '@/shared/lib/db';
-import { users, natalCharts } from '@/shared/lib/schema';
-import { eq, and } from 'drizzle-orm';
+import { users, natalCharts, emailLeads } from '@/shared/lib/schema';
+import { eq, and, isNull } from 'drizzle-orm';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 /**
@@ -101,6 +101,45 @@ export async function POST(req: Request) {
         .onConflictDoNothing(); // idempotent — safe to retry
 
       console.info('[clerk-webhook] user.created', { userId: data.id });
+
+      // T10: Lead conversion linking. If this Clerk email matches an existing
+      // email_leads row, mark it converted so the lead-nurture cron sweep stops
+      // sending further drip emails to a now-registered user. Also enables
+      // lead→sub attribution via email_leads → users → subscriptions join.
+      // Match is lowercase (leads are stored normalized). Only touch rows that
+      // are not yet converted (idempotent on Clerk webhook retries).
+      // Non-blocking: failure must not 500 the webhook — Clerk would retry
+      // and duplicate the user insert. Skip when email is empty (can't match).
+      if (email) {
+        try {
+          await db
+            .update(emailLeads)
+            .set({
+              convertedToUserId: data.id,
+              convertedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(emailLeads.email, email.toLowerCase()),
+                isNull(emailLeads.convertedToUserId),
+              ),
+            );
+        } catch (leadErr) {
+          // PII-safe log — never include the email address.
+          console.error('[clerk-webhook] lead conversion link failed (non-fatal)', {
+            userId: data.id,
+            message: leadErr instanceof Error ? leadErr.message : 'unknown',
+          });
+          try {
+            const { captureException } = await import('@sentry/nextjs');
+            captureException(leadErr, {
+              tags: { webhook: 'clerk', op: 'lead_conversion_link' },
+            });
+          } catch {
+            // Sentry capture is best-effort.
+          }
+        }
+      }
 
       // Fire user_registered to PostHog so the advertising agent's funnel
       // reconciler can compare this against Meta clicks. Idempotency comes

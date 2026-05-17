@@ -17,6 +17,11 @@ const mocks = vi.hoisted(() => ({
   select: vi.fn(),
   deleteWhere: vi.fn().mockResolvedValue(undefined),
   delete: vi.fn(),
+  // T10: track update() chain so tests can verify the emailLeads UPDATE
+  // fired by user.created. update() → { set } → { where } → resolves.
+  updateWhere: vi.fn().mockResolvedValue(undefined),
+  updateSet: vi.fn(),
+  update: vi.fn(),
   // Email helpers
   sendWelcomeEmail: vi.fn().mockResolvedValue({ sent: true }),
   sendAccountDeletionEmail: vi.fn().mockResolvedValue({ sent: true }),
@@ -36,6 +41,11 @@ mocks.select.mockImplementation(() => ({ from: mocks.selectFrom }));
 mocks.deleteWhere.mockResolvedValue(undefined);
 mocks.delete.mockImplementation(() => ({ where: mocks.deleteWhere }));
 
+// Wire update chain: update() → { set } → { where } → resolves
+mocks.updateWhere.mockResolvedValue(undefined);
+mocks.updateSet.mockImplementation(() => ({ where: mocks.updateWhere }));
+mocks.update.mockImplementation(() => ({ set: mocks.updateSet }));
+
 vi.mock('svix', () => ({
   // Regular function (not arrow) so `new Webhook()` works as a constructor
   Webhook: vi.fn(function MockWebhook() {
@@ -54,7 +64,7 @@ vi.mock('next/headers', () => ({
 vi.mock('@/shared/lib/db', () => ({
   getDb: () => ({
     insert: mocks.insert,
-    update: vi.fn(() => ({ set: () => ({ where: vi.fn().mockResolvedValue(undefined) }) })),
+    update: mocks.update,
     delete: mocks.delete,
     select: mocks.select,
   }),
@@ -95,6 +105,9 @@ beforeEach(() => {
   mocks.selectLimit.mockClear();
   mocks.delete.mockClear();
   mocks.deleteWhere.mockClear();
+  mocks.update.mockClear();
+  mocks.updateSet.mockClear();
+  mocks.updateWhere.mockClear();
   mocks.sendWelcomeEmail.mockReset();
   mocks.sendAccountDeletionEmail.mockReset();
   // Default: no saved charts, no user row
@@ -346,5 +359,69 @@ describe('POST /api/webhooks/clerk — T3 email hookups', () => {
     });
     // Email must fire before DB delete
     expect(callOrder).toEqual(['email', 'delete']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T10: user.created links matching email_leads rows to the new clerk user
+// ---------------------------------------------------------------------------
+describe('POST /api/webhooks/clerk — T10 lead conversion linking', () => {
+  it('user.created issues an UPDATE on email_leads with convertedToUserId + convertedAt', async () => {
+    mocks.verify.mockReturnValue({
+      type: 'user.created',
+      data: {
+        id: 'user_new123',
+        email_addresses: [{ id: 'em1', email_address: 'NewUser@Example.com' }],
+        primary_email_address_id: 'em1',
+        unsafe_metadata: {},
+      },
+    });
+
+    const res = await POST(makeReq({}));
+    expect(res.status).toBe(200);
+
+    // Exactly one update() — the email_leads conversion link
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    expect(mocks.updateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        convertedToUserId: 'user_new123',
+        convertedAt: expect.any(Date),
+      }),
+    );
+    // where() must have been invoked (filter clause built)
+    expect(mocks.updateWhere).toHaveBeenCalledTimes(1);
+  });
+
+  it('lead-link UPDATE failure is non-fatal — still returns 200 and inserts the user', async () => {
+    mocks.verify.mockReturnValue({
+      type: 'user.created',
+      data: {
+        id: 'user_link_fail',
+        email_addresses: [{ email_address: 'failmatch@example.com' }],
+        unsafe_metadata: {},
+      },
+    });
+    mocks.updateWhere.mockRejectedValueOnce(new Error('db connection refused'));
+
+    const res = await POST(makeReq({}));
+    expect(res.status).toBe(200);
+    // user row was still inserted (the lead-link is best-effort post-step)
+    expect(mocks.onConflictDoNothing).toHaveBeenCalled();
+  });
+
+  it('skips email_leads UPDATE when email is empty (cannot match)', async () => {
+    mocks.verify.mockReturnValue({
+      type: 'user.created',
+      data: {
+        id: 'user_no_email',
+        email_addresses: [{ email_address: '' }],
+        unsafe_metadata: {},
+      },
+    });
+
+    const res = await POST(makeReq({}));
+    expect(res.status).toBe(200);
+    // No email → no lead lookup
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 });
