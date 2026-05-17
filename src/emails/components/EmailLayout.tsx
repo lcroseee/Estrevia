@@ -1,4 +1,4 @@
-import { Body, Container, Head, Html, Img, Section, Text, Hr, Preview } from '@react-email/components';
+import { Body, Container, Head, Html, Section, Text, Hr, Preview } from '@react-email/components';
 import type { ReactNode } from 'react';
 
 interface Props {
@@ -32,7 +32,19 @@ export function EmailLayout({ preview, locale, children, unsubscribeUrl }: Props
       <Body style={{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', backgroundColor: '#0a0a0f', margin: 0, padding: 0 }}>
         <Container style={{ maxWidth: 600, margin: '0 auto', padding: '32px 24px', backgroundColor: '#14141d' }}>
           <Section>
-            <Img src={`${SITE_URL}/logo-email.png`} alt="Estrevia" width="120" height="32" />
+            <Text
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontSize: 22,
+                fontWeight: 300,
+                color: '#FFD700',
+                letterSpacing: '0.15em',
+                margin: 0,
+                padding: 0,
+              }}
+            >
+              ESTREVIA
+            </Text>
           </Section>
           <Section style={{ marginTop: 24, color: 'rgba(255,255,255,0.9)' }}>
             {children}
