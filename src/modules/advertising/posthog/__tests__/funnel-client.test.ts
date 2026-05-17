@@ -26,7 +26,7 @@ describe('PosthogFunnelClient', () => {
     const client = new PosthogFunnelClient({
       projectId: '1234',
       apiKey: 'phx_test',
-      host: 'https://eu.i.posthog.com',
+      host: 'https://us.i.posthog.com',
       fetchImpl,
     });
 
@@ -36,7 +36,7 @@ describe('PosthogFunnelClient', () => {
     });
 
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe('https://eu.i.posthog.com/api/projects/1234/query/');
+    expect(url).toBe('https://us.i.posthog.com/api/projects/1234/query/');
     expect(init.method).toBe('POST');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer phx_test');
 
@@ -122,7 +122,7 @@ describe('PosthogFunnelClient', () => {
       const client = new PosthogFunnelClient({
         projectId: 'p1',
         apiKey: 'k1',
-        host: 'https://eu.posthog.com',
+        host: 'https://us.posthog.com',
         fetchImpl,
       });
       await client.getFunnel({
@@ -143,7 +143,7 @@ describe('PosthogFunnelClient', () => {
       const client = new PosthogFunnelClient({
         projectId: 'p1',
         apiKey: 'k1',
-        host: 'https://eu.posthog.com',
+        host: 'https://us.posthog.com',
         fetchImpl,
       });
       await client.getFunnel({
@@ -164,7 +164,7 @@ describe('PosthogFunnelClient', () => {
       const client = new PosthogFunnelClient({
         projectId: 'p1',
         apiKey: 'k1',
-        host: 'https://eu.posthog.com',
+        host: 'https://us.posthog.com',
         fetchImpl,
       });
       await client.getFunnel({

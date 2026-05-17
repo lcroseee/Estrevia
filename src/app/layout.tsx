@@ -65,10 +65,10 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon.svg" />
         {/* Preconnect to third-party origins to reduce LCP */}
         <link rel="preconnect" href="https://cdn.clerk.com" />
-        {/* PostHog host is eu.i.posthog.com — must match PostHogProvider and CSP connect-src */}
-        <link rel="preconnect" href="https://eu.i.posthog.com" />
+        {/* PostHog host is us.i.posthog.com — must match PostHogProvider and CSP connect-src */}
+        <link rel="preconnect" href="https://us.i.posthog.com" />
         <link rel="dns-prefetch" href="https://cdn.clerk.com" />
-        <link rel="dns-prefetch" href="https://eu.i.posthog.com" />
+        <link rel="dns-prefetch" href="https://us.i.posthog.com" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${crimsonPro.variable} antialiased bg-[#0A0A0F] text-white min-h-screen`}

@@ -57,7 +57,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
   async function initPostHog() {
     const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     const host =
-      process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com';
+      process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
 
     if (!apiKey) {
       if (process.env.NODE_ENV === 'development') {

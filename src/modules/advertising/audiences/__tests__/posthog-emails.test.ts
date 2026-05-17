@@ -18,7 +18,7 @@ describe('posthog-emails HogQL queries', () => {
     vi.clearAllMocks();
     process.env.POSTHOG_PROJECT_ID = 'p1';
     process.env.POSTHOG_PERSONAL_API_KEY = 'k1';
-    process.env.NEXT_PUBLIC_POSTHOG_HOST = 'https://eu.posthog.com';
+    process.env.NEXT_PUBLIC_POSTHOG_HOST = 'https://us.posthog.com';
     global.fetch = mockFetch as unknown as typeof fetch;
     mockFetch.mockResolvedValue({
       ok: true,

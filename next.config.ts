@@ -42,17 +42,17 @@ const ContentSecurityPolicy = [
   // cdn.clerk.com is kept as a fallback for any legacy loaders.
   // connect.facebook.net loads fbevents.js for the Meta Pixel base snippet
   // injected from src/app/[locale]/layout.tsx when NEXT_PUBLIC_META_PIXEL_ID is set.
-  `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://js.stripe.com https://clerk.estrevia.app https://cdn.clerk.com https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu-assets.i.posthog.com https://*.sentry.io https://vercel.live https://*.vercel-scripts.com https://connect.facebook.net`,
+  `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''} https://js.stripe.com https://clerk.estrevia.app https://cdn.clerk.com https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://us.posthog.com https://us-assets.i.posthog.com https://*.sentry.io https://vercel.live https://*.vercel-scripts.com https://connect.facebook.net`,
 
   // Styles: self + unsafe-inline (required by shadcn/ui) + Google Fonts
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 
   // Images: self + data URIs + blob URIs (OG image generation) + Stripe + Clerk + PostHog assets + Vercel
-  // eu-assets.i.posthog.com serves PostHog tracking pixels and UI assets
+  // us-assets.i.posthog.com serves PostHog tracking pixels and UI assets
   // clerk.estrevia.app serves Clerk's UI sprites and OAuth provider icons
   // www.facebook.com serves the Meta Pixel `tr/` tracking-pixel image (PageView,
   // Lead, Subscribe events) + the <noscript> fallback img.
-  "img-src 'self' data: blob: https://*.stripe.com https://img.clerk.com https://*.clerk.com https://clerk.estrevia.app https://eu-assets.i.posthog.com https://*.public.blob.vercel-storage.com https://www.facebook.com",
+  "img-src 'self' data: blob: https://*.stripe.com https://img.clerk.com https://*.clerk.com https://clerk.estrevia.app https://us-assets.i.posthog.com https://*.public.blob.vercel-storage.com https://www.facebook.com",
 
   // Fonts: self + Google Fonts static host
   "font-src 'self' https://fonts.gstatic.com",
@@ -61,8 +61,8 @@ const ContentSecurityPolicy = [
   // *.accounts.dev covers Clerk development instances; clerk.estrevia.app is
   // the Frontend API (FAPI) for the production Clerk instance — required for
   // environment fetch, session refresh, sign-in/up flows.
-  // PostHog EU uses a dedicated ingest subdomain `eu.i.posthog.com` and asset
-  // subdomain `eu-assets.i.posthog.com` — wildcard `*.posthog.com` does NOT
+  // PostHog US uses a dedicated ingest subdomain `us.i.posthog.com` and asset
+  // subdomain `us-assets.i.posthog.com` — wildcard `*.posthog.com` does NOT
   // cover the `i.posthog.com` third-level hosts, they must be listed explicitly
   //
   // Meta Pixel delivers events through up to 4 redundant channels. We allowlist
@@ -74,7 +74,7 @@ const ContentSecurityPolicy = [
   //   4. https://*.datah04.com            — CAPI Gateway (capig.* first-party host for our Pixel)
   // The matching frame-src and form-action entries below cover the iframe and
   // form-POST fallback channels for resilient capture in older browsers.
-  "connect-src 'self' https://api.clerk.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://eu.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com https://*.ingest.sentry.io https://*.sentry.io https://api.stripe.com https://vitals.vercel-insights.com https://vercel.live wss://vercel.live https://www.facebook.com https://*.facebook.com https://*.facebook.net https://*.datah04.com",
+  "connect-src 'self' https://api.clerk.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://*.posthog.com https://us.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com https://*.ingest.sentry.io https://*.sentry.io https://api.stripe.com https://vitals.vercel-insights.com https://vercel.live wss://vercel.live https://www.facebook.com https://*.facebook.com https://*.facebook.net https://*.datah04.com",
 
   // Frames: Stripe (3D Secure) + Clerk (OAuth callbacks, dev modal) + production Clerk instance
   "frame-src https://js.stripe.com https://*.stripe.com https://clerk.estrevia.app https://*.clerk.accounts.dev https://*.accounts.dev https://vercel.live https://www.facebook.com",

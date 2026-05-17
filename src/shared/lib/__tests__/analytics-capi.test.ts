@@ -44,7 +44,7 @@ import { trackServerEvent, AnalyticsEvent } from '../analytics';
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.NEXT_PUBLIC_POSTHOG_KEY = 'k';
-  process.env.NEXT_PUBLIC_POSTHOG_HOST = 'https://eu.i.posthog.com';
+  process.env.NEXT_PUBLIC_POSTHOG_HOST = 'https://us.i.posthog.com';
 });
 
 describe('trackServerEvent — CAPI integration', () => {

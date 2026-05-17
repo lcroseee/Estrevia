@@ -11,7 +11,7 @@ import type { PosthogFunnelApi } from '@/modules/advertising/perceive/posthog-fu
  * Env vars (validated at construction):
  *   POSTHOG_PROJECT_ID         — numeric project id
  *   POSTHOG_PERSONAL_API_KEY   — personal API key from PostHog UI (Bearer auth)
- *   NEXT_PUBLIC_POSTHOG_HOST   — base URL (default https://eu.i.posthog.com)
+ *   NEXT_PUBLIC_POSTHOG_HOST   — base URL (default https://us.i.posthog.com)
  *
  * Returned counts feed `fetchFunnelSnapshot` which recomputes
  * conversion_from_previous, so this client only needs raw counts per event.
@@ -161,7 +161,7 @@ export class PosthogFunnelClient implements PosthogFunnelApi {
 function readEnv(): { projectId: string; apiKey: string; host: string } {
   const projectId = process.env.POSTHOG_PROJECT_ID;
   const apiKey = process.env.POSTHOG_PERSONAL_API_KEY;
-  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com';
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
   if (!projectId) throw new Error('POSTHOG_PROJECT_ID is not set');
   if (!apiKey) throw new Error('POSTHOG_PERSONAL_API_KEY is not set');
   return { projectId, apiKey, host };
