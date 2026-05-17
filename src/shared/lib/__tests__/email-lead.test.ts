@@ -124,3 +124,36 @@ describe('sendLeadChartEmail', () => {
     expect((callArgs.html as string).toLowerCase()).not.toContain('ascendant');
   });
 });
+
+describe('sendLeadMoonAscEmail', () => {
+  it('sends T+24h with Moon insight + sign-up CTA', async () => {
+    const { sendLeadMoonAscEmail } = await import('../email');
+    const res = await sendLeadMoonAscEmail({
+      leadId: 'lead_m24',
+      email: 't24@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: 'chart_m24',
+    });
+    expect(res.sent).toBe(true);
+    expect(tryInsertMock).toHaveBeenCalledWith('lead_m24', 'lead_moon_asc');
+    const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
+    expect((callArgs.subject as string).toLowerCase()).toContain('moon');
+    expect(callArgs.html).toContain('Pisces');  // Moon sign from sampleChart
+    expect(callArgs.html).toContain('sign-up'); // or similar
+  });
+
+  it('dedups on second call', async () => {
+    tryInsertMock.mockResolvedValueOnce(false);
+    const { sendLeadMoonAscEmail } = await import('../email');
+    const res = await sendLeadMoonAscEmail({
+      leadId: 'lead_m24_dup',
+      email: 'dup@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: 'chart_x',
+    });
+    expect(res.sent).toBe(false);
+    expect(resendSendMock).not.toHaveBeenCalled();
+  });
+});

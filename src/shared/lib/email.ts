@@ -8,6 +8,7 @@ import AccountDeletionEmail from '@/emails/AccountDeletionEmail';
 import ReEngagementEmail from '@/emails/ReEngagementEmail';
 import TrialEndingEmail from '@/emails/TrialEndingEmail';
 import LeadChartEmail from '@/emails/LeadChartEmail';
+import LeadMoonAscEmail from '@/emails/LeadMoonAscEmail';
 import { tryInsertOneShot, recordSent } from './sent-emails';
 import { tryInsertOneShotLead, recordSentLead } from './sent-lead-emails';
 import { signUnsubscribeToken, signLeadUnsubscribeToken } from './unsubscribe-token';
@@ -60,6 +61,12 @@ const SUBJECTS = {
   lead_chart: {
     en: 'Your sidereal chart is ready ✦',
     es: 'Tu carta sideral está lista ✦',
+  },
+  lead_moon_asc: {
+    en: (moonSign: string | null) =>
+      moonSign ? `Your Moon in ${moonSign} — what it means` : 'Your sidereal Moon — what it means',
+    es: (moonSign: string | null) =>
+      moonSign ? `Tu Luna en ${moonSign} — qué significa` : 'Tu Luna sideral — qué significa',
   },
 };
 
@@ -342,6 +349,65 @@ export async function sendLeadChartEmail(params: {
   );
 
   await recordSentLead(params.leadId, 'lead_chart', result.data?.id ?? null);
+  return { sent: true };
+}
+
+// ---------------------------------------------------------------------------
+// sendLeadMoonAscEmail — T+24h nurture drip, one-shot per lead
+// ---------------------------------------------------------------------------
+export async function sendLeadMoonAscEmail(params: {
+  leadId: string;
+  email: string;
+  locale: 'en' | 'es';
+  chart: ChartResult | null;
+  chartId: string | null;
+}): Promise<{ sent: boolean; reason?: string }> {
+  const inserted = await tryInsertOneShotLead(params.leadId, 'lead_moon_asc');
+  if (!inserted) return { sent: false, reason: 'already_sent' };
+
+  const token = await signLeadUnsubscribeToken(params.leadId);
+  const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
+
+  const signs = pickKeySigns(params.chart);
+  const signupPath = `/${params.locale === 'es' ? 'es/' : ''}sign-up?redirect_url=${encodeURIComponent(
+    `/${params.locale === 'es' ? 'es/' : ''}chart${params.chartId ? `?chartId=${params.chartId}` : ''}`,
+  )}&utm_source=lead-nurture&utm_campaign=t24`;
+  const signupUrl = `${SITE_URL}${signupPath}`;
+
+  const html = await render(
+    LeadMoonAscEmail({
+      locale: params.locale,
+      moonSign: signs.moonSign,
+      ascSign: signs.ascSign,
+      signupUrl,
+    }),
+  );
+  const text = await render(
+    LeadMoonAscEmail({
+      locale: params.locale,
+      moonSign: signs.moonSign,
+      ascSign: signs.ascSign,
+      signupUrl,
+    }),
+    { plainText: true },
+  );
+
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject: SUBJECTS.lead_moon_asc[params.locale](signs.moonSign),
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    },
+    { idempotencyKey: `${params.leadId}:lead_moon_asc` },
+  );
+
+  await recordSentLead(params.leadId, 'lead_moon_asc', result.data?.id ?? null);
   return { sent: true };
 }
 
