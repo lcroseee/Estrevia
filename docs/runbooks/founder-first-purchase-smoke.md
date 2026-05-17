@@ -39,13 +39,13 @@ Expected output includes a "Stripe prices validity" section showing `monthly` an
 
 ```bash
 TEST_EMAIL='test+wave1-20260517@estrevia.dev'  # ← replace date with today
-node --env-file=.env -e "
+TEST_EMAIL="$TEST_EMAIL" node --env-file=.env -e "
 import('@neondatabase/serverless').then(async ({neon}) => {
   const sql = neon(process.env.DATABASE_URL);
-  const rows = await sql('SELECT email, subscription_tier, subscription_status FROM users WHERE email = $1', [process.env.TEST_EMAIL]);
+  const rows = await sql\`SELECT email, subscription_tier, subscription_status FROM users WHERE email = \${process.env.TEST_EMAIL}\`;
   console.log(rows);
 });
-" TEST_EMAIL=\"$TEST_EMAIL\"
+"
 ```
 
 Expected: `subscription_tier = 'premium'`, `subscription_status = 'active'`.
