@@ -101,6 +101,11 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(5, '1m'),
     prefix: 'rl:tarot/interpret',
   }),
+  'chart/interpret': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1m'),
+    prefix: 'rl:chart/interpret',
+  }),
   'chart/sun-sign': new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(15, '1m'),
