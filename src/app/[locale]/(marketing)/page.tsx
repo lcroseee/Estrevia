@@ -37,8 +37,20 @@ export default async function LandingPage() {
   // Read auth state on the server via Clerk middleware context. HeroCalculator
   // is a client component without a ClerkProvider ancestor (marketing tree
   // intentionally omits it for bundle size), so we cannot call useUser() there.
-  const { userId } = await auth();
-  const isSignedIn = !!userId;
+  //
+  // The try/catch handles bot-scan paths like /.env.test or /phpinfo.php: the
+  // middleware matcher excludes dotted paths, but Next.js still routes them
+  // through `[locale]/page.tsx` with `[locale]='.env.test'`. The page renders
+  // in parallel with the layout's notFound() call, so auth() runs without a
+  // Clerk context and throws. Anonymous fallback is the safe default — the
+  // layout will discard this render and emit a 404 anyway.
+  let isSignedIn = false;
+  try {
+    const { userId } = await auth();
+    isSignedIn = !!userId;
+  } catch {
+    // Anonymous render — see comment above.
+  }
 
   // Structural data only — text comes from translations by key
   const features = [
