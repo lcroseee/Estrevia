@@ -73,7 +73,7 @@ After building the dashboard, confirm:
 - [ ] Six funnel insights exist (one per trigger value above).
 - [ ] At least one insight shows non-zero entries at step 1 — confirms the event is firing in production.
 - [ ] If a funnel shows step-1 traffic but zero step-2 conversions, mark that flow for Wave 2 paywall variant test priority.
-- [ ] Dashboard is shared with the founder Clerk admin user only (not public).
+- [ ] Dashboard visibility set to private (PostHog project settings → Members; do not set to public).
 
 ## When to rebuild
 
