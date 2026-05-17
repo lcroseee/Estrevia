@@ -66,6 +66,35 @@ export const cosmicPassports = pgTable('cosmic_passports', {
 });
 
 // ---------------------------------------------------------------------------
+// chart_readings — cached AI interpretations of natal charts.
+// Keyed by (chart_id, locale) so EN + ES readings of the same chart coexist.
+// Cascade-deletes when the underlying natal_chart is purged.
+// ---------------------------------------------------------------------------
+export const chartReadings = pgTable(
+  'chart_readings',
+  {
+    id: text('id').primaryKey(), // nanoid
+    chartId: text('chart_id')
+      .notNull()
+      .references(() => natalCharts.id, { onDelete: 'cascade' }),
+    locale: text('locale', { enum: ['en', 'es'] }).notNull(),
+    body: text('body').notNull(),
+    model: text('model').notNull().default('claude-sonnet-4-20250514'),
+    generatedAt: timestamp('generated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uniqChartLocale: uniqueIndex('chart_readings_chart_locale_uniq').on(
+      t.chartId,
+      t.locale,
+    ),
+  }),
+);
+
+export type ChartReading = typeof chartReadings.$inferSelect;
+
+// ---------------------------------------------------------------------------
 // waitlist_entries
 // ---------------------------------------------------------------------------
 // Retention policy (GDPR Art. 5(1)(e) — storage limitation):
