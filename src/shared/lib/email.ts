@@ -7,8 +7,12 @@ import SubscriptionCanceledEmail from '@/emails/SubscriptionCanceledEmail';
 import AccountDeletionEmail from '@/emails/AccountDeletionEmail';
 import ReEngagementEmail from '@/emails/ReEngagementEmail';
 import TrialEndingEmail from '@/emails/TrialEndingEmail';
+import LeadChartEmail from '@/emails/LeadChartEmail';
 import { tryInsertOneShot, recordSent } from './sent-emails';
-import { signUnsubscribeToken } from './unsubscribe-token';
+import { tryInsertOneShotLead, recordSentLead } from './sent-lead-emails';
+import { signUnsubscribeToken, signLeadUnsubscribeToken } from './unsubscribe-token';
+import type { ChartResult } from '@/shared/types';
+import { Planet } from '@/shared/types';
 
 const FROM_ADDRESS = 'Estrevia <hello@estrevia.app>';
 const SITE_URL = 'https://estrevia.app';
@@ -52,6 +56,10 @@ const SUBJECTS = {
   trial_ending: {
     en: 'Your Estrevia Pro trial ends tomorrow',
     es: 'Tu prueba gratuita de Estrevia Pro termina mañana',
+  },
+  lead_chart: {
+    en: 'Your sidereal chart is ready ✦',
+    es: 'Tu carta sideral está lista ✦',
   },
 };
 
@@ -266,6 +274,75 @@ export async function sendTrialEndingEmail(params: {
     { idempotencyKey: `${params.userId}:trial:${params.trialEnd.toISOString()}` },
   );
   await recordSent(params.userId, 'trial_ending', result.data?.id ?? null);
+}
+
+// ---------------------------------------------------------------------------
+// Lead nurture helpers
+// ---------------------------------------------------------------------------
+function pickKeySigns(chart: ChartResult | null): {
+  sunSign: string | null;
+  moonSign: string | null;
+  ascSign: string | null;
+} {
+  if (!chart) return { sunSign: null, moonSign: null, ascSign: null };
+  const sun = chart.planets.find((p) => p.planet === Planet.Sun);
+  const moon = chart.planets.find((p) => p.planet === Planet.Moon);
+  const hasHouses = Array.isArray(chart.houses) && chart.houses.length > 0;
+  const ascSign = hasHouses ? chart.houses![0].sign : null;
+  return {
+    sunSign: sun?.sign ?? null,
+    moonSign: moon?.sign ?? null,
+    ascSign,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// sendLeadChartEmail — T+0 nurture drip, one-shot per lead
+// ---------------------------------------------------------------------------
+export async function sendLeadChartEmail(params: {
+  leadId: string;
+  email: string;
+  locale: 'en' | 'es';
+  chart: ChartResult | null;
+  chartId: string | null;
+}): Promise<{ sent: boolean; reason?: string }> {
+  // 1. Idempotency guard
+  const inserted = await tryInsertOneShotLead(params.leadId, 'lead_chart');
+  if (!inserted) return { sent: false, reason: 'already_sent' };
+
+  // 2. Build unsubscribe URL with lead-kind token
+  const token = await signLeadUnsubscribeToken(params.leadId);
+  const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
+
+  // 3. Derive personalization
+  const signs = pickKeySigns(params.chart);
+  const chartPath = params.chartId
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t0`
+    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t0`;
+  const chartUrl = `${SITE_URL}${chartPath}`;
+
+  // 4. Render
+  const html = await render(LeadChartEmail({ locale: params.locale, ...signs, chartUrl }));
+  const text = await render(LeadChartEmail({ locale: params.locale, ...signs, chartUrl }), { plainText: true });
+
+  // 5. Send (Resend)
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject: SUBJECTS.lead_chart[params.locale],
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    },
+    { idempotencyKey: `${params.leadId}:lead_chart` },
+  );
+
+  await recordSentLead(params.leadId, 'lead_chart', result.data?.id ?? null);
+  return { sent: true };
 }
 
 // ---------------------------------------------------------------------------
