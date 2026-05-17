@@ -84,6 +84,57 @@ test.describe('Paywall CTA — 3-card spread', () => {
   });
 });
 
+test.describe('Paywall CTA — Natal Chart Reading', () => {
+  test('anonymous user calculates chart, sees AI Reading CTA, opens modal with contextual headline', async ({ page }) => {
+    await suppressCookieBanner(page);
+
+    // Bypass the email-gate localStorage flag so the modal does not appear and
+    // intercept the test. Combine with `no_gate=1` query param to be belt-and-suspenders.
+    await page.addInitScript(() => {
+      window.localStorage.setItem('email_gate_passed', '1');
+    });
+
+    // Drive directly to /chart with URL-param pre-fill — exercises the
+    // auto-calculate path without forms.
+    const url = '/en/chart'
+      + '?bd=1990-04-15'
+      + '&bt=14:30'
+      + '&ktb=1'
+      + '&lat=-34.6037'
+      + '&lon=-58.3816'
+      + '&place=Buenos+Aires'
+      + '&tz=America/Argentina/Buenos_Aires'
+      + '&no_gate=1';
+
+    const response = await page.goto(url);
+    if (response?.status() === 404) test.skip();
+    await page.waitForLoadState('domcontentloaded');
+
+    // Auto-calculation runs; wait for the chart result wrapper to appear.
+    await page.waitForSelector('[data-testid="natal-chart-result"]', { timeout: 15_000 });
+
+    // Scroll into the new AI Reading section.
+    const section = page.locator('[data-testid="chart-reading-section"]');
+    await section.scrollIntoViewIfNeeded();
+    await expect(section).toBeVisible();
+
+    // PaywallCta is mounted inside the section for free users.
+    const cta = section.locator('[data-variant="card"]');
+    await expect(cta).toBeVisible();
+    await expect(cta).toContainText(/natal chart|carta natal/i);
+
+    // No /pricing anchor leakage from this section.
+    const pricingLink = section.locator('a[href*="/pricing"]').first();
+    await expect(pricingLink).toBeHidden();
+
+    // Click the CTA → modal opens with contextual headline.
+    await cta.getByRole('button').click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText(/natal chart|carta natal/i);
+  });
+});
+
 // Synastry E2E requires filling two birth-data forms — pattern from existing
 // synastry spec (if any) or skip and rely on manual smoke. Keeping the
 // suite focused on the two simpler trigger surfaces; document the skip:
