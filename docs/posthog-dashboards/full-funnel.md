@@ -47,8 +47,11 @@ ORDER BY week DESC
 
 Each step shows count + conversion rate from previous step.
 
-**HogQL alternative (step-by-step counts only — funnel UI does conversion math):**
+**HogQL alternative — headcount sanity check only:**
 ```sql
+-- NOTE: This query is a per-event headcount sanity check ONLY. It does NOT
+-- enforce step order or conversion windows. For actual drop-off rates with
+-- ordered funnel semantics, use the PostHog Funnel insight UI documented above.
 SELECT
   event,
   count(DISTINCT person_id) AS unique_persons
@@ -65,8 +68,8 @@ GROUP BY event
 ## Panel 3 — Cohort retention
 
 **Insight type:** Retention.
-**Cohort event:** `user_signed_up`.
-**Return event:** any of (`chart_calculated`, `paywall_opened`, `subscription_started`).
+**Cohort event:** `user_registered`. (Fired by Clerk `user.created` webhook — see `src/app/api/webhooks/clerk/route.ts`. `user_signed_up` exists in the enum but is currently un-fired; do NOT use it.)
+**Return event:** `subscription_started` (PostHog Retention insight UI supports one return event per insight — if you want to see retention against `chart_calculated` or `paywall_opened` too, create separate insights).
 **Period:** Weekly, 4 weeks deep.
 **Cohorts:** Last 8 weeks of signups.
 
@@ -101,7 +104,7 @@ LIMIT 10
 - [ ] Dashboard `Estrevia / North Star` exists with all 4 panels.
 - [ ] Panel 2 step 3 (`email_gate_viewed`) shows non-zero — confirms Task 1 deploy worked.
 - [ ] Panel 4 shows `meta` and `organic` as top sources (sanity check on attribution).
-- [ ] Dashboard shared with founder Clerk admin only.
+- [ ] Dashboard visibility set to private (PostHog project settings → Members; do not set to public).
 
 ## When to rebuild
 
