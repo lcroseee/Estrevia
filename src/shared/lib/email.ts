@@ -320,9 +320,11 @@ export async function sendLeadChartEmail(params: {
   chart: ChartResult | null;
   chartId: string | null;
 }): Promise<{ sent: boolean; reason?: string }> {
-  // 1. Idempotency guard
-  const inserted = await tryInsertOneShotLead(params.leadId, 'lead_chart');
-  if (!inserted) return { sent: false, reason: 'already_sent' };
+  // 1. Idempotency guard. 'delivered' means a prior send wrote a resend
+  // message id; 'new' is the first attempt; 'retry' picks up after a prior
+  // attempt claimed the dedup slot but never completed (e.g. Resend rejected).
+  const claim = await tryInsertOneShotLead(params.leadId, 'lead_chart');
+  if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
 
   // 2. Build unsubscribe URL with lead-kind token
   const token = await signLeadUnsubscribeToken(params.leadId);
@@ -339,7 +341,10 @@ export async function sendLeadChartEmail(params: {
   const html = await render(LeadChartEmail({ locale: params.locale, ...signs, chartUrl }));
   const text = await render(LeadChartEmail({ locale: params.locale, ...signs, chartUrl }), { plainText: true });
 
-  // 5. Send (Resend)
+  // 5. Send (Resend). Throw on `result.error` so the caller's try/catch
+  // surfaces the failure via Sentry and the nurture-step state is NOT
+  // advanced. The next cron pass picks the lead up again (claim returns
+  // 'retry' because the dedup row exists without resend_message_id).
   const result = await getResend().emails.send(
     {
       from: FROM_ADDRESS,
@@ -354,6 +359,11 @@ export async function sendLeadChartEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_chart` },
   );
+  if (result.error) {
+    throw new Error(
+      `Resend rejected lead_chart for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
+    );
+  }
 
   await recordSentLead(params.leadId, 'lead_chart', result.data?.id ?? null);
   return { sent: true };
@@ -369,8 +379,8 @@ export async function sendLeadMoonAscEmail(params: {
   chart: ChartResult | null;
   chartId: string | null;
 }): Promise<{ sent: boolean; reason?: string }> {
-  const inserted = await tryInsertOneShotLead(params.leadId, 'lead_moon_asc');
-  if (!inserted) return { sent: false, reason: 'already_sent' };
+  const claim = await tryInsertOneShotLead(params.leadId, 'lead_moon_asc');
+  if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
 
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -413,6 +423,11 @@ export async function sendLeadMoonAscEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_moon_asc` },
   );
+  if (result.error) {
+    throw new Error(
+      `Resend rejected lead_moon_asc for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
+    );
+  }
 
   await recordSentLead(params.leadId, 'lead_moon_asc', result.data?.id ?? null);
   return { sent: true };
@@ -428,8 +443,8 @@ export async function sendLeadPaywallTeaserEmail(params: {
   chart: ChartResult | null;
   chartId: string | null;
 }): Promise<{ sent: boolean; reason?: string }> {
-  const inserted = await tryInsertOneShotLead(params.leadId, 'lead_paywall_teaser');
-  if (!inserted) return { sent: false, reason: 'already_sent' };
+  const claim = await tryInsertOneShotLead(params.leadId, 'lead_paywall_teaser');
+  if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
 
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -461,6 +476,11 @@ export async function sendLeadPaywallTeaserEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_paywall_teaser` },
   );
+  if (result.error) {
+    throw new Error(
+      `Resend rejected lead_paywall_teaser for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
+    );
+  }
 
   await recordSentLead(params.leadId, 'lead_paywall_teaser', result.data?.id ?? null);
   return { sent: true };

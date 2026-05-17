@@ -1,28 +1,57 @@
 import 'server-only';
+import { and, eq } from 'drizzle-orm';
 import { getDb } from './db';
 import { sentLeadEmails } from './schema';
 
 type LeadEmailType = typeof sentLeadEmails.$inferInsert['emailType'];
 
 /**
- * Inserts a one-shot dedup row for lead nurture emails.
- * Returns true if inserted, false on UNIQUE conflict (caller must skip send).
+ * Result of claiming a one-shot lead-email send slot.
+ *
+ *   - 'new'       — row was just inserted; this is the first attempt.
+ *   - 'retry'     — row already exists but `resend_message_id` is NULL,
+ *                   meaning a prior attempt claimed the slot but never
+ *                   recorded a successful Resend message id. Safe to retry.
+ *   - 'delivered' — row exists with `resend_message_id` populated, so the
+ *                   email was successfully sent at least once. Skip send.
+ *
+ * Without the 'retry' classification, a Resend rejection after the initial
+ * dedup-row insert would cement the lead at "already sent" forever, even
+ * though no email reached the recipient.
+ */
+export type LeadEmailClaim = 'new' | 'retry' | 'delivered';
+
+/**
+ * Claims a one-shot send slot for a lead-nurture email.
  *
  * Mirrors sent-emails.ts:tryInsertOneShot but for anonymous leads (no userId FK).
  * All three lead email types are one-shot per lead — there is no repeatable
  * nurture send (drip terminates at step=3).
+ *
+ * On UNIQUE conflict we cross-check `resend_message_id`: if it's NULL the
+ * caller should retry the actual Resend send (`recordSentLead` will populate
+ * the id on success); if it's set the caller should treat as already-sent.
  */
 export async function tryInsertOneShotLead(
   leadId: string,
   emailType: LeadEmailType,
-): Promise<boolean> {
+): Promise<LeadEmailClaim> {
   const db = getDb();
   const inserted = await db
     .insert(sentLeadEmails)
     .values({ leadId, emailType })
     .onConflictDoNothing()
     .returning();
-  return inserted.length > 0;
+  if (inserted.length > 0) return 'new';
+
+  // Conflict — distinguish "delivered" (msgid present) vs "retry" (msgid null,
+  // prior send claimed the slot but never completed successfully).
+  const existing = await db
+    .select({ resendMessageId: sentLeadEmails.resendMessageId })
+    .from(sentLeadEmails)
+    .where(and(eq(sentLeadEmails.leadId, leadId), eq(sentLeadEmails.emailType, emailType)))
+    .limit(1);
+  return existing[0]?.resendMessageId ? 'delivered' : 'retry';
 }
 
 /**
@@ -37,15 +66,13 @@ export async function recordSentLead(
 ): Promise<void> {
   if (!resendMessageId) return;
   const db = getDb();
-  // Update the row inserted by tryInsertOneShotLead.
   await db
     .update(sentLeadEmails)
     .set({ resendMessageId })
     .where(
-      // Inline import to avoid circular dep with drizzle-orm at module level
-      (await import('drizzle-orm')).and(
-        (await import('drizzle-orm')).eq(sentLeadEmails.leadId, leadId),
-        (await import('drizzle-orm')).eq(sentLeadEmails.emailType, emailType),
+      and(
+        eq(sentLeadEmails.leadId, leadId),
+        eq(sentLeadEmails.emailType, emailType),
       ),
     );
 }

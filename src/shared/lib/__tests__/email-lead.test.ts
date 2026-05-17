@@ -1,18 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const resendSendMock = vi.fn(
-  async (_payload: Record<string, unknown>, _opts?: Record<string, unknown>) => ({
-    data: { id: 'resend_msg_123' },
-    error: null,
-  }),
-);
+type ResendResult =
+  | { data: { id: string }; error: null }
+  | { data: null; error: { name: string; message: string } };
+const resendSendMock = vi.fn<
+  (
+    _payload: Record<string, unknown>,
+    _opts?: Record<string, unknown>,
+  ) => Promise<ResendResult>
+>(async () => ({
+  data: { id: 'resend_msg_123' },
+  error: null,
+}));
 vi.mock('resend', () => ({
   Resend: class {
     emails = { send: resendSendMock };
   },
 }));
 
-const tryInsertMock = vi.fn(async () => true);
+const tryInsertMock = vi.fn(async () => 'new' as 'new' | 'retry' | 'delivered');
 const recordSentMock = vi.fn(async () => undefined);
 vi.mock('@/shared/lib/sent-lead-emails', () => ({
   tryInsertOneShotLead: tryInsertMock,
@@ -25,7 +31,8 @@ vi.mock('@/shared/lib/unsubscribe-token', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  tryInsertMock.mockResolvedValue(true);
+  tryInsertMock.mockResolvedValue('new');
+  resendSendMock.mockResolvedValue({ data: { id: 'resend_msg_123' }, error: null });
   vi.stubEnv('RESEND_API_KEY', 're_test_key_aaaaaaaaaaaaaaaaaa');
 });
 
@@ -50,6 +57,7 @@ describe('sendLeadChartEmail', () => {
     expect(res.sent).toBe(true);
     expect(tryInsertMock).toHaveBeenCalledWith('lead_1', 'lead_chart');
     expect(resendSendMock).toHaveBeenCalledTimes(1);
+    expect(recordSentMock).toHaveBeenCalledWith('lead_1', 'lead_chart', 'resend_msg_123');
     const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
     expect(callArgs.to).toBe('test@example.com');
     expect((callArgs.subject as string).toLowerCase()).toContain('sidereal');
@@ -57,8 +65,8 @@ describe('sendLeadChartEmail', () => {
     expect(callArgs.headers).toMatchObject({ 'List-Unsubscribe': expect.stringContaining('tok_lead_1') });
   });
 
-  it('returns sent:false reason already_sent on conflict', async () => {
-    tryInsertMock.mockResolvedValueOnce(false);
+  it("returns sent:false reason already_sent when claim is 'delivered'", async () => {
+    tryInsertMock.mockResolvedValueOnce('delivered');
     const { sendLeadChartEmail } = await import('../email');
     const res = await sendLeadChartEmail({
       leadId: 'lead_dup',
@@ -70,6 +78,39 @@ describe('sendLeadChartEmail', () => {
     expect(res.sent).toBe(false);
     expect(res.reason).toBe('already_sent');
     expect(resendSendMock).not.toHaveBeenCalled();
+  });
+
+  it("proceeds with send when claim is 'retry' (prior send failed)", async () => {
+    tryInsertMock.mockResolvedValueOnce('retry');
+    const { sendLeadChartEmail } = await import('../email');
+    const res = await sendLeadChartEmail({
+      leadId: 'lead_retry',
+      email: 'retry@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: 'chart_r',
+    });
+    expect(res.sent).toBe(true);
+    expect(resendSendMock).toHaveBeenCalledTimes(1);
+    expect(recordSentMock).toHaveBeenCalledWith('lead_retry', 'lead_chart', 'resend_msg_123');
+  });
+
+  it('throws when Resend returns result.error (does not falsely report success)', async () => {
+    resendSendMock.mockResolvedValueOnce({
+      data: null,
+      error: { name: 'rate_limit_exceeded', message: 'Too many requests' },
+    });
+    const { sendLeadChartEmail } = await import('../email');
+    await expect(
+      sendLeadChartEmail({
+        leadId: 'lead_err',
+        email: 'err@example.com',
+        locale: 'en',
+        chart: sampleChart as never,
+        chartId: 'chart_err',
+      }),
+    ).rejects.toThrow(/Resend rejected lead_chart for lead_err.*Too many requests/);
+    expect(recordSentMock).not.toHaveBeenCalled();
   });
 
   it('uses ES subject + body for locale=es', async () => {
@@ -96,7 +137,6 @@ describe('sendLeadChartEmail', () => {
     });
     const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
     expect(callArgs.html).not.toContain('Capricorn');
-    // Should still send, just less personalized
     expect(callArgs.html).toBeTruthy();
   });
 
@@ -119,7 +159,6 @@ describe('sendLeadChartEmail', () => {
     const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
     expect(callArgs.html).toContain('Aries');
     expect(callArgs.html).toContain('Leo');
-    // No Ascendant teaser line ("Your Rising in <sign>") should render
     expect((callArgs.html as string).toLowerCase()).not.toContain('your rising in');
     expect((callArgs.html as string).toLowerCase()).not.toContain('ascendant');
   });
@@ -139,12 +178,12 @@ describe('sendLeadMoonAscEmail', () => {
     expect(tryInsertMock).toHaveBeenCalledWith('lead_m24', 'lead_moon_asc');
     const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
     expect((callArgs.subject as string).toLowerCase()).toContain('moon');
-    expect(callArgs.html).toContain('Pisces');  // Moon sign from sampleChart
-    expect(callArgs.html).toContain('sign-up'); // or similar
+    expect(callArgs.html).toContain('Pisces');
+    expect(callArgs.html).toContain('sign-up');
   });
 
-  it('dedups on second call', async () => {
-    tryInsertMock.mockResolvedValueOnce(false);
+  it("dedups on 'delivered' claim", async () => {
+    tryInsertMock.mockResolvedValueOnce('delivered');
     const { sendLeadMoonAscEmail } = await import('../email');
     const res = await sendLeadMoonAscEmail({
       leadId: 'lead_m24_dup',
@@ -155,6 +194,23 @@ describe('sendLeadMoonAscEmail', () => {
     });
     expect(res.sent).toBe(false);
     expect(resendSendMock).not.toHaveBeenCalled();
+  });
+
+  it('throws when Resend returns result.error', async () => {
+    resendSendMock.mockResolvedValueOnce({
+      data: null,
+      error: { name: 'invalid_recipient', message: 'Bounced address' },
+    });
+    const { sendLeadMoonAscEmail } = await import('../email');
+    await expect(
+      sendLeadMoonAscEmail({
+        leadId: 'lead_m24_err',
+        email: 'bounced@example.com',
+        locale: 'en',
+        chart: sampleChart as never,
+        chartId: 'chart_e',
+      }),
+    ).rejects.toThrow(/Resend rejected lead_moon_asc/);
   });
 });
 
@@ -176,8 +232,8 @@ describe('sendLeadPaywallTeaserEmail', () => {
     expect(callArgs.html).toContain('checkout/start');
   });
 
-  it('dedups on second call', async () => {
-    tryInsertMock.mockResolvedValueOnce(false);
+  it("dedups on 'delivered' claim", async () => {
+    tryInsertMock.mockResolvedValueOnce('delivered');
     const { sendLeadPaywallTeaserEmail } = await import('../email');
     const res = await sendLeadPaywallTeaserEmail({
       leadId: 'lead_t72_dup',
@@ -188,5 +244,22 @@ describe('sendLeadPaywallTeaserEmail', () => {
     });
     expect(res.sent).toBe(false);
     expect(resendSendMock).not.toHaveBeenCalled();
+  });
+
+  it('throws when Resend returns result.error', async () => {
+    resendSendMock.mockResolvedValueOnce({
+      data: null,
+      error: { name: 'domain_unverified', message: 'Domain not verified' },
+    });
+    const { sendLeadPaywallTeaserEmail } = await import('../email');
+    await expect(
+      sendLeadPaywallTeaserEmail({
+        leadId: 'lead_t72_err',
+        email: 'err@example.com',
+        locale: 'en',
+        chart: sampleChart as never,
+        chartId: 'chart_p',
+      }),
+    ).rejects.toThrow(/Resend rejected lead_paywall_teaser/);
   });
 });
