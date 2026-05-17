@@ -157,3 +157,36 @@ describe('sendLeadMoonAscEmail', () => {
     expect(resendSendMock).not.toHaveBeenCalled();
   });
 });
+
+describe('sendLeadPaywallTeaserEmail', () => {
+  it('sends T+72h with AI reading teaser + trial CTA', async () => {
+    const { sendLeadPaywallTeaserEmail } = await import('../email');
+    const res = await sendLeadPaywallTeaserEmail({
+      leadId: 'lead_t72',
+      email: 't72@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: 'chart_t72',
+    });
+    expect(res.sent).toBe(true);
+    expect(tryInsertMock).toHaveBeenCalledWith('lead_t72', 'lead_paywall_teaser');
+    const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
+    expect((callArgs.subject as string).toLowerCase()).toMatch(/reading|capricorn/);
+    expect((callArgs.html as string).toLowerCase()).toMatch(/trial|free/);
+    expect(callArgs.html).toContain('checkout/start');
+  });
+
+  it('dedups on second call', async () => {
+    tryInsertMock.mockResolvedValueOnce(false);
+    const { sendLeadPaywallTeaserEmail } = await import('../email');
+    const res = await sendLeadPaywallTeaserEmail({
+      leadId: 'lead_t72_dup',
+      email: 'dup@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: 'chart_x',
+    });
+    expect(res.sent).toBe(false);
+    expect(resendSendMock).not.toHaveBeenCalled();
+  });
+});
