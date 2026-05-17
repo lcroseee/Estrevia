@@ -16,7 +16,7 @@ Expected output includes a "Stripe prices validity" section showing `monthly` an
 
 ## Steps
 
-1. **Open** `https://estrevia.com/en/pricing` in a fresh incognito window.
+1. **Open** `https://estrevia.app/en/pricing` in a fresh incognito window.
 
 2. **Sign up** with a throwaway test email — suggested: `test+wave1-<YYYYMMDD>@estrevia.dev`. Complete Clerk sign-up flow.
 
@@ -31,19 +31,26 @@ Expected output includes a "Stripe prices validity" section showing `monthly` an
 
 5. **Submit payment.** Expected: success redirect to the Estrevia success page within ~5 seconds.
 
-6. **Verify Welcome email** in Resend dashboard (https://resend.com/emails) arrives within 1 minute. Subject: `Welcome to Estrevia Pro` (or whatever the current `WelcomeEmail.tsx` produces).
+6. **Verify two emails in Resend dashboard** (https://resend.com/emails):
+   - **After step 2 (sign-up):** `Welcome to Estrevia — your sidereal chart awaits` — from `src/emails/WelcomeEmail.tsx`, fired by Clerk webhook. Usually arrives within 30s of sign-up completion.
+   - **After step 5 (purchase):** `Welcome to Estrevia Pro` — from `src/emails/PurchaseConfirmationEmail.tsx`, fired by Stripe webhook. Usually arrives within 1 minute of payment success.
 
-7. **Verify DB state.** From a separate terminal:
+7. **Verify DB state.** From a separate terminal in the project root (so `.env` is loadable). Substitute the literal date before running:
+
 ```bash
-node -e "
+TEST_EMAIL='test+wave1-20260517@estrevia.dev'  # ← replace date with today
+node --env-file=.env -e "
 import('@neondatabase/serverless').then(async ({neon}) => {
   const sql = neon(process.env.DATABASE_URL);
-  const rows = await sql\`SELECT email, subscription_tier, subscription_status FROM users WHERE email = 'test+wave1-<YYYYMMDD>@estrevia.dev'\`;
+  const rows = await sql('SELECT email, subscription_tier, subscription_status FROM users WHERE email = $1', [process.env.TEST_EMAIL]);
   console.log(rows);
 });
-"
+" TEST_EMAIL=\"$TEST_EMAIL\"
 ```
-Expected: `subscription_tier = 'pro'`, `subscription_status = 'active'`.
+
+Expected: `subscription_tier = 'premium'`, `subscription_status = 'active'`.
+
+(Node 20+ has built-in `--env-file=.env` support, so no `dotenv` install needed.)
 
 8. **Test AI Reading entitlement.** In the same incognito session:
    - Open `/en/chart`.
@@ -55,10 +62,8 @@ Expected: `subscription_tier = 'pro'`, `subscription_status = 'active'`.
 ## Cleanup
 
 - [ ] In Stripe dashboard → Subscriptions → find the test sub → Cancel immediately (test mode is free; no charges, but keep the dashboard tidy).
-- [ ] In Neon DB, optionally soft-delete the test user:
-```sql
-UPDATE users SET deleted_at = NOW() WHERE email = 'test+wave1-<YYYYMMDD>@estrevia.dev';
-```
+- [ ] In Clerk dashboard → Users → find the test email → Delete user. (The `users` table has no soft-delete column; full deletion via Clerk cascades to the DB row via the existing user-deletion webhook.)
+- [ ] **Safety:** double-check the test email string before any deletion — typing a real user's email will hard-delete that account.
 
 ## Outcome
 
