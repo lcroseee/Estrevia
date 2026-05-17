@@ -32,16 +32,24 @@ Create one **Funnel insight** per trigger above (6 total — include `generic` t
 | 3 | `checkout_stripe_redirected` | (no trigger filter — Stripe flow is shared) |
 | 4 | `subscription_started` | (no trigger filter — fired by Stripe webhook) |
 
+**Why steps 3-4 have no trigger filter:** the Stripe flow is shared across all paywall triggers and the pricing page. At low traffic volumes, you may see step-3 counts that exceed step-2 counts for a given trigger — this is expected cross-funnel inflation, not a bug. The signal to monitor per-trigger is step 1 → step 2 drop-off; step 2 → step 3 → step 4 is a shared-funnel view, not a per-flow view.
+
+**Note on step 2:** `paywall_trial_clicked` is also fired from `src/app/[locale]/(marketing)/pricing/PricingUpgradeButton.tsx` with a `source: 'pricing'` property but no `trigger`. The filter `properties.trigger = <flow>` on step 2 correctly excludes those pricing-page clicks.
+
 **Conversion window:** 24 hours.
 **Aggregation:** Total persons (not events).
 **Date range:** Last 30 days, refresh weekly.
 
 ## HogQL queries
 
-If you prefer SQL views over the insight UI, paste these into a PostHog SQL insight:
+For a quick headcount sanity check (not a true ordered funnel — see warning in the query), paste into a PostHog SQL insight:
 
 ```sql
--- Paywall funnel for trigger = '<flow>'
+-- NOTE: This query is a per-event headcount sanity check ONLY. It does NOT
+-- enforce step order or conversion windows. For actual drop-off rates with
+-- ordered funnel semantics, use the PostHog Funnel insight UI documented above.
+--
+-- Paywall headcount for trigger = '<flow>'
 -- Replace <flow> with one of: 'celtic-cross', 'three-card', 'synastry-ai',
 -- 'natal-chart', 'essay', 'generic'.
 SELECT
