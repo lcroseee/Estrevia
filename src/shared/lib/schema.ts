@@ -520,10 +520,38 @@ export const emailLeads = pgTable('email_leads', {
   // Preparatory column — not used in this spec; populated by follow-up
   // /unsubscribe extension.
   unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+  // Nurture drip state — set by /api/v1/leads waitUntil + /api/cron/lead-nurture
+  nurtureStep: integer('nurture_step').notNull().default(0),
+  nurtureNextAt: timestamp('nurture_next_at', { withTimezone: true }),
+  emailUndeliverable: boolean('email_undeliverable').notNull().default(false),
 }, (table) => [
   index('email_leads_created_at_idx').on(table.createdAt),
   index('email_leads_converted_to_user_id_idx').on(table.convertedToUserId),
+  index('email_leads_nurture_due_idx')
+    .on(table.nurtureNextAt)
+    .where(sql`nurture_step < 3 AND converted_to_user_id IS NULL AND unsubscribed_at IS NULL AND email_undeliverable = false`),
 ]);
+
+// ---------------------------------------------------------------------------
+// sent_lead_emails — idempotency + audit log for nurture drip
+// ---------------------------------------------------------------------------
+export const sentLeadEmails = pgTable('sent_lead_emails', {
+  id: serial('id').primaryKey(),
+  leadId: text('lead_id')
+    .notNull()
+    .references(() => emailLeads.id, { onDelete: 'cascade' }),
+  emailType: text('email_type', {
+    enum: ['lead_chart', 'lead_moon_asc', 'lead_paywall_teaser'],
+  }).notNull(),
+  resendMessageId: text('resend_message_id'),
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('sent_lead_emails_oneshot_idx').on(table.leadId, table.emailType),
+  index('sent_lead_emails_lead_id_idx').on(table.leadId),
+]);
+
+export type SentLeadEmail = typeof sentLeadEmails.$inferSelect;
+export type NewSentLeadEmail = typeof sentLeadEmails.$inferInsert;
 
 // ---------------------------------------------------------------------------
 // Type aliases
