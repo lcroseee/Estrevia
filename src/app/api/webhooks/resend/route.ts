@@ -14,7 +14,7 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/shared/lib/db';
-import { users } from '@/shared/lib/schema';
+import { users, emailLeads } from '@/shared/lib/schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,23 +99,60 @@ export async function POST(req: Request) {
     if (evt.type === 'email.bounced') {
       const bounceEvt = evt as ResendBouncedEvent;
       if (bounceEvt.data.bounce_type === 'hard') {
+        const bouncedEmail = bounceEvt.data.email;
         await db
           .update(users)
           .set({ emailUndeliverable: true })
-          .where(eq(users.email, bounceEvt.data.email));
+          .where(eq(users.email, bouncedEmail));
         // Log event type only — never the email address (PII)
-        console.info('[resend-webhook] hard bounce → emailUndeliverable=true');
+        console.info('[resend-webhook] hard bounce → users.emailUndeliverable=true');
+
+        // T11: Propagate to email_leads. The same address may belong to a
+        // lead that hasn't signed up yet; we don't want the cron drip to
+        // keep firing into a known-bouncing address. Match is case-insensitive
+        // (leads are stored normalized lowercase in /api/v1/leads).
+        // Non-blocking: failure must not 500 the webhook — Resend would retry
+        // and re-apply the users UPDATE.
+        try {
+          await db
+            .update(emailLeads)
+            .set({ emailUndeliverable: true })
+            .where(eq(emailLeads.email, bouncedEmail.toLowerCase()));
+          console.info('[resend-webhook] hard bounce → email_leads.emailUndeliverable=true');
+        } catch (leadErr) {
+          console.error('[resend-webhook] email_leads bounce propagation failed (non-fatal)', {
+            message: leadErr instanceof Error ? leadErr.message : 'unknown',
+          });
+        }
       } else {
         // Soft bounce: transient failure, log only, no DB write
         console.info('[resend-webhook] soft bounce ignored');
       }
     } else if (evt.type === 'email.complained') {
       const complainEvt = evt as ResendComplainedEvent;
+      const complainedEmail = complainEvt.data.email;
       await db
         .update(users)
         .set({ emailUndeliverable: true })
-        .where(eq(users.email, complainEvt.data.email));
-      console.info('[resend-webhook] complaint → emailUndeliverable=true');
+        .where(eq(users.email, complainedEmail));
+      console.info('[resend-webhook] complaint → users.emailUndeliverable=true');
+
+      // T11: Propagate to email_leads. A complaint is stronger than a bounce:
+      // the recipient marked the email as spam. We BOTH flag undeliverable
+      // (skip future cron sends) AND set unsubscribed_at so any future
+      // re-submission of the same email through the lead form also stays
+      // out of the drip (cron filter excludes unsubscribed leads).
+      try {
+        await db
+          .update(emailLeads)
+          .set({ emailUndeliverable: true, unsubscribedAt: new Date() })
+          .where(eq(emailLeads.email, complainedEmail.toLowerCase()));
+        console.info('[resend-webhook] complaint → email_leads.unsubscribed_at + emailUndeliverable=true');
+      } catch (leadErr) {
+        console.error('[resend-webhook] email_leads complaint propagation failed (non-fatal)', {
+          message: leadErr instanceof Error ? leadErr.message : 'unknown',
+        });
+      }
     }
     // Unknown event types are silently accepted (forward-compatible)
   } catch (err) {

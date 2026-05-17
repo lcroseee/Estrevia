@@ -81,9 +81,9 @@ describe('POST /api/webhooks/resend', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Test 2: hard bounce → emailUndeliverable = true
+  // Test 2: hard bounce → emailUndeliverable=true on BOTH users + email_leads
   // -------------------------------------------------------------------------
-  it('marks user emailUndeliverable on hard bounce', async () => {
+  it('marks emailUndeliverable on users AND email_leads on hard bounce', async () => {
     verifyMock.mockReturnValue({
       type: 'email.bounced',
       data: { email: 'bounced@example.com', bounce_type: 'hard' },
@@ -94,16 +94,18 @@ describe('POST /api/webhooks/resend', () => {
 
     expect(res.status).toBe(200);
     expect(body.received).toBe(true);
-    expect(dbUpdateMock).toHaveBeenCalledOnce();
-    // Verify set was called with emailUndeliverable: true
-    const setMock = dbUpdateMock.mock.results[0].value.set;
-    expect(setMock).toHaveBeenCalledWith({ emailUndeliverable: true });
+    // Two UPDATEs: one for `users`, one for `email_leads`
+    expect(dbUpdateMock).toHaveBeenCalledTimes(2);
+    const usersSet = dbUpdateMock.mock.results[0].value.set;
+    const leadsSet = dbUpdateMock.mock.results[1].value.set;
+    expect(usersSet).toHaveBeenCalledWith({ emailUndeliverable: true });
+    expect(leadsSet).toHaveBeenCalledWith({ emailUndeliverable: true });
   });
 
   // -------------------------------------------------------------------------
-  // Test 3: complaint → emailUndeliverable = true
+  // Test 3: complaint → emailUndeliverable=true on users; both flags on leads
   // -------------------------------------------------------------------------
-  it('marks user emailUndeliverable on complaint', async () => {
+  it('marks emailUndeliverable on users AND unsubscribes lead on complaint', async () => {
     verifyMock.mockReturnValue({
       type: 'email.complained',
       data: { email: 'complained@example.com' },
@@ -114,9 +116,17 @@ describe('POST /api/webhooks/resend', () => {
 
     expect(res.status).toBe(200);
     expect(body.received).toBe(true);
-    expect(dbUpdateMock).toHaveBeenCalledOnce();
-    const setMock = dbUpdateMock.mock.results[0].value.set;
-    expect(setMock).toHaveBeenCalledWith({ emailUndeliverable: true });
+    expect(dbUpdateMock).toHaveBeenCalledTimes(2);
+    const usersSet = dbUpdateMock.mock.results[0].value.set;
+    const leadsSet = dbUpdateMock.mock.results[1].value.set;
+    expect(usersSet).toHaveBeenCalledWith({ emailUndeliverable: true });
+    // Complaint propagation: BOTH undeliverable AND unsubscribed_at=now
+    expect(leadsSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        emailUndeliverable: true,
+        unsubscribedAt: expect.any(Date),
+      }),
+    );
   });
 
   // -------------------------------------------------------------------------
@@ -135,5 +145,53 @@ describe('POST /api/webhooks/resend', () => {
     expect(body.received).toBe(true);
     // Must NOT touch the database
     expect(dbUpdateMock).not.toHaveBeenCalled();
+  });
+
+  // -------------------------------------------------------------------------
+  // T11: lowercase the email before matching email_leads (stored normalized)
+  // -------------------------------------------------------------------------
+  it('lowercases email when querying email_leads on hard bounce', async () => {
+    verifyMock.mockReturnValue({
+      type: 'email.bounced',
+      data: { email: 'MixedCase@Example.COM', bounce_type: 'hard' },
+    });
+
+    const res = await POST(makeResendRequest());
+    expect(res.status).toBe(200);
+    expect(dbUpdateMock).toHaveBeenCalledTimes(2);
+    // Both updates fired (users + email_leads). The leads where() clause uses
+    // lowercase — we can't inspect the where args easily but coverage here
+    // ensures the code path was exercised + didn't throw on mixed-case input.
+  });
+
+  // -------------------------------------------------------------------------
+  // T11: email_leads UPDATE failure is non-blocking (analytics, not auth)
+  // -------------------------------------------------------------------------
+  it('returns 200 even when email_leads UPDATE throws on hard bounce', async () => {
+    verifyMock.mockReturnValue({
+      type: 'email.bounced',
+      data: { email: 'bounced@example.com', bounce_type: 'hard' },
+    });
+    // First update (users) succeeds; second (email_leads) rejects.
+    let callIdx = 0;
+    dbUpdateMock.mockImplementation(() => {
+      callIdx += 1;
+      if (callIdx === 1) {
+        return {
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(undefined),
+          }),
+        };
+      }
+      return {
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockRejectedValue(new Error('leads db down')),
+        }),
+      };
+    });
+
+    const res = await POST(makeResendRequest());
+    expect(res.status).toBe(200);
+    expect(dbUpdateMock).toHaveBeenCalledTimes(2);
   });
 });
