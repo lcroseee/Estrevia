@@ -26,6 +26,9 @@ const mocks = vi.hoisted(() => ({
   updateSet: vi.fn(),
   update: vi.fn(),
   getDb: vi.fn(),
+  // Sentinel table refs used to identify which table the update targeted.
+  USERS_TABLE: { id: 'id', marketingEmailOptIn: 'marketing_email_opt_in', __table: 'users' },
+  EMAIL_LEADS_TABLE: { id: 'id', unsubscribedAt: 'unsubscribed_at', __table: 'email_leads' },
 }));
 
 // Wire DB mock: update() → { set } → { where }
@@ -33,6 +36,8 @@ mocks.updateWhere.mockResolvedValue(undefined);
 mocks.updateSet.mockImplementation(() => ({ where: mocks.updateWhere }));
 mocks.update.mockImplementation(() => ({ set: mocks.updateSet }));
 mocks.getDb.mockReturnValue({ update: mocks.update });
+
+const { USERS_TABLE, EMAIL_LEADS_TABLE } = mocks;
 
 vi.mock('@/shared/lib/unsubscribe-token', () => ({
   verifyUnsubscribeToken: mocks.verifyUnsubscribeToken,
@@ -43,7 +48,8 @@ vi.mock('@/shared/lib/db', () => ({
 }));
 
 vi.mock('@/shared/lib/schema', () => ({
-  users: { id: 'id', marketingEmailOptIn: 'marketing_email_opt_in' },
+  users: mocks.USERS_TABLE,
+  emailLeads: mocks.EMAIL_LEADS_TABLE,
 }));
 
 vi.mock('@/i18n/navigation', () => ({
@@ -97,13 +103,34 @@ describe('/unsubscribe page', () => {
     mocks.getDb.mockReturnValue({ update: mocks.update });
   });
 
-  it('valid token — updates DB and renders success heading', async () => {
-    mocks.verifyUnsubscribeToken.mockResolvedValue({ ok: true, userId: 'user_123' });
+  it("valid user-kind token — updates users table and renders success heading", async () => {
+    mocks.verifyUnsubscribeToken.mockResolvedValue({ ok: true, kind: 'user', id: 'user_123' });
 
     const html = await renderPageToString('validtoken123');
 
     expect(mocks.verifyUnsubscribeToken).toHaveBeenCalledWith('validtoken123');
-    expect(mocks.update).toHaveBeenCalled();
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    expect(mocks.update).toHaveBeenCalledWith(USERS_TABLE);
+    expect(mocks.updateSet).toHaveBeenCalledWith({ marketingEmailOptIn: false });
+    expect(html).toContain("You&#x27;ve been unsubscribed");
+    expect(html).toContain('You will no longer receive marketing emails.');
+  });
+
+  it("valid lead-kind token — updates email_leads.unsubscribed_at and renders same confirmation", async () => {
+    mocks.verifyUnsubscribeToken.mockResolvedValue({ ok: true, kind: 'lead', id: 'lead_xyz' });
+
+    const html = await renderPageToString('validleadtoken');
+
+    expect(mocks.verifyUnsubscribeToken).toHaveBeenCalledWith('validleadtoken');
+    expect(mocks.update).toHaveBeenCalledTimes(1);
+    expect(mocks.update).toHaveBeenCalledWith(EMAIL_LEADS_TABLE);
+
+    // .set({ unsubscribedAt: <Date> }) — Date is constructed at call-time so assert shape, not equality
+    const setArg = mocks.updateSet.mock.calls[0]?.[0] as { unsubscribedAt: unknown };
+    expect(setArg).toBeDefined();
+    expect(setArg.unsubscribedAt).toBeInstanceOf(Date);
+
+    // No behavioural leakage to user — identical confirmation copy as user-kind.
     expect(html).toContain("You&#x27;ve been unsubscribed");
     expect(html).toContain('You will no longer receive marketing emails.');
   });

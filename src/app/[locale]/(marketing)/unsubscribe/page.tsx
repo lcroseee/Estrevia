@@ -16,7 +16,7 @@ import { eq } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { verifyUnsubscribeToken } from '@/shared/lib/unsubscribe-token';
 import { getDb } from '@/shared/lib/db';
-import { users } from '@/shared/lib/schema';
+import { emailLeads, users } from '@/shared/lib/schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,23 +35,35 @@ async function processToken(token: string | undefined): Promise<PageState> {
     return { status: 'missing' };
   }
 
-  let userId: string;
+  let kind: 'user' | 'lead';
+  let id: string;
   try {
     const result = await verifyUnsubscribeToken(token);
     if (!result.ok) {
       return { status: 'invalid' };
     }
-    userId = result.id;
+    kind = result.kind;
+    id = result.id;
   } catch {
     return { status: 'invalid' };
   }
 
   try {
     const db = getDb();
-    await db
-      .update(users)
-      .set({ marketingEmailOptIn: false })
-      .where(eq(users.id, userId));
+    if (kind === 'user') {
+      await db
+        .update(users)
+        .set({ marketingEmailOptIn: false })
+        .where(eq(users.id, id));
+    } else {
+      // kind === 'lead': flip unsubscribed_at on the email_leads row.
+      // UI confirmation copy is identical to the user branch — no kind
+      // leakage to the recipient (signed tokens already prevent enumeration).
+      await db
+        .update(emailLeads)
+        .set({ unsubscribedAt: new Date() })
+        .where(eq(emailLeads.id, id));
+    }
     return { status: 'success' };
   } catch {
     return { status: 'error' };
