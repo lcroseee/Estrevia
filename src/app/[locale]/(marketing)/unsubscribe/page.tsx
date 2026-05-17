@@ -41,7 +41,7 @@ async function processToken(token: string | undefined): Promise<PageState> {
     if (!result.ok) {
       return { status: 'invalid' };
     }
-    userId = result.userId;
+    userId = result.id;
   } catch {
     return { status: 'invalid' };
   }
