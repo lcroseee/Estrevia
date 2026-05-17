@@ -84,6 +84,37 @@
     "passportFooter": "Shareable card · No personal data stored",
     "loadingAria": "Loading chart..."
   },
+  "chartReading": {
+    "eyebrow": "AI Reading · Pro",
+    "heading": "Your natal chart reading",
+    "teaserSub": "What your luminaries say:",
+    "teaserSun": "Sun in {sign}",
+    "teaserMoon": "Moon in {sign}",
+    "teaserAscendant": "Ascendant in {sign}",
+    "lockedLabelWithHouses": "10 more planets, houses & aspects",
+    "lockedLabelNoHouses": "10 more planets & aspects",
+    "generateButton": "Generate reading",
+    "generating": "Reading the stars…",
+    "regenerateButton": "Regenerate",
+    "errorGeneric": "Could not generate your reading. Please try again.",
+    "errorRateLimit": "Too many requests. Try in a minute.",
+    "errorNetwork": "Network error. Check your connection.",
+    "errorNotFound": "Chart not found. Recalculate to continue.",
+    "signOneLiners": {
+      "Aries": "Cardinal fire — the spark of initiation.",
+      "Taurus": "Fixed earth — the rooted body of value.",
+      "Gemini": "Mutable air — the curious mirror.",
+      "Cancer": "Cardinal water — emotional roots.",
+      "Leo": "Fixed fire — the radiant heart.",
+      "Virgo": "Mutable earth — the discerning servant.",
+      "Libra": "Cardinal air — the social mask.",
+      "Scorpio": "Fixed water — the transformative deep.",
+      "Sagittarius": "Mutable fire — the questing arrow.",
+      "Capricorn": "Cardinal earth — the structured ascent.",
+      "Aquarius": "Fixed air — the visionary outsider.",
+      "Pisces": "Mutable water — the dissolving mystic."
+    }
+  },
   "moonPage": {
     "eyebrow": "Lunar Calendar",
     "h1": "Moon Phase Today",
@@ -983,14 +1014,16 @@
       "celticCross": "Unlock your Celtic Cross reading",
       "threeCard": "See the full 3-card story",
       "synastryAi": "Get the AI relationship analysis",
-      "essay": "Unlock the full essay"
+      "essay": "Unlock the full essay",
+      "natalChart": "Get your full natal chart reading"
     },
     "cta": {
       "eyebrow": "Locked behind Star",
       "subline": {
         "celticCross": "Get the full interpretation tying all 10 cards into one narrative.",
         "threeCard": "Get the LLM reading that connects past, present, and future.",
-        "synastryAi": "Get a detailed analysis of how your charts interact."
+        "synastryAi": "Get a detailed analysis of how your charts interact.",
+        "natalChart": "An AI-crafted synthesis of all your planets, houses, and aspects — written for your chart, not a generic horoscope."
       },
       "ctaLabel": "Start 3-Day Free Trial"
     }

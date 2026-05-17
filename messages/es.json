@@ -84,6 +84,37 @@
     "passportFooter": "Tarjeta compartible · Sin datos personales almacenados",
     "loadingAria": "Cargando carta..."
   },
+  "chartReading": {
+    "eyebrow": "Lectura IA · Pro",
+    "heading": "Tu lectura natal",
+    "teaserSub": "Lo que dicen tus luminarias:",
+    "teaserSun": "Sol en {sign}",
+    "teaserMoon": "Luna en {sign}",
+    "teaserAscendant": "Ascendente en {sign}",
+    "lockedLabelWithHouses": "10 planetas, casas y aspectos más",
+    "lockedLabelNoHouses": "10 planetas y aspectos más",
+    "generateButton": "Generar lectura",
+    "generating": "Leyendo las estrellas…",
+    "regenerateButton": "Regenerar",
+    "errorGeneric": "No pudimos generar tu lectura. Intenta de nuevo.",
+    "errorRateLimit": "Demasiadas solicitudes. Intenta en un minuto.",
+    "errorNetwork": "Error de red. Verifica tu conexión.",
+    "errorNotFound": "Carta no encontrada. Recalcula para continuar.",
+    "signOneLiners": {
+      "Aries": "Fuego cardinal — la chispa de la iniciación.",
+      "Taurus": "Tierra fija — el cuerpo enraizado del valor.",
+      "Gemini": "Aire mutable — el espejo curioso.",
+      "Cancer": "Agua cardinal — raíces emocionales.",
+      "Leo": "Fuego fijo — el corazón radiante.",
+      "Virgo": "Tierra mutable — el servidor discerniente.",
+      "Libra": "Aire cardinal — la máscara social.",
+      "Scorpio": "Agua fija — la profundidad transformadora.",
+      "Sagittarius": "Fuego mutable — la flecha buscadora.",
+      "Capricorn": "Tierra cardinal — el ascenso estructurado.",
+      "Aquarius": "Aire fijo — la visión disidente.",
+      "Pisces": "Agua mutable — el místico que se disuelve."
+    }
+  },
   "moonPage": {
     "eyebrow": "Calendario Lunar",
     "h1": "Fase Lunar Hoy",
@@ -983,14 +1014,16 @@
       "celticCross": "Desbloquea tu lectura de la Cruz Celta",
       "threeCard": "Descubre la historia completa de las 3 cartas",
       "synastryAi": "Obtén el análisis de compatibilidad con IA",
-      "essay": "Desbloquea el ensayo completo"
+      "essay": "Desbloquea el ensayo completo",
+      "natalChart": "Obtén la lectura completa de tu carta natal"
     },
     "cta": {
       "eyebrow": "Bloqueado tras Star",
       "subline": {
         "celticCross": "Obtén la interpretación completa que conecta las 10 cartas en una narrativa.",
         "threeCard": "Obtén la lectura que conecta pasado, presente y futuro.",
-        "synastryAi": "Obtén un análisis detallado de cómo interactúan tus cartas."
+        "synastryAi": "Obtén un análisis detallado de cómo interactúan tus cartas.",
+        "natalChart": "Síntesis hecha con IA de todos tus planetas, casas y aspectos — escrita para tu carta, no un horóscopo genérico."
       },
       "ctaLabel": "Comienza tu prueba gratis de 3 días"
     }
