@@ -121,6 +121,12 @@ const nextConfig: NextConfig = {
     '/api/**': ['./data/ephe/**'],
   },
 
+  // PostHog reverse proxy passes through `/ingest/decide` with a trailing-slash
+  // variant. Next's default trailing-slash redirect would 308 the request before
+  // the rewrite fires, breaking the proxy chain. Disabling the redirect keeps
+  // `/ingest/decide` and `/ingest/decide/` both forwarded to PostHog as-is.
+  skipTrailingSlashRedirect: true,
+
   // Tree-shake heavy barrel-import packages on a per-subpath basis.
   // Reduces initial JS by ~30-80 KB gzipped on routes using lucide icons,
   // framer-motion animations, or date-fns-tz helpers.
@@ -151,7 +157,15 @@ const nextConfig: NextConfig = {
     // next-intl middleware (localePrefix: 'as-needed') internally prepends the
     // locale before Next.js routing runs, so we match both the /en/ and /es/
     // prefixed forms. The browser URL is never changed.
+    //
+    // PostHog reverse proxy: routes browser-side analytics traffic through our
+    // own origin so ad blockers cannot match the third-party host. The static
+    // asset proxy MUST come before the catch-all so `/ingest/static/array.js`
+    // resolves to the asset host, not the ingest host.
     return [
+      { source: '/ingest/static/:path*', destination: 'https://us-assets.i.posthog.com/static/:path*' },
+      { source: '/ingest/:path*', destination: 'https://us.i.posthog.com/:path*' },
+      { source: '/ingest/decide', destination: 'https://us.i.posthog.com/decide' },
       { source: '/en/sidereal-:sign-dates', destination: '/en/sidereal-dates/:sign' },
       { source: '/es/sidereal-:sign-dates', destination: '/es/sidereal-dates/:sign' },
       // Fallback: if next-intl does not prepend a locale for the default locale,

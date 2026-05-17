@@ -157,8 +157,10 @@ export const config = {
   //     every path in createRouteMatcher must also be matched here.
   matcher: [
     // Page routes — intl + optional Clerk auth
-    // Excludes: _next internals, _vercel, static files (any path with extension), api paths
-    '/((?!_next|_vercel|api|.*\\..*).*)',
+    // Excludes: _next internals, _vercel, static files (any path with extension),
+    // api paths, and `/ingest/*` (PostHog reverse proxy — must reach the rewrite
+    // layer untouched; Clerk/i18n have no business intercepting analytics traffic).
+    '/((?!_next|_vercel|api|ingest|.*\\..*).*)',
     // Admin pages and API routes — Clerk auth required; allowlist checked inside handlers
     '/admin/:path*',
     '/api/admin/:path*',

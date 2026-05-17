@@ -56,8 +56,6 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
 
   async function initPostHog() {
     const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    const host =
-      process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
 
     if (!apiKey) {
       if (process.env.NODE_ENV === 'development') {
@@ -84,11 +82,21 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     }
 
     posthog.init(apiKey, {
-      api_host: host,
+      // Same-origin reverse proxy bypasses ad blockers that block us.i.posthog.com
+      // directly. Rewrites in next.config.ts forward /ingest/* → PostHog hosts.
+      // ui_host keeps toolbar/recording links pointing at the real PostHog UI.
+      api_host: '/ingest',
+      ui_host: 'https://us.posthog.com',
       capture_pageview: true,
       disable_session_recording: true,
       persistence: 'localStorage',
       autocapture: false,
+      // Heatmaps + rage clicks + scroll depth without enabling full autocapture.
+      // PII guard via sanitize_properties continues to strip birth-data params.
+      enable_heatmaps: true,
+      // Core Web Vitals (LCP, INP, CLS) from real users — feeds PostHog
+      // Web Vitals dashboard. Lightweight, runs in browser idle time.
+      capture_performance: { web_vitals: true },
       bootstrap: {},
       sanitize_properties: (properties: Record<string, unknown>) => ({
         ...properties,
