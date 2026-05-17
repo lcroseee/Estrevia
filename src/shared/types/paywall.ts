@@ -13,4 +13,5 @@ export type PaywallTrigger =
   | 'celtic-cross'
   | 'three-card'
   | 'synastry-ai'
+  | 'natal-chart'
   | 'generic';

@@ -81,4 +81,12 @@ describe('PaywallCta', () => {
     );
     expect(getByRole('button').getAttribute('aria-haspopup')).toBe('dialog');
   });
+
+  it('accepts trigger="natal-chart" and forwards it to PAYWALL_CTA_VIEWED', () => {
+    render(<PaywallCta trigger="natal-chart" onClick={vi.fn()} />);
+    expect(mockTrackEvent).toHaveBeenCalledWith(
+      'PAYWALL_CTA_VIEWED',
+      expect.objectContaining({ trigger: 'natal-chart', variant: 'card' }),
+    );
+  });
 });
