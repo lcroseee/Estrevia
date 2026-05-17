@@ -227,6 +227,7 @@ export const AnalyticsEvent = {
   EMAIL_LEAD_SUBMITTED: 'email_lead_submitted',
   EMAIL_LEAD_RESUBMITTED: 'email_lead_resubmitted', // PostHog only — no CAPI
   EMAIL_GATE_DISMISSED: 'email_gate_dismissed',     // PostHog only — no CAPI
+  EMAIL_GATE_VIEWED: 'email_gate_viewed',           // PostHog only — no CAPI
   // Conversion funnel — paywall → sign-up → checkout → Stripe
   PAYWALL_CTA_VIEWED: 'paywall_cta_viewed',
   CHART_READING_GENERATED: 'chart_reading_generated',

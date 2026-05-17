@@ -70,6 +70,19 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
     onDismiss();
   }, [chartId, locale, onDismiss]);
 
+  const viewedFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (open) {
+      if (!viewedFiredRef.current) {
+        trackEvent(AnalyticsEvent.EMAIL_GATE_VIEWED, { chartId, locale });
+        viewedFiredRef.current = true;
+      }
+    } else {
+      viewedFiredRef.current = false;
+    }
+  }, [open, chartId, locale]);
+
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(e: KeyboardEvent) {

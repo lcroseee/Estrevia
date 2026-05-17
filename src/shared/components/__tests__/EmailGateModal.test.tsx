@@ -60,6 +60,41 @@ describe('EmailGateModal', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('fires email_gate_viewed once when rendered with open=true', () => {
+    const ph = makePosthogMock();
+    render(<EmailGateModal {...baseProps} />);
+    const viewedCalls = ph.capture.mock.calls.filter(
+      (call: unknown[]) => call[0] === 'email_gate_viewed',
+    );
+    expect(viewedCalls).toHaveLength(1);
+    expect(viewedCalls[0]?.[1]).toEqual({
+      chartId: 'chart_test_1',
+      locale: 'en',
+    });
+  });
+
+  it('does NOT re-fire email_gate_viewed when re-rendered with the same open=true', () => {
+    const ph = makePosthogMock();
+    const { rerender } = render(<EmailGateModal {...baseProps} />);
+    rerender(<EmailGateModal {...baseProps} />);
+    rerender(<EmailGateModal {...baseProps} />);
+    const viewedCalls = ph.capture.mock.calls.filter(
+      (call: unknown[]) => call[0] === 'email_gate_viewed',
+    );
+    expect(viewedCalls).toHaveLength(1);
+  });
+
+  it('re-fires email_gate_viewed when open toggles false → true again', () => {
+    const ph = makePosthogMock();
+    const { rerender } = render(<EmailGateModal {...baseProps} />);
+    rerender(<EmailGateModal {...baseProps} open={false} />);
+    rerender(<EmailGateModal {...baseProps} open={true} />);
+    const viewedCalls = ph.capture.mock.calls.filter(
+      (call: unknown[]) => call[0] === 'email_gate_viewed',
+    );
+    expect(viewedCalls).toHaveLength(2);
+  });
+
   it('disables submit when email is empty', () => {
     render(<EmailGateModal {...baseProps} />);
     const submit = screen.getByRole('button', { name: 'submitCta' }) as HTMLButtonElement;
