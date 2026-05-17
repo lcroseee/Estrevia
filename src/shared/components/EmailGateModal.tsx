@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
@@ -175,7 +176,14 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
     }
   }
 
-  return (
+  // Render via portal to document.body so the modal escapes any ancestor
+  // stacking context. The hero calculator's animation wrapper applies
+  // `transform: translateY(...)` which creates a new containing block —
+  // without portal, `fixed inset-0 z-50` positions relative to that wrapper
+  // and the page's trust-line sibling renders visually on top of the modal.
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -260,6 +268,7 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
           </p>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
