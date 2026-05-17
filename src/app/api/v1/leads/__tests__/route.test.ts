@@ -53,10 +53,22 @@ const selectChain = {
   })),
 };
 let lastSelectEmail = '';
+// T+0 waitUntil closure issues db.update(emailLeads).set(...).where(...). We
+// capture each invocation in updateCalls so individual tests can assert state
+// transitions (nurture_step=1, nurture_next_at=NOW()+24h).
+const updateCalls: Array<{ vals: Record<string, unknown> }> = [];
+const updateBuilder = {
+  set: vi.fn((vals: Record<string, unknown>) => ({
+    where: vi.fn(async () => {
+      updateCalls.push({ vals });
+    }),
+  })),
+};
 vi.mock('@/shared/lib/db', () => ({
   getDb: () => ({
     insert: () => insertBuilder,
     select: () => selectChain,
+    update: () => updateBuilder,
   }),
 }));
 
@@ -65,6 +77,38 @@ vi.mock('@/shared/lib/analytics', async () => {
   const actual = await vi.importActual<typeof import('@/shared/lib/analytics')>('@/shared/lib/analytics');
   return { ...actual, trackServerEvent: trackMock };
 });
+
+// Capture waitUntil invocations + execute the promise so we can assert the
+// background work it queues (sendLeadChartEmail call, db.update state change).
+const waitUntilMock = vi.fn<(promise: Promise<unknown>) => void>((promise) => {
+  // Swallow errors so the test runner's unhandled-rejection handler stays quiet —
+  // production behavior is "errors logged + Sentry captured, never crash request".
+  void promise.catch(() => {});
+});
+vi.mock('@vercel/functions', () => ({
+  waitUntil: waitUntilMock,
+}));
+
+type SendChartArgs = {
+  leadId: string;
+  email: string;
+  locale: 'en' | 'es';
+  chart: unknown;
+  chartId: string | null;
+};
+const sendLeadChartEmailMock = vi.fn<(args: SendChartArgs) => Promise<{ sent: boolean }>>(
+  async () => ({ sent: true }),
+);
+vi.mock('@/shared/lib/email', () => ({
+  sendLeadChartEmail: sendLeadChartEmailMock,
+}));
+
+const fetchTempChartMock = vi.fn<(chartId: string | null | undefined) => Promise<unknown>>(
+  async () => ({ planets: [], houses: null }),
+);
+vi.mock('@/shared/lib/temp-chart', () => ({
+  fetchTempChart: fetchTempChartMock,
+}));
 
 function makeRequest(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request('https://test.local/api/v1/leads', {
@@ -83,6 +127,13 @@ beforeEach(() => {
   limitMock.mockImplementation(async () => ({ success: true }));
   lastSelectEmail = '';
   selectChain.from.mockClear();
+  waitUntilMock.mockClear();
+  sendLeadChartEmailMock.mockClear();
+  sendLeadChartEmailMock.mockImplementation(async () => ({ sent: true as const }));
+  fetchTempChartMock.mockClear();
+  fetchTempChartMock.mockImplementation(async () => ({ planets: [], houses: null }));
+  updateBuilder.set.mockClear();
+  updateCalls.length = 0;
 });
 
 async function importPOST() {
@@ -238,5 +289,55 @@ describe('POST /api/v1/leads', () => {
     expect(trackMock).toHaveBeenCalledTimes(1);
     const [, , props] = trackMock.mock.calls[0] as [string, string, Record<string, unknown>];
     expect(props.client_ip_address).toBeUndefined();
+  });
+
+  it('queues T+0 send via waitUntil after wasNew=true insert', async () => {
+    const POST = await importPOST();
+    const res = await POST(makeRequest({
+      email: 'newlead@example.com',
+      chartId: 'chart_xyz',
+      locale: 'en',
+    }));
+    expect(res.status).toBe(200);
+    expect(waitUntilMock).toHaveBeenCalledTimes(1);
+
+    // Drain the background work so we can assert it called the send helper +
+    // advanced nurture state. The route hands waitUntil the in-flight promise.
+    const queued = waitUntilMock.mock.calls[0]![0] as Promise<unknown>;
+    await queued;
+
+    expect(fetchTempChartMock).toHaveBeenCalledWith('chart_xyz');
+    expect(sendLeadChartEmailMock).toHaveBeenCalledTimes(1);
+    const sendArgs = sendLeadChartEmailMock.mock.calls[0]![0];
+    expect(sendArgs.email).toBe('newlead@example.com');
+    expect(sendArgs.locale).toBe('en');
+    expect(sendArgs.chartId).toBe('chart_xyz');
+    expect(sendArgs.leadId).toMatch(/^[A-Za-z0-9_-]{10,}$/);
+
+    // State transition: nurture_step → 1, nurture_next_at ≈ NOW()+24h.
+    expect(updateCalls).toHaveLength(1);
+    const setVals = updateCalls[0]!.vals as { nurtureStep: number; nurtureNextAt: Date };
+    expect(setVals.nurtureStep).toBe(1);
+    expect(setVals.nurtureNextAt).toBeInstanceOf(Date);
+    const deltaMs = setVals.nurtureNextAt.getTime() - Date.now();
+    expect(deltaMs).toBeGreaterThan(23 * 3600_000);
+    expect(deltaMs).toBeLessThan(25 * 3600_000);
+  });
+
+  it('does NOT queue T+0 send when wasNew=false (duplicate email)', async () => {
+    const POST = await importPOST();
+    const body = { email: 'dupnurture@example.com', chartId: 'chart_d', locale: 'en' as const };
+    // First insert — should queue exactly one waitUntil.
+    await POST(makeRequest(body));
+    expect(waitUntilMock).toHaveBeenCalledTimes(1);
+    waitUntilMock.mockClear();
+    sendLeadChartEmailMock.mockClear();
+
+    // Second insert with same email — wasNew=false, no T+0 queueing.
+    lastSelectEmail = 'dupnurture@example.com';
+    const res2 = await POST(makeRequest(body));
+    expect(res2.status).toBe(200);
+    expect(waitUntilMock).not.toHaveBeenCalled();
+    expect(sendLeadChartEmailMock).not.toHaveBeenCalled();
   });
 });

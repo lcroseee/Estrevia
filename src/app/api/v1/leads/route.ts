@@ -3,10 +3,13 @@ import { nanoid } from 'nanoid';
 import { z, ZodError } from 'zod';
 import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
+import { waitUntil } from '@vercel/functions';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { emailLeads } from '@/shared/lib/schema';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { sendLeadChartEmail } from '@/shared/lib/email';
+import { fetchTempChart } from '@/shared/lib/temp-chart';
 import type { ApiResponse } from '@/shared/types';
 
 export const runtime = 'nodejs';
@@ -170,6 +173,47 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<L
       client_user_agent: userAgent ?? undefined,
       event_source_url: referer,
     });
+
+    // T+0 nurture email — fire-and-forget via Vercel waitUntil so the API
+    // response returns immediately (<200ms) while the email send (500-2000ms)
+    // continues in the background. Errors are isolated; the hourly cron T+0
+    // recovery branch picks up any stuck step=0 leads within 1h.
+    const t0LeadId = leadId;
+    const t0Email = input.email;
+    const t0Locale = input.locale;
+    const t0ChartId = input.chartId ?? null;
+    waitUntil((async () => {
+      try {
+        const chart = await fetchTempChart(t0ChartId);
+        const sendRes = await sendLeadChartEmail({
+          leadId: t0LeadId,
+          email: t0Email,
+          locale: t0Locale,
+          chart,
+          chartId: t0ChartId,
+        });
+        if (sendRes.sent) {
+          const db = getDb();
+          await db
+            .update(emailLeads)
+            .set({
+              nurtureStep: 1,
+              nurtureNextAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            })
+            .where(eq(emailLeads.id, t0LeadId));
+        }
+      } catch (err) {
+        try {
+          const { captureException } = await import('@sentry/nextjs');
+          captureException(err, { tags: { component: 'lead-nurture-t0', leadId: t0LeadId } });
+        } catch {
+          console.error('[leads/t0] send failed', {
+            leadId: t0LeadId,
+            err: err instanceof Error ? err.message : 'unknown',
+          });
+        }
+      }
+    })());
   }
 
   return NextResponse.json(
