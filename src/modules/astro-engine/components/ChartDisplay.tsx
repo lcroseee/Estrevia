@@ -29,6 +29,7 @@ import { PositionTable } from './PositionTable';
 import { PassportCard } from './PassportCard';
 import { ShareButton } from './ShareButton';
 import { AvatarSection } from './AvatarSection';
+import { ChartReadingSection } from './ChartReadingSection';
 import { generatePassport } from '@/modules/astro-engine/passport';
 
 type Tab = 'wheel' | 'table';
@@ -421,7 +422,19 @@ export function ChartDisplay() {
         <PositionTable chart={chart} />
       </div>
 
-      {/* Passport section — shown after chart calculation */}
+      {/* AI Reading section — first slot after the chart */}
+      {chartId && chart && (
+        <>
+          <div
+            className="h-px"
+            style={{ background: 'rgba(255,255,255,0.06)' }}
+            aria-hidden="true"
+          />
+          <ChartReadingSection chartId={chartId} chart={chart} />
+        </>
+      )}
+
+      {/* Passport section — second slot, viral share mechanic */}
       {chartId && (
         <>
           <div
