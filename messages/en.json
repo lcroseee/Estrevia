@@ -1000,7 +1000,14 @@
       "loadingAria": "Loading",
       "errSession": "Unable to create a checkout session. Please try again.",
       "errGeneric": "Something went wrong.",
-      "errNetwork": "Network error. Please check your connection and try again."
+      "errNetwork": "Network error. Please check your connection and try again.",
+      "complete": {
+        "title": "Finalizing your account",
+        "description": "Your payment is confirmed. Setting up your Pro access — this takes a few seconds.",
+        "redirecting": "Signing you in…",
+        "checkEmail": "Account is being set up. Check your email for a sign-in link.",
+        "contactSupport": "If this persists, email support@estrevia.app"
+      }
     }
   },
   "paywall": {

@@ -1000,7 +1000,14 @@
       "loadingAria": "Cargando",
       "errSession": "No pudimos crear la sesión de pago. Por favor intenta de nuevo.",
       "errGeneric": "Algo salió mal.",
-      "errNetwork": "Error de red. Verifica tu conexión e intenta de nuevo."
+      "errNetwork": "Error de red. Verifica tu conexión e intenta de nuevo.",
+      "complete": {
+        "title": "Activando tu cuenta",
+        "description": "Tu pago se confirmó. Estamos preparando tu acceso Pro — esto toma unos segundos.",
+        "redirecting": "Iniciando tu sesión…",
+        "checkEmail": "Tu cuenta se está creando. Revisa tu correo para el enlace de acceso.",
+        "contactSupport": "Si esto persiste, escríbenos a support@estrevia.app"
+      }
     }
   },
   "paywall": {
