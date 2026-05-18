@@ -19,6 +19,9 @@ vi.mock('next-intl/server', () => ({
   getTranslations: async () => (key: string) => `t:${key}`,
   getLocale: async () => 'en',
 }));
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => `t:${key}`,
+}));
 
 import CheckoutCompletePage from '../page';
 
@@ -59,7 +62,7 @@ describe('/checkout/complete page', () => {
       params: Promise.resolve({ locale: 'en' }),
     });
     render(result);
-    expect(screen.getByText(/t:title/i)).toBeInTheDocument();
+    expect(screen.getByText(/t:title/i)).toBeTruthy();
   }, 15000); // server poll budget = 8s, test wait ~10s
 
   it('redirects to /pricing?error=session_not_found when sessionId missing', async () => {

@@ -6,9 +6,11 @@ import React from 'react';
 // Capture which i18n key was requested so we can assert headline resolution.
 const requestedKeys: string[] = [];
 
+type TranslatorFn = ((key: string) => string) & { has: (key: string) => boolean };
+
 vi.mock('next-intl', () => ({
   useTranslations: () => {
-    const t: any = (key: string) => {
+    const t = ((key: string) => {
       requestedKeys.push(key);
       // Return distinct sentinel for `title` vs contextual keys.
       if (key === 'title') return 'GENERIC_TITLE';
@@ -17,7 +19,7 @@ vi.mock('next-intl', () => ({
       if (key === 'contextualTitles.synastryAi') return 'SYNASTRY_TITLE';
       if (key === 'contextualTitles.essay') return 'ESSAY_TITLE';
       return key;
-    };
+    }) as TranslatorFn;
     t.has = (key: string) => key.startsWith('contextualTitles.') || key === 'title';
     return t;
   },
