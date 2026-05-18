@@ -71,6 +71,11 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(10, '1m'),
     prefix: 'rl:stripe/portal',
   }),
+  'checkout/session-status': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1m'),
+    prefix: 'rl:checkout/session-status',
+  }),
   'avatar/generate': new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(3, '1m'),
