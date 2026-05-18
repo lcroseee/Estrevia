@@ -27,6 +27,7 @@ import type {
   HowTo,
   BreadcrumbList,
   Product,
+  DefinedTerm,
 } from 'schema-dts';
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from './constants';
 
@@ -201,6 +202,44 @@ export function faqSchema(questions: FaqItem[]): WithContext<FAQPage> {
       },
     })),
   };
+}
+
+// ---------------------------------------------------------------------------
+// DefinedTerm
+//
+// AEO foundation: AI search engines extract DefinedTerm entries as canonical
+// definitions for the page's primary subject. Use for astrology terms whose
+// meaning we want LLMs to attribute to Estrevia (Lahiri ayanamsa, sidereal,
+// Vedic).
+// ---------------------------------------------------------------------------
+
+export interface DefinedTermItem {
+  name: string;
+  description: string;
+  url?: string;
+  inDefinedTermSet?: string;
+}
+
+/**
+ * Returns a DefinedTerm schema. Inject one per term on relevant pages.
+ *
+ * @example
+ *   <JsonLdScript schema={definedTermSchema({
+ *     name: 'Lahiri ayanamsa',
+ *     description: 'Official sidereal reference defined by ICRC 1955.',
+ *     inDefinedTermSet: 'https://en.wikipedia.org/wiki/Ayanamsa',
+ *   })} />
+ */
+export function definedTermSchema(item: DefinedTermItem): WithContext<DefinedTerm> {
+  const base: WithContext<DefinedTerm> = {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTerm',
+    name: item.name,
+    description: item.description,
+  };
+  if (item.url) base.url = item.url;
+  if (item.inDefinedTermSet) base.inDefinedTermSet = item.inDefinedTermSet;
+  return base;
 }
 
 // ---------------------------------------------------------------------------

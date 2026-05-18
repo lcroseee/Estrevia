@@ -14,6 +14,7 @@
  *   organizationSchema() — Organization schema for homepage/pillar pages
  *   softwareAppSchema()  — SoftwareApplication schema for homepage
  *   websiteSchema()      — WebSite schema for site identity (homepage only)
+ *   definedTermSchema()  — DefinedTerm schema for AEO entity markup
  *   getRelatedPages()    — returns 3-5 related pages for internal linking
  *   getAllEssaySlugs()   — all 120 essay slugs for sitemap/generateStaticParams
  *   getAllSignSlugs()    — all 12 sign slugs for sitemap/generateStaticParams
@@ -32,6 +33,7 @@ export {
   howToSchema,
   breadcrumbSchema,
   productSchema,
+  definedTermSchema,
 } from './json-ld';
 export type {
   ArticleSchemaOptions,
@@ -40,6 +42,7 @@ export type {
   BreadcrumbItem,
   ProductSchemaOptions,
   ProductOffer,
+  DefinedTermItem,
 } from './json-ld';
 
 export {

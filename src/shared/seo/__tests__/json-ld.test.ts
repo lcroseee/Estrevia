@@ -7,6 +7,7 @@ import {
   howToSchema,
   breadcrumbSchema,
   websiteSchema,
+  definedTermSchema,
 } from '../json-ld';
 
 // schema-dts types are complex union types — we cast through unknown for test assertions.
@@ -287,5 +288,52 @@ describe('websiteSchema', () => {
   it('omits potentialAction (no /search route in MVP)', () => {
     const schema = websiteSchema() as unknown as AnySchema;
     expect(schema).not.toHaveProperty('potentialAction');
+  });
+});
+
+describe('definedTermSchema', () => {
+  it('returns DefinedTerm @type with required name + description', () => {
+    const schema = definedTermSchema({
+      name: 'Lahiri ayanamsa',
+      description: 'Official sidereal reference defined by ICRC 1955.',
+    }) as unknown as AnySchema;
+    expect(schema['@type']).toBe('DefinedTerm');
+    expect(schema['@context']).toBe('https://schema.org');
+    expect(schema.name).toBe('Lahiri ayanamsa');
+    expect(schema.description).toBe('Official sidereal reference defined by ICRC 1955.');
+  });
+
+  it('includes url when provided', () => {
+    const schema = definedTermSchema({
+      name: 'Sidereal astrology',
+      description: 'Astrology relative to actual constellations.',
+      url: 'https://estrevia.app/why-sidereal',
+    }) as unknown as AnySchema;
+    expect(schema.url).toBe('https://estrevia.app/why-sidereal');
+  });
+
+  it('includes inDefinedTermSet when provided', () => {
+    const schema = definedTermSchema({
+      name: 'Lahiri ayanamsa',
+      description: 'Official sidereal reference defined by ICRC 1955.',
+      inDefinedTermSet: 'https://en.wikipedia.org/wiki/Ayanamsa',
+    }) as unknown as AnySchema;
+    expect(schema.inDefinedTermSet).toBe('https://en.wikipedia.org/wiki/Ayanamsa');
+  });
+
+  it('omits url field when not provided', () => {
+    const schema = definedTermSchema({
+      name: 'Vedic astrology',
+      description: 'Sanskrit Jyotisha tradition using sidereal positions.',
+    }) as unknown as AnySchema;
+    expect('url' in schema).toBe(false);
+  });
+
+  it('omits inDefinedTermSet field when not provided', () => {
+    const schema = definedTermSchema({
+      name: 'Vedic astrology',
+      description: 'Sanskrit Jyotisha tradition using sidereal positions.',
+    }) as unknown as AnySchema;
+    expect('inDefinedTermSet' in schema).toBe(false);
   });
 });
