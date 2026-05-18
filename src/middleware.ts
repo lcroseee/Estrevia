@@ -52,7 +52,7 @@ const isProtectedRoute = createRouteMatcher([
   '/api/v1/chart/list(.*)',
   // Match UUIDs/nanoids only — exclude named sub-routes like /calculate
   '/api/v1/chart/:id([a-zA-Z0-9_-]{10,})',
-  '/api/v1/stripe(.*)',
+  '/api/v1/stripe/portal(.*)',
   '/api/v1/user(.*)',
   // Synastry write endpoints only — the GET /:id route is intentionally public
   // (share-link UX, returns no PII). The broad '(.*)' was blocking anonymous reads.
@@ -171,7 +171,8 @@ export const config = {
     '/api/v1/chart/save',
     '/api/v1/chart/list',
     '/api/v1/chart/:id',
-    '/api/v1/stripe/:path*',
+    '/api/v1/stripe/portal/:path*',
+    '/api/v1/stripe/checkout',
     '/api/v1/user/:path*',
     '/api/v1/synastry/:path*',
     '/api/v1/avatar/:path*',
