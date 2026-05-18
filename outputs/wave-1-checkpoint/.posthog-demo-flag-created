@@ -1,0 +1,3 @@
+PostHog wave2-demo-flag created in project 407908 on 2026-05-18T02:21:45Z.
+Verification: GET /api/projects/407908/feature_flags/?search=wave2-demo-flag returns 1 result.
+Method: REST API via scripts/wave2-closeout/_seed_posthog_demo_flag.mjs (inline-and-delete).
