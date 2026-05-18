@@ -236,6 +236,10 @@ export const AnalyticsEvent = {
   CHECKOUT_AUTH_REDIRECT: 'checkout_auth_redirect',
   CHECKOUT_AUTO_STARTED: 'checkout_auto_started',
   CHECKOUT_STRIPE_REDIRECTED: 'checkout_stripe_redirected',
+  ANONYMOUS_CHECKOUT_STARTED: 'anonymous_checkout_started',
+  ANONYMOUS_USER_MATERIALIZED: 'anonymous_user_materialized',
+  CHECKOUT_TICKET_READY: 'checkout_ticket_ready',
+  CHECKOUT_TICKET_TIMEOUT: 'checkout_ticket_timeout',
   CHECKOUT_ERROR: 'checkout_error',
   SUBSCRIPTION_STARTED: 'subscription_started',
   // GDPR
