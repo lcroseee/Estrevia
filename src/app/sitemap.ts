@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getAllEssaySlugs, getAllSignSlugs, SIGNS } from '@/shared/seo';
+import { ALL_CITY_SLUGS } from '@/shared/seo/cities';
+import { ALL_PAIR_SLUGS } from '@/shared/seo/compatibility-pairs';
 import { SITE_URL } from '@/shared/seo/constants';
 import { lastModifiedFor } from '@/shared/seo/sitemap-mtime';
 
@@ -260,5 +262,55 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  return [...staticPages, ...appPages, ...tarotPages, ...essayPages, ...signPages, ...siderealDatesPages];
+  // ── Compatibility index (EN + ES) ─────────────────────────────────────────
+  // lastModifiedFor() is strict on its RouteType union; new route families fall
+  // back to build-time `new Date()` (acceptable per spec §8 — Google accepts it).
+  const compatibilityBuildTime = new Date();
+  const compatibilityIndex: MetadataRoute.Sitemap = emitLocalized('/compatibility', {
+    lastModified: compatibilityBuildTime,
+    changeFrequency: 'monthly',
+    priority: 0.7,
+  });
+
+  // ── Compatibility pairs (78 × 2 locales = 156) ────────────────────────────
+  const compatibilityPairs: MetadataRoute.Sitemap = ALL_PAIR_SLUGS.flatMap((pair) =>
+    emitLocalized(`/compatibility/${pair}`, {
+      lastModified: compatibilityBuildTime,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    }),
+  );
+
+  // ── Planetary-hours-cities index (EN + ES) ────────────────────────────────
+  const planetaryHoursCitiesBuildTime = new Date();
+  const planetaryHoursCitiesIndex: MetadataRoute.Sitemap = emitLocalized(
+    '/planetary-hours-cities',
+    {
+      lastModified: planetaryHoursCitiesBuildTime,
+      changeFrequency: 'daily',
+      priority: 0.7,
+    },
+  );
+
+  // ── Planetary-hours per-city (20 × 2 locales = 40) ────────────────────────
+  const planetaryHoursCities: MetadataRoute.Sitemap = ALL_CITY_SLUGS.flatMap((city) =>
+    emitLocalized(`/planetary-hours-cities/${city}`, {
+      lastModified: planetaryHoursCitiesBuildTime,
+      changeFrequency: 'daily',
+      priority: 0.5,
+    }),
+  );
+
+  return [
+    ...staticPages,
+    ...appPages,
+    ...tarotPages,
+    ...essayPages,
+    ...signPages,
+    ...siderealDatesPages,
+    ...compatibilityIndex,
+    ...compatibilityPairs,
+    ...planetaryHoursCitiesIndex,
+    ...planetaryHoursCities,
+  ];
 }
