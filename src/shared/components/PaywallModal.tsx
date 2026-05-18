@@ -119,38 +119,10 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
         body: JSON.stringify({ plan, returnUrl, ...(utmFields ?? {}) }),
       });
 
-      // Detect auth failure before attempting JSON.parse.
-      // Handles both the fixed path (401 JSON) and the Clerk protect-rewrite
-      // path (200 + text/html pointing to /_not-found), plus any CDN/proxy
-      // error pages that are non-JSON.
-      const contentType = res.headers.get('content-type') ?? '';
-      const clerkAuthStatus = res.headers.get('x-clerk-auth-status');
-      const isAuthFailure =
-        res.status === 401 ||
-        clerkAuthStatus === 'signed-out' ||
-        !contentType.includes('application/json');
-
-      if (isAuthFailure) {
-        // Send the user to sign-up (they're on a trial CTA — most have no
-        // account yet). Post-auth, Clerk redirects to /checkout/start, which
-        // auto-creates the Stripe session and redirects to Stripe. Zero
-        // extra clicks between sign-up and payment.
-        const target = returnUrl ?? window.location.pathname;
-        const checkoutStart = `/checkout/start?plan=${plan}&return=${encodeURIComponent(target)}`;
-        trackEvent(AnalyticsEvent.CHECKOUT_AUTH_REDIRECT, {
-          plan,
-          trigger: triggerContext ?? 'generic',
-          returnUrl: target,
-        });
-        window.location.href = `/sign-up?redirect_url=${encodeURIComponent(checkoutStart)}`;
-        return;
-      }
-
       let data: { success: boolean; data?: { url: string }; error?: string };
       try {
         data = (await res.json()) as typeof data;
       } catch {
-        // Server returned valid JSON content-type but unparseable body.
         setError('Unexpected response from server. Please try again.');
         return;
       }
@@ -166,7 +138,6 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       });
       window.location.href = data.data.url;
     } catch {
-      // fetch() itself threw — genuine network failure (offline, DNS, timeout).
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
