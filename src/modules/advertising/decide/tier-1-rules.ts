@@ -8,6 +8,10 @@ const SPEND_DAILY_OVERAGE = 25.0; // USD
 // max_days=14 and conversion-based transition. Kept here as defensive minimum
 // for the legacy code path (active when seniorBuyerMode feature gate = off).
 const LEARNING_PHASE_DAYS = 7;
+// Meta documents learning phase as exiting at ≥50 conversions in 7 days. Below
+// that, per-ad-set metrics are too noisy for confident pause/scale decisions.
+// See [[feedback-meta-learning-phase]] (memory) and Wave 3 spec §5.
+const MIN_CONVERSIONS_BEFORE_ACTION = 50;
 
 /**
  * Tier 1 hard rules engine.
@@ -30,6 +34,15 @@ export function applyTier1Rules(m: AdMetric): AdDecision {
       ...base,
       action: 'hold',
       reason: `learning_phase_protection: only ${m.days_running}d running, need ≥${LEARNING_PHASE_DAYS}d`,
+    };
+  }
+
+  // Conversion sample size — fail-open when field missing (Meta API hiccup)
+  if (m.conversions_7d != null && m.conversions_7d < MIN_CONVERSIONS_BEFORE_ACTION) {
+    return {
+      ...base,
+      action: 'hold',
+      reason: `insufficient_conversions: ${m.conversions_7d}/7d, need ≥${MIN_CONVERSIONS_BEFORE_ACTION}`,
     };
   }
 
@@ -67,4 +80,10 @@ export function applyTier1Rules(m: AdMetric): AdDecision {
   };
 }
 
-export { FREQUENCY_CAP, CPC_HARD_CAP, SPEND_DAILY_OVERAGE, LEARNING_PHASE_DAYS };
+export {
+  FREQUENCY_CAP,
+  CPC_HARD_CAP,
+  SPEND_DAILY_OVERAGE,
+  LEARNING_PHASE_DAYS,
+  MIN_CONVERSIONS_BEFORE_ACTION,
+};

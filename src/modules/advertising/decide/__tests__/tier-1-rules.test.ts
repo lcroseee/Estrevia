@@ -131,4 +131,49 @@ describe('applyTier1Rules', () => {
     expect(decision.action).toBe('pause');
     expect(decision.reason).toContain('frequency');
   });
+
+  // --- Conversion sample size guard ---
+
+  it('holds when conversions_7d < 50 (insufficient sample)', () => {
+    const m = mockAdMetric({ days_running: 7, conversions_7d: 49, frequency: 1.0, cpc: 1.0, spend_usd: 5.0 });
+    const decision = applyTier1Rules(m);
+    expect(decision.action).toBe('hold');
+    expect(decision.reason).toContain('insufficient_conversions');
+  });
+
+  it('does NOT hold (proceeds to rules) when conversions_7d exactly equals threshold (50)', () => {
+    const m = mockAdMetric({ days_running: 7, conversions_7d: 50, frequency: 1.0, cpc: 1.0, spend_usd: 5.0 });
+    const decision = applyTier1Rules(m);
+    expect(decision.action).toBe('maintain');
+  });
+
+  it('proceeds to rules when conversions_7d > 50', () => {
+    const m = mockAdMetric({ days_running: 7, conversions_7d: 100, frequency: 4.5, cpc: 1.0, spend_usd: 5.0 });
+    const decision = applyTier1Rules(m);
+    expect(decision.action).toBe('pause');
+    expect(decision.reason).toContain('frequency');
+  });
+
+  it('learning-phase guard wins over conversion guard (days_running < 7)', () => {
+    const m = mockAdMetric({ days_running: 3, conversions_7d: 5 });
+    const decision = applyTier1Rules(m);
+    expect(decision.action).toBe('hold');
+    expect(decision.reason).toContain('learning_phase');
+    expect(decision.reason).not.toContain('insufficient_conversions');
+  });
+
+  it('fail-open: skips guard when conversions_7d is null', () => {
+    const m = mockAdMetric({ days_running: 7, conversions_7d: null, frequency: 1.0, cpc: 1.0, spend_usd: 5.0 });
+    const decision = applyTier1Rules(m);
+    expect(decision.action).toBe('maintain');
+  });
+
+  it('fail-open: skips guard when conversions_7d is undefined', () => {
+    const overrides: Partial<typeof mockAdMetric extends () => infer R ? R : never> = { days_running: 7, frequency: 1.0, cpc: 1.0, spend_usd: 5.0 };
+    delete (overrides as Record<string, unknown>).conversions_7d;
+    const m = mockAdMetric(overrides);
+    // Override explicit undefined
+    const decision = applyTier1Rules({ ...m, conversions_7d: undefined });
+    expect(decision.action).toBe('maintain');
+  });
 });
