@@ -40,8 +40,8 @@
 
 ## PostHog dashboards (created in Task 4)
 
-- North Star: `https://us.posthog.com/project/407908/dashboard/<id-from-Task-4>` (URL filled by Task 4 subagent)
-- Paywall funnel: `https://us.posthog.com/project/407908/dashboard/<id-from-Task-4>`
+- North Star: `https://us.posthog.com/project/407908/dashboard/1596577`
+- Paywall funnel: `https://us.posthog.com/project/407908/dashboard/1596578`
 
 ## PostHog feature flags (created in Task 1)
 
