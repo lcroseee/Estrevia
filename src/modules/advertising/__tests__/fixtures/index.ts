@@ -18,6 +18,7 @@ export const mockAdMetric = (overrides?: Partial<AdMetric>): AdMetric => ({
   frequency: 1.4,
   reach: 3748,
   days_running: 7,
+  conversions_7d: 60,
   status: 'ACTIVE',
   ...overrides,
 });

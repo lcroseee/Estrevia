@@ -12,6 +12,7 @@ export interface AdMetric {
   frequency: number;
   reach: number;
   days_running: number;
+  conversions_7d?: number | null;
   status: 'ACTIVE' | 'PAUSED' | 'DELETED' | 'DISAPPROVED';
 }
 
