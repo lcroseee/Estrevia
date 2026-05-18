@@ -10,21 +10,21 @@ interface Props {
 
 const STRINGS = {
   en: {
-    preview: 'A weekly note from Estrevia: what your Saturn is doing.',
-    heading: 'Your Saturn this week',
+    preview: 'A weekly note from Estrevia about Saturn.',
+    heading: 'A weekly note about Saturn',
     body1:
-      'Saturn rules discipline, time, and the slow shaping of who you are becoming. In sidereal Vedic astrology, its position right now shows where life is asking for patience and structure.',
+      'Sade-sati is the seven-and-a-half-year Saturn passage that visits every chart in three phases: twelfth-house preparation, first-house stripping-down, second-house rebuild of what matters. Whether you are inside it now or watching its memory, Saturn\'s task does not change — to build the structure your future self will rest on.',
     body2:
-      'Step back this week and notice: where are you being asked to slow down? Where would 1% more consistency compound over the next year?',
+      'Step back and notice: what would you keep building if no one were watching? Saturn\'s question is rarely the urgent one — it is the slow one that compounds.',
     cta: 'Open your chart',
   },
   es: {
-    preview: 'Una nota semanal de Estrevia: qué está haciendo tu Saturno.',
-    heading: 'Tu Saturno esta semana',
+    preview: 'Una nota semanal de Estrevia sobre Saturno.',
+    heading: 'Una nota semanal sobre Saturno',
     body1:
-      'Saturno rige la disciplina, el tiempo y la lenta formación de quien estás siendo. En astrología sideral védica, su posición ahora muestra dónde la vida pide paciencia y estructura.',
+      'Sade-sati es el tránsito saturnino de siete años y medio que visita toda carta en tres fases: preparación en la casa doce, desmonte de identidad en la primera, reconstrucción de valores en la segunda. Estés dentro ahora o viendo su memoria, la tarea de Saturno no cambia — construir la estructura sobre la cual tu yo futuro descansará.',
     body2:
-      'Esta semana, da un paso atrás y observa: ¿dónde te están pidiendo desacelerar? ¿Dónde un 1% más de consistencia compondría durante el próximo año?',
+      'Da un paso atrás y observa: ¿qué seguirías construyendo si nadie te mirara? La pregunta de Saturno rara vez es la urgente — es la lenta, la que compone.',
     cta: 'Abre tu carta',
   },
 };

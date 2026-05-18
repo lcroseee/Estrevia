@@ -79,8 +79,8 @@ const SUBJECTS = {
       sunSign ? `La lectura completa de tu carta ${sunSign}` : 'La lectura completa de tu carta sideral',
   },
   lead_saturn_weekly: {
-    en: 'Your Saturn this week',
-    es: 'Tu Saturno esta semana',
+    en: 'A weekly note about Saturn',
+    es: 'Una nota semanal sobre Saturno',
   },
   lead_mini_reading: {
     en: 'Your sidereal mini-reading',
