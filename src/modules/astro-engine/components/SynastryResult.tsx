@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { SynastryScores, CategoryScore } from '@/modules/astro-engine/synastry-scoring';
 import type { SynastryAspect } from '@/modules/astro-engine/synastry';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { buildShareUrl } from '@/shared/lib/share';
 
 interface ChartSummary {
   sunSign: string | null;
@@ -151,14 +153,17 @@ export function SynastryResult({
 
   const handleShare = async () => {
     const text = `${person1Label} & ${person2Label}: ${Math.round(scores.overall)}% compatibility`;
+    const taggedUrl = buildShareUrl(shareUrl, 'native');
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: text, url: shareUrl });
+        await navigator.share({ title: text, url: taggedUrl });
+        trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'native', passport_id: id });
       } catch {
-        // User cancelled or unsupported
+        // User dismissed — not an error
       }
     } else {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(taggedUrl);
+      trackEvent(AnalyticsEvent.PASSPORT_RESHARED, { platform: 'copy_link', passport_id: id });
     }
   };
 
