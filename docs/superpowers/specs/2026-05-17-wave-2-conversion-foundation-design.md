@@ -2,8 +2,10 @@
 
 **Date:** 2026-05-17
 **Author:** Kirill (founder) + Claude (brainstorm)
-**Status:** Spec (approved 2026-05-17)
+**Status:** Spec (approved 2026-05-17; corrected 2026-05-17 with ground-truth paths)
 **Parent roadmap:** `docs/superpowers/specs/2026-05-17-advertising-improvements-design.md`
+
+> **Note (2026-05-17 correction pass):** Initial spec had ghost paths. Corrected after `grep`-verification of actual codebase. Lessons saved in memory `feedback_grep_callers_not_just_definitions`. Architecture unchanged; only file paths, symbol names, and integration approaches updated to match reality.
 
 ---
 
@@ -36,31 +38,45 @@ Wave 3 will need to run A/B tests on pricing copy, paywall variants, and email s
 
 ### Change
 
-Lightweight client-side `posthog-js` wrapper. **Server-side feature-flag evaluation is explicitly out of scope** (no SSR experiments in Wave 2; pricing page changes are static).
+Lightweight client-side wrapper integrating with the project's existing `PostHogProvider` (which lazy-loads `posthog-js` after cookie consent). **The `posthog-js/react` package is NOT installed**; the project uses a custom `usePostHog()` hook from `@/shared/components/PostHogProvider` that returns `{ isInitialized }`. The PostHog SDK is exposed globally via `(window as { posthog?: ... }).posthog` once initialized. **Server-side feature-flag evaluation is explicitly out of scope** (no SSR experiments in Wave 2).
 
 **1. Create `src/shared/hooks/useFeatureFlag.ts`:**
 
 ```ts
 import { useEffect, useState } from 'react';
-import { usePostHog } from 'posthog-js/react';
+import { usePostHog } from '@/shared/components/PostHogProvider';
 
 interface Loadable<T> {
   value: T;
   isLoading: boolean;
 }
 
+interface PostHogClient {
+  getFeatureFlag: (key: string) => string | boolean | null | undefined;
+  onFeatureFlags: (callback: () => void) => void;
+}
+
+function getPostHogClient(): PostHogClient | null {
+  if (typeof window === 'undefined') return null;
+  const candidate = (window as unknown as { posthog?: PostHogClient }).posthog;
+  return candidate ?? null;
+}
+
 export function useFeatureFlag<T = boolean>(
   key: string,
   defaultValue: T
 ): Loadable<T> {
-  const posthog = usePostHog();
+  const { isInitialized } = usePostHog();
   const [state, setState] = useState<Loadable<T>>({
     value: defaultValue,
     isLoading: true,
   });
 
   useEffect(() => {
+    if (!isInitialized) return;
+    const posthog = getPostHogClient();
     if (!posthog) return;
+
     const evaluate = () => {
       const flagValue = posthog.getFeatureFlag(key);
       const resolved = (flagValue ?? defaultValue) as T;
@@ -68,7 +84,7 @@ export function useFeatureFlag<T = boolean>(
     };
     evaluate();
     posthog.onFeatureFlags(evaluate);
-  }, [posthog, key, defaultValue]);
+  }, [isInitialized, key, defaultValue]);
 
   return state;
 }
@@ -88,13 +104,13 @@ export function useFeatureFlag<T = boolean>(
 
 `src/shared/hooks/__tests__/useFeatureFlag.test.ts`:
 
-1. Renders with `defaultValue` initially (`isLoading: true`).
-2. Resolves to flag value once PostHog evaluates (`isLoading: false`).
-3. Falls back to `defaultValue` when PostHog returns `null` / `undefined`.
-4. Sticky behavior: same key returns same value across re-renders.
-5. Re-renders on `onFeatureFlags` callback fire.
+1. Returns `defaultValue` with `isLoading: true` when `usePostHog()` reports `isInitialized: false`.
+2. Resolves to flag value with `isLoading: false` once `isInitialized: true` and `window.posthog` is available.
+3. Falls back to `defaultValue` when `window.posthog.getFeatureFlag` returns `null` / `undefined`.
+4. Re-renders to new value when the registered `onFeatureFlags` callback fires (simulates PostHog re-evaluation).
+5. Returns `defaultValue` if `window.posthog` is missing even after `isInitialized: true` (defensive — cookie consent path edge case).
 
-Mock `posthog-js/react`'s `usePostHog` hook. No real PostHog SDK in jsdom tests.
+Mock `@/shared/components/PostHogProvider`'s `usePostHog` hook via `vi.mock`. Stub `window.posthog` with `{ getFeatureFlag, onFeatureFlags }` in a `beforeEach`. No real PostHog SDK in jsdom tests.
 
 ### Acceptance
 
@@ -119,41 +135,58 @@ Current pricing page (`src/app/[locale]/(marketing)/pricing/page.tsx`) renders M
 
 Static improvements (no A/B variants for v1). Wave 3 will layer A/B on top via L4-B.
 
-**4 specific edits to `src/app/[locale]/(marketing)/pricing/page.tsx`:**
+**Ground-truth notes:**
+- Pricing page is split: `page.tsx` (server component) renders header + `<PricingToggle />` (client) + trust footer + FAQ.
+- `PricingToggle.tsx` renders the monthly/annual toggle + both pricing cards + Pro CTA via `<PricingUpgradeButton />`.
+- A `Save 42%` badge **already exists** on the Annual toggle button (small chip via `t('saveBadge')`). Actual savings: `$4.99 × 12 = $59.88` vs `$34.99/yr` = 42% off.
+- Existing trust footer: `trustNoContracts` + `trustCancel` + `trustSecure` rendered as small text below cards.
+- Existing 3-day free trial (`Start 3-Day Free Trial`) — distinct from 14-day money-back guarantee (which kicks in post-charge).
 
-**1. Annual savings anchoring** — Above the Annual price card:
-- EN: badge "Save 33% with annual"
-- ES: badge "Ahorra 33% anual"
-- Computation: `Math.round((1 - annualMonthly / monthly) * 100)` (auto-derived; verify actual % against current Stripe prices before commit).
+**4 specific edits split across `page.tsx`, `PricingToggle.tsx`, `messages/{en,es}.json`:**
 
-**2. 14-day money-back guarantee block** — Below pricing cards, dedicated section:
+**1. Annual savings anchoring — promote existing `saveBadge`** — Currently rendered as a small absolute-positioned chip on the Annual toggle button (`PricingToggle.tsx` line ~85). Add a **second, prominent display** below the price when Annual is selected:
+- EN: "Save 42% — pay $34.99 once vs $59.88 monthly"
+- ES: "Ahorra 42% — paga $34.99 una vez vs $59.88 mensual"
+- New `pricing.saveBadgeLong` translation key.
+
+**2. 14-day money-back guarantee block** — Below pricing cards, dedicated section in `page.tsx` (after `<PricingToggle />`, before trust footer):
 - EN headline: "14-day money-back guarantee, no questions asked"
 - ES headline: "Garantía de devolución de 14 días, sin preguntas"
 - EN subcopy: "Try Pro risk-free. Full refund within 14 days. Just email us."
 - ES subcopy: "Prueba Pro sin riesgo. Reembolso total en 14 días. Solo escríbenos."
-- Icon: shield/check via shadcn/ui Icon (existing).
+- New translation keys: `pricing.guaranteeHeading`, `pricing.guaranteeSubcopy`.
+- Icon: shield/check inline SVG (existing pricing page uses inline SVGs for atmosphere, no shadcn Icon import).
 
-**3. Trust signals block** — Above pricing cards, below value-prop hero:
-- EN: "Lahiri ayanamsa ±0.01° accuracy" + "Built by working astrologers"
-- ES: "Precisión Lahiri ayanamsa ±0.01°" + "Hecho por astrólogos en activo"
-- 2-column or icon-row layout (founder picks at design review).
+**3. Trust signals refresh** — Replace existing `trustItems` (`trustNoContracts`, `trustCancel`, `trustSecure`) with stronger Estrevia-specific signals. Keep the 3-item layout in `page.tsx` trust footer; just swap copy:
+- EN: "Lahiri ayanamsa ±0.01° accuracy" / "Built by working astrologers" / "Cancel anytime"
+- ES: "Precisión Lahiri ayanamsa ±0.01°" / "Hecho por astrólogos en activo" / "Cancela cuando quieras"
+- Replace `trustNoContracts` + `trustSecure` with `trustLahiri` + `trustAstrologers`; keep `trustCancel`.
 
-**4. Refined value prop hero** — Single sentence above-the-fold:
-- EN: "Sidereal Vedic charts — Lahiri-accurate, the way the ancient texts intended."
-- ES: "Cartas védicas siderales — precisión Lahiri, como los textos antiguos las querían."
+**4. Refined value prop hero** — Replace existing `pricing.heading` + `pricing.subheading`:
+- EN heading: "Sidereal Vedic charts — Lahiri-accurate"
+- EN subheading: "The way the ancient texts intended. Try Pro risk-free for 14 days."
+- ES heading: "Cartas védicas siderales — precisión Lahiri"
+- ES subheading: "Como los textos antiguos las querían. Prueba Pro sin riesgo por 14 días."
 
-**i18n:** All new strings in `src/i18n/messages/en/pricing.json` and `src/i18n/messages/es/pricing.json`. Founder reviews ES translation per español neutro LATAM, `tú` form, before deploy.
+**i18n:** All new + replaced strings in `messages/en.json` and `messages/es.json` at repo root, under the `pricing` namespace. Founder reviews ES translation per español neutro LATAM, `tú` form, before deploy.
 
 **Stripe-side:** No code changes to webhook or subscription logic. Refunds honored manually via Stripe dashboard.
 
 ### Tests
 
-`src/app/[locale]/(marketing)/pricing/__tests__/`:
+`src/app/[locale]/(marketing)/pricing/__tests__/PricingPage.test.tsx` (new):
 
-- Snapshot test: EN pricing page renders with 4 new elements.
-- Snapshot test: ES pricing page renders with 4 new elements (LATAM neutro).
-- A11y: `axe-core` audit on rendered page — WCAG 2.1 AA compliant.
-- Unit: annual savings computation (`monthly=19, annual=160` → ~30%; verify exact % per actual Stripe prices).
+- Renders new guarantee block (heading + subcopy in EN + ES) when locale is `en` / `es`.
+- Renders refreshed trust footer items (Lahiri ±0.01° + astrologers + cancel).
+- Renders refined heading + subheading copy.
+- `axe-core` audit on rendered page — WCAG 2.1 AA compliant (no new violations vs current baseline).
+
+`src/app/[locale]/(marketing)/pricing/__tests__/PricingToggle.test.tsx` (extend existing `PricingUpgradeButton.utm.test.tsx` patterns or add new):
+
+- Annual mode displays the new long-form savings text (`saveBadgeLong`) below the price.
+- Existing chip `saveBadge` still renders on Annual button.
+
+Use `vi.mock('next-intl', () => ({ useTranslations: () => (key: string) => key }))` per existing pattern in `PricingUpgradeButton.utm.test.tsx:6`.
 
 ### Acceptance
 
@@ -216,62 +249,92 @@ export function getSignKeywords(
 
 **Founder owns content:** 12 signs × 3 placements × 2 locales = **72 keyword strings** before deploy.
 
-**2. Three new email templates (`src/modules/advertising/emails/`):**
+**2. Three new email templates (`src/emails/`):**
 
-- **`SaturnWeekly.tsx`** (T+7d):
+Mirror existing lead-email patterns (`LeadChartEmail.tsx`, `LeadMoonAscEmail.tsx`, `LeadPaywallTeaserEmail.tsx`): React-email components using `<EmailLayout>` + `<Button>` from `src/emails/components/`. Bilingual via `STRINGS = { en: {...}, es: {...} }`. Include unsubscribe footer.
+
+- **`SaturnWeeklyEmail.tsx`** (T+7d):
   - Static template, founder-written content.
-  - Body: weekly astrology angle (Saturn / Saturn return / Saturn-in-X). No personalization beyond first name.
+  - Body: weekly astrology angle (Saturn / Saturn return / Saturn-in-X). No personalization beyond locale.
   - Subject EN: "Your Saturn this week"
   - Subject ES: "Tu Saturno esta semana"
+  - Props: `{ locale, unsubscribeUrl, chartUrl }`.
 
-- **`MiniReading.tsx`** (T+14d):
-  - Templated. Reads Sun/Moon/Asc signs from `email_leads.chart_data` (decrypted via existing PII encryption module at send-time, never logged).
-  - Fills 3 keyword slots via `getSignKeywords(locale, sign, placement)`.
+- **`MiniReadingEmail.tsx`** (T+14d):
+  - Templated. Receives sign data as props from send function (which uses the existing `pickKeySigns(chart)` helper in `src/shared/lib/email.ts:296` to extract `sunSign` / `moonSign` / `ascSign` from a `ChartResult`).
+  - Fills 3 keyword slots via `getSignKeywords(locale, sign, placement)` lookup against the static `SIGN_KEYWORDS` map.
   - Body template EN: "Your Sun in {sign} suggests {sunKeyword}. Your Moon in {sign} reveals {moonKeyword}. Your Ascendant in {sign} shapes how others see you: {ascKeyword}."
   - Body template ES: equivalent, español neutro LATAM, `tú` form.
-  - Soft CTA at end: "See your full chart →" linking to user's chart page.
+  - Soft CTA at end: "See your full chart →" linking to user's chart page (`chartId` route, same pattern as `LeadChartEmail`).
   - Subject EN: "Your sidereal mini-reading"
   - Subject ES: "Tu mini-lectura sideral"
+  - Props: `{ locale, sunSign, moonSign, ascSign, chartUrl, unsubscribeUrl }`.
 
-- **`SynastryTeaser.tsx`** (T+21d):
+- **`SynastryTeaserEmail.tsx`** (T+21d):
   - Static template, founder-written content.
   - Body: invites adding partner's birth data for free synastry reading.
   - Subject EN: "Want to see your compatibility?"
   - Subject ES: "¿Quieres ver tu compatibilidad?"
+  - Props: `{ locale, unsubscribeUrl, synastryUrl }`.
 
-**3. Cron extension (`src/modules/advertising/lead-nurture/cron.ts`):**
+**3. Email send functions in `src/shared/lib/email.ts`:**
 
-- Extend `nurture_stage` enum transitions: existing `t0` / `t24h` / `t72h` → new `t7d` (168h after lead) / `t14d` (336h) / `t21d` (504h) / `done`.
-- `nurture_stage` column already exists via Wave 1 migration `0011`.
-- Failed sends retry per existing logic (Sev1 fix `c94316f` checks `result.error` before advancing stage).
-- Cron schedule unchanged (existing every-5-min cron handles new stages via stage-current check).
+Mirror existing lead-email functions (`sendLeadChartEmail`, `sendLeadMoonAscEmail`, `sendLeadPaywallTeaserEmail`):
 
-**4. Edge cases (must handle):**
+- `sendLeadSaturnWeeklyEmail(params)` — uses `tryInsertOneShotLead(leadId, 'lead_saturn_weekly')`, `signLeadUnsubscribeToken`, builds chart URL with `utm_campaign=t7d`, throws on `result.error`, calls `recordSentLead`.
+- `sendLeadMiniReadingEmail(params)` — same pattern + extracts signs via `pickKeySigns(chart)`, looks up keywords via `getSignKeywords`. `utm_campaign=t14d`.
+- `sendLeadSynastryTeaserEmail(params)` — same pattern + synastry URL `utm_campaign=t21d`.
+
+All three: `params: { leadId, email, locale, chart, chartId }`. Return `{ sent: boolean; reason?: string }`. Add new entries to `SUBJECTS` constant.
+
+**4. Schema extension (`src/shared/lib/schema.ts`):**
+
+Extend `sentLeadEmails.emailType` enum (TypeScript-only, no DB constraint) from `['lead_chart', 'lead_moon_asc', 'lead_paywall_teaser']` to add `'lead_saturn_weekly', 'lead_mini_reading', 'lead_synastry_teaser'`.
+
+**5. Migration (`drizzle/0012_<descriptor>.sql`):**
+
+Drop and recreate the partial index `email_leads_nurture_due_idx` to allow `nurture_step < 6` (currently `< 3`):
+```sql
+DROP INDEX "email_leads_nurture_due_idx";
+CREATE INDEX "email_leads_nurture_due_idx" ON "email_leads" USING btree ("nurture_next_at") WHERE nurture_step < 6 AND converted_to_user_id IS NULL AND unsubscribed_at IS NULL AND email_undeliverable = false;
+```
+Also update the matching `where()` clause in `src/shared/lib/schema.ts:530-532`.
+
+**6. Cron extension (`src/app/api/cron/lead-nurture/route.ts`):**
+
+Existing cron is **hourly** (per file comment: "Vercel Cron — runs hourly at minute 0"). Extend state machine:
+- Current: `nurture_step` 0 → 1 (T+24h queued) → 2 (T+72h queued) → 3 (done).
+- New: 0 → 1 → 2 → 3 (T+7d queued, `+96h` after T+72h) → 4 (T+14d queued, `+168h`) → 5 (T+21d queued, `+168h`) → 6 (done).
+- Add `T96_AFTER_T72_MS`, `T168_MS` constants (or compute inline).
+- Add 3 new branches inside per-lead loop: `lead.nurtureStep === 3` → `sendLeadSaturnWeeklyEmail`; `=== 4` → `sendLeadMiniReadingEmail`; `=== 5` → `sendLeadSynastryTeaserEmail`.
+- Final stage `=== 6` falls through to skipped.
+- Update `lt(emailLeads.nurtureStep, 3)` filter to `lt(emailLeads.nurtureStep, 6)`.
+- Idempotency, retry semantics, pacing, error isolation — unchanged (Sev1 fix `c94316f` already in place).
+
+**7. Edge cases (must handle in `MiniReadingEmail` send-path):**
 
 - **Birth time unknown (Asc is null):** T+14d falls back to 2-line template: "Your Sun in {sign}... Your Moon in {sign}..." Skip Asc line. Subject unchanged.
-- **Decryption fails or chart_data missing:** Skip T+14d for this lead (advance `nurture_stage` to `t21d`, log warning). Lead still receives T+7d and T+21d.
-- **Unknown sign value (e.g. malformed chart_data):** Skip T+14d as above. Sentry alert.
+- **`fetchTempChart(chartId)` returns `null` (chart purged):** Skip T+14d for this lead (advance `nurture_step` to next, log warning). Lead still receives T+7d and T+21d (these don't depend on chart signs).
+- **Unknown sign value (`pickKeySigns` returns invalid sign):** Skip T+14d as above. Sentry alert via existing `catch` in cron.
 
 ### Tests
 
-`src/modules/advertising/lead-nurture/__tests__/`:
-
-- Unit: `getSignKeywords()` returns expected keyword for each sign+placement+locale.
-- Integration: T+14d email renders with fixture `chart_data` (synthetic per CLAUDE.md PII rules).
-- Integration: T+14d falls back to 2-line template when Asc is null.
-- Integration: T+14d skips and advances stage when chart_data missing or decryption fails.
-- Integration: cron stage transitions advance `nurture_stage` `t72h` → `t7d` → `t14d` → `t21d` → `done` at correct time deltas.
-- Integration (regression): failed Resend `result.error` triggers retry, not stage advance (Sev1 regression test).
-- Mock Resend per existing pattern.
+- **`src/shared/lib/__tests__/chart-keywords.test.ts`** (unit): `getSignKeywords()` returns expected keyword for each sign+placement+locale combination.
+- **`src/emails/__tests__/MiniReadingEmail.test.tsx`** (component): renders full 3-line template with Sun+Moon+Asc supplied; renders 2-line fallback when Asc is null.
+- **`src/app/api/cron/lead-nurture/__tests__/route.test.ts`** (integration, extend existing test file):
+  - Stage transitions: `nurture_step` advances `2 → 3` after T+72h teaser send with `nurture_next_at = +96h`; `3 → 4` after T+7d send with `+168h`; `4 → 5` after T+14d send with `+168h`; `5 → 6` final (`nurture_next_at = null`).
+  - T+14d skips and advances stage when `fetchTempChart` returns null.
+  - Failed Resend `result.error` triggers retry path (claim returns `'retry'`), step is NOT advanced (Sev1 regression).
+- Mock Resend per existing pattern in `src/app/api/cron/lead-nurture/__tests__/route.test.ts`.
 
 ### Acceptance
 
-- 72 keyword strings supplied by founder before deploy (T+14 won't render correctly without them).
-- T+7 + T+14 + T+21 verified rendering in Resend preview.
-- T+14 renders user's actual chart signs for a test lead (uses synthetic fixture).
-- T+14 fallback verified for Asc-null lead.
-- Cron stage transitions verified in test environment.
-- PII safety: `chart_data` decrypted only inside send-job, never logged, never persisted in unencrypted form. Verified via test that asserts no decrypted PII in any log output.
+- 72 keyword strings supplied by founder before deploy (T+14 won't render correctly without them; tests use synthetic placeholders to pass without founder content).
+- T+7 + T+14 + T+21 verified rendering in Resend preview (`?preview` route in dev).
+- T+14 renders user's actual chart signs for a test lead (uses `pickKeySigns` against a synthetic `ChartResult` fixture).
+- T+14 fallback verified for Asc-null lead (no `houses` array in `ChartResult`).
+- Cron stage transitions verified via integration tests.
+- PII safety: chart data accessed only via `fetchTempChart(chartId)` inside send-job, never logged. The existing `console.error` and `Sentry.captureException` calls in the cron loop log only `leadId` (per existing pattern, verified at `src/app/api/cron/lead-nurture/route.ts:184-194`).
 
 ### Effort
 
@@ -290,7 +353,7 @@ export function getSignKeywords(
 
 ### Migration
 
-None — `email_leads.nurture_stage` column already exists via migration `0011` (Wave 1).
+One new migration `drizzle/0012_<descriptor>.sql` — drop and recreate the partial index `email_leads_nurture_due_idx` to change `nurture_step < 3` to `nurture_step < 6`. Schema column `nurture_step` (integer, currently 0-3) does not need extension; integer column already supports values 0-6. No new columns added. `email_type` enum extension on `sent_lead_emails` is TypeScript-only (no DB constraint).
 
 ### Vercel / env
 
