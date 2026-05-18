@@ -9,10 +9,10 @@ import type { TarotCardData } from '@/modules/esoteric/components/TarotCard';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
+  const tMeta = await getTranslations('pageMeta.tarotSpread');
   return createMetadata({
-    title: 'Tarot Spreads — Three Card & Celtic Cross',
-    description:
-      'Draw a Three-Card or Celtic Cross spread from the 78-card Thoth deck. AI interpretation available with Pro.',
+    title: tMeta('title'),
+    description: tMeta('description'),
     path: '/tarot/spread',
     locale: locale as 'en' | 'es',
     keywords: [

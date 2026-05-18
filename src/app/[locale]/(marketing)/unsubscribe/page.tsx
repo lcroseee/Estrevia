@@ -11,14 +11,30 @@
  * Server Component; force-dynamic to ensure fresh searchParams every request.
  */
 
-import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { eq } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
+import { createMetadata } from '@/shared/seo';
 import { verifyUnsubscribeToken } from '@/shared/lib/unsubscribe-token';
 import { getDb } from '@/shared/lib/db';
 import { emailLeads, users } from '@/shared/lib/schema';
 
 export const dynamic = 'force-dynamic';
+
+// noIndex: signed token URLs land in email clients; if a recipient ever shares
+// the link, Google must not index it (privacy + thin-content double-hit).
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const tMeta = await getTranslations('pageMeta.unsubscribe');
+  return createMetadata({
+    title: tMeta('title'),
+    description: tMeta('description'),
+    path: '/unsubscribe',
+    locale: locale as 'en' | 'es',
+    noIndex: true,
+  });
+}
 
 interface Props {
   searchParams: Promise<{ token?: string }>;

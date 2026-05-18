@@ -140,8 +140,12 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
     'x-default': enUrl,
   };
 
-  const ogLocale = locale === 'es' ? 'es_ES' : 'en_US';
-  const ogLocaleAlternate = locale === 'es' ? 'en_US' : 'es_ES';
+  // og:locale targets the largest LATAM Spanish market (Mexico) per the
+  // español-neutro LATAM editorial decision in CLAUDE.md and the
+  // feedback_spanish_style memory. Facebook accepts es_MX in its supported
+  // locales list and signals regional intent to share-card consumers.
+  const ogLocale = locale === 'es' ? 'es_MX' : 'en_US';
+  const ogLocaleAlternate = locale === 'es' ? 'en_US' : 'es_MX';
 
   // Per-locale Atom feed link surfaced in <head> via metadata.alternates.types.
   // EN feed lives at root /feed.xml; ES feed at /es/feed.xml. Injecting here

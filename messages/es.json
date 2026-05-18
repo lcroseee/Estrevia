@@ -458,6 +458,22 @@
     "signUp": {
       "title": "Crear cuenta",
       "description": "Crea tu cuenta de Estrevia para guardar cartas siderales, sacar tarot diario y desbloquear las funciones Premium."
+    },
+    "checkoutStart": {
+      "title": "Preparando el pago",
+      "description": "Te llevamos al pago seguro."
+    },
+    "checkoutComplete": {
+      "title": "Finalizando tu cuenta",
+      "description": "Tu pago está confirmado. Configurando tu acceso Pro."
+    },
+    "unsubscribe": {
+      "title": "Cancelar suscripción",
+      "description": "Actualiza tus preferencias de correo."
+    },
+    "tarotSpread": {
+      "title": "Tiradas de Tarot — Tres Cartas y Cruz Celta",
+      "description": "Saca una tirada de Tres Cartas o Cruz Celta del mazo Thoth de 78 cartas. Interpretación con IA disponible en Pro."
     }
   },
   "essayDetail": {
@@ -853,7 +869,8 @@
     "sign": "Signo",
     "degree": "Grado",
     "house": "Casa",
-    "noTimeWarning": "Sin hora de nacimiento, las casas y el Ascendente no pueden calcularse"
+    "noTimeWarning": "Sin hora de nacimiento, las casas y el Ascendente no pueden calcularse",
+    "breadcrumbCurrent": "Calculadora de carta natal"
   },
   "passport": {
     "title": "Pasaporte Cósmico",

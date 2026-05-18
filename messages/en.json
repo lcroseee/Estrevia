@@ -458,6 +458,22 @@
     "signUp": {
       "title": "Sign Up",
       "description": "Create your Estrevia account to save sidereal charts, draw daily tarot, and unlock Premium features."
+    },
+    "checkoutStart": {
+      "title": "Preparing checkout",
+      "description": "Redirecting to secure payment."
+    },
+    "checkoutComplete": {
+      "title": "Finalizing your account",
+      "description": "Your payment is confirmed. Setting up your Pro access."
+    },
+    "unsubscribe": {
+      "title": "Unsubscribe",
+      "description": "Update your email preferences."
+    },
+    "tarotSpread": {
+      "title": "Tarot Spreads — Three Card & Celtic Cross",
+      "description": "Draw a Three-Card or Celtic Cross spread from the 78-card Thoth deck. AI interpretation available with Pro."
     }
   },
   "essayDetail": {
@@ -853,7 +869,8 @@
     "sign": "Sign",
     "degree": "Degree",
     "house": "House",
-    "noTimeWarning": "Without birth time, houses and Ascendant cannot be calculated"
+    "noTimeWarning": "Without birth time, houses and Ascendant cannot be calculated",
+    "breadcrumbCurrent": "Natal Chart Calculator"
   },
   "passport": {
     "title": "Cosmic Passport",

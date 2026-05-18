@@ -16,13 +16,27 @@
  * with a session cookie set; middleware then allows access normally.
  */
 
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { createMetadata } from '@/shared/seo';
 import { getStripe } from '@/shared/lib/stripe';
 import { CheckoutCompleteClient } from './CheckoutCompleteClient';
 
 const SERVER_POLL_MAX_MS = 8000;
 const SERVER_POLL_INTERVAL_MS = 500;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const tMeta = await getTranslations('pageMeta.checkoutComplete');
+  return createMetadata({
+    title: tMeta('title'),
+    description: tMeta('description'),
+    path: '/checkout/complete',
+    locale: locale as 'en' | 'es',
+    noIndex: true,
+  });
+}
 
 async function waitForTicket(sessionId: string): Promise<string | null> {
   const stripe = getStripe();

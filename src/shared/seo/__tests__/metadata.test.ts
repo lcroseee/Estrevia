@@ -207,16 +207,16 @@ describe('createMetadata locale-aware behaviour', () => {
     expect(m.alternates?.canonical).toBe('https://estrevia.app/es/chart');
   });
 
-  it('emits og:locale=es_ES and alternateLocale=en_US for spanish', () => {
+  it('emits og:locale=es_MX and alternateLocale=en_US for spanish', () => {
     const m = createMetadata({ title: 't', description: 'd', path: '/chart', locale: 'es' });
-    expect(m.openGraph?.locale).toBe('es_ES');
+    expect(m.openGraph?.locale).toBe('es_MX');
     expect(m.openGraph?.alternateLocale).toEqual(['en_US']);
   });
 
-  it('emits og:locale=en_US and alternateLocale=es_ES for english', () => {
+  it('emits og:locale=en_US and alternateLocale=es_MX for english', () => {
     const m = createMetadata({ title: 't', description: 'd', path: '/chart', locale: 'en' });
     expect(m.openGraph?.locale).toBe('en_US');
-    expect(m.openGraph?.alternateLocale).toEqual(['es_ES']);
+    expect(m.openGraph?.alternateLocale).toEqual(['es_MX']);
   });
 
   it('handles root path correctly for EN', () => {

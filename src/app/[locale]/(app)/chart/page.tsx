@@ -47,13 +47,16 @@ async function ChartSkeleton() {
   );
 }
 
-const chartBreadcrumb = breadcrumbSchema([
-  { name: 'Estrevia', url: SITE_URL },
-  { name: 'Natal Chart Calculator', url: `${SITE_URL}/chart` },
-]);
-
 export default async function ChartPage() {
+  const t = await getTranslations('chart');
   const schema = softwareAppSchema();
+
+  // Breadcrumb is built inside the function so the page-name crumb stays in
+  // sync with the active locale ('Estrevia' is a proper noun — no translation).
+  const chartBreadcrumb = breadcrumbSchema([
+    { name: 'Estrevia', url: SITE_URL },
+    { name: t('breadcrumbCurrent'), url: `${SITE_URL}/chart` },
+  ]);
 
   return (
     <>

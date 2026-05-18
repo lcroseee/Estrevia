@@ -72,15 +72,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: 'This tarot card was not found.',
       path: `/tarot/${cardId}`,
       locale: locale as 'en' | 'es',
+      noIndex: true,
     });
   }
 
+  // SEO i18n: serve localized title/description per locale. Falls back to EN
+  // via getCardName/getCardDescription when an ES variant is missing in
+  // cards.json (translation in progress for some cards).
+  const localizedName = getCardName(card, locale);
+  const localizedDescription = getCardDescription(card, locale);
+
   return createMetadata({
-    title: `${card.name.en} — Thoth Tarot`,
-    description: card.description.en.slice(0, 155),
+    title: `${localizedName} — Thoth Tarot`,
+    description: localizedDescription.slice(0, 155),
     path: `/tarot/${cardId}`,
     locale: locale as 'en' | 'es',
-    keywords: [card.name.en, 'thoth tarot', card.suit, card.astrology, card.hebrewLetter],
+    keywords: [localizedName, 'thoth tarot', card.suit, card.astrology, card.hebrewLetter],
   });
 }
 
