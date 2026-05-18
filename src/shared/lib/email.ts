@@ -10,6 +10,9 @@ import TrialEndingEmail from '@/emails/TrialEndingEmail';
 import LeadChartEmail from '@/emails/LeadChartEmail';
 import LeadMoonAscEmail from '@/emails/LeadMoonAscEmail';
 import LeadPaywallTeaserEmail from '@/emails/LeadPaywallTeaserEmail';
+import SaturnWeeklyEmail from '@/emails/SaturnWeeklyEmail';
+import MiniReadingEmail from '@/emails/MiniReadingEmail';
+import SynastryTeaserEmail from '@/emails/SynastryTeaserEmail';
 import { tryInsertOneShot, recordSent } from './sent-emails';
 import { tryInsertOneShotLead, recordSentLead } from './sent-lead-emails';
 import { signUnsubscribeToken, signLeadUnsubscribeToken } from './unsubscribe-token';
@@ -74,6 +77,18 @@ const SUBJECTS = {
       sunSign ? `The full reading for your ${sunSign} chart` : 'The full reading for your sidereal chart',
     es: (sunSign: string | null) =>
       sunSign ? `La lectura completa de tu carta ${sunSign}` : 'La lectura completa de tu carta sideral',
+  },
+  lead_saturn_weekly: {
+    en: 'Your Saturn this week',
+    es: 'Tu Saturno esta semana',
+  },
+  lead_mini_reading: {
+    en: 'Your sidereal mini-reading',
+    es: 'Tu mini-lectura sideral',
+  },
+  lead_synastry_teaser: {
+    en: 'Want to see your compatibility?',
+    es: '¿Quieres ver tu compatibilidad?',
   },
 };
 
@@ -483,6 +498,178 @@ export async function sendLeadPaywallTeaserEmail(params: {
   }
 
   await recordSentLead(params.leadId, 'lead_paywall_teaser', result.data?.id ?? null);
+  return { sent: true };
+}
+
+// ---------------------------------------------------------------------------
+// sendLeadSaturnWeeklyEmail — T+7d nurture drip, one-shot per lead
+// ---------------------------------------------------------------------------
+export async function sendLeadSaturnWeeklyEmail(params: {
+  leadId: string;
+  email: string;
+  locale: 'en' | 'es';
+  chart: ChartResult | null;
+  chartId: string | null;
+}): Promise<{ sent: boolean; reason?: string }> {
+  const claim = await tryInsertOneShotLead(params.leadId, 'lead_saturn_weekly');
+  if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  const token = await signLeadUnsubscribeToken(params.leadId);
+  const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
+
+  const chartPath = params.chartId
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t7d`
+    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t7d`;
+  const chartUrl = `${SITE_URL}${chartPath}`;
+
+  const html = await render(
+    SaturnWeeklyEmail({ locale: params.locale, chartUrl, unsubscribeUrl }),
+  );
+  const text = await render(
+    SaturnWeeklyEmail({ locale: params.locale, chartUrl, unsubscribeUrl }),
+    { plainText: true },
+  );
+
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject: SUBJECTS.lead_saturn_weekly[params.locale],
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    },
+    { idempotencyKey: `${params.leadId}:lead_saturn_weekly` },
+  );
+  if (result.error) {
+    throw new Error(
+      `Resend rejected lead_saturn_weekly for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
+    );
+  }
+
+  await recordSentLead(params.leadId, 'lead_saturn_weekly', result.data?.id ?? null);
+  return { sent: true };
+}
+
+// ---------------------------------------------------------------------------
+// sendLeadMiniReadingEmail — T+14d nurture drip, one-shot per lead
+// ---------------------------------------------------------------------------
+export async function sendLeadMiniReadingEmail(params: {
+  leadId: string;
+  email: string;
+  locale: 'en' | 'es';
+  chart: ChartResult | null;
+  chartId: string | null;
+}): Promise<{ sent: boolean; reason?: string }> {
+  const claim = await tryInsertOneShotLead(params.leadId, 'lead_mini_reading');
+  if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  const token = await signLeadUnsubscribeToken(params.leadId);
+  const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
+
+  const signs = pickKeySigns(params.chart);
+  const chartPath = params.chartId
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t14d`
+    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t14d`;
+  const chartUrl = `${SITE_URL}${chartPath}`;
+
+  const html = await render(
+    MiniReadingEmail({
+      locale: params.locale,
+      sunSign: signs.sunSign,
+      moonSign: signs.moonSign,
+      ascSign: signs.ascSign,
+      chartUrl,
+      unsubscribeUrl,
+    }),
+  );
+  const text = await render(
+    MiniReadingEmail({
+      locale: params.locale,
+      sunSign: signs.sunSign,
+      moonSign: signs.moonSign,
+      ascSign: signs.ascSign,
+      chartUrl,
+      unsubscribeUrl,
+    }),
+    { plainText: true },
+  );
+
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject: SUBJECTS.lead_mini_reading[params.locale],
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    },
+    { idempotencyKey: `${params.leadId}:lead_mini_reading` },
+  );
+  if (result.error) {
+    throw new Error(
+      `Resend rejected lead_mini_reading for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
+    );
+  }
+
+  await recordSentLead(params.leadId, 'lead_mini_reading', result.data?.id ?? null);
+  return { sent: true };
+}
+
+// ---------------------------------------------------------------------------
+// sendLeadSynastryTeaserEmail — T+21d nurture drip, one-shot per lead
+// ---------------------------------------------------------------------------
+export async function sendLeadSynastryTeaserEmail(params: {
+  leadId: string;
+  email: string;
+  locale: 'en' | 'es';
+  chart: ChartResult | null;
+  chartId: string | null;
+}): Promise<{ sent: boolean; reason?: string }> {
+  const claim = await tryInsertOneShotLead(params.leadId, 'lead_synastry_teaser');
+  if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  const token = await signLeadUnsubscribeToken(params.leadId);
+  const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
+
+  const synastryPath = `/${params.locale === 'es' ? 'es/' : ''}synastry?utm_source=lead-nurture&utm_campaign=t21d`;
+  const synastryUrl = `${SITE_URL}${synastryPath}`;
+
+  const html = await render(
+    SynastryTeaserEmail({ locale: params.locale, synastryUrl, unsubscribeUrl }),
+  );
+  const text = await render(
+    SynastryTeaserEmail({ locale: params.locale, synastryUrl, unsubscribeUrl }),
+    { plainText: true },
+  );
+
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject: SUBJECTS.lead_synastry_teaser[params.locale],
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    },
+    { idempotencyKey: `${params.leadId}:lead_synastry_teaser` },
+  );
+  if (result.error) {
+    throw new Error(
+      `Resend rejected lead_synastry_teaser for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
+    );
+  }
+
+  await recordSentLead(params.leadId, 'lead_synastry_teaser', result.data?.id ?? null);
   return { sent: true };
 }
 
