@@ -6,6 +6,7 @@ import {
   JsonLdScript,
   articleSchema,
   faqSchema,
+  definedTermSchema,
   breadcrumbSchema,
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
@@ -88,14 +89,56 @@ const FAQS = [
 
 export default async function WhySiderealPage() {
   const t = await getTranslations('whySidereal');
+  const locale = await getLocale();
   const pageUrl = `${SITE_URL}/why-sidereal`;
   const today = new Date().toISOString().split('T')[0];
 
   const faqLd = faqSchema(
-    FAQS.map(({ qKey, aKey }) => ({
-      question: t(qKey),
-      answer: t(aKey),
-    })),
+    locale === 'es'
+      ? [
+          {
+            question: '¿Qué es la astrología sideral?',
+            answer: 'La astrología sideral calcula las posiciones planetarias contra las constelaciones reales tal como aparecen hoy en el cielo, aplicando la corrección del ayanamsa Lahiri (~24° en 2026) para compensar la precesión axial de la Tierra.',
+          },
+          {
+            question: '¿Qué es el ayanamsa Lahiri?',
+            answer: 'El ayanamsa Lahiri es el punto de referencia sideral oficial definido por el Comité de Reforma del Calendario Indio en 1955. Estrevia lo utiliza para todos sus cálculos de carta.',
+          },
+          {
+            question: '¿Qué tan precisos son los cálculos de Estrevia?',
+            answer: 'Estrevia utiliza Swiss Ephemeris con el algoritmo Moshier, preciso a ±0.01°. Las casas usan el sistema Placidus.',
+          },
+          {
+            question: '¿Cuál es la diferencia entre astrología sideral y tropical?',
+            answer: 'La astrología tropical usa las estaciones (la trayectoria aparente del Sol) como marco de referencia; la sideral usa las constelaciones reales. Se diferencian en el valor actual del ayanamsa.',
+          },
+          {
+            question: '¿La astrología védica es lo mismo que la sideral?',
+            answer: 'La astrología védica (Jyotish) utiliza cálculos siderales como base matemática, pero añade doctrinas adicionales (nakshatras, dashas, yogas) sobre esa base.',
+          },
+        ]
+      : [
+          {
+            question: 'What is sidereal astrology?',
+            answer: 'Sidereal astrology calculates planetary positions against the actual constellations as they appear in the sky today, applying the Lahiri ayanamsa correction (~24° as of 2026) to account for Earth’s axial precession.',
+          },
+          {
+            question: 'What is the Lahiri ayanamsa?',
+            answer: 'The Lahiri ayanamsa is the official sidereal reference point defined by the Indian Calendar Reform Committee in 1955, used by Estrevia for all chart calculations.',
+          },
+          {
+            question: 'How accurate is Estrevia’s chart calculation?',
+            answer: 'Estrevia uses Swiss Ephemeris with the Moshier algorithm, accurate to ±0.01°. Houses use the Placidus system.',
+          },
+          {
+            question: 'What is the difference between sidereal and tropical astrology?',
+            answer: 'Tropical astrology uses the seasons (the Sun’s apparent path) as its reference frame; sidereal astrology uses the actual constellations. They differ by the current ayanamsa value.',
+          },
+          {
+            question: 'Is Vedic astrology the same as sidereal astrology?',
+            answer: 'Vedic (Jyotish) astrology uses sidereal calculations as its mathematical foundation but layers additional doctrines (nakshatras, dashas, yogas) on top.',
+          },
+        ],
   );
 
   const breadcrumbLd = breadcrumbSchema([
@@ -125,6 +168,33 @@ export default async function WhySiderealPage() {
       <JsonLdScript schema={articleLd} />
       <JsonLdScript schema={faqLd} />
       <JsonLdScript schema={breadcrumbLd} />
+      <JsonLdScript
+        schema={definedTermSchema({
+          name: 'Lahiri ayanamsa',
+          description: locale === 'es'
+            ? 'Punto de referencia sideral oficial definido por el Comité de Reforma del Calendario Indio en 1955; corrige la precesión de los equinoccios.'
+            : 'Official sidereal reference point defined by the Indian Calendar Reform Committee in 1955; corrects for equinoctial precession.',
+          inDefinedTermSet: 'https://en.wikipedia.org/wiki/Ayanamsa',
+        })}
+      />
+      <JsonLdScript
+        schema={definedTermSchema({
+          name: 'Sidereal astrology',
+          description: locale === 'es'
+            ? 'Sistema astrológico que mide las posiciones planetarias contra las constelaciones reales, no contra el zodíaco estacional tropical.'
+            : 'Astrological system measuring planetary positions against the actual constellations rather than the tropical seasonal zodiac.',
+          inDefinedTermSet: 'https://en.wikipedia.org/wiki/Sidereal_astrology',
+        })}
+      />
+      <JsonLdScript
+        schema={definedTermSchema({
+          name: 'Vedic astrology',
+          description: locale === 'es'
+            ? 'Tradición Jyotish sánscrita que utiliza cálculos siderales como base matemática y añade doctrinas como nakshatras, dashas y yogas.'
+            : 'Sanskrit Jyotish tradition using sidereal calculations as its mathematical foundation and layering nakshatras, dashas, and yogas on top.',
+          inDefinedTermSet: 'https://en.wikipedia.org/wiki/Hindu_astrology',
+        })}
+      />
 
       <div className="max-w-3xl mx-auto px-4 py-10 md:py-16">
 
