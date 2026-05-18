@@ -9,7 +9,10 @@ const mocks = vi.hoisted(() => {
     checkout: { sessions: { create: mockSessionsCreate } },
   }));
 
-  const mockRequireAuth = vi.fn();
+  const mockAuth = vi.fn();
+  const mockCookieGet = vi.fn(() => undefined);
+  const mockCookies = vi.fn(() => Promise.resolve({ get: mockCookieGet }));
+
   const mockComputeIsPremium = vi.fn().mockReturnValue(false);
   const mockGetRateLimiter = vi.fn(() => ({
     limit: vi.fn().mockResolvedValue({ success: true }),
@@ -24,7 +27,9 @@ const mocks = vi.hoisted(() => {
   return {
     mockSessionsCreate,
     mockGetStripe,
-    mockRequireAuth,
+    mockAuth,
+    mockCookieGet,
+    mockCookies,
     mockComputeIsPremium,
     mockGetRateLimiter,
     mockSelectLimit,
@@ -35,8 +40,12 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock('@/modules/auth/lib/helpers', () => ({
-  requireAuth: mocks.mockRequireAuth,
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: mocks.mockAuth,
+}));
+
+vi.mock('next/headers', () => ({
+  cookies: mocks.mockCookies,
 }));
 
 vi.mock('@/modules/auth/lib/premium', () => ({
@@ -52,15 +61,33 @@ vi.mock('@/shared/lib/db', () => ({
 }));
 
 vi.mock('@/shared/lib/schema', () => ({
-  users: { id: 'id', stripeCustomerId: 'stripe_customer_id', subscriptionTier: 'subscription_tier', subscriptionStatus: 'subscription_status', subscriptionExpiresAt: 'subscription_expires_at' },
+  users: {
+    id: 'id',
+    email: 'email',
+    stripeCustomerId: 'stripe_customer_id',
+    subscriptionTier: 'subscription_tier',
+    subscriptionStatus: 'subscription_status',
+    subscriptionExpiresAt: 'subscription_expires_at',
+  },
+  emailLeads: {
+    email: 'email',
+    anonymousId: 'anonymous_id',
+    createdAt: 'created_at',
+  },
 }));
 
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn((col: unknown, val: unknown) => ({ col, val })),
+  desc: vi.fn((col: unknown) => ({ col, dir: 'desc' })),
 }));
 
 vi.mock('@/shared/lib/rate-limit', () => ({
   getRateLimiter: mocks.mockGetRateLimiter,
+}));
+
+vi.mock('@/shared/lib/analytics', () => ({
+  trackServerEvent: vi.fn(),
+  AnalyticsEvent: { ANONYMOUS_CHECKOUT_STARTED: 'anonymous_checkout_started' },
 }));
 
 vi.mock('@sentry/nextjs', () => ({
@@ -90,7 +117,9 @@ beforeEach(() => {
   process.env.STRIPE_PRICE_ID_PRO_MONTHLY = 'price_pro_monthly_test';
   process.env.NEXT_PUBLIC_APP_URL = 'https://estrevia.app';
 
-  mocks.mockRequireAuth.mockResolvedValue({ userId: USER_ID, email: 'test@example.com' });
+  mocks.mockAuth.mockResolvedValue({ userId: USER_ID });
+  mocks.mockCookieGet.mockReturnValue(undefined);
+  mocks.mockCookies.mockResolvedValue({ get: mocks.mockCookieGet });
   mocks.mockGetRateLimiter.mockReturnValue({
     limit: vi.fn().mockResolvedValue({ success: true }),
   });
@@ -98,6 +127,7 @@ beforeEach(() => {
 
   // DB returns a free user row with no existing Stripe customer
   mocks.mockSelectLimit.mockResolvedValue([{
+    email: 'test@example.com',
     stripeCustomerId: null,
     subscriptionTier: 'free',
     subscriptionStatus: null,

@@ -2,23 +2,30 @@
  * POST /api/v1/stripe/checkout
  *
  * Creates a Stripe Checkout session for upgrading to Premium.
- * Auth required — the session is tied to the current user's email.
+ * Works in two modes:
  *
- * If the user already has a stripeCustomerId, it is passed to Checkout so that
- * Stripe reuses the existing customer record (prevents duplicates on retries).
+ *   AUTHENTICATED — existing behavior: ties session to current user's email,
+ *   reuses stripeCustomerId, short-circuits if already premium.
  *
- * Returns: { url: string } — the hosted Checkout URL to redirect the user to.
+ *   ANONYMOUS — new: when no Clerk session, looks up email from email_leads
+ *   by anonymous_id cookie (best-effort pre-fill). Stripe Checkout collects
+ *   email natively if no pre-fill available. Webhook materializes the Clerk
+ *   user on payment success.
+ *
+ * Returns: { url: string } — the hosted Checkout URL.
  */
 
 import { NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth } from '@/modules/auth/lib/helpers';
+import { auth } from '@clerk/nextjs/server';
+import { cookies } from 'next/headers';
 import { computeIsPremium } from '@/modules/auth/lib/premium';
 import { getDb } from '@/shared/lib/db';
-import { users } from '@/shared/lib/schema';
+import { users, emailLeads } from '@/shared/lib/schema';
 import { getStripe } from '@/shared/lib/stripe';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
+import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import type { ApiResponse } from '@/shared/types';
 
 const checkoutBodySchema = z.object({
@@ -37,24 +44,23 @@ interface CheckoutResponse {
 
 export async function POST(request: Request): Promise<NextResponse<ApiResponse<CheckoutResponse>>> {
   // ---------------------------------------------------------------------------
-  // 1. Auth
+  // 1. Resolve auth state (may be null for anonymous)
   // ---------------------------------------------------------------------------
-  let userId: string;
-  let email: string;
-  try {
-    const user = await requireAuth();
-    userId = user.userId;
-    email = user.email;
-  } catch (err) {
-    if (err instanceof Response) return err as never;
-    throw err;
-  }
+  const { userId } = await auth();
+  const isAuthenticated = userId !== null && userId !== undefined;
+
+  // For anonymous, key rate-limit by anonymous_id cookie; fall back to IP.
+  const cookieStore = await cookies();
+  const anonymousId = cookieStore.get('anonymous_id')?.value ?? null;
+  const rateLimitKey = isAuthenticated
+    ? userId
+    : (anonymousId ?? request.headers.get('x-forwarded-for') ?? 'unknown');
 
   // ---------------------------------------------------------------------------
-  // 2. Rate limiting (keyed by userId to prevent session spam)
+  // 2. Rate limiting
   // ---------------------------------------------------------------------------
   const limiter = getRateLimiter('stripe/checkout');
-  const { success: rateLimitOk } = await limiter.limit(userId);
+  const { success: rateLimitOk } = await limiter.limit(rateLimitKey);
   if (!rateLimitOk) {
     return NextResponse.json(
       { success: false, data: null, error: 'RATE_LIMITED' },
@@ -63,7 +69,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   }
 
   // ---------------------------------------------------------------------------
-  // 3. Parse plan + UTM attribution fields from request body
+  // 3. Parse plan + UTM
   // ---------------------------------------------------------------------------
   let plan: 'pro_monthly' | 'pro_annual' = 'pro_annual';
   let utm: Record<string, string> = {};
@@ -71,25 +77,22 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
     const body = await request.json();
     const parsed = checkoutBodySchema.parse(body);
     plan = parsed.plan;
-    // Strip plan and undefined values — Stripe rejects undefined metadata values
     utm = Object.fromEntries(
       Object.entries(parsed).filter(
         (entry): entry is [string, string] => entry[0] !== 'plan' && entry[1] !== undefined,
       ),
     );
   } catch {
-    // Default to pro_annual with no UTM if body is absent or invalid
     plan = 'pro_annual';
   }
 
   // ---------------------------------------------------------------------------
-  // 4. Resolve price ID from plan
+  // 4. Resolve price ID
   // ---------------------------------------------------------------------------
   const priceIdMap: Record<string, string | undefined> = {
     pro_monthly: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
     pro_annual: process.env.STRIPE_PRICE_ID_PRO_ANNUAL,
   };
-  // Fall back to old STRIPE_PRICE_ID for backward compat
   const priceId = priceIdMap[plan] ?? process.env.STRIPE_PRICE_ID;
   if (!priceId) {
     console.error('[stripe/checkout] No price ID configured for plan', { plan });
@@ -102,100 +105,156 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estrevia.app';
 
   // ---------------------------------------------------------------------------
-  // 5. Look up existing Stripe customer + subscription state.
-  //
-  // Two purposes:
-  //   a) idempotency guard — reuse stripeCustomerId so Stripe doesn't create
-  //      a duplicate customer on retries.
-  //   b) already-subscribed short-circuit — if the caller is already premium,
-  //      creating a new Checkout Session would produce a duplicate subscription
-  //      (and charge them again, since returning customers skip the trial).
-  //      Instead, bounce them to /settings where Customer Portal manages billing.
+  // 5a. AUTHENTICATED branch (preserves existing behavior)
   // ---------------------------------------------------------------------------
-  let stripeCustomerId: string | null = null;
-  let isAlreadyPremium = false;
-  try {
-    const db = getDb();
-    const rows = await db
-      .select({
-        stripeCustomerId: users.stripeCustomerId,
-        subscriptionTier: users.subscriptionTier,
-        subscriptionStatus: users.subscriptionStatus,
-        subscriptionExpiresAt: users.subscriptionExpiresAt,
-      })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+  if (isAuthenticated) {
+    let stripeCustomerId: string | null = null;
+    let userEmail = '';
+    let isAlreadyPremium = false;
+    try {
+      const db = getDb();
+      const rows = await db
+        .select({
+          email: users.email,
+          stripeCustomerId: users.stripeCustomerId,
+          subscriptionTier: users.subscriptionTier,
+          subscriptionStatus: users.subscriptionStatus,
+          subscriptionExpiresAt: users.subscriptionExpiresAt,
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
 
-    const row = rows[0];
-    stripeCustomerId = row?.stripeCustomerId ?? null;
-    if (row) {
-      isAlreadyPremium = computeIsPremium(
-        row.subscriptionTier,
-        row.subscriptionStatus,
-        row.subscriptionExpiresAt,
+      const row = rows[0];
+      stripeCustomerId = row?.stripeCustomerId ?? null;
+      userEmail = row?.email ?? '';
+      if (row) {
+        isAlreadyPremium = computeIsPremium(
+          row.subscriptionTier,
+          row.subscriptionStatus,
+          row.subscriptionExpiresAt,
+        );
+      }
+    } catch (err) {
+      console.error('[stripe/checkout] db lookup failed', { userId, err });
+      return NextResponse.json(
+        { success: false, data: null, error: 'DATABASE_ERROR' },
+        { status: 500 },
       );
     }
-  } catch (err) {
-    console.error('[stripe/checkout] db lookup failed', { userId, err });
-    return NextResponse.json(
-      { success: false, data: null, error: 'DATABASE_ERROR' },
-      { status: 500 },
-    );
-  }
 
-  if (isAlreadyPremium) {
-    // Paying user clicked the trial CTA (usually because the paywall wrongly
-    // flashed for them). Redirect to /settings so the Customer Portal can
-    // handle any plan changes; never create a duplicate subscription.
-    return NextResponse.json(
-      {
-        success: true,
-        data: { url: `${appUrl}/settings?already_subscribed=1` },
-        error: null,
-      },
-      { status: 200 },
-    );
-  }
+    if (isAlreadyPremium) {
+      return NextResponse.json(
+        { success: true, data: { url: `${appUrl}/settings?already_subscribed=1` }, error: null },
+        { status: 200 },
+      );
+    }
 
-  // ---------------------------------------------------------------------------
-  // 6. Create Stripe Checkout session
-  // ---------------------------------------------------------------------------
-  try {
-    const stripe = getStripe();
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      line_items: [{ price: priceId, quantity: 1 }],
-      // Reuse existing customer if we have one, otherwise let Stripe create one
-      ...(stripeCustomerId
-        ? { customer: stripeCustomerId }
-        : { customer_email: email }),
-      // Attach Clerk userId to the Stripe customer for webhook reconciliation
-      client_reference_id: userId,
-      metadata: { clerkUserId: userId, ...utm },
-      // 3-day free trial only for first-time subscribers (no stripeCustomerId yet).
-      // Returning subscribers skip the trial to prevent revenue leak.
-      // UTM fields duplicated here so the subscription itself carries attribution
-      // data (stripe-attribution.ts reads from subscription.metadata).
-      subscription_data: {
-        ...(stripeCustomerId ? {} : { trial_period_days: 3 }),
+    try {
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        line_items: [{ price: priceId, quantity: 1 }],
+        ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: userEmail }),
+        client_reference_id: userId,
         metadata: { clerkUserId: userId, ...utm },
-      },
-      success_url: `${appUrl}/settings?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/pricing`,
-      // Allow user to change their email at checkout if needed
-      allow_promotion_codes: true,
-      // Collect billing address for tax purposes
-      billing_address_collection: 'auto',
-    });
+        subscription_data: {
+          ...(stripeCustomerId ? {} : { trial_period_days: 3 }),
+          metadata: { clerkUserId: userId, ...utm },
+        },
+        success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}/pricing`,
+        allow_promotion_codes: true,
+        billing_address_collection: 'auto',
+      });
 
-    if (!session.url) {
-      console.error('[stripe/checkout] session has no URL', { sessionId: session.id });
+      if (!session.url) {
+        console.error('[stripe/checkout] session has no URL', { sessionId: session.id });
+        return NextResponse.json(
+          { success: false, data: null, error: 'INTERNAL_ERROR' },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json(
+        { success: true, data: { url: session.url }, error: null },
+        { status: 200 },
+      );
+    } catch (err) {
+      try {
+        const { captureException } = await import('@sentry/nextjs');
+        captureException(err, { tags: { checkout: 'authenticated', stage: 'session-create' } });
+      } catch {
+        console.error('[stripe/checkout] stripe error', { userId, err });
+      }
       return NextResponse.json(
         { success: false, data: null, error: 'INTERNAL_ERROR' },
         { status: 500 },
       );
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 5b. ANONYMOUS branch
+  // ---------------------------------------------------------------------------
+  let prefilledEmail: string | undefined = undefined;
+  if (anonymousId) {
+    try {
+      const db = getDb();
+      const rows = await db
+        .select({ email: emailLeads.email })
+        .from(emailLeads)
+        .where(eq(emailLeads.anonymousId, anonymousId))
+        .orderBy(desc(emailLeads.createdAt))
+        .limit(1);
+      if (rows.length > 0) prefilledEmail = rows[0].email;
+    } catch (err) {
+      console.warn(
+        '[stripe/checkout] anonymous email_lead lookup failed (non-fatal)',
+        err instanceof Error ? err.message : 'unknown',
+      );
+    }
+  }
+
+  try {
+    const stripe = getStripe();
+    const metadata: Record<string, string> = { ...utm };
+    if (anonymousId) metadata.anonymous_id = anonymousId;
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      ...(prefilledEmail ? { customer_email: prefilledEmail } : {}),
+      ...(anonymousId ? { client_reference_id: anonymousId } : {}),
+      metadata,
+      subscription_data: {
+        trial_period_days: 3,
+        metadata,
+      },
+      success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/pricing`,
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
+    });
+
+    if (!session.url) {
+      console.error('[stripe/checkout] session has no URL (anonymous)', { sessionId: session.id });
+      return NextResponse.json(
+        { success: false, data: null, error: 'INTERNAL_ERROR' },
+        { status: 500 },
+      );
+    }
+
+    // Best-effort analytics fire (server-side PostHog). Non-blocking.
+    try {
+      trackServerEvent(anonymousId ?? `cs:${session.id}`, AnalyticsEvent.ANONYMOUS_CHECKOUT_STARTED, {
+        email_known: Boolean(prefilledEmail),
+        anonymous_id: anonymousId,
+        plan,
+        ...utm,
+      });
+    } catch {
+      // PostHog failures must never break the checkout response.
     }
 
     return NextResponse.json(
@@ -205,11 +264,10 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   } catch (err) {
     try {
       const { captureException } = await import('@sentry/nextjs');
-      captureException(err);
+      captureException(err, { tags: { checkout: 'anonymous', stage: 'session-create' } });
     } catch {
-      console.error('[stripe/checkout] stripe error', { userId, err });
+      console.error('[stripe/checkout] anonymous stripe error', { anonymousId, err });
     }
-
     return NextResponse.json(
       { success: false, data: null, error: 'INTERNAL_ERROR' },
       { status: 500 },
