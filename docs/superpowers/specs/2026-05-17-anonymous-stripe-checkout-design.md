@@ -38,9 +38,11 @@ Today the funnel collapses at the sign-up gate. We need to flip the order: pay f
 | Post-payment auth UX | Auto-create Clerk user + auto-sign-in via short-lived sign-in ticket | Zero clicks between Stripe success and signed-in app state — lowest possible friction. |
 | Email source for users without `email_lead` | Stripe Checkout collects natively | Stripe UI is trusted, mobile-optimised, integrates with Apple Pay / Google Pay. No friction added on our side. |
 | Endpoint architecture | One endpoint with conditional `auth()` | Single Stripe-session-create surface; client (PaywallModal) never branches; UTM/Idempotency/customer-reuse logic stays in one place. |
+| Middleware scope for `/api/v1/stripe/*` | Replace broad `'/api/v1/stripe(.*)'` with specific `'/api/v1/stripe/portal(.*)'` | Current middleware returns 401 to anonymous before our route's `auth()` even runs; narrowing the protected matcher unblocks anonymous checkout creation while keeping Customer Portal auth-required. |
 | Clerk user creation timing | Webhook-side (post-payment) | Avoids ghost Clerk accounts for abandoned checkouts; clean idempotency via Stripe event retries. |
 | Sign-in ticket transport | Stored in Stripe session `metadata.signInTicket` (updated by webhook) | Settings page can read it server-side via `stripe.checkout.sessions.retrieve`; no separate DB table; survives webhook/success-page race. |
-| Settings page ticket wait strategy | Server-side poll up to 8s, then client-side polling fallback to 30s | Fluid Compute default 300s budget easily covers 8s wait; client fallback handles slow webhook delivery; degraded UX after 30s falls back to "check email" path. |
+| Post-payment landing route | New public `/[locale]/checkout/complete` page (outside `(app)` group) — NOT `/settings` | `/settings(.*)` is in the protected middleware matcher; anonymous users get redirected to `/sign-in` before our server-side ticket-wait can run. A sibling-of-checkout route is naturally public, then redirects to `/settings` post-consume. |
+| Ticket wait strategy on `/checkout/complete` | Server-side poll up to 8s, then client-side polling fallback to 30s | Fluid Compute default 300s budget easily covers 8s wait; client fallback handles slow webhook delivery; degraded UX after 30s falls back to "check email" path. |
 | Anonymous rate-limit key | `anonymous_id` cookie first, fallback IP | Existing Upstash limiter; protects against DDoS without blocking legitimate retries. |
 | `email_leads.converted_to_user_id` linkage | UPDATE via `(anonymous_id = ? OR email = ?)` in webhook | Captures both linkage paths; covers case where user changes email at Stripe Checkout. |
 
@@ -63,12 +65,12 @@ checkout route:
        client_reference_id = anonymous_id,
        metadata = { anonymous_id, ...utm },
        trial_period_days: 3,
-       success_url = /settings?session_id={CHECKOUT_SESSION_ID}
+       success_url = /checkout/complete?session_id={CHECKOUT_SESSION_ID}
    - return { url }
    ↓
 [user redirects to Stripe Checkout, pays]
    ↓
-[Stripe redirects to /settings?session_id=cs_xxx (parallel to webhook)]
+[Stripe redirects to /checkout/complete?session_id=cs_xxx (parallel to webhook)]
 [Stripe sends webhook checkout.session.completed]
    ↓
 Webhook (async):
@@ -142,7 +144,7 @@ T=0.1   checkout route:
 T=0.3   PaywallModal: window.location.href = session.url
 T=0.5   user lands on Stripe Checkout
 T=...   user enters card / Apple Pay / Google Pay → pays
-T=N     Stripe redirects to /settings?session_id=cs_xxx
+T=N     Stripe redirects to /checkout/complete?session_id=cs_xxx
         Stripe POSTs webhook (parallel, T=N+0.1 to N+3s)
 
 WEBHOOK (async, may arrive before/after user lands on /settings)
@@ -220,15 +222,16 @@ T=N+2   Clerk processes ticket → session cookie set → redirects back to /set
 | 1 | `src/app/api/v1/stripe/checkout/route.ts` | `requireAuth()` → `auth()`. Anonymous branch: cookie read, `email_leads` lookup, Stripe session without `clerkUserId`. Preserves all signed-in behavior. | +80 |
 | 2 | `src/app/api/webhooks/stripe/route.ts` | In `checkout.session.completed`: handle null `clerkUserId` via `findOrCreateClerkUser(email)` → `createSignInToken` → `sessions.update`. Wrap in try/catch with dedup-row rollback. Update `email_leads.converted_to_user_id`. | +60 |
 | 3 | `src/shared/components/PaywallModal.tsx` | Remove the `isAuthFailure` branch + `/sign-up?redirect_url=…` redirect. Endpoint always returns Stripe URL. | −30 |
-| 4 | `src/app/[locale]/settings/page.tsx` | Add server-side `?session_id=…` handling: when `auth()` is null and session_id is present, server-poll for ticket up to 8s; redirect to `/sign-in?__clerk_ticket=…` if found, else render `<ClientCheckoutPolling/>`. | +40 |
-| 5 | `src/app/api/v1/checkout/session-status/route.ts` | **NEW.** `GET ?id=cs_xxx` → `{ ready: bool, ticket?: string }`. Reads Stripe session metadata. Rate-limited. | +50 |
-| 6 | `src/shared/components/ClientCheckoutPolling.tsx` | **NEW.** Client component polling `session-status` every 2s, max 30s, with progress + fallback copy + analytics event. | +80 |
+| 4 | `src/app/[locale]/checkout/complete/page.tsx` + `CheckoutCompleteClient.tsx` | **NEW.** Public server-component route (outside `(app)` group). On `?session_id=…`: server-poll for ticket up to 8s; redirect to `/sign-in?__clerk_ticket=…&redirect_url=/settings` if found, else render `<CheckoutCompleteClient/>` (polling fallback). | +90 (split across page + client) |
+| 5 | `src/app/api/v1/checkout/session-status/route.ts` | **NEW.** `GET ?id=cs_xxx` → `{ ready: bool, ticket?: string }`. Reads Stripe session metadata. Rate-limited. Public (no auth). | +50 |
+| 6 | `src/middleware.ts` | Replace protected matcher entry `'/api/v1/stripe(.*)'` with `'/api/v1/stripe/portal(.*)'` in BOTH `createRouteMatcher` and `config.matcher`. Keeps `/api/v1/stripe/portal` auth-required, unblocks `/api/v1/stripe/checkout` for anonymous POST. | ~4 lines |
 | 7 | `src/shared/lib/analytics.ts` | Add `ANONYMOUS_CHECKOUT_STARTED`, `ANONYMOUS_USER_MATERIALIZED`, `CHECKOUT_TICKET_READY`, `CHECKOUT_TICKET_TIMEOUT` event constants. Keep `CHECKOUT_AUTH_REDIRECT` (used for signed-in session-expired edge case). | +6 |
-| 8 | `src/messages/en.json` + `src/messages/es.json` | New copy: `settings.finalizing.title`, `.description`, `.checkEmail`, `.contactSupport`. | +8 keys × 2 langs |
+| 8 | `src/messages/en.json` + `src/messages/es.json` | New copy under `checkout.complete.*`: `title`, `description`, `checkEmail`, `contactSupport`, `redirecting`. | +5 keys × 2 langs |
 
 ### Not changed
 
 - `src/app/[locale]/checkout/start/CheckoutStartClient.tsx` — kept as-is; serves signed-in users coming from `/pricing` page.
+- `src/app/[locale]/(app)/settings/page.tsx` — no changes; the ticket-consumption + sign-in handshake happens at `/checkout/complete`, after which Clerk-authed users land on `/settings` via standard redirect.
 - DB schema — no migration. `users.id` stays Clerk user ID; linkage data lives in Stripe metadata + existing columns.
 - Webhook handlers for `customer.subscription.updated/deleted/trial_will_end/invoice.*` — unchanged.
 
@@ -240,8 +243,9 @@ T=N+2   Clerk processes ticket → session cookie set → redirects back to /set
 | `src/app/api/webhooks/stripe/__tests__/anonymous-completion.test.ts` | `checkout.session.completed` without `clerkUserId`: existing Clerk user found → reuse; not found → createUser + ticket; Stripe `sessions.update` receives `signInTicket`; `email_leads.converted_to_user_id` set; Clerk failure → dedup row removed + 500; createUser race → retry getUserList recovers. |
 | `src/app/api/v1/checkout/session-status/__tests__/route.test.ts` | Ready=true with ticket; ready=false without; invalid sessionId → 404. |
 | `src/shared/components/__tests__/PaywallModal.trigger.test.tsx` | UPDATE: remove `expect(window.location.href).toContain('/sign-up')`; add `expect(window.location.href).toBe(stripeUrl)` for both anonymous and signed-in cases. |
-| `src/shared/components/__tests__/ClientCheckoutPolling.test.tsx` | **NEW.** Poll fires every 2s; redirects on `ready=true`; fires timeout event after 30s. |
-| `src/app/[locale]/settings/__tests__/anonymous-arrival.test.tsx` | **NEW.** Server component with `auth()=null + session_id` → redirects with ticket if available; renders `<ClientCheckoutPolling/>` if not. |
+| `src/app/[locale]/checkout/complete/__tests__/CheckoutCompleteClient.test.tsx` | **NEW.** Client polling fires every 2s; redirects on `ready=true`; fires timeout event after 30s. |
+| `src/app/[locale]/checkout/complete/__tests__/page.test.tsx` | **NEW.** Server component with `session_id` → redirects with ticket if available within 8s; renders `<CheckoutCompleteClient/>` if not. |
+| `src/middleware.test.ts` (or co-located) | UPDATE: assert `/api/v1/stripe/checkout` is NOT in protected matcher, `/api/v1/stripe/portal` IS. |
 
 ## Error Handling
 
@@ -255,9 +259,9 @@ T=N+2   Clerk processes ticket → session cookie set → redirects back to /set
 | Webhook | Clerk createUser race ("identifier exists") | retry `getUserList`, use found userId | invisible |
 | Webhook | `stripe.checkout.sessions.update` fails | log + Sentry `{stage:'ticket-save'}`, **continue** (user can poll via `session-status`) | invisible if recovered; fallback copy otherwise |
 | Webhook | DB upsert fails | return 500 → Stripe retries (idempotent) | invisible |
-| Settings page | Invalid sessionId / 404 from Stripe | redirect → `/pricing?error=session_not_found` | "Session not found. Please try again." |
-| Settings page | 30s polling timeout (ticket never appears) | fire `CHECKOUT_TICKET_TIMEOUT` event | "Account is being set up. Check your email for sign-in link." |
-| Settings page | Stripe session retrieve fails | redirect → `/pricing?error=session_check_failed` | "Couldn't verify payment. Check email for confirmation." |
+| /checkout/complete | Invalid sessionId / 404 from Stripe | redirect → `/pricing?error=session_not_found` | "Session not found. Please try again." |
+| /checkout/complete | 30s polling timeout (ticket never appears) | fire `CHECKOUT_TICKET_TIMEOUT` event | "Account is being set up. Check your email for sign-in link." |
+| /checkout/complete | Stripe session retrieve fails | redirect → `/pricing?error=session_check_failed` | "Couldn't verify payment. Check email for confirmation." |
 | Sign-in page | Ticket expired / consumed | Clerk native error UI | "Link expired" + manual sign-in fallback |
 
 ### Critical path protection — dedup-row bug mitigation
