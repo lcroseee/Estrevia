@@ -32,11 +32,12 @@
  */
 
 import { headers } from 'next/headers';
-import { eq, sql } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 import type Stripe from 'stripe';
+import { clerkClient } from '@clerk/nextjs/server';
 import { getStripe } from '@/shared/lib/stripe';
 import { getDb } from '@/shared/lib/db';
-import { users, processedStripeEvents } from '@/shared/lib/schema';
+import { users, processedStripeEvents, emailLeads } from '@/shared/lib/schema';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 // ---------------------------------------------------------------------------
@@ -166,12 +167,116 @@ export async function POST(request: Request): Promise<Response> {
         // Only handle subscription checkouts
         if (session.mode !== 'subscription') break;
 
-        const clerkUserId = extractClerkUserId(session);
+        let clerkUserId = extractClerkUserId(session);
+
+        // ANONYMOUS branch: materialize Clerk user + sign-in ticket
         if (!clerkUserId) {
-          console.warn('[stripe-webhook] checkout.session.completed: no clerkUserId in metadata', {
-            sessionId: session.id,
-          });
-          break;
+          const email = session.customer_details?.email;
+          if (!email) {
+            console.warn('[stripe-webhook] anonymous checkout.session.completed: no email on session', {
+              sessionId: session.id,
+            });
+            break;
+          }
+
+          try {
+            const clerk = await clerkClient();
+
+            // Find-or-create with race recovery
+            const existing = await clerk.users.getUserList({ emailAddress: [email] });
+            if (existing.totalCount > 0) {
+              clerkUserId = existing.data[0].id;
+            } else {
+              try {
+                const newUser = await clerk.users.createUser({
+                  emailAddress: [email],
+                  skipPasswordChecks: true,
+                  skipPasswordRequirement: true,
+                  externalId: `stripe:${session.id}`,
+                });
+                clerkUserId = newUser.id;
+              } catch (createErr) {
+                // Race: concurrent webhook retry created the user. Re-query.
+                const retry = await clerk.users.getUserList({ emailAddress: [email] });
+                if (retry.totalCount > 0) {
+                  clerkUserId = retry.data[0].id;
+                } else {
+                  throw createErr;
+                }
+              }
+            }
+
+            // Create single-use sign-in ticket and write back to Stripe metadata
+            const ticket = await clerk.signInTokens.createSignInToken({
+              userId: clerkUserId,
+              expiresInSeconds: 600,
+            });
+            const existingMetadata = session.metadata ?? {};
+            await getStripe().checkout.sessions.update(session.id, {
+              metadata: { ...existingMetadata, signInTicket: ticket.token },
+            });
+
+            // Link the email_lead(s) to the new user — both anonymous_id and email paths
+            const anonymousIdMeta = (session.metadata?.anonymous_id ?? null) as string | null;
+            try {
+              if (anonymousIdMeta) {
+                await db
+                  .update(emailLeads)
+                  .set({ convertedToUserId: clerkUserId, convertedAt: new Date() })
+                  .where(
+                    or(
+                      eq(emailLeads.anonymousId, anonymousIdMeta),
+                      eq(emailLeads.email, email),
+                    ),
+                  );
+              } else {
+                await db
+                  .update(emailLeads)
+                  .set({ convertedToUserId: clerkUserId, convertedAt: new Date() })
+                  .where(eq(emailLeads.email, email));
+              }
+            } catch (linkErr) {
+              console.warn(
+                '[stripe-webhook] email_leads link failed (non-fatal)',
+                linkErr instanceof Error ? linkErr.message : 'unknown',
+              );
+            }
+
+            // Observability — non-blocking
+            try {
+              trackServerEvent(clerkUserId, AnalyticsEvent.ANONYMOUS_USER_MATERIALIZED, {
+                created_new: existing.totalCount === 0,
+                session_id: session.id,
+                anonymous_id: anonymousIdMeta,
+              });
+              trackServerEvent(clerkUserId, AnalyticsEvent.CHECKOUT_TICKET_READY, {
+                session_id: session.id,
+              });
+            } catch {
+              // PostHog must not break the webhook.
+            }
+          } catch (clerkErr) {
+            // Roll back dedup row so Stripe retries
+            try {
+              await db
+                .delete(processedStripeEvents)
+                .where(eq(processedStripeEvents.eventId, event.id));
+            } catch (delErr) {
+              console.error(
+                '[stripe-webhook] dedup rollback failed',
+                delErr instanceof Error ? delErr.message : 'unknown',
+              );
+            }
+            try {
+              const { captureException } = await import('@sentry/nextjs');
+              captureException(clerkErr, {
+                tags: { webhook: 'stripe', checkout: 'anonymous', stage: 'webhook-materialize' },
+              });
+            } catch {
+              // Sentry best-effort
+            }
+            throw clerkErr;
+          }
         }
 
         const stripeCustomerId =
