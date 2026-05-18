@@ -11,7 +11,13 @@
  *   2. T+24h — `nurture_step=1 AND nurture_next_at <= NOW()` → send the
  *      Moon/Asc email, advance to step=2 with nextAt=NOW()+48h.
  *   3. T+72h — `nurture_step=2 AND nurture_next_at <= NOW()` → send the
- *      paywall-teaser email, advance to step=3 with nextAt=null.
+ *      paywall-teaser email, advance to step=3 with nextAt=NOW()+96h.
+ *   4. T+7d — `nurture_step=3 AND nurture_next_at <= NOW()` → send the
+ *      Saturn-weekly email, advance to step=4 with nextAt=NOW()+168h.
+ *   5. T+14d — `nurture_step=4 AND nurture_next_at <= NOW()` → send the
+ *      mini-reading email, advance to step=5 with nextAt=NOW()+168h.
+ *   6. T+21d — `nurture_step=5 AND nurture_next_at <= NOW()` → send the
+ *      synastry-teaser email, advance to step=6 with nextAt=null (final).
  *
  * Filters out leads that have converted, unsubscribed, or marked as
  * undeliverable. Idempotency is enforced inside the send functions via
@@ -40,6 +46,9 @@ import {
   sendLeadChartEmail,
   sendLeadMoonAscEmail,
   sendLeadPaywallTeaserEmail,
+  sendLeadSaturnWeeklyEmail,
+  sendLeadMiniReadingEmail,
+  sendLeadSynastryTeaserEmail,
 } from '@/shared/lib/email';
 
 export const dynamic = 'force-dynamic';
@@ -49,6 +58,8 @@ export const maxDuration = 300;
 const STUCK_T0_GRACE_MS = 15 * 60 * 1000;
 const T24_DELAY_MS = 24 * 60 * 60 * 1000;
 const T48_AFTER_T24_MS = 48 * 60 * 60 * 1000; // step1→step2: +48h (total T+72h)
+const T96_AFTER_T72_MS = 96 * 60 * 60 * 1000; // step2→step3: +96h (total T+7d ≈ 168h)
+const T168_DELAY_MS = 168 * 60 * 60 * 1000;   // step3→step4 and step4→step5: +168h between weekly sends
 const BATCH_LIMIT = 100;
 const RESEND_PACING_MS = 1100; // 1.1s between sends → under 1 req/s safety
                                 // (Resend free tier: 10 req/s; we go conservative)
@@ -91,7 +102,7 @@ export async function GET(request: Request) {
       .from(emailLeads)
       .where(
         and(
-          lt(emailLeads.nurtureStep, 3),
+          lt(emailLeads.nurtureStep, 6),
           isNull(emailLeads.convertedToUserId),
           isNull(emailLeads.unsubscribedAt),
           eq(emailLeads.emailUndeliverable, false),
@@ -151,6 +162,36 @@ export async function GET(request: Request) {
             chartId: lead.chartId,
           });
           nextStep = 3;
+          nextAt = new Date(Date.now() + T96_AFTER_T72_MS);
+        } else if (lead.nurtureStep === 3) {
+          sendResult = await sendLeadSaturnWeeklyEmail({
+            leadId: lead.id,
+            email: lead.email,
+            locale: lead.locale,
+            chart,
+            chartId: lead.chartId,
+          });
+          nextStep = 4;
+          nextAt = new Date(Date.now() + T168_DELAY_MS);
+        } else if (lead.nurtureStep === 4) {
+          sendResult = await sendLeadMiniReadingEmail({
+            leadId: lead.id,
+            email: lead.email,
+            locale: lead.locale,
+            chart,
+            chartId: lead.chartId,
+          });
+          nextStep = 5;
+          nextAt = new Date(Date.now() + T168_DELAY_MS);
+        } else if (lead.nurtureStep === 5) {
+          sendResult = await sendLeadSynastryTeaserEmail({
+            leadId: lead.id,
+            email: lead.email,
+            locale: lead.locale,
+            chart,
+            chartId: lead.chartId,
+          });
+          nextStep = 6;
           nextAt = null;
         } else {
           skipped++;
