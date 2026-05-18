@@ -81,9 +81,9 @@ export default async function PricingPage() {
   });
 
   const trustItems = [
-    t('trustNoContracts'),
+    t('trustLahiri'),
+    t('trustAstrologers'),
     t('trustCancel'),
-    t('trustSecure'),
   ];
 
   return (
@@ -126,6 +126,39 @@ export default async function PricingPage() {
 
           {/* Pricing cards with monthly/annual toggle */}
           <PricingToggle />
+
+          {/* 14-day money-back guarantee block */}
+          <section
+            className="mt-10 mx-auto max-w-2xl rounded-xl border border-[#FFD700]/15 px-6 py-5 text-center"
+            style={{ background: 'rgba(255,215,0,0.04)' }}
+            aria-labelledby="guarantee-heading"
+          >
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                width="20"
+                height="20"
+                style={{ color: 'rgba(255,215,0,0.7)' }}
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h2
+                id="guarantee-heading"
+                className="text-base font-light text-white/90"
+                style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
+              >
+                {t('guaranteeHeading')}
+              </h2>
+            </div>
+            <p className="text-sm text-white/65 leading-relaxed">
+              {t('guaranteeSubcopy')}
+            </p>
+          </section>
 
           {/* Trust signals */}
           <div className="mt-12 text-center">
