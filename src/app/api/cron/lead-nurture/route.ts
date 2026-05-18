@@ -85,9 +85,9 @@ export async function GET(request: Request) {
     // -------------------------------------------------------------------------
     // 2. Select due candidates (cap at BATCH_LIMIT).
     //    Filters: not yet converted, not unsubscribed, not undeliverable,
-    //    step < 3 (final step), AND one of:
+    //    step < 6 (final step is 6 after T+21d synastry teaser), AND one of:
     //      - stuck T+0 (step=0, no nextAt, created >15min ago)
-    //      - step1/step2 with nextAt <= NOW()
+    //      - steps 1..5 with nextAt <= NOW()
     // -------------------------------------------------------------------------
     const candidates = await db
       .select({
@@ -113,7 +113,7 @@ export async function GET(request: Request) {
               isNull(emailLeads.nurtureNextAt),
               lt(emailLeads.createdAt, stuckCutoff),
             ),
-            // step1→2 (T+24h) and step2→3 (T+72h)
+            // steps 1..5 with due nextAt (T+24h, T+72h, T+7d, T+14d, T+21d)
             sql`${emailLeads.nurtureNextAt} IS NOT NULL AND ${emailLeads.nurtureNextAt} <= NOW()`,
           ),
         ),
