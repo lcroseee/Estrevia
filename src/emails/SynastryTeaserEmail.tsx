@@ -13,18 +13,18 @@ const STRINGS = {
     preview: 'Compare your chart with someone you love — free synastry reading.',
     heading: 'Want to see your compatibility?',
     body1:
-      "We've sent you your sidereal chart, your Moon and Ascendant, a paywall teaser, and a weekly Saturn note. Here's one more: synastry — the chart comparison between two people.",
+      "Synastry is what we have not yet shown you — the chart comparison between two people. It's the oldest use of astrology, the one you actually do with friends: comparing where your Mars sits next to theirs, where your Moons echo or argue.",
     body2:
-      "Add a partner, friend, or family member's birth data and Estrevia will calculate your synastry reading free. No card required, no nudge: just curiosity.",
+      "Add a partner, friend, or family member's birth data and Estrevia will calculate the synastry free. No card, no nudge: just one more pattern to look at.",
     cta: 'Open synastry',
   },
   es: {
     preview: 'Compara tu carta con alguien que amas — lectura de sinastría gratis.',
     heading: '¿Quieres ver tu compatibilidad?',
     body1:
-      'Te hemos enviado tu carta sideral, tu Luna y Ascendente, un teaser del paywall y una nota semanal sobre Saturno. Aquí hay una más: la sinastría — la comparación entre dos cartas.',
+      'La sinastría es lo que aún no te hemos mostrado — la comparación entre dos cartas. Es el uso más antiguo de la astrología, el que de hecho haces con tus amistades: ver dónde tu Marte queda junto al suyo, dónde tus Lunas se hacen eco o discuten.',
     body2:
-      'Agrega los datos de nacimiento de una pareja, amistad o familiar y Estrevia calculará tu lectura de sinastría gratis. Sin tarjeta, sin presión: pura curiosidad.',
+      'Agrega los datos de nacimiento de una pareja, amistad o familiar y Estrevia calculará la sinastría gratis. Sin tarjeta, sin presión: solo un patrón más para observar.',
     cta: 'Abrir sinastría',
   },
 };
