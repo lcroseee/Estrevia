@@ -1,0 +1,2 @@
+DROP INDEX "email_leads_nurture_due_idx";--> statement-breakpoint
+CREATE INDEX "email_leads_nurture_due_idx" ON "email_leads" USING btree ("nurture_next_at") WHERE nurture_step < 6 AND converted_to_user_id IS NULL AND unsubscribed_at IS NULL AND email_undeliverable = false;
