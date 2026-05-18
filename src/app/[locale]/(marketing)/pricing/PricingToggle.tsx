@@ -87,9 +87,17 @@ export function PricingToggle() {
           </span>
         </button>
       </div>
-      <p className="text-xs text-white/60 text-center mb-12">
+      <p className="text-xs text-white/60 text-center mb-3">
         {billing === 'monthly' ? t('monthlyPrice') + t('monthlyLabel') : t('annualPrice') + t('annualLabel') + ' · ' + t('annualPerMonth')}
       </p>
+      {billing === 'annual' && (
+        <p className="text-sm text-[#FFD700]/80 text-center mb-12 font-medium">
+          {t('saveBadgeLong')}
+        </p>
+      )}
+      {billing === 'monthly' && (
+        <div className="mb-12" aria-hidden="true" />
+      )}
 
       {/* Pricing cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
