@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
+
 type ResendResult =
   | { data: { id: string }; error: null }
   | { data: null; error: { name: string; message: string } };
@@ -127,5 +129,20 @@ describe('sendLeadCuriosityHookEmail', () => {
     expect(callArgs.subject as string).toContain('Mercury');
     expect(callArgs.html).toContain('Mercury');
     expect(callArgs.html).toContain('Gemini');
+  });
+
+  it("proceeds with send when claim is 'retry' (prior send failed)", async () => {
+    tryInsertMock.mockResolvedValueOnce('retry');
+    const { sendLeadCuriosityHookEmail } = await import('../email');
+    const res = await sendLeadCuriosityHookEmail({
+      leadId: 'lead_retry',
+      email: 'retry@example.com',
+      locale: 'en',
+      chart: saturnChart as never,
+      chartId: 'chart_r',
+    });
+    expect(res.sent).toBe(true);
+    expect(resendSendMock).toHaveBeenCalledTimes(1);
+    expect(recordSentMock).toHaveBeenCalledWith('lead_retry', 'lead_curiosity_hook', 'resend_msg_curiosity');
   });
 });

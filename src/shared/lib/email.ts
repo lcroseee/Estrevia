@@ -1,4 +1,5 @@
 import 'server-only';
+import * as Sentry from '@sentry/nextjs';
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import WelcomeEmail from '@/emails/WelcomeEmail';
@@ -14,6 +15,7 @@ import LeadPaywallTeaserEmail from '@/emails/LeadPaywallTeaserEmail';
 import SaturnWeeklyEmail from '@/emails/SaturnWeeklyEmail';
 import MiniReadingEmail from '@/emails/MiniReadingEmail';
 import SynastryTeaserEmail from '@/emails/SynastryTeaserEmail';
+import { PLANET_ES_NAMES } from './planet-i18n';
 import { tryInsertOneShot, recordSent } from './sent-emails';
 import { tryInsertOneShotLead, recordSentLead } from './sent-lead-emails';
 import { signUnsubscribeToken, signLeadUnsubscribeToken } from './unsubscribe-token';
@@ -463,12 +465,9 @@ export async function sendLeadCuriosityHookEmail(params: {
     { plainText: true },
   );
 
-  const PLANET_ES_SUBJECT: Record<string, string> = {
-    Saturn: 'Saturno', Mars: 'Marte', Venus: 'Venus', Mercury: 'Mercurio',
-  };
   const subject =
     params.locale === 'es'
-      ? `Tu ${PLANET_ES_SUBJECT[dominant.planet] ?? dominant.planet} está haciendo algo poco común`
+      ? `Tu ${PLANET_ES_NAMES[dominant.planet]} está haciendo algo poco común`
       : `Your ${dominant.planet} is doing something rare`;
 
   const result = await getResend().emails.send(
@@ -486,9 +485,18 @@ export async function sendLeadCuriosityHookEmail(params: {
     { idempotencyKey: `${params.leadId}:lead_curiosity_hook` },
   );
   if (result.error) {
-    throw new Error(
+    const err = new Error(
       `Resend rejected lead_curiosity_hook for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
     );
+    // Tag the error so Sentry groups by component + email type
+    Sentry.captureException(err, {
+      tags: {
+        component: 'lead-nurture-curiosity-hook',
+        email_type: 'lead_curiosity_hook',
+        lead_id: String(params.leadId),
+      },
+    });
+    throw err;
   }
 
   await recordSentLead(params.leadId, 'lead_curiosity_hook', result.data?.id ?? null);

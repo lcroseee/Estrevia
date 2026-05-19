@@ -1,5 +1,6 @@
 import { Heading, Text } from '@react-email/components';
 import type { Planet, Sign } from '@/shared/types';
+import { PLANET_ES_NAMES } from '@/shared/lib/planet-i18n';
 import { EmailLayout } from './components/EmailLayout';
 import { Button } from './components/Button';
 
@@ -131,10 +132,6 @@ const REVEAL_ES: Partial<Record<Planet, Partial<Record<Sign, string>>>> = {
   },
 };
 
-const PLANET_ES: Record<string, string> = {
-  Saturn: 'Saturno', Mars: 'Marte', Venus: 'Venus', Mercury: 'Mercurio',
-};
-
 const STRINGS = {
   en: {
     preview: (planet: string) => `Your ${planet} is doing something most charts don't.`,
@@ -146,10 +143,10 @@ const STRINGS = {
     trialNote: '3-day free trial. Cancel anytime.',
   },
   es: {
-    preview: (planet: string) => `Tu ${PLANET_ES[planet] ?? planet} está haciendo algo que la mayoría de las cartas no hace.`,
-    heading: (planet: string) => `Tu ${PLANET_ES[planet] ?? planet} es poco común`,
+    preview: (planet: string) => `Tu ${PLANET_ES_NAMES[planet as 'Saturn' | 'Mars' | 'Venus' | 'Mercury'] ?? planet} está haciendo algo que la mayoría de las cartas no hace.`,
+    heading: (planet: string) => `Tu ${PLANET_ES_NAMES[planet as 'Saturn' | 'Mars' | 'Venus' | 'Mercury'] ?? planet} es poco común`,
     intro: 'La mayoría de la astrología se queda en Sol-Luna-Ascendente. Estrevia lee la capa de abajo — posiciones siderales Lahiri, dignidad, y tono de las casas.',
-    revealFallback: (planet: string, sign: string) => `Tu ${PLANET_ES[planet] ?? planet} está en ${sign} — una posición que moldea cómo operas bajo lo visible.`,
+    revealFallback: (planet: string, sign: string) => `Tu ${PLANET_ES_NAMES[planet as 'Saturn' | 'Mars' | 'Venus' | 'Mercury'] ?? planet} está en ${sign} — una posición que moldea cómo operas bajo lo visible.`,
     depthPitch: 'La lectura completa usa correspondencias de Thelema y la red 777 — el sistema al que tu carta realmente responde, no la versión diluida que la mayoría de apps usa.',
     cta: 'Desbloquea tu lectura completa',
     trialNote: '3 días de prueba gratis. Cancela cuando quieras.',
