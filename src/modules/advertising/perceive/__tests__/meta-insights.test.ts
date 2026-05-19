@@ -82,4 +82,34 @@ describe('fetchMetaInsights', () => {
       }),
     );
   });
+
+  it('forwards windowKey to apiClient.getInsights when provided', async () => {
+    const api = mockMetaApi();
+    api.getInsights.mockResolvedValue([]);
+
+    await fetchMetaInsights({
+      apiClient: api,
+      dateFrom: '2026-05-11',
+      dateTo: '2026-05-18',
+      windowKey: 'conversions_7d',
+    });
+
+    expect(api.getInsights).toHaveBeenCalledWith(
+      expect.objectContaining({ windowKey: 'conversions_7d' }),
+    );
+  });
+
+  it('omits windowKey field when not provided', async () => {
+    const api = mockMetaApi();
+    api.getInsights.mockResolvedValue([]);
+
+    await fetchMetaInsights({
+      apiClient: api,
+      dateFrom: '2026-05-11',
+      dateTo: '2026-05-18',
+    });
+
+    const callArg = api.getInsights.mock.calls[0][0] as { windowKey?: unknown };
+    expect(callArg.windowKey).toBeUndefined();
+  });
 });
