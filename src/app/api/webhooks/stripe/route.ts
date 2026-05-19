@@ -216,24 +216,37 @@ export async function POST(request: Request): Promise<Response> {
               metadata: { ...existingMetadata, signInTicket: ticket.token },
             });
 
-            // Link the email_lead(s) to the new user — both anonymous_id and email paths
+            // Link the email_lead(s) to the new user — both anonymous_id and email paths.
+            // Capture matched rows via .returning() so we can decide whether to run the
+            // utm_content fallback below.
             const anonymousIdMeta = (session.metadata?.anonymous_id ?? null) as string | null;
             try {
-              if (anonymousIdMeta) {
+              const linkedRows = await db
+                .update(emailLeads)
+                .set({ convertedToUserId: clerkUserId, convertedAt: new Date() })
+                .where(
+                  anonymousIdMeta
+                    ? or(
+                        eq(emailLeads.anonymousId, anonymousIdMeta),
+                        eq(emailLeads.email, email),
+                      )
+                    : eq(emailLeads.email, email),
+                )
+                .returning({ id: emailLeads.id });
+
+              // utm_content fallback. Fires only when the primary link matched zero rows
+              // (lead-email differs from checkout-email AND browser dropped anonymous_id).
+              // Sets ONLY unsubscribed_at — we cannot prove cross-email identity match.
+              const utmContent = session.metadata?.utm_content;
+              if (linkedRows.length === 0 && typeof utmContent === 'string') {
                 await db
                   .update(emailLeads)
-                  .set({ convertedToUserId: clerkUserId, convertedAt: new Date() })
-                  .where(
-                    or(
-                      eq(emailLeads.anonymousId, anonymousIdMeta),
-                      eq(emailLeads.email, email),
-                    ),
-                  );
-              } else {
-                await db
-                  .update(emailLeads)
-                  .set({ convertedToUserId: clerkUserId, convertedAt: new Date() })
-                  .where(eq(emailLeads.email, email));
+                  .set({ unsubscribedAt: new Date() })
+                  .where(eq(emailLeads.id, utmContent));
+                console.info('[stripe-webhook] utm_content fallback unsubscribed lead', {
+                  sessionId: session.id,
+                  leadId: utmContent,
+                });
               }
             } catch (linkErr) {
               console.warn(

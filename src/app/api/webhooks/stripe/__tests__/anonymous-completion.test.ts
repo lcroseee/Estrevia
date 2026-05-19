@@ -213,4 +213,39 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
     expect(createUserMock).not.toHaveBeenCalled();
     expect(sessionsUpdateMock).not.toHaveBeenCalled();
   });
+
+  it('linksByEmail_thenSkipsUtmFallback', async () => {
+    // Lead-link UPDATE returns 1 row → fallback must NOT fire even with valid utm_content.
+    dbUpdateReturningRows = [{ id: 'lead-matched-by-email' }];
+    getUserListMock.mockResolvedValue({ totalCount: 1, data: [{ id: 'user_existing' }] });
+
+    await POST(makeSessionCompletedEvent({
+      metadata: {
+        anonymous_id: 'anon-xyz',
+        utm_content: 'qnU9lsC9dkhb8XUTXF4wZ', // valid 21-char lead id
+      },
+      email: 'paid@example.com',
+    }));
+
+    // Exactly one UPDATE: the link itself. No fallback UPDATE.
+    expect(dbUpdateCalls).toHaveLength(1);
+    expect(dbUpdateCalls[0].returningCalled).toBe(true);
+  });
+
+  it('emailMismatch_utmFallbackSetsUnsubscribed', async () => {
+    // Lead-link UPDATE returns 0 rows (lead-email ≠ checkout-email, no anonymous_id cookie).
+    dbUpdateReturningRows = [];
+    getUserListMock.mockResolvedValue({ totalCount: 0, data: [] });
+    createUserMock.mockResolvedValue({ id: 'user_new_mismatch' });
+
+    await POST(makeSessionCompletedEvent({
+      metadata: { utm_content: 'qnU9lsC9dkhb8XUTXF4wZ' },
+      email: 'destinig7996@example.com',
+    }));
+
+    expect(dbUpdateCalls).toHaveLength(2);
+    expect(dbUpdateCalls[0].returningCalled).toBe(true); // link UPDATE
+    expect(dbUpdateCalls[1].returningCalled).toBe(false); // fallback UPDATE (no .returning())
+    expect(dbUpdateCalls[1].setArgs).toMatchObject({ unsubscribedAt: expect.any(Date) });
+  });
 });
