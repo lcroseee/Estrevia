@@ -23,6 +23,13 @@ interface MetaInsightsRow {
   cpm?: string;
   frequency?: string;
   reach?: string;
+  actions?: Array<{
+    action_type: string;
+    value: string;
+    '1d_click'?: string;
+    '7d_click'?: string;
+    '28d_click'?: string;
+  }>;
 }
 
 interface MetaInsightsResponse {
