@@ -326,6 +326,42 @@ function pickKeySigns(chart: ChartResult | null): {
 }
 
 // ---------------------------------------------------------------------------
+// pickDominantPlanet — selects one of Saturn/Mars/Venus/Mercury based on
+// essential-dignity rules. Used in T+1h curiosity-hook email and as a tease
+// hint in the T+0 chart email. Deterministic, no LLM, <1ms.
+// ---------------------------------------------------------------------------
+export function pickDominantPlanet(chart: ChartResult | null): {
+  planet: 'Saturn' | 'Mars' | 'Venus' | 'Mercury';
+  signName: string;
+} {
+  if (!chart) return { planet: 'Mercury', signName: 'Gemini' };
+
+  const find = (p: Planet) => chart.planets.find((row) => row.planet === p);
+  const saturn = find(Planet.Saturn);
+  const mars = find(Planet.Mars);
+  const venus = find(Planet.Venus);
+  const mercury = find(Planet.Mercury);
+
+  // Rule 1: Saturn in Capricorn or Aquarius (sidereal essential dignity)
+  if (saturn && (saturn.sign === 'Capricorn' || saturn.sign === 'Aquarius')) {
+    return { planet: 'Saturn', signName: saturn.sign };
+  }
+  // Rule 2: Mars in Aries or Scorpio (domicile)
+  if (mars && (mars.sign === 'Aries' || mars.sign === 'Scorpio')) {
+    return { planet: 'Mars', signName: mars.sign };
+  }
+  // Rule 3: Venus in Taurus or Libra (domicile)
+  if (venus && (venus.sign === 'Taurus' || venus.sign === 'Libra')) {
+    return { planet: 'Venus', signName: venus.sign };
+  }
+  // Rule 4: fallback to Mercury (messenger angle works generically)
+  return {
+    planet: 'Mercury',
+    signName: mercury?.sign ?? 'Gemini',
+  };
+}
+
+// ---------------------------------------------------------------------------
 // sendLeadChartEmail — T+0 nurture drip, one-shot per lead
 // ---------------------------------------------------------------------------
 export async function sendLeadChartEmail(params: {
