@@ -1,4 +1,5 @@
 import { Heading, Text } from '@react-email/components';
+import type { Planet, Sign } from '@/shared/types';
 import { EmailLayout } from './components/EmailLayout';
 import { Button } from './components/Button';
 
@@ -12,7 +13,7 @@ interface Props {
 // Sign-level interpretations per planet (12 signs × 4 planets × 2 locales = 96 keys).
 // Copy intentionally short (1 line) — full depth lives behind the paywall.
 // Fallback: if sign not in map, generic copy is used.
-const REVEAL_EN: Record<string, Record<string, string>> = {
+const REVEAL_EN: Partial<Record<Planet, Partial<Record<Sign, string>>>> = {
   Saturn: {
     Capricorn: 'Saturn in Capricorn — discipline as your spine.',
     Aquarius: 'Saturn in Aquarius — your future arrives ahead of you.',
@@ -71,7 +72,7 @@ const REVEAL_EN: Record<string, Record<string, string>> = {
   },
 };
 
-const REVEAL_ES: Record<string, Record<string, string>> = {
+const REVEAL_ES: Partial<Record<Planet, Partial<Record<Sign, string>>>> = {
   Saturn: {
     Capricorn: 'Saturno en Capricornio — la disciplina como columna vertebral.',
     Aquarius: 'Saturno en Acuario — tu futuro llega antes que tú.',
@@ -158,7 +159,7 @@ const STRINGS = {
 export default function LeadCuriosityHookEmail({ locale, planet, signName, chartUrl }: Props) {
   const t = STRINGS[locale];
   const revealMap = locale === 'es' ? REVEAL_ES : REVEAL_EN;
-  const revealLine = revealMap[planet]?.[signName] ?? t.revealFallback(planet, signName);
+  const revealLine = revealMap[planet as Planet]?.[signName as Sign] ?? t.revealFallback(planet, signName);
 
   return (
     <EmailLayout preview={t.preview(planet)} locale={locale}>

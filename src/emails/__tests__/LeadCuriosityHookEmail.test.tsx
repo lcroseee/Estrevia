@@ -39,7 +39,7 @@ describe('LeadCuriosityHookEmail', () => {
     expect(html).toContain('Desbloquea');
   });
 
-  it('renders Mercury fallback when planet/sign combo is unmapped', async () => {
+  it('renders Mercury-Gemini reveal (mapped)', async () => {
     const html = await render(
       <LeadCuriosityHookEmail
         locale="en"
@@ -92,5 +92,19 @@ describe('LeadCuriosityHookEmail', () => {
     expect(text).toContain('Aquarius');
     expect(text).toContain(baseProps.chartUrl);
     expect(text).not.toContain('<');  // no HTML tags
+  });
+
+  it('uses revealFallback when sign is not in the REVEAL map', async () => {
+    const html = await render(
+      <LeadCuriosityHookEmail
+        locale="en"
+        planet="Saturn"
+        signName="Ophiuchus"
+        {...baseProps}
+      />,
+    );
+    // Fallback copy includes the generic "a placement that shapes how you operate beneath the visible"
+    expect(html).toContain('Ophiuchus');
+    expect(html.toLowerCase()).toContain('shapes how you operate');
   });
 });
