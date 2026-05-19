@@ -1165,6 +1165,107 @@ describe('triage-daily — senior-buyer extension', () => {
     };
     expect(body.summary.senior_buyer.maturity_transitions).toBe(1);
   });
+
+  it('writes conversions7dMeta and conversionsTotalMeta to ad_set_state', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const convWindows = await import('@/modules/advertising/perceive/conversion-windows');
+    const upsertAdSetStateMock = vi.mocked(stateStore.upsertAdSetState);
+    upsertAdSetStateMock.mockClear();
+
+    // Three ads in adset_alpha (two with leads) + one ad in adset_beta.
+    vi.mocked(convWindows.fetchConversionWindows).mockResolvedValueOnce({
+      metrics7d: [
+        { ad_id: 'ad1', adset_id: 'adset_alpha', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, conversions_7d: 7, status: 'ACTIVE' },
+        { ad_id: 'ad2', adset_id: 'adset_alpha', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, conversions_7d: 5, status: 'ACTIVE' },
+        { ad_id: 'ad3', adset_id: 'adset_beta',  campaign_id: 'c2', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, conversions_7d: 0, status: 'ACTIVE' },
+      ],
+      metrics28d: [
+        { ad_id: 'ad1', adset_id: 'adset_alpha', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, conversions_total: 31, status: 'ACTIVE' },
+        { ad_id: 'ad2', adset_id: 'adset_alpha', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, conversions_total: 19, status: 'ACTIVE' },
+        { ad_id: 'ad3', adset_id: 'adset_beta',  campaign_id: 'c2', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, conversions_total: 4,  status: 'ACTIVE' },
+      ],
+    });
+    // The daily metrics fetch needs to surface the same ad sets so the bootstrap loop sees them.
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([
+      { ad_id: 'ad1', adset_id: 'adset_alpha', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, status: 'ACTIVE' },
+      { ad_id: 'ad2', adset_id: 'adset_alpha', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, status: 'ACTIVE' },
+      { ad_id: 'ad3', adset_id: 'adset_beta',  campaign_id: 'c2', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, status: 'ACTIVE' },
+    ]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    // Sum 7d for adset_alpha = 7 + 5 = 12; for adset_beta = 0.
+    const alphaCall = upsertAdSetStateMock.mock.calls.find(
+      (c) => c[0].adSetId === 'adset_alpha' && c[0].conversions7dMeta !== undefined,
+    );
+    expect(alphaCall).toBeDefined();
+    expect(alphaCall![0].conversions7dMeta).toBe(12);
+    expect(alphaCall![0].conversionsTotalMeta).toBe(50);
+
+    const betaCall = upsertAdSetStateMock.mock.calls.find(
+      (c) => c[0].adSetId === 'adset_beta' && c[0].conversions7dMeta !== undefined,
+    );
+    expect(betaCall).toBeDefined();
+    expect(betaCall![0].conversions7dMeta).toBe(0);
+    expect(betaCall![0].conversionsTotalMeta).toBe(4);
+  });
+
+  it('omits conversions7dMeta when 7d fetch failed but writes conversionsTotalMeta', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const convWindows = await import('@/modules/advertising/perceive/conversion-windows');
+    const upsertAdSetStateMock = vi.mocked(stateStore.upsertAdSetState);
+    upsertAdSetStateMock.mockClear();
+
+    vi.mocked(convWindows.fetchConversionWindows).mockResolvedValueOnce({
+      metrics7d: null,
+      metrics28d: [
+        { ad_id: 'ad1', adset_id: 'adset_a', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, conversions_total: 8, status: 'ACTIVE' },
+      ],
+    });
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([
+      { ad_id: 'ad1', adset_id: 'adset_a', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, status: 'ACTIVE' },
+    ]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    const aCall = upsertAdSetStateMock.mock.calls.find(
+      (c) => c[0].adSetId === 'adset_a' && c[0].conversionsTotalMeta !== undefined,
+    );
+    expect(aCall).toBeDefined();
+    expect(aCall![0].conversions7dMeta).toBeUndefined();
+    expect(aCall![0].conversionsTotalMeta).toBe(8);
+  });
+
+  it('omits both conversion fields when both fetches failed', async () => {
+    const stateStore = await import('@/modules/advertising/senior-buyer/state-store');
+    const convWindows = await import('@/modules/advertising/perceive/conversion-windows');
+    const upsertAdSetStateMock = vi.mocked(stateStore.upsertAdSetState);
+    upsertAdSetStateMock.mockClear();
+
+    vi.mocked(convWindows.fetchConversionWindows).mockResolvedValueOnce({
+      metrics7d: null,
+      metrics28d: null,
+    });
+    vi.mocked(fetchMetaInsights).mockResolvedValueOnce([
+      { ad_id: 'ad1', adset_id: 'adset_x', campaign_id: 'c1', date: '2026-05-18', impressions: 1, clicks: 1, spend_usd: 1, ctr: 1, cpc: 1, cpm: 1, frequency: 1, reach: 1, days_running: 1, status: 'ACTIVE' },
+    ]);
+
+    const req = makeRequest(`Bearer ${CRON_SECRET}`);
+    const res = await triageDailyGET(req);
+    expect(res.status).toBe(200);
+
+    // No upsert call should have conversionFields populated.
+    for (const call of upsertAdSetStateMock.mock.calls) {
+      if (call[0].adSetId === 'adset_x') {
+        expect(call[0].conversions7dMeta).toBeUndefined();
+        expect(call[0].conversionsTotalMeta).toBeUndefined();
+      }
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
