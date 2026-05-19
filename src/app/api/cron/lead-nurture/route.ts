@@ -3,21 +3,21 @@
  *
  * Vercel Cron — runs hourly at minute 0.
  *
- * Sweeps `email_leads` for due nurture-drip sends:
+ * Sweeps `email_leads` for due nurture-drip sends via a table-driven
+ * step dispatcher. After 2026-05-19 curiosity-drip rebuild, the steps are:
  *
- *   1. T+0 recovery — `nurture_step=0 AND nurture_next_at IS NULL AND
- *      created_at < NOW() - 15min` (the original /api/v1/leads waitUntil
- *      send failed; retry the chart email here).
- *   2. T+24h — `nurture_step=1 AND nurture_next_at <= NOW()` → send the
- *      Moon/Asc email, advance to step=2 with nextAt=NOW()+48h.
- *   3. T+72h — `nurture_step=2 AND nurture_next_at <= NOW()` → send the
- *      paywall-teaser email, advance to step=3 with nextAt=NOW()+96h.
- *   4. T+7d — `nurture_step=3 AND nurture_next_at <= NOW()` → send the
- *      Saturn-weekly email, advance to step=4 with nextAt=NOW()+168h.
- *   5. T+14d — `nurture_step=4 AND nurture_next_at <= NOW()` → send the
- *      mini-reading email, advance to step=5 with nextAt=NOW()+168h.
- *   6. T+21d — `nurture_step=5 AND nurture_next_at <= NOW()` → send the
- *      synastry-teaser email, advance to step=6 with nextAt=null (final).
+ *   step 0 → T+0 chart email           (cliffhanger: Sun + planet tease)
+ *   step 1 → T+1h curiosity hook       (NEW: dominant-planet reveal + paywall)
+ *   step 2 → T+24h moon-asc            (deeper reveals + AI-reading teaser)
+ *   step 3 → T+72h paywall teaser      (third paywall push)
+ *   step 4 → T+7d saturn weekly        (brand-building)
+ *   step 5 → T+14d mini reading        (brand-building)
+ *   step 6 → T+21d synastry teaser     (brand-building)
+ *   step 7 → terminal                  (no further sends)
+ *
+ * Also handles T+0 recovery: leads with `nurture_step=0 AND nurture_next_at
+ * IS NULL AND created_at < NOW() - 15min` had the initial waitUntil send
+ * fail; the hourly cron retries.
  *
  * Filters out leads that have converted, unsubscribed, or marked as
  * undeliverable. Idempotency is enforced inside the send functions via
@@ -44,6 +44,7 @@ import { assertCronAuth } from '@/shared/lib/cron-auth';
 import { fetchTempChart } from '@/shared/lib/temp-chart';
 import {
   sendLeadChartEmail,
+  sendLeadCuriosityHookEmail,
   sendLeadMoonAscEmail,
   sendLeadPaywallTeaserEmail,
   sendLeadSaturnWeeklyEmail,
@@ -56,13 +57,37 @@ export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 const STUCK_T0_GRACE_MS = 15 * 60 * 1000;
-const T24_DELAY_MS = 24 * 60 * 60 * 1000;
-const T48_AFTER_T24_MS = 48 * 60 * 60 * 1000; // step1→step2: +48h (total T+72h)
-const T96_AFTER_T72_MS = 96 * 60 * 60 * 1000; // step2→step3: +96h (total T+7d ≈ 168h)
-const T168_DELAY_MS = 168 * 60 * 60 * 1000;   // step3→step4 and step4→step5: +168h between weekly sends
 const BATCH_LIMIT = 100;
-const RESEND_PACING_MS = 1100; // 1.1s between sends → under 1 req/s safety
-                                // (Resend free tier: 10 req/s; we go conservative)
+const RESEND_PACING_MS = 1100; // 1.1s between sends — well under Resend free-tier 10 req/s.
+
+// Step dispatch table. Each row: which step number triggers which send
+// function, what email_type it represents, and the delay until the NEXT
+// step's nurture_next_at. nextDelayMs=null marks the terminal step.
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+
+interface StepHandler {
+  fromStep: number;
+  toStep: number;
+  send: (params: {
+    leadId: string;
+    email: string;
+    locale: 'en' | 'es';
+    chart: Awaited<ReturnType<typeof fetchTempChart>>;
+    chartId: string | null;
+  }) => Promise<{ sent: boolean; reason?: string }>;
+  nextDelayMs: number | null;
+}
+
+const STEP_HANDLERS: StepHandler[] = [
+  { fromStep: 0, toStep: 1, send: sendLeadChartEmail,           nextDelayMs: 1 * HOUR },
+  { fromStep: 1, toStep: 2, send: sendLeadCuriosityHookEmail,   nextDelayMs: 23 * HOUR },
+  { fromStep: 2, toStep: 3, send: sendLeadMoonAscEmail,         nextDelayMs: 2 * DAY },
+  { fromStep: 3, toStep: 4, send: sendLeadPaywallTeaserEmail,   nextDelayMs: 4 * DAY },
+  { fromStep: 4, toStep: 5, send: sendLeadSaturnWeeklyEmail,    nextDelayMs: 7 * DAY },
+  { fromStep: 5, toStep: 6, send: sendLeadMiniReadingEmail,     nextDelayMs: 7 * DAY },
+  { fromStep: 6, toStep: 7, send: sendLeadSynastryTeaserEmail,  nextDelayMs: null },
+];
 
 export async function GET(request: Request) {
   // ---------------------------------------------------------------------------
@@ -102,7 +127,7 @@ export async function GET(request: Request) {
       .from(emailLeads)
       .where(
         and(
-          lt(emailLeads.nurtureStep, 6),
+          lt(emailLeads.nurtureStep, 7),
           isNull(emailLeads.convertedToUserId),
           isNull(emailLeads.unsubscribedAt),
           eq(emailLeads.emailUndeliverable, false),
@@ -128,80 +153,27 @@ export async function GET(request: Request) {
     for (const lead of candidates) {
       try {
         const chart = await fetchTempChart(lead.chartId);
+        const handler = STEP_HANDLERS.find((h) => h.fromStep === lead.nurtureStep);
 
-        let sendResult: { sent: boolean; reason?: string };
-        let nextStep: number;
-        let nextAt: Date | null;
-
-        if (lead.nurtureStep === 0) {
-          sendResult = await sendLeadChartEmail({
-            leadId: lead.id,
-            email: lead.email,
-            locale: lead.locale,
-            chart,
-            chartId: lead.chartId,
-          });
-          nextStep = 1;
-          nextAt = new Date(Date.now() + T24_DELAY_MS);
-        } else if (lead.nurtureStep === 1) {
-          sendResult = await sendLeadMoonAscEmail({
-            leadId: lead.id,
-            email: lead.email,
-            locale: lead.locale,
-            chart,
-            chartId: lead.chartId,
-          });
-          nextStep = 2;
-          nextAt = new Date(Date.now() + T48_AFTER_T24_MS);
-        } else if (lead.nurtureStep === 2) {
-          sendResult = await sendLeadPaywallTeaserEmail({
-            leadId: lead.id,
-            email: lead.email,
-            locale: lead.locale,
-            chart,
-            chartId: lead.chartId,
-          });
-          nextStep = 3;
-          nextAt = new Date(Date.now() + T96_AFTER_T72_MS);
-        } else if (lead.nurtureStep === 3) {
-          sendResult = await sendLeadSaturnWeeklyEmail({
-            leadId: lead.id,
-            email: lead.email,
-            locale: lead.locale,
-            chart,
-            chartId: lead.chartId,
-          });
-          nextStep = 4;
-          nextAt = new Date(Date.now() + T168_DELAY_MS);
-        } else if (lead.nurtureStep === 4) {
-          sendResult = await sendLeadMiniReadingEmail({
-            leadId: lead.id,
-            email: lead.email,
-            locale: lead.locale,
-            chart,
-            chartId: lead.chartId,
-          });
-          nextStep = 5;
-          nextAt = new Date(Date.now() + T168_DELAY_MS);
-        } else if (lead.nurtureStep === 5) {
-          sendResult = await sendLeadSynastryTeaserEmail({
-            leadId: lead.id,
-            email: lead.email,
-            locale: lead.locale,
-            chart,
-            chartId: lead.chartId,
-          });
-          nextStep = 6;
-          nextAt = null;
-        } else {
+        if (!handler) {
           skipped++;
           continue;
         }
 
+        const sendResult = await handler.send({
+          leadId: lead.id,
+          email: lead.email,
+          locale: lead.locale,
+          chart,
+          chartId: lead.chartId,
+        });
+
+        const nextAt = handler.nextDelayMs == null ? null : new Date(Date.now() + handler.nextDelayMs);
+
         if (sendResult.sent) {
           await db
             .update(emailLeads)
-            .set({ nurtureStep: nextStep, nurtureNextAt: nextAt })
+            .set({ nurtureStep: handler.toStep, nurtureNextAt: nextAt })
             .where(eq(emailLeads.id, lead.id));
           sent++;
         } else if (sendResult.reason === 'already_sent') {
@@ -209,13 +181,11 @@ export async function GET(request: Request) {
           // lead next hour and re-pay the no-op cost.
           await db
             .update(emailLeads)
-            .set({ nurtureStep: nextStep, nurtureNextAt: nextAt })
+            .set({ nurtureStep: handler.toStep, nurtureNextAt: nextAt })
             .where(eq(emailLeads.id, lead.id));
           skipped++;
         }
 
-        // Pace to avoid Resend rate limits when batch is large enough
-        // to matter; tiny batches don't.
         if (candidates.length > 5) {
           await new Promise((r) => setTimeout(r, RESEND_PACING_MS));
         }

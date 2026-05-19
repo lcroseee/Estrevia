@@ -12,6 +12,7 @@ vi.mock('@/shared/lib/temp-chart', () => ({
 
 // Mock send functions
 const sendChartMock = vi.fn(async () => ({ sent: true }));
+const sendCuriosityHookMock = vi.fn(async () => ({ sent: true }));
 const sendMoonAscMock = vi.fn(async () => ({ sent: true }));
 const sendPaywallMock = vi.fn(async () => ({ sent: true }));
 const sendSaturnMock = vi.fn(async () => ({ sent: true }));
@@ -19,6 +20,7 @@ const sendMiniReadingMock = vi.fn(async () => ({ sent: true }));
 const sendSynastryMock = vi.fn(async () => ({ sent: true }));
 vi.mock('@/shared/lib/email', () => ({
   sendLeadChartEmail: sendChartMock,
+  sendLeadCuriosityHookEmail: sendCuriosityHookMock,
   sendLeadMoonAscEmail: sendMoonAscMock,
   sendLeadPaywallTeaserEmail: sendPaywallMock,
   sendLeadSaturnWeeklyEmail: sendSaturnMock,
@@ -79,7 +81,7 @@ describe('/api/cron/lead-nurture', () => {
     expect(json).toMatchObject({ candidates: 0, sent: 0, failed: 0 });
   });
 
-  it('dispatches to sendLeadMoonAscEmail when step=1 and due', async () => {
+  it('dispatches to sendLeadCuriosityHookEmail when step=1 and due (T+1h new step)', async () => {
     candidates = [{
       id: 'lead_s1',
       email: 's1@example.com',
@@ -87,17 +89,18 @@ describe('/api/cron/lead-nurture', () => {
       chartId: 'chart_s1',
       nurtureStep: 1,
       nurtureNextAt: new Date(Date.now() - 60_000),
-      createdAt: new Date(Date.now() - 25 * 3600_000),
+      createdAt: new Date(Date.now() - 2 * 3600_000),
     }];
     const { GET } = await import('../route');
     const res = await GET(new Request('http://localhost/api/cron/lead-nurture'));
     expect(res.status).toBe(200);
-    expect(sendMoonAscMock).toHaveBeenCalledTimes(1);
+    expect(sendCuriosityHookMock).toHaveBeenCalledTimes(1);
     expect(sendChartMock).not.toHaveBeenCalled();
+    expect(sendMoonAscMock).not.toHaveBeenCalled();
     expect(sendPaywallMock).not.toHaveBeenCalled();
   });
 
-  it('dispatches to sendLeadPaywallTeaserEmail when step=2 and due', async () => {
+  it('dispatches to sendLeadMoonAscEmail when step=2 and due (was step=1)', async () => {
     candidates = [{
       id: 'lead_s2',
       email: 's2@example.com',
@@ -105,11 +108,12 @@ describe('/api/cron/lead-nurture', () => {
       chartId: 'chart_s2',
       nurtureStep: 2,
       nurtureNextAt: new Date(Date.now() - 60_000),
-      createdAt: new Date(Date.now() - 73 * 3600_000),
+      createdAt: new Date(Date.now() - 25 * 3600_000),
     }];
     const { GET } = await import('../route');
     await GET(new Request('http://localhost/api/cron/lead-nurture'));
-    expect(sendPaywallMock).toHaveBeenCalledTimes(1);
+    expect(sendMoonAscMock).toHaveBeenCalledTimes(1);
+    expect(sendPaywallMock).not.toHaveBeenCalled();
   });
 
   it('dispatches T+0 recovery to sendLeadChartEmail when step=0 stuck', async () => {
@@ -128,10 +132,10 @@ describe('/api/cron/lead-nurture', () => {
   });
 
   it('isolates per-lead error and continues', async () => {
-    sendMoonAscMock.mockRejectedValueOnce(new Error('Resend 5xx'));
+    sendCuriosityHookMock.mockRejectedValueOnce(new Error('Resend 5xx'));
     candidates = [
-      { id: 'lead_fail', email: 'fail@example.com', locale: 'en', chartId: 'c1', nurtureStep: 1, nurtureNextAt: new Date(Date.now() - 60_000), createdAt: new Date(Date.now() - 25 * 3600_000) },
-      { id: 'lead_ok', email: 'ok@example.com', locale: 'en', chartId: 'c2', nurtureStep: 1, nurtureNextAt: new Date(Date.now() - 60_000), createdAt: new Date(Date.now() - 25 * 3600_000) },
+      { id: 'lead_fail', email: 'fail@example.com', locale: 'en', chartId: 'c1', nurtureStep: 1, nurtureNextAt: new Date(Date.now() - 60_000), createdAt: new Date(Date.now() - 2 * 3600_000) },
+      { id: 'lead_ok', email: 'ok@example.com', locale: 'en', chartId: 'c2', nurtureStep: 1, nurtureNextAt: new Date(Date.now() - 60_000), createdAt: new Date(Date.now() - 2 * 3600_000) },
     ];
     const { GET } = await import('../route');
     const res = await GET(new Request('http://localhost/api/cron/lead-nurture'));
@@ -141,7 +145,7 @@ describe('/api/cron/lead-nurture', () => {
     expect(json.sent).toBe(1);
   });
 
-  it('advances step 2 → 3 after T+72h teaser send and schedules T+7d (~96h later)', async () => {
+  it('advances step 2 → 3 after moonAsc send and schedules T+48h later', async () => {
     candidates = [{
       id: 'lead_s2_to_3',
       email: 's2@example.com',
@@ -149,22 +153,22 @@ describe('/api/cron/lead-nurture', () => {
       chartId: 'chart_s2',
       nurtureStep: 2,
       nurtureNextAt: new Date(Date.now() - 60_000),
-      createdAt: new Date(Date.now() - 73 * 3600_000),
+      createdAt: new Date(Date.now() - 25 * 3600_000),
     }];
     const before = Date.now();
     const { GET } = await import('../route');
     await GET(new Request('http://localhost/api/cron/lead-nurture'));
     const after = Date.now();
-    expect(sendPaywallMock).toHaveBeenCalledTimes(1);
+    expect(sendMoonAscMock).toHaveBeenCalledTimes(1);
     expect(updates).toHaveLength(1);
     const update = updates[0]!;
     expect(update.vals.nurtureStep).toBe(3);
     const scheduled = (update.vals.nurtureNextAt as Date).getTime();
-    expect(scheduled).toBeGreaterThanOrEqual(before + 96 * 3600_000);
-    expect(scheduled).toBeLessThanOrEqual(after + 96 * 3600_000);
+    expect(scheduled).toBeGreaterThanOrEqual(before + 48 * 3600_000);
+    expect(scheduled).toBeLessThanOrEqual(after + 48 * 3600_000);
   });
 
-  it('dispatches to sendLeadSaturnWeeklyEmail when step=3 and due', async () => {
+  it('dispatches to sendLeadPaywallTeaserEmail when step=3 and due (was step=2)', async () => {
     candidates = [{
       id: 'lead_s3',
       email: 's3@example.com',
@@ -172,30 +176,51 @@ describe('/api/cron/lead-nurture', () => {
       chartId: 'chart_s3',
       nurtureStep: 3,
       nurtureNextAt: new Date(Date.now() - 60_000),
-      createdAt: new Date(Date.now() - 170 * 3600_000),
+      createdAt: new Date(Date.now() - 73 * 3600_000),
     }];
     const before = Date.now();
     const { GET } = await import('../route');
     await GET(new Request('http://localhost/api/cron/lead-nurture'));
-    expect(sendSaturnMock).toHaveBeenCalledTimes(1);
+    expect(sendPaywallMock).toHaveBeenCalledTimes(1);
     expect(sendChartMock).not.toHaveBeenCalled();
+    expect(sendCuriosityHookMock).not.toHaveBeenCalled();
     expect(sendMoonAscMock).not.toHaveBeenCalled();
-    expect(sendPaywallMock).not.toHaveBeenCalled();
+    expect(sendSaturnMock).not.toHaveBeenCalled();
     expect(sendMiniReadingMock).not.toHaveBeenCalled();
     expect(sendSynastryMock).not.toHaveBeenCalled();
     expect(updates).toHaveLength(1);
     expect(updates[0]!.vals.nurtureStep).toBe(4);
     const scheduled = (updates[0]!.vals.nurtureNextAt as Date).getTime();
-    expect(scheduled).toBeGreaterThanOrEqual(before + 168 * 3600_000);
+    expect(scheduled).toBeGreaterThanOrEqual(before + 4 * 24 * 3600_000);
   });
 
-  it('dispatches to sendLeadMiniReadingEmail when step=4 and due', async () => {
+  it('dispatches to sendLeadSaturnWeeklyEmail when step=4 and due (was step=3)', async () => {
     candidates = [{
       id: 'lead_s4',
       email: 's4@example.com',
       locale: 'en',
       chartId: 'chart_s4',
       nurtureStep: 4,
+      nurtureNextAt: new Date(Date.now() - 60_000),
+      createdAt: new Date(Date.now() - 170 * 3600_000),
+    }];
+    const before = Date.now();
+    const { GET } = await import('../route');
+    await GET(new Request('http://localhost/api/cron/lead-nurture'));
+    expect(sendSaturnMock).toHaveBeenCalledTimes(1);
+    expect(updates).toHaveLength(1);
+    expect(updates[0]!.vals.nurtureStep).toBe(5);
+    const scheduled = (updates[0]!.vals.nurtureNextAt as Date).getTime();
+    expect(scheduled).toBeGreaterThanOrEqual(before + 168 * 3600_000);
+  });
+
+  it('dispatches to sendLeadMiniReadingEmail when step=5 and due (was step=4)', async () => {
+    candidates = [{
+      id: 'lead_s5',
+      email: 's5@example.com',
+      locale: 'en',
+      chartId: 'chart_s5',
+      nurtureStep: 5,
       nurtureNextAt: new Date(Date.now() - 60_000),
       createdAt: new Date(Date.now() - 340 * 3600_000),
     }];
@@ -204,18 +229,18 @@ describe('/api/cron/lead-nurture', () => {
     await GET(new Request('http://localhost/api/cron/lead-nurture'));
     expect(sendMiniReadingMock).toHaveBeenCalledTimes(1);
     expect(updates).toHaveLength(1);
-    expect(updates[0]!.vals.nurtureStep).toBe(5);
+    expect(updates[0]!.vals.nurtureStep).toBe(6);
     const scheduled = (updates[0]!.vals.nurtureNextAt as Date).getTime();
     expect(scheduled).toBeGreaterThanOrEqual(before + 168 * 3600_000);
   });
 
-  it('dispatches to sendLeadSynastryTeaserEmail when step=5 and due (final state)', async () => {
+  it('dispatches to sendLeadSynastryTeaserEmail when step=6 and due (terminal, was step=5)', async () => {
     candidates = [{
-      id: 'lead_s5',
-      email: 's5@example.com',
+      id: 'lead_s6',
+      email: 's6@example.com',
       locale: 'en',
-      chartId: 'chart_s5',
-      nurtureStep: 5,
+      chartId: 'chart_s6',
+      nurtureStep: 6,
       nurtureNextAt: new Date(Date.now() - 60_000),
       createdAt: new Date(Date.now() - 508 * 3600_000),
     }];
@@ -223,18 +248,18 @@ describe('/api/cron/lead-nurture', () => {
     await GET(new Request('http://localhost/api/cron/lead-nurture'));
     expect(sendSynastryMock).toHaveBeenCalledTimes(1);
     expect(updates).toHaveLength(1);
-    expect(updates[0]!.vals.nurtureStep).toBe(6);
+    expect(updates[0]!.vals.nurtureStep).toBe(7);
     expect(updates[0]!.vals.nurtureNextAt).toBeNull();
   });
 
   it('does NOT advance step when sendLeadMiniReadingEmail throws (Sev1 regression)', async () => {
     sendMiniReadingMock.mockRejectedValueOnce(new Error('Resend rejected lead_mini_reading'));
     candidates = [{
-      id: 'lead_s4_fail',
+      id: 'lead_s5_fail',
       email: 'fail@example.com',
       locale: 'en',
-      chartId: 'chart_s4_fail',
-      nurtureStep: 4,
+      chartId: 'chart_s5_fail',
+      nurtureStep: 5,
       nurtureNextAt: new Date(Date.now() - 60_000),
       createdAt: new Date(Date.now() - 340 * 3600_000),
     }];
