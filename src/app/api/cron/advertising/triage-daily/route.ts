@@ -609,24 +609,37 @@ interface AggregatedAdSetSnapshot {
   cpc: number;
   cpm: number;
   frequency: number;
+  /** Sum of lead conversions across ads in this ad set. `null` indicates the
+   * source metrics array was `null` (fetch failed) and the caller MUST skip
+   * the conversion field in any DB upsert. */
+  conversions: number | null;
 }
 
 /**
  * Collapses ad-level Meta Insights rows into one snapshot per ad set.
  * Sums impressions/clicks/spend, recomputes ratios from those sums so
  * CTR/CPC/CPM stay arithmetically consistent. Frequency is impression-
- * weighted across sibling ads.
+ * weighted across sibling ads. Conversions are summed across whichever
+ * AdMetric field is populated (`conversions_7d` or `conversions_total`),
+ * since each call site supplies a single-window result.
+ *
+ * Pass `null` to signal "no data" — propagates to all returned entries.
  */
-function aggregateMetricsByAdSet(metrics: AdMetric[]): Map<string, AggregatedAdSetSnapshot> {
+function aggregateMetricsByAdSet(
+  metrics: AdMetric[] | null,
+): Map<string, AggregatedAdSetSnapshot> {
   type Acc = AggregatedAdSetSnapshot & { _freqWeightSum: number; _freqAcc: number };
   const acc = new Map<string, Acc>();
+  if (metrics === null) return new Map();
   for (const m of metrics) {
     if (!m.adset_id) continue;
+    const leadCount = m.conversions_7d ?? m.conversions_total ?? 0;
     const existing = acc.get(m.adset_id);
     if (existing) {
       existing.impressions += m.impressions;
       existing.clicks += m.clicks;
       existing.spendUsd += m.spend_usd;
+      existing.conversions = (existing.conversions ?? 0) + leadCount;
       existing._freqAcc += m.frequency * m.impressions;
       existing._freqWeightSum += m.impressions;
     } else {
@@ -639,6 +652,7 @@ function aggregateMetricsByAdSet(metrics: AdMetric[]): Map<string, AggregatedAdS
         cpc: 0,
         cpm: 0,
         frequency: 0,
+        conversions: leadCount,
         _freqAcc: m.frequency * m.impressions,
         _freqWeightSum: m.impressions,
       });
@@ -656,6 +670,7 @@ function aggregateMetricsByAdSet(metrics: AdMetric[]): Map<string, AggregatedAdS
       cpc: s.clicks > 0 ? s.spendUsd / s.clicks : 0,
       cpm: s.impressions > 0 ? (s.spendUsd / s.impressions) * 1000 : 0,
       frequency: s._freqWeightSum > 0 ? s._freqAcc / s._freqWeightSum : 0,
+      conversions: s.conversions,
     });
   }
   return out;
