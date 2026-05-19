@@ -282,7 +282,7 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
     }));
 
     expect(dbUpdateCalls).toHaveLength(2);
-    const fallbackWhere = inspect(dbUpdateCalls[1].whereArgs, { depth: 8 });
+    const fallbackWhere = inspect(dbUpdateCalls[1].whereArgs, { depth: 12 });
     // drizzle-orm renders isNull() as the SQL text ' is null' inside a StringChunk
     expect(fallbackWhere).toMatch(/is null/i);
     expect(fallbackWhere).toMatch(/unsubscribed_at/i);
