@@ -32,7 +32,7 @@
  */
 
 import { headers } from 'next/headers';
-import { eq, or, sql } from 'drizzle-orm';
+import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import type Stripe from 'stripe';
 import { clerkClient } from '@clerk/nextjs/server';
 import { getStripe } from '@/shared/lib/stripe';
@@ -244,7 +244,12 @@ export async function POST(request: Request): Promise<Response> {
                 await db
                   .update(emailLeads)
                   .set({ unsubscribedAt: new Date() })
-                  .where(eq(emailLeads.id, utmContent));
+                  .where(
+                    and(
+                      eq(emailLeads.id, utmContent),
+                      isNull(emailLeads.unsubscribedAt),
+                    ),
+                  );
                 console.info('[stripe-webhook] utm_content fallback unsubscribed lead', {
                   sessionId: session.id,
                   leadId: utmContent,

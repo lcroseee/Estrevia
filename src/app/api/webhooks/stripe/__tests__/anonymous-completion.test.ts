@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { inspect } from 'node:util';
 
 const constructEventMock = vi.fn();
 const subsRetrieveMock = vi.fn();
@@ -261,5 +262,29 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
     }));
 
     expect(dbUpdateCalls).toHaveLength(1); // only link UPDATE; no fallback
+  });
+
+  it('utmFallback_idempotentOnRetry', async () => {
+    // The fallback UPDATE's where clause must include an isNull(unsubscribed_at)
+    // guard so a Stripe retry on the same checkout (or a future code path with
+    // overlapping intent) does not overwrite the timestamp.
+    //
+    // util.inspect() on a Drizzle SQL object renders column references and
+    // operator names (including "IsNull"). This is more stable than peeking
+    // at .queryChunks internals across drizzle versions.
+    dbUpdateReturningRows = [];
+    getUserListMock.mockResolvedValue({ totalCount: 0, data: [] });
+    createUserMock.mockResolvedValue({ id: 'user_retry' });
+
+    await POST(makeSessionCompletedEvent({
+      metadata: { utm_content: 'qnU9lsC9dkhb8XUTXF4wZ' },
+      email: 'paid@example.com',
+    }));
+
+    expect(dbUpdateCalls).toHaveLength(2);
+    const fallbackWhere = inspect(dbUpdateCalls[1].whereArgs, { depth: 8 });
+    // drizzle-orm renders isNull() as the SQL text ' is null' inside a StringChunk
+    expect(fallbackWhere).toMatch(/is null/i);
+    expect(fallbackWhere).toMatch(/unsubscribed_at/i);
   });
 });
