@@ -90,4 +90,29 @@ describe('pickDominantPlanet', () => {
     const chart = makeChart([]);
     expect(pickDominantPlanet(chart)).toEqual({ planet: 'Mercury', signName: 'Gemini' });
   });
+
+  it('Saturn wins over Mars when both are in domicile (priority test)', () => {
+    const chart = makeChart([
+      { planet: Planet.Saturn, sign: Sign.Capricorn },
+      { planet: Planet.Mars, sign: Sign.Aries },
+    ]);
+    expect(pickDominantPlanet(chart)).toEqual({ planet: 'Saturn', signName: 'Capricorn' });
+  });
+
+  it('Saturn wins over Venus when both are in domicile (priority test)', () => {
+    const chart = makeChart([
+      { planet: Planet.Saturn, sign: Sign.Aquarius },
+      { planet: Planet.Venus, sign: Sign.Libra },
+    ]);
+    expect(pickDominantPlanet(chart)).toEqual({ planet: 'Saturn', signName: 'Aquarius' });
+  });
+
+  it('Mars wins over Venus when both are in domicile (priority test)', () => {
+    const chart = makeChart([
+      { planet: Planet.Saturn, sign: Sign.Cancer },
+      { planet: Planet.Mars, sign: Sign.Scorpio },
+      { planet: Planet.Venus, sign: Sign.Taurus },
+    ]);
+    expect(pickDominantPlanet(chart)).toEqual({ planet: 'Mars', signName: 'Scorpio' });
+  });
 });
