@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server';
 import { assertCronAuth } from '@/shared/lib/cron-auth';
 import { getDb } from '@/shared/lib/db';
 import { fetchMetaInsights } from '@/modules/advertising/perceive/meta-insights';
+import { fetchConversionWindows } from '@/modules/advertising/perceive/conversion-windows';
 import { fetchFunnelSnapshot } from '@/modules/advertising/perceive/posthog-funnel';
 import { fetchStripeAttribution } from '@/modules/advertising/perceive/stripe-attribution';
 import { reconcile } from '@/modules/advertising/perceive/reconciler';
@@ -114,11 +115,16 @@ export async function GET(request: Request) {
     }
 
     // --- Step 1: Perceive — pull all data sources in parallel ---
-    const [metrics, funnelSnapshot, stripeAttributions] = await Promise.all([
+    const [metrics, conversionWindows, funnelSnapshot, stripeAttributions] = await Promise.all([
       fetchMetaInsights({
         apiClient: metaApiClient,
         dateFrom: dateStr,
         dateTo: todayStr,
+        retryBaseMs: 500,
+      }),
+      fetchConversionWindows({
+        apiClient: metaApiClient,
+        todayStr,
         retryBaseMs: 500,
       }),
       fetchFunnelSnapshot({
@@ -137,13 +143,31 @@ export async function GET(request: Request) {
       }),
     ]);
 
+    if (conversionWindows.metrics7d === null) {
+      Sentry.captureMessage('fetchConversionWindows: 7d window failed', {
+        level: 'warning',
+        tags: { cron: true, route: '/api/cron/advertising/triage-daily', subsystem: 'senior-buyer/conversions' },
+      });
+    }
+    if (conversionWindows.metrics28d === null) {
+      Sentry.captureMessage('fetchConversionWindows: 28d window failed', {
+        level: 'warning',
+        tags: { cron: true, route: '/api/cron/advertising/triage-daily', subsystem: 'senior-buyer/conversions' },
+      });
+    }
+
     // --- Step 1b: Persist daily snapshots + drift-triggered calibration +
     //              phase / maturity transitions (senior-buyer mode).
     //
     // Failures here are non-fatal: we still want decide()/act()/digest to
     // run even if the new senior-buyer plumbing isn't ready (e.g. no
     // ad_set_state rows seeded yet during early rollout).
-    const seniorBuyerSummary = await runSeniorBuyerDailyExtension(metrics, todayStr);
+    const seniorBuyerSummary = await runSeniorBuyerDailyExtension(
+      metrics,
+      conversionWindows.metrics7d,
+      conversionWindows.metrics28d,
+      todayStr,
+    );
 
     // --- Step 2: Reconcile sources (alerts on critical drift) ---
     const reconciliation = await reconcile(metrics, funnelSnapshot, {
@@ -365,6 +389,8 @@ interface SeniorBuyerDailySummary {
  */
 async function runSeniorBuyerDailyExtension(
   metrics: AdMetric[],
+  metrics7d: AdMetric[] | null,
+  metrics28d: AdMetric[] | null,
   todayStr: string,
 ): Promise<SeniorBuyerDailySummary> {
   const summary: SeniorBuyerDailySummary = {
@@ -374,6 +400,24 @@ async function runSeniorBuyerDailyExtension(
     maturity_transitions: 0,
     phase_transitions: 0,
     errors: 0,
+  };
+
+  // Aggregate the conversion-window metrics by ad-set once so the bootstrap
+  // and transition loops can read the totals cheaply. `null` upstream (fetch
+  // failed) propagates to "no field in the upsert input" rather than 0 — so
+  // bootstrap INSERT inherits schema default 0 and UPDATE preserves the old
+  // value via stripUndefined() inside upsertAdSetState.
+  const agg7d = aggregateMetricsByAdSet(metrics7d);
+  const agg28d = aggregateMetricsByAdSet(metrics28d);
+  const has7d = metrics7d !== null;
+  const has28d = metrics28d !== null;
+  const conversionFieldsFor = (
+    adSetId: string,
+  ): { conversions7dMeta?: number; conversionsTotalMeta?: number } => {
+    const fields: { conversions7dMeta?: number; conversionsTotalMeta?: number } = {};
+    if (has7d) fields.conversions7dMeta = agg7d.get(adSetId)?.conversions ?? 0;
+    if (has28d) fields.conversionsTotalMeta = agg28d.get(adSetId)?.conversions ?? 0;
+    return fields;
   };
 
   // 0. Auto-bootstrap defensive seed: any adset_id seen in metrics but
@@ -416,6 +460,7 @@ async function runSeniorBuyerDailyExtension(
           locale: 'en',
           currentPhase: 'A',
           dataMaturityMode: 'COLD_START',
+          ...conversionFieldsFor(metric.adset_id),
         });
         summary.bootstraps_created += 1;
       } catch (err) {
@@ -544,6 +589,7 @@ async function runSeniorBuyerDailyExtension(
           campaignId: adSet.campaignId,
           locale: adSet.locale,
           dataMaturityMode: newMaturity,
+          ...conversionFieldsFor(adSet.adSetId),
         });
         summary.maturity_transitions += 1;
       }
@@ -568,6 +614,7 @@ async function runSeniorBuyerDailyExtension(
             campaignId: adSet.campaignId,
             locale: adSet.locale,
             currentPhase: 'C',
+            ...conversionFieldsFor(adSet.adSetId),
           });
           summary.phase_transitions += 1;
         }
@@ -584,6 +631,35 @@ async function runSeniorBuyerDailyExtension(
           route: '/api/cron/advertising/triage-daily',
           subsystem: 'senior-buyer/transitions',
         },
+        extra: { ad_set_id: adSet.adSetId },
+      });
+    }
+  }
+
+  // Tail refresh: write conversion fields for every live ad-set, even those
+  // that did not transition phase or maturity this run. Without this,
+  // conversions_*_meta only updates on transition days, which violates the
+  // Tier-1 guard's "fresh 7d window" assumption (tier-1-rules.ts:41).
+  // liveAdSets carries the authoritative locale from DB — use it to avoid
+  // clobbering ES rows with an 'en' default.
+  for (const adSet of liveAdSets) {
+    const convFields = conversionFieldsFor(adSet.adSetId);
+    if (convFields.conversions7dMeta === undefined && convFields.conversionsTotalMeta === undefined) continue;
+    try {
+      await upsertAdSetState({
+        adSetId: adSet.adSetId,
+        campaignId: adSet.campaignId,
+        locale: adSet.locale,
+        ...convFields,
+      });
+    } catch (err) {
+      summary.errors += 1;
+      console.warn(
+        `[triage-daily][senior-buyer] conversion refresh failed for ${adSet.adSetId}:`,
+        err,
+      );
+      Sentry.captureException(err, {
+        tags: { cron: true, route: '/api/cron/advertising/triage-daily', subsystem: 'senior-buyer/conversions' },
         extra: { ad_set_id: adSet.adSetId },
       });
     }

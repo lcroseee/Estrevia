@@ -18,6 +18,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // ---------------------------------------------------------------------------
 vi.mock('@sentry/nextjs', () => ({
   captureException: vi.fn(),
+  captureMessage: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -118,6 +119,53 @@ vi.mock('@/modules/advertising/stripe/attribution-client', () => ({
   createStripeAttributionClient: vi.fn(async () => ({
     listSubscriptionsCreatedBetween: vi.fn(async () => { throw new Error('test stub: mock perceive instead'); }),
   })),
+}));
+
+// ---------------------------------------------------------------------------
+// Mock conversion windows (fetchConversionWindows — called alongside
+// fetchMetaInsights in triage-daily's Promise.all perceive step)
+// ---------------------------------------------------------------------------
+vi.mock('@/modules/advertising/perceive/conversion-windows', () => ({
+  fetchConversionWindows: vi.fn().mockResolvedValue({
+    metrics7d: [
+      {
+        ad_id: 'ad_001',
+        adset_id: 'adset_001',
+        campaign_id: 'campaign_001',
+        date: '2026-05-18',
+        impressions: 1000,
+        clicks: 20,
+        spend_usd: 5.0,
+        ctr: 0.02,
+        cpc: 0.25,
+        cpm: 5.0,
+        frequency: 1.2,
+        reach: 900,
+        days_running: 5,
+        status: 'ACTIVE',
+        conversions_7d: 3,
+      },
+    ],
+    metrics28d: [
+      {
+        ad_id: 'ad_001',
+        adset_id: 'adset_001',
+        campaign_id: 'campaign_001',
+        date: '2026-05-18',
+        impressions: 4000,
+        clicks: 80,
+        spend_usd: 20.0,
+        ctr: 0.02,
+        cpc: 0.25,
+        cpm: 5.0,
+        frequency: 1.5,
+        reach: 3600,
+        days_running: 28,
+        status: 'ACTIVE',
+        conversions_total: 12,
+      },
+    ],
+  }),
 }));
 
 // ---------------------------------------------------------------------------
