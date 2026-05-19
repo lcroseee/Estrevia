@@ -12,6 +12,13 @@ export interface MetaInsightsApi {
      * creatives). Pass-through to Meta Marketing API param of the same name.
      */
     action_attribution_windows?: Array<'1d_click' | '7d_click' | '1d_view' | '7d_view' | '28d_click'>;
+    /**
+     * When set, getInsights requests `actions{action_type,value,7d_click}` and
+     * the resulting AdMetric receives the lead conversion count under the named
+     * key (`conversions_7d` for the 7-day window, `conversions_total` for the
+     * rolling-28-day window). Omit to preserve the original non-conversion fetch.
+     */
+    windowKey?: 'conversions_7d' | 'conversions_total';
   }): Promise<AdMetric[]>;
 }
 
@@ -19,6 +26,8 @@ export interface FetchMetaInsightsOptions {
   apiClient: MockMetaApi | MetaInsightsApi;
   dateFrom: string;
   dateTo: string;
+  action_attribution_windows?: Array<'1d_click' | '7d_click' | '1d_view' | '7d_view' | '28d_click'>;
+  windowKey?: 'conversions_7d' | 'conversions_total';
   /** Base delay in ms for exponential backoff. Defaults to 1000ms; override in tests. */
   retryBaseMs?: number;
   maxRetries?: number;
@@ -53,7 +62,8 @@ export async function fetchMetaInsights(opts: FetchMetaInsightsOptions): Promise
     time_range: { since: dateFrom, until: dateTo },
     level: 'ad' as const,
     fields: [...META_FIELDS],
-    action_attribution_windows: ['7d_click' as const],
+    action_attribution_windows: opts.action_attribution_windows ?? ['7d_click' as const],
+    windowKey: opts.windowKey,
   };
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
