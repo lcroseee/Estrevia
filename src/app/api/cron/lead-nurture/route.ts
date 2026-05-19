@@ -110,9 +110,9 @@ export async function GET(request: Request) {
     // -------------------------------------------------------------------------
     // 2. Select due candidates (cap at BATCH_LIMIT).
     //    Filters: not yet converted, not unsubscribed, not undeliverable,
-    //    step < 6 (final step is 6 after T+21d synastry teaser), AND one of:
+    //    step < 7 (final step is 7 after T+21d synastry teaser), AND one of:
     //      - stuck T+0 (step=0, no nextAt, created >15min ago)
-    //      - steps 1..5 with nextAt <= NOW()
+    //      - steps 1..6 with nextAt <= NOW()
     // -------------------------------------------------------------------------
     const candidates = await db
       .select({
