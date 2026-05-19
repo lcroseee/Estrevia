@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { inspect } from 'node:util';
+import type { SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 
 const constructEventMock = vi.fn();
@@ -307,7 +308,7 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
 
     expect(dbUpdateCalls).toHaveLength(2);
     const dialect = new PgDialect({ casing: 'snake_case' });
-    const fallbackSql = dialect.sqlToQuery(dbUpdateCalls[1].whereArgs).sql;
+    const fallbackSql = dialect.sqlToQuery(dbUpdateCalls[1].whereArgs as SQL).sql;
     expect(fallbackSql).toMatch(/unsubscribed_at.*is null/i);
     expect(fallbackSql).toMatch(/converted_to_user_id.*is null/i);
   });
