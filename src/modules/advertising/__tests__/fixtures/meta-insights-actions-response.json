@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "ad_id": "ad_with_leads",
+      "adset_id": "adset_alpha",
+      "campaign_id": "campaign_en",
+      "date_start": "2026-05-11",
+      "date_stop": "2026-05-18",
+      "impressions": "12450",
+      "clicks": "287",
+      "spend": "42.18",
+      "ctr": "0.02306",
+      "cpc": "0.147",
+      "cpm": "3.388",
+      "frequency": "1.62",
+      "reach": "7691",
+      "actions": [
+        { "action_type": "link_click", "value": "287", "7d_click": "287" },
+        { "action_type": "landing_page_view", "value": "243", "7d_click": "243" },
+        { "action_type": "lead", "value": "12", "7d_click": "12" }
+      ]
+    },
+    {
+      "ad_id": "ad_no_actions",
+      "adset_id": "adset_beta",
+      "campaign_id": "campaign_es",
+      "date_start": "2026-05-11",
+      "date_stop": "2026-05-18",
+      "impressions": "3200",
+      "clicks": "41",
+      "spend": "8.10",
+      "ctr": "0.0128",
+      "cpc": "0.198",
+      "cpm": "2.531",
+      "frequency": "1.18",
+      "reach": "2712"
+    }
+  ],
+  "paging": { "cursors": { "before": "abc", "after": "xyz" } }
+}
