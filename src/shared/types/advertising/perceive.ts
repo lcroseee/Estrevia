@@ -12,7 +12,10 @@ export interface AdMetric {
   frequency: number;
   reach: number;
   days_running: number;
+  /** Window-relative lead conversions (7-day click attribution). Populated when getInsights is called with windowKey='conversions_7d'. */
   conversions_7d?: number | null;
+  /** Rolling-28-day lead conversions (7-day click attribution). Populated when getInsights is called with windowKey='conversions_total'. */
+  conversions_total?: number | null;
   status: 'ACTIVE' | 'PAUSED' | 'DELETED' | 'DISAPPROVED';
 }
 
