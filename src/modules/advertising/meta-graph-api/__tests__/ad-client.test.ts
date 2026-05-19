@@ -259,6 +259,55 @@ describe('MetaAdManagementClient', () => {
       // action_attribution_windows must be JSON-encoded array
       expect(url).toContain(encodeURIComponent('["7d_click"]'));
     });
+
+    it('parses actions[lead].7d_click into AdMetric.conversions_7d when windowKey=conversions_7d', async () => {
+      const fixture = await import('../../__tests__/fixtures/meta-insights-actions-response.json');
+      const fetchImpl = chainedFetch(ok(fixture.default ?? fixture));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const res = await client.getInsights({
+        time_range: { since: '2026-05-11', until: '2026-05-18' },
+        level: 'ad',
+        fields: ['impressions', 'clicks', 'spend'],
+        action_attribution_windows: ['7d_click'],
+        windowKey: 'conversions_7d',
+      });
+      expect(res).toHaveLength(2);
+      const withLeads = res.find((r) => r.ad_id === 'ad_with_leads');
+      const noActions = res.find((r) => r.ad_id === 'ad_no_actions');
+      expect(withLeads?.conversions_7d).toBe(12);
+      expect(withLeads?.conversions_total).toBeUndefined();
+      expect(noActions?.conversions_7d).toBe(0);
+    });
+
+    it('parses actions[lead] into AdMetric.conversions_total when windowKey=conversions_total', async () => {
+      const fixture = await import('../../__tests__/fixtures/meta-insights-actions-response.json');
+      const fetchImpl = chainedFetch(ok(fixture.default ?? fixture));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const res = await client.getInsights({
+        time_range: { since: '2026-04-20', until: '2026-05-18' },
+        level: 'ad',
+        fields: ['impressions', 'clicks', 'spend'],
+        action_attribution_windows: ['7d_click'],
+        windowKey: 'conversions_total',
+      });
+      const withLeads = res.find((r) => r.ad_id === 'ad_with_leads');
+      expect(withLeads?.conversions_total).toBe(12);
+      expect(withLeads?.conversions_7d).toBeUndefined();
+    });
+
+    it('leaves conversions_* undefined when windowKey is not provided', async () => {
+      const fixture = await import('../../__tests__/fixtures/meta-insights-actions-response.json');
+      const fetchImpl = chainedFetch(ok(fixture.default ?? fixture));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      const res = await client.getInsights({
+        time_range: { since: '2026-05-11', until: '2026-05-18' },
+        level: 'ad',
+        fields: ['impressions', 'clicks', 'spend'],
+      });
+      const withLeads = res.find((r) => r.ad_id === 'ad_with_leads');
+      expect(withLeads?.conversions_7d).toBeUndefined();
+      expect(withLeads?.conversions_total).toBeUndefined();
+    });
   });
 
   describe('getAccountStatus', () => {
