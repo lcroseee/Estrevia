@@ -384,16 +384,26 @@ export async function sendLeadChartEmail(params: {
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
 
-  // 3. Derive personalization
+  // 3. Derive personalization — T+0 cliffhanger reveals Sun only, hints
+  // moon/asc presence (boolean), names the dominant planet without interp.
   const signs = pickKeySigns(params.chart);
+  const dominant = pickDominantPlanet(params.chart);
   const chartPath = params.chartId
     ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t0`
     : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t0`;
   const chartUrl = `${SITE_URL}${chartPath}`;
 
-  // 4. Render
-  const html = await render(LeadChartEmail({ locale: params.locale, ...signs, chartUrl }));
-  const text = await render(LeadChartEmail({ locale: params.locale, ...signs, chartUrl }), { plainText: true });
+  // 4. Render with cliffhanger props (moon/asc presence-only, dominant planet name-only)
+  const emailProps = {
+    locale: params.locale,
+    sunSign: signs.sunSign,
+    hasMoonSign: Boolean(signs.moonSign),
+    hasAscSign: Boolean(signs.ascSign),
+    dominantPlanet: dominant.planet,
+    chartUrl,
+  };
+  const html = await render(LeadChartEmail(emailProps));
+  const text = await render(LeadChartEmail(emailProps), { plainText: true });
 
   // 5. Send (Resend). Throw on `result.error` so the caller's try/catch
   // surfaces the failure via Sentry and the nurture-step state is NOT

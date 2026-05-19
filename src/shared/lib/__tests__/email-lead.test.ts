@@ -63,6 +63,14 @@ describe('sendLeadChartEmail', () => {
     expect((callArgs.subject as string).toLowerCase()).toContain('sidereal');
     expect(callArgs.html).toContain('Capricorn');
     expect(callArgs.headers).toMatchObject({ 'List-Unsubscribe': expect.stringContaining('tok_lead_1') });
+    // Cliffhanger: T+0 reveals Sun but withholds Moon sign and Ascendant.
+    expect(callArgs.html).toContain('Capricorn');     // Sun sign — revealed
+    expect(callArgs.html).not.toContain('Pisces');    // Moon sign — withheld
+    expect(callArgs.html).not.toContain('Leo');       // Ascendant sign — withheld
+    // Hidden-planet tease: name only, no sign reveal.
+    // sampleChart has no Saturn/Mars/Venus in essential dignity, so picker
+    // falls back to Mercury — verify Mercury mentioned but not its sign.
+    expect((callArgs.html as string).toLowerCase()).toContain('mercury');
   });
 
   it("returns sent:false reason already_sent when claim is 'delivered'", async () => {
@@ -140,7 +148,11 @@ describe('sendLeadChartEmail', () => {
     expect(callArgs.html).toBeTruthy();
   });
 
-  it('skips Ascendant line when chart has no houses (knowsBirthTime=false)', async () => {
+  it('shows fallback path (no Moon/Asc tease) when chart has no houses (knowsBirthTime=false)', async () => {
+    // When hasAscSign=false AND hasMoonSign=true, showCliffhanger still fires
+    // (sunSign && (hasMoonSign || hasAscSign)). So Sun is revealed, Moon sign
+    // is withheld (cliffhanger), and the moonAscTease phrase is shown.
+    // The sign name "Leo" should NOT appear in the email body (withheld).
     const noTimeChart = {
       planets: [
         { planet: 'Sun', sign: 'Aries', signDegree: 5 },
@@ -157,10 +169,9 @@ describe('sendLeadChartEmail', () => {
       chartId: 'chart_z',
     });
     const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
-    expect(callArgs.html).toContain('Aries');
-    expect(callArgs.html).toContain('Leo');
+    expect(callArgs.html).toContain('Aries');   // Sun revealed
+    expect(callArgs.html).not.toContain('Leo'); // Moon sign withheld (cliffhanger)
     expect((callArgs.html as string).toLowerCase()).not.toContain('your rising in');
-    expect((callArgs.html as string).toLowerCase()).not.toContain('ascendant');
   });
 });
 
