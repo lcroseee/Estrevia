@@ -230,6 +230,22 @@ describe('sendLeadMoonAscEmail', () => {
       }),
     ).rejects.toThrow(/Resend rejected lead_moon_asc/);
   });
+
+  it('falls back to homepage URL when chartId is null', async () => {
+    const { sendLeadMoonAscEmail } = await import('../email');
+    await sendLeadMoonAscEmail({
+      leadId: 'lead_no_chart',
+      email: 'nochart@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: null,
+    });
+    const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
+    // Fallback URL points to homepage, not /chart, but still carries the utm tag
+    expect(callArgs.html).toContain('utm_campaign=t24h');
+    expect(callArgs.html).not.toContain('chart?chartId=');
+    expect(callArgs.html).not.toContain('/sign-up');
+  });
 });
 
 describe('sendLeadPaywallTeaserEmail', () => {

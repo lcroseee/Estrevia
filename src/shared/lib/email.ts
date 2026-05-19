@@ -534,7 +534,7 @@ export async function sendLeadMoonAscEmail(params: {
   // utm_campaign updated from t24 → t24h for consistency with t0/t1h naming.
   const chartPath = params.chartId
     ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t24h`
-    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t24h`;
+    : `/${params.locale === 'es' ? 'es/' : ''}?utm_source=lead-nurture&utm_campaign=t24h`;
   const chartUrl = `${SITE_URL}${chartPath}`;
 
   const html = await render(

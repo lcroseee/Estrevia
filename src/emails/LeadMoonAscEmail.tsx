@@ -23,6 +23,8 @@ const STRINGS = {
       `Your Ascendant in ${asc} is the threshold others meet first — the way you arrive in a room, the shape of your edge.`,
     triangleTease:
       "Your Sun, Moon, and Ascendant form a unique triangle — but the deeper pattern lives in your house placements and the aspects between planets. Estrevia's AI analysis reads the full layered map.",
+    triangleTeaseMoonOnly:
+      "Your Sun and Moon hint at the surface — but the deeper pattern lives in your house placements and the aspects between planets. Estrevia's AI analysis reads the full layered map.",
     cta: 'Read your AI-generated chart analysis',
     fallback:
       'Your sidereal Moon and Ascendant are part of a deeper pattern — readable on your full chart.',
@@ -41,6 +43,8 @@ const STRINGS = {
       `Tu Ascendente en ${asc} es el umbral que otros encuentran primero — la forma en que llegas a una habitación, la forma de tu borde.`,
     triangleTease:
       'Tu Sol, Luna y Ascendente forman un triángulo único — pero el patrón más profundo vive en tus casas y los aspectos entre planetas. El análisis con IA de Estrevia lee el mapa completo en capas.',
+    triangleTeaseMoonOnly:
+      'Tu Sol y tu Luna insinúan la superficie — pero el patrón más profundo vive en tus casas y los aspectos entre planetas. El análisis con IA de Estrevia lee el mapa completo en capas.',
     cta: 'Lee tu análisis de carta generado con IA',
     fallback:
       'Tu Luna sideral y tu Ascendente son parte de un patrón más profundo — legible en tu carta completa.',
@@ -71,7 +75,7 @@ export default function LeadMoonAscEmail({ locale, moonSign, ascSign, chartUrl }
             </Text>
           )}
           <Text style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 24, color: '#9CA3AF' }}>
-            {t.triangleTease}
+            {ascSign ? t.triangleTease : t.triangleTeaseMoonOnly}
           </Text>
           <Button href={chartUrl}>{t.cta}</Button>
         </>
