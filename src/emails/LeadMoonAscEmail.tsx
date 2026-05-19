@@ -6,123 +6,81 @@ interface Props {
   locale: 'en' | 'es';
   moonSign: string | null;
   ascSign: string | null;
-  signupUrl: string;
+  chartUrl: string; // renamed from signupUrl — points to /chart paywall surface
 }
-
-const MOON_INSIGHTS_EN: Record<string, string> = {
-  Aries: 'reacts in flashes — momentum carries more than reflection',
-  Taurus: 'needs grounded comfort — change feels like loss of footing',
-  Gemini: 'cycles through moods like channels — naming each one steadies them',
-  Cancer: 'absorbs other people\'s weather and calls it your own',
-  Leo: 'wants to be seen at full brightness — privacy feels like dimming',
-  Virgo: 'soothes through ordering, listing, sorting — chaos is grief',
-  Libra: 'balances by mirroring — easy to lose your own mood inside theirs',
-  Scorpio: 'feels in undertows; surface calm masks tidal depth',
-  Sagittarius: 'restless without a horizon to project against',
-  Capricorn: 'metabolizes feeling through structure and discipline',
-  Aquarius: 'observes feeling from a slight distance, even your own',
-  Pisces: 'permeable to atmospheres — needs the right water to swim in',
-};
-
-const ASC_INSIGHTS_EN: Record<string, string> = {
-  Aries: 'people clock you as direct, sometimes before you speak',
-  Taurus: 'you read as steady, slower-to-warm, worth the wait',
-  Gemini: 'first impression: quick, curious, hard to pin down',
-  Cancer: 'protective shell first; soft interior reserved for trust',
-  Leo: 'you arrive in a room; absence is noticed',
-  Virgo: 'crisp, observant, slightly evaluating',
-  Libra: 'pleasant default; conflict-avoidant by reflex',
-  Scorpio: 'you read as composed; people sense the held depth',
-  Sagittarius: 'open posture, signals broad interests early',
-  Capricorn: 'you read as older than you are — competence telegraphed',
-  Aquarius: 'friendly but slightly elsewhere; angle of detachment',
-  Pisces: 'soft edges; people project what they need onto you',
-};
-
-const MOON_INSIGHTS_ES: Record<string, string> = {
-  Aries: 'reacciona en destellos — el momentum pesa más que la reflexión',
-  Taurus: 'necesita comodidad firme — el cambio se siente como perder el suelo',
-  Gemini: 'cicla entre estados como canales — nombrarlos los estabiliza',
-  Cancer: 'absorbe el clima emocional de otros y lo llama propio',
-  Leo: 'quiere ser visto con brillo completo — la privacidad se siente como bajar la luz',
-  Virgo: 'se calma ordenando, listando — el caos es duelo',
-  Libra: 'equilibra reflejando — fácil perder tu propio ánimo en el de ellos',
-  Scorpio: 'siente en corrientes profundas; calma superficial enmascara mareas',
-  Sagittarius: 'inquieto sin un horizonte para proyectarse',
-  Capricorn: 'metaboliza el sentir a través de estructura y disciplina',
-  Aquarius: 'observa el sentir desde cierta distancia, incluso el propio',
-  Pisces: 'permeable a atmósferas — necesita el agua correcta para nadar',
-};
-
-const ASC_INSIGHTS_ES: Record<string, string> = {
-  Aries: 'la gente te lee como directo, a veces antes de que hables',
-  Taurus: 'te lees como estable, lento al calor, vale la espera',
-  Gemini: 'primera impresión: rápido, curioso, difícil de fijar',
-  Cancer: 'caparazón protector primero; interior suave reservado a la confianza',
-  Leo: 'llegas a una sala; tu ausencia se nota',
-  Virgo: 'nítido, observador, ligeramente evaluador',
-  Libra: 'amable por defecto; evita el conflicto por reflejo',
-  Scorpio: 'te lees como compuesto; la gente percibe la profundidad contenida',
-  Sagittarius: 'postura abierta, señala intereses amplios temprano',
-  Capricorn: 'te lees mayor de lo que eres — competencia telegrafiada',
-  Aquarius: 'amistoso pero ligeramente en otra parte; ángulo de distancia',
-  Pisces: 'bordes suaves; la gente proyecta sobre ti lo que necesita',
-};
 
 const STRINGS = {
   en: {
-    preview: 'Your Moon shapes how you feel; your Ascendant shapes how you arrive.',
-    heading: (moon: string | null) =>
-      moon ? `Your Moon in ${moon}` : 'Your sidereal Moon',
-    moonLead: 'Your Moon sign is where your emotional life actually lives — not your performed self.',
-    ascLead: 'Your Ascendant is the angle the world meets you at — the first impression you can\'t pick.',
-    cta: 'Save your chart — create free account',
-    fallback: 'Sign up to save your chart and track Moon and Ascendant changes over time.',
+    preview: (moon: string | null) =>
+      moon
+        ? `Your Moon in ${moon} reveals your emotional core.`
+        : 'Your sidereal Moon and Ascendant — what they reveal.',
+    headingWithMoon: (moon: string) => `Your Moon in ${moon}`,
+    headingFallback: 'Your sidereal Moon and Ascendant',
+    moonBody: (moon: string) =>
+      `Your Moon in ${moon} shows the emotional layer beneath what you signal to the world — the inner weather of how you actually feel and need.`,
+    ascBody: (asc: string) =>
+      `Your Ascendant in ${asc} is the threshold others meet first — the way you arrive in a room, the shape of your edge.`,
+    triangleTease:
+      "Your Sun, Moon, and Ascendant form a unique triangle — but the deeper pattern lives in your house placements and the aspects between planets. Estrevia's AI analysis reads the full layered map.",
+    cta: 'Read your AI-generated chart analysis',
+    fallback:
+      'Your sidereal Moon and Ascendant are part of a deeper pattern — readable on your full chart.',
+    fallbackCta: 'See your full chart',
   },
   es: {
-    preview: 'Tu Luna moldea cómo sientes; tu Ascendente, cómo llegas.',
-    heading: (moon: string | null) =>
-      moon ? `Tu Luna en ${moon}` : 'Tu Luna sideral',
-    moonLead: 'Tu signo lunar es donde tu vida emocional realmente vive — no tu yo performativo.',
-    ascLead: 'Tu Ascendente es el ángulo con el que el mundo te encuentra — la primera impresión que no eliges.',
-    cta: 'Guarda tu carta — crea cuenta gratis',
-    fallback: 'Crea una cuenta para guardar tu carta y seguir cambios de Luna y Ascendente con el tiempo.',
+    preview: (moon: string | null) =>
+      moon
+        ? `Tu Luna en ${moon} revela tu núcleo emocional.`
+        : 'Tu Luna sideral y tu Ascendente — qué revelan.',
+    headingWithMoon: (moon: string) => `Tu Luna en ${moon}`,
+    headingFallback: 'Tu Luna sideral y tu Ascendente',
+    moonBody: (moon: string) =>
+      `Tu Luna en ${moon} muestra la capa emocional debajo de lo que señalas al mundo — el clima interno de cómo realmente sientes y necesitas.`,
+    ascBody: (asc: string) =>
+      `Tu Ascendente en ${asc} es el umbral que otros encuentran primero — la forma en que llegas a una habitación, la forma de tu borde.`,
+    triangleTease:
+      'Tu Sol, Luna y Ascendente forman un triángulo único — pero el patrón más profundo vive en tus casas y los aspectos entre planetas. El análisis con IA de Estrevia lee el mapa completo en capas.',
+    cta: 'Lee tu análisis de carta generado con IA',
+    fallback:
+      'Tu Luna sideral y tu Ascendente son parte de un patrón más profundo — legible en tu carta completa.',
+    fallbackCta: 'Ver tu carta completa',
   },
 };
 
-export default function LeadMoonAscEmail({ locale, moonSign, ascSign, signupUrl }: Props) {
+export default function LeadMoonAscEmail({ locale, moonSign, ascSign, chartUrl }: Props) {
   const t = STRINGS[locale];
-  const moonInsight = moonSign
-    ? (locale === 'en' ? MOON_INSIGHTS_EN[moonSign] : MOON_INSIGHTS_ES[moonSign])
-    : null;
-  const ascInsight = ascSign
-    ? (locale === 'en' ? ASC_INSIGHTS_EN[ascSign] : ASC_INSIGHTS_ES[ascSign])
-    : null;
+  const hasData = Boolean(moonSign || ascSign);
 
   return (
-    <EmailLayout preview={t.preview} locale={locale}>
-      <Heading style={{ fontSize: 26, marginBottom: 16 }}>{t.heading(moonSign)}</Heading>
+    <EmailLayout preview={t.preview(moonSign)} locale={locale}>
+      <Heading style={{ fontSize: 28, marginBottom: 16 }}>
+        {moonSign ? t.headingWithMoon(moonSign) : t.headingFallback}
+      </Heading>
 
-      {moonInsight ? (
+      {hasData ? (
         <>
-          <Text style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 16 }}>{t.moonLead}</Text>
-          <Text style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 24 }}>
-            <strong>{moonSign}:</strong> {moonInsight}
-          </Text>
-          {ascInsight && (
-            <>
-              <Text style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 16 }}>{t.ascLead}</Text>
-              <Text style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 24 }}>
-                <strong>{ascSign}:</strong> {ascInsight}
-              </Text>
-            </>
+          {moonSign && (
+            <Text style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 18 }}>
+              {t.moonBody(moonSign)}
+            </Text>
           )}
+          {ascSign && (
+            <Text style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 24 }}>
+              {t.ascBody(ascSign)}
+            </Text>
+          )}
+          <Text style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 24, color: '#9CA3AF' }}>
+            {t.triangleTease}
+          </Text>
+          <Button href={chartUrl}>{t.cta}</Button>
         </>
       ) : (
-        <Text style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 24 }}>{t.fallback}</Text>
+        <>
+          <Text style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 24 }}>{t.fallback}</Text>
+          <Button href={chartUrl}>{t.fallbackCta}</Button>
+        </>
       )}
-
-      <Button href={signupUrl}>{t.cta}</Button>
     </EmailLayout>
   );
 }

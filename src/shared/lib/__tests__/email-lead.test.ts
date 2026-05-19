@@ -178,7 +178,7 @@ describe('sendLeadChartEmail', () => {
 });
 
 describe('sendLeadMoonAscEmail', () => {
-  it('sends T+24h with Moon insight + sign-up CTA', async () => {
+  it('sends T+24h with Moon insight + chart CTA (AI-reading teaser)', async () => {
     const { sendLeadMoonAscEmail } = await import('../email');
     const res = await sendLeadMoonAscEmail({
       leadId: 'lead_m24',
@@ -192,7 +192,12 @@ describe('sendLeadMoonAscEmail', () => {
     const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
     expect((callArgs.subject as string).toLowerCase()).toContain('moon');
     expect(callArgs.html).toContain('Pisces');
-    expect(callArgs.html).toContain('sign-up');
+    // CTA now points to /chart (paywall surface), NOT /sign-up.
+    expect(callArgs.html).toContain('/chart?chartId=');
+    expect(callArgs.html).toContain('utm_campaign=t24h');
+    expect(callArgs.html).not.toContain('/sign-up');
+    // AI-reading teaser copy mentions "full reading" or "AI"
+    expect((callArgs.html as string).toLowerCase()).toMatch(/ai analysis|ai reading|generated/);
   });
 
   it("dedups on 'delivered' claim", async () => {

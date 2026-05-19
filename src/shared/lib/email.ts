@@ -530,17 +530,19 @@ export async function sendLeadMoonAscEmail(params: {
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
 
   const signs = pickKeySigns(params.chart);
-  const signupPath = `/${params.locale === 'es' ? 'es/' : ''}sign-up?redirect_url=${encodeURIComponent(
-    `/${params.locale === 'es' ? 'es/' : ''}chart${params.chartId ? `?chartId=${params.chartId}` : ''}`,
-  )}&utm_source=lead-nurture&utm_campaign=t24`;
-  const signupUrl = `${SITE_URL}${signupPath}`;
+  // T+24h CTA now points to /chart (paywall surface), not /sign-up.
+  // utm_campaign updated from t24 → t24h for consistency with t0/t1h naming.
+  const chartPath = params.chartId
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t24h`
+    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t24h`;
+  const chartUrl = `${SITE_URL}${chartPath}`;
 
   const html = await render(
     LeadMoonAscEmail({
       locale: params.locale,
       moonSign: signs.moonSign,
       ascSign: signs.ascSign,
-      signupUrl,
+      chartUrl,
     }),
   );
   const text = await render(
@@ -548,7 +550,7 @@ export async function sendLeadMoonAscEmail(params: {
       locale: params.locale,
       moonSign: signs.moonSign,
       ascSign: signs.ascSign,
-      signupUrl,
+      chartUrl,
     }),
     { plainText: true },
   );
