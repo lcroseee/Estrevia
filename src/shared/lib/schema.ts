@@ -543,6 +543,7 @@ export const sentLeadEmails = pgTable('sent_lead_emails', {
   emailType: text('email_type', {
     enum: [
       'lead_chart',
+      'lead_curiosity_hook',
       'lead_moon_asc',
       'lead_paywall_teaser',
       'lead_saturn_weekly',

@@ -8,6 +8,7 @@ import AccountDeletionEmail from '@/emails/AccountDeletionEmail';
 import ReEngagementEmail from '@/emails/ReEngagementEmail';
 import TrialEndingEmail from '@/emails/TrialEndingEmail';
 import LeadChartEmail from '@/emails/LeadChartEmail';
+import LeadCuriosityHookEmail from '@/emails/LeadCuriosityHookEmail';
 import LeadMoonAscEmail from '@/emails/LeadMoonAscEmail';
 import LeadPaywallTeaserEmail from '@/emails/LeadPaywallTeaserEmail';
 import SaturnWeeklyEmail from '@/emails/SaturnWeeklyEmail';
@@ -417,6 +418,80 @@ export async function sendLeadChartEmail(params: {
   }
 
   await recordSentLead(params.leadId, 'lead_chart', result.data?.id ?? null);
+  return { sent: true };
+}
+
+// ---------------------------------------------------------------------------
+// sendLeadCuriosityHookEmail — T+1h nurture drip, one-shot per lead.
+// Reveals one "dominant" planet's sign-level interpretation with a paywall
+// CTA pointing to /chart (where ChartReadingSection paywall surface lives).
+// ---------------------------------------------------------------------------
+export async function sendLeadCuriosityHookEmail(params: {
+  leadId: string;
+  email: string;
+  locale: 'en' | 'es';
+  chart: ChartResult | null;
+  chartId: string | null;
+}): Promise<{ sent: boolean; reason?: string }> {
+  const claim = await tryInsertOneShotLead(params.leadId, 'lead_curiosity_hook');
+  if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  const token = await signLeadUnsubscribeToken(params.leadId);
+  const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
+
+  const dominant = pickDominantPlanet(params.chart);
+  const chartPath = params.chartId
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t1h`
+    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t1h`;
+  const chartUrl = `${SITE_URL}${chartPath}`;
+
+  const html = await render(
+    LeadCuriosityHookEmail({
+      locale: params.locale,
+      planet: dominant.planet,
+      signName: dominant.signName,
+      chartUrl,
+    }),
+  );
+  const text = await render(
+    LeadCuriosityHookEmail({
+      locale: params.locale,
+      planet: dominant.planet,
+      signName: dominant.signName,
+      chartUrl,
+    }),
+    { plainText: true },
+  );
+
+  const PLANET_ES_SUBJECT: Record<string, string> = {
+    Saturn: 'Saturno', Mars: 'Marte', Venus: 'Venus', Mercury: 'Mercurio',
+  };
+  const subject =
+    params.locale === 'es'
+      ? `Tu ${PLANET_ES_SUBJECT[dominant.planet] ?? dominant.planet} está haciendo algo poco común`
+      : `Your ${dominant.planet} is doing something rare`;
+
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject,
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    },
+    { idempotencyKey: `${params.leadId}:lead_curiosity_hook` },
+  );
+  if (result.error) {
+    throw new Error(
+      `Resend rejected lead_curiosity_hook for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
+    );
+  }
+
+  await recordSentLead(params.leadId, 'lead_curiosity_hook', result.data?.id ?? null);
   return { sent: true };
 }
 
