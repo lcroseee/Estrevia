@@ -242,6 +242,23 @@ describe('MetaAdManagementClient', () => {
       });
       expect(res[0]).toMatchObject({ impressions: 0, clicks: 0, spend_usd: 0 });
     });
+
+    it('forwards action_attribution_windows and includes actions in fields when windowKey provided', async () => {
+      const fetchImpl = chainedFetch(ok({ data: [] }));
+      const client = new MetaAdManagementClient({ accessToken: 'T', adAccountId: 'act_1', fetchImpl });
+      await client.getInsights({
+        time_range: { since: '2026-05-11', until: '2026-05-18' },
+        level: 'ad',
+        fields: ['impressions', 'clicks', 'spend'],
+        action_attribution_windows: ['7d_click'],
+        windowKey: 'conversions_7d',
+      });
+      const [url] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+      // actions must be appended to fields
+      expect(decodeURIComponent(url)).toContain('fields=ad_id,adset_id,campaign_id,date_start,date_stop,impressions,clicks,spend,actions');
+      // action_attribution_windows must be JSON-encoded array
+      expect(url).toContain(encodeURIComponent('["7d_click"]'));
+    });
   });
 
   describe('getAccountStatus', () => {

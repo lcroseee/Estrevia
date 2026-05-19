@@ -103,18 +103,25 @@ export class MetaAdManagementClient extends MetaGraphApiBase {
     time_range: { since: string; until: string };
     level: string;
     fields: string[];
+    action_attribution_windows?: Array<'1d_click' | '7d_click' | '1d_view' | '7d_view' | '28d_click'>;
+    windowKey?: 'conversions_7d' | 'conversions_total';
   }): Promise<AdMetric[]> {
+    const fields = ['ad_id', 'adset_id', 'campaign_id', 'date_start', 'date_stop', ...opts.fields];
+    if (opts.windowKey) fields.push('actions');
     const params = new URLSearchParams({
       level: opts.level,
-      fields: ['ad_id', 'adset_id', 'campaign_id', 'date_start', 'date_stop', ...opts.fields].join(','),
+      fields: fields.join(','),
       time_range: JSON.stringify(opts.time_range),
       limit: '500',
     });
+    if (opts.action_attribution_windows && opts.action_attribution_windows.length > 0) {
+      params.set('action_attribution_windows', JSON.stringify(opts.action_attribution_windows));
+    }
     const res = await this.request<MetaInsightsResponse>(
       'GET',
       `/${this.adAccountId}/insights?${params.toString()}`,
     );
-    return (res.data ?? []).map((row) => this.toAdMetric(row, opts.time_range));
+    return (res.data ?? []).map((row) => this.toAdMetric(row, opts.time_range, opts.windowKey));
   }
 
   async getAccountStatus(): Promise<{ status: string; disapproval_rate: number }> {
@@ -168,10 +175,11 @@ export class MetaAdManagementClient extends MetaGraphApiBase {
   private toAdMetric(
     row: MetaInsightsRow,
     timeRange: { since: string; until: string },
+    windowKey?: 'conversions_7d' | 'conversions_total',
   ): AdMetric {
     const date = row.date_start ?? timeRange.since;
     const daysRunning = this.diffDaysInclusive(row.date_start ?? timeRange.since, row.date_stop ?? timeRange.until);
-    return {
+    const out: AdMetric = {
       ad_id: row.ad_id ?? '',
       adset_id: row.adset_id ?? '',
       campaign_id: row.campaign_id ?? '',
@@ -187,6 +195,12 @@ export class MetaAdManagementClient extends MetaGraphApiBase {
       days_running: daysRunning,
       status: 'ACTIVE',
     };
+    if (windowKey) {
+      const leadAction = row.actions?.find((a) => a.action_type === 'lead');
+      const rawValue = leadAction?.['7d_click'] ?? leadAction?.value;
+      out[windowKey] = leadAction ? this.parseNum(rawValue) : 0;
+    }
+    return out;
   }
 
   private parseNum(v: string | undefined): number {
