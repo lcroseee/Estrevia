@@ -61,7 +61,6 @@ describe('sendLeadChartEmail', () => {
     const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
     expect(callArgs.to).toBe('test@example.com');
     expect((callArgs.subject as string).toLowerCase()).toContain('sidereal');
-    expect(callArgs.html).toContain('Capricorn');
     expect(callArgs.headers).toMatchObject({ 'List-Unsubscribe': expect.stringContaining('tok_lead_1') });
     // Cliffhanger: T+0 reveals Sun but withholds Moon sign and Ascendant.
     expect(callArgs.html).toContain('Capricorn');     // Sun sign — revealed
@@ -171,6 +170,9 @@ describe('sendLeadChartEmail', () => {
     const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
     expect(callArgs.html).toContain('Aries');   // Sun revealed
     expect(callArgs.html).not.toContain('Leo'); // Moon sign withheld (cliffhanger)
+    // Anchor the negative assertion: ensure dominant planet name is present
+    // so the test fails clearly if any sign-revealing copy is added.
+    expect((callArgs.html as string).toLowerCase()).toContain('mercury');
     expect((callArgs.html as string).toLowerCase()).not.toContain('your rising in');
   });
 });

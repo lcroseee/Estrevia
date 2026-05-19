@@ -40,6 +40,7 @@ const STRINGS = {
     intro: 'Estrevia calculates from where the planets actually appear in the sky — Lahiri sidereal, ±0.01° precision.',
     teaserSun: (sign: string) => `Your Sun in ${sign}`,
     moonAscTease: 'Your Moon and Ascendant tell a deeper story — visible on your full chart.',
+    moonOnlyTease: 'Your Moon sign tells a deeper story — visible on your full chart.',
     planetTease: (planet: 'Saturn' | 'Mars' | 'Venus' | 'Mercury') => `And your ${planet} is doing something most charts don't.`,
     cta: 'See your full chart',
     fallback: 'Your sidereal chart is waiting — Estrevia uses Lahiri precision.',
@@ -55,6 +56,7 @@ const STRINGS = {
     intro: 'Estrevia calcula desde donde los planetas aparecen realmente en el cielo — sideral Lahiri, precisión ±0,01°.',
     teaserSun: (sign: string) => `Tu Sol en ${sign}`,
     moonAscTease: 'Tu Luna y tu Ascendente cuentan una historia más profunda — visible en tu carta completa.',
+    moonOnlyTease: 'Tu Luna sideral cuenta una historia más profunda — visible en tu carta completa.',
     planetTease: (planet: 'Saturn' | 'Mars' | 'Venus' | 'Mercury') => `Y tu ${PLANET_ES_NAMES[planet]} está haciendo algo que la mayoría de las cartas no hace.`,
     cta: 'Ver tu carta completa',
     fallback: 'Tu carta sideral te espera — Estrevia usa precisión Lahiri.',
@@ -88,7 +90,7 @@ export default function LeadChartEmail({
             </Text>
           )}
           <Text style={{ fontSize: 15, color: '#9CA3AF', marginBottom: 18, fontStyle: 'italic' }}>
-            {t.moonAscTease}
+            {hasAscSign ? t.moonAscTease : t.moonOnlyTease}
           </Text>
           <Text style={{ fontSize: 15, color: '#9CA3AF', marginBottom: 24, fontStyle: 'italic' }}>
             {t.planetTease(dominantPlanet)}
