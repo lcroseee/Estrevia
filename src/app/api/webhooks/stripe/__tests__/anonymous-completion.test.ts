@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { inspect } from 'node:util';
+import { PgDialect } from 'drizzle-orm/pg-core';
 
 const constructEventMock = vi.fn();
 const subsRetrieveMock = vi.fn();
@@ -286,5 +287,28 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
     // drizzle-orm renders isNull() as the SQL text ' is null' inside a StringChunk
     expect(fallbackWhere).toMatch(/is null/i);
     expect(fallbackWhere).toMatch(/unsubscribed_at/i);
+  });
+
+  it('utmFallback_skipsAlreadyConverted', async () => {
+    // The fallback UPDATE's where clause must contain TWO isNull guards:
+    // one on unsubscribed_at (from T4) and one on converted_to_user_id (this task).
+    // PgDialect.sqlToQuery() renders the actual SQL string, which is the only
+    // reliable discriminator — inspect() of a drizzle column AST node always
+    // includes all sibling columns via the table back-reference, making
+    // regex-on-inspect non-discriminating for this assertion.
+    dbUpdateReturningRows = [];
+    getUserListMock.mockResolvedValue({ totalCount: 0, data: [] });
+    createUserMock.mockResolvedValue({ id: 'user_already_converted' });
+
+    await POST(makeSessionCompletedEvent({
+      metadata: { utm_content: 'qnU9lsC9dkhb8XUTXF4wZ' },
+      email: 'paid@example.com',
+    }));
+
+    expect(dbUpdateCalls).toHaveLength(2);
+    const dialect = new PgDialect({ casing: 'snake_case' });
+    const fallbackSql = dialect.sqlToQuery(dbUpdateCalls[1].whereArgs).sql;
+    expect(fallbackSql).toMatch(/unsubscribed_at.*is null/i);
+    expect(fallbackSql).toMatch(/converted_to_user_id.*is null/i);
   });
 });

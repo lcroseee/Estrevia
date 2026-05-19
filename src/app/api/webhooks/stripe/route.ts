@@ -248,6 +248,7 @@ export async function POST(request: Request): Promise<Response> {
                     and(
                       eq(emailLeads.id, utmContent),
                       isNull(emailLeads.unsubscribedAt),
+                      isNull(emailLeads.convertedToUserId),
                     ),
                   );
                 console.info('[stripe-webhook] utm_content fallback unsubscribed lead', {
