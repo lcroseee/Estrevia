@@ -18,7 +18,8 @@ describe('LeadCuriosityHookEmail', () => {
     );
     expect(html).toContain('Saturn');
     expect(html).toContain('Capricorn');
-    expect(html).toContain(baseProps.chartUrl);
+    expect(html).toContain('chartId=abc');
+    expect(html).toContain('utm_campaign=t1h');
     expect(html).toContain('Unlock');
   });
 
@@ -33,7 +34,8 @@ describe('LeadCuriosityHookEmail', () => {
     );
     expect(html).toContain('Marte');
     expect(html).toContain('Aries');
-    expect(html).toContain(baseProps.chartUrl);
+    expect(html).toContain('chartId=abc');
+    expect(html).toContain('utm_campaign=t1h');
     expect(html).toContain('Desbloquea');
   });
 
