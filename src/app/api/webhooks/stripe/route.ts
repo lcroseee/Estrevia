@@ -238,7 +238,9 @@ export async function POST(request: Request): Promise<Response> {
               // (lead-email differs from checkout-email AND browser dropped anonymous_id).
               // Sets ONLY unsubscribed_at — we cannot prove cross-email identity match.
               const utmContent = session.metadata?.utm_content;
-              if (linkedRows.length === 0 && typeof utmContent === 'string') {
+              const looksLikeLeadId =
+                typeof utmContent === 'string' && /^[A-Za-z0-9_-]{21}$/.test(utmContent);
+              if (linkedRows.length === 0 && looksLikeLeadId) {
                 await db
                   .update(emailLeads)
                   .set({ unsubscribedAt: new Date() })

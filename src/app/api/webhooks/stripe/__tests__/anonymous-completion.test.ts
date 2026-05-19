@@ -248,4 +248,18 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
     expect(dbUpdateCalls[1].returningCalled).toBe(false); // fallback UPDATE (no .returning())
     expect(dbUpdateCalls[1].setArgs).toMatchObject({ unsubscribedAt: expect.any(Date) });
   });
+
+  it('utmFallback_invalidFormatNoOp', async () => {
+    // utm_content like a legacy ad_id (not a 21-char nanoid) → fallback must NOT fire.
+    dbUpdateReturningRows = []; // link matched zero rows
+    getUserListMock.mockResolvedValue({ totalCount: 0, data: [] });
+    createUserMock.mockResolvedValue({ id: 'user_invalid_utm' });
+
+    await POST(makeSessionCompletedEvent({
+      metadata: { utm_content: 'ad_123' },
+      email: 'paid@example.com',
+    }));
+
+    expect(dbUpdateCalls).toHaveLength(1); // only link UPDATE; no fallback
+  });
 });
