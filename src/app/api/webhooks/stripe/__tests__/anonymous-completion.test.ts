@@ -11,6 +11,17 @@ const dbUpdateMock = vi.fn();
 const dbDeleteMock = vi.fn();
 const sendEmailMock = vi.fn();
 
+// Captures every db.update().set().where()[.returning()] invocation in order.
+// Tests assert on .length, .setArgs, .whereArgs, and .returningCalled.
+type UpdateCall = {
+  setArgs: unknown;
+  whereArgs: unknown;
+  returningCalled: boolean;
+};
+const dbUpdateCalls: UpdateCall[] = [];
+// Result returned when the link UPDATE chains .returning(). Empty array = "no rows linked".
+let dbUpdateReturningRows: Array<{ id: string }> = [];
+
 vi.mock('@/shared/lib/stripe', () => ({
   getStripe: () => ({
     webhooks: { constructEvent: constructEventMock },
@@ -32,7 +43,25 @@ vi.mock('@/shared/lib/db', () => ({
         onConflictDoUpdate: () => Promise.resolve(undefined),
       }),
     }),
-    update: () => ({ set: () => ({ where: () => Promise.resolve(dbUpdateMock()) }) }),
+    update: () => ({
+      set: (setArgs: unknown) => ({
+        where: (whereArgs: unknown) => {
+          const call: UpdateCall = { setArgs, whereArgs, returningCalled: false };
+          dbUpdateCalls.push(call);
+          dbUpdateMock();
+          // The fallback path awaits .where() directly (thenable resolves to undefined).
+          // The link path calls .returning() first, which resolves to dbUpdateReturningRows.
+          const thenable: PromiseLike<undefined> & { returning: () => Promise<Array<{ id: string }>> } = {
+            then: (resolve) => Promise.resolve(undefined).then(resolve),
+            returning: () => {
+              call.returningCalled = true;
+              return Promise.resolve(dbUpdateReturningRows);
+            },
+          };
+          return thenable;
+        },
+      }),
+    }),
     delete: () => ({ where: () => Promise.resolve(dbDeleteMock()) }),
     select: () => ({ from: () => ({ where: () => ({ limit: () => Promise.resolve([]) }) }) }),
   }),
@@ -81,6 +110,8 @@ function makeSessionCompletedEvent(opts: { metadata?: Record<string, string>; em
 
 beforeEach(() => {
   vi.clearAllMocks();
+  dbUpdateCalls.length = 0;
+  dbUpdateReturningRows = [{ id: 'lead-default' }]; // default: link succeeds → fallback skipped
   process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
   process.env.STRIPE_PRICE_ID_PRO_ANNUAL = 'price_annual_test';
   dbInsertMock.mockReturnValue([{ eventId: 'evt_test_1' }]);
