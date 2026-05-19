@@ -311,4 +311,18 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
     expect(fallbackSql).toMatch(/unsubscribed_at.*is null/i);
     expect(fallbackSql).toMatch(/converted_to_user_id.*is null/i);
   });
+
+  it('utmFallback_noMetadataNoOp', async () => {
+    // session.metadata.utm_content undefined → fallback must NOT fire and must NOT throw.
+    dbUpdateReturningRows = [];
+    getUserListMock.mockResolvedValue({ totalCount: 0, data: [] });
+    createUserMock.mockResolvedValue({ id: 'user_no_utm' });
+
+    await POST(makeSessionCompletedEvent({
+      metadata: { anonymous_id: 'anon-xyz' }, // no utm_content key
+      email: 'paid@example.com',
+    }));
+
+    expect(dbUpdateCalls).toHaveLength(1); // only link UPDATE
+  });
 });
