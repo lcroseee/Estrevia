@@ -529,7 +529,7 @@ export const emailLeads = pgTable('email_leads', {
   index('email_leads_converted_to_user_id_idx').on(table.convertedToUserId),
   index('email_leads_nurture_due_idx')
     .on(table.nurtureNextAt)
-    .where(sql`nurture_step < 6 AND converted_to_user_id IS NULL AND unsubscribed_at IS NULL AND email_undeliverable = false`),
+    .where(sql`nurture_step < 4 AND converted_to_user_id IS NULL AND unsubscribed_at IS NULL AND email_undeliverable = false`),
 ]);
 
 // ---------------------------------------------------------------------------

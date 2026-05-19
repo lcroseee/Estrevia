@@ -138,7 +138,7 @@ export async function GET(request: Request) {
               isNull(emailLeads.nurtureNextAt),
               lt(emailLeads.createdAt, stuckCutoff),
             ),
-            // steps 1..5 with due nextAt (T+24h, T+72h, T+7d, T+14d, T+21d)
+            // steps 1..6 with due nextAt (T+1h, T+24h, T+72h, T+7d, T+14d, T+21d)
             sql`${emailLeads.nurtureNextAt} IS NOT NULL AND ${emailLeads.nurtureNextAt} <= NOW()`,
           ),
         ),
