@@ -141,6 +141,23 @@ describe('applyTier1Rules', () => {
     expect(decision.reason).toContain('insufficient_conversions');
   });
 
+  it('holds when conversions_7d = 0 (zero leads, in sample) — post-fix common case', () => {
+    // Pre-fix audit state: AdMetric.conversions_7d was always undefined → guard fail-open.
+    // Post-fix with fetchConversionWindows: live ad-sets with no leads in last 7d report 0.
+    // The guard must hold-with-insufficient_conversions, NOT fall through to the
+    // frequency/CPC pause rules (which would otherwise fire on a fatigued ad-set).
+    const m = mockAdMetric({
+      days_running: 10,
+      conversions_7d: 0,
+      frequency: 5.0, // would trigger frequency_cap pause if guard didn't fire
+      cpc: 6.0,       // would trigger cpc_hard_cap pause if guard didn't fire
+    });
+    const decision = applyTier1Rules(m);
+    expect(decision.action).toBe('hold');
+    expect(decision.reason).toContain('insufficient_conversions');
+    expect(decision.reason).toContain('0/7d');
+  });
+
   it('does NOT hold (proceeds to rules) when conversions_7d exactly equals threshold (50)', () => {
     const m = mockAdMetric({ days_running: 7, conversions_7d: 50, frequency: 1.0, cpc: 1.0, spend_usd: 5.0 });
     const decision = applyTier1Rules(m);
