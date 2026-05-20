@@ -16,13 +16,13 @@ vi.mock('@/shared/lib/analytics', () => ({
 }));
 
 vi.mock('@/shared/lib/utm-cookie', () => ({
-  readUtmCookie: vi.fn(),
+  readUtmLastTouch: vi.fn(),
 }));
 
-import { readUtmCookie } from '@/shared/lib/utm-cookie';
+import { readUtmLastTouch } from '@/shared/lib/utm-cookie';
 import { PricingUpgradeButton } from '../PricingUpgradeButton';
 
-const mockReadUtmCookie = vi.mocked(readUtmCookie);
+const mockReadUtmLastTouch = vi.mocked(readUtmLastTouch);
 
 function makeFetchMock() {
   return vi.fn().mockResolvedValue({
@@ -41,8 +41,8 @@ beforeEach(() => {
 });
 
 describe('PricingUpgradeButton — UTM forwarding', () => {
-  it('includes UTM fields in the fetch body when readUtmCookie returns data', async () => {
-    mockReadUtmCookie.mockReturnValue({
+  it('includes UTM fields in the fetch body when readUtmLastTouch returns data', async () => {
+    mockReadUtmLastTouch.mockReturnValue({
       utm_source: 'meta',
       utm_click_timestamp: '2026-05-04T10:00:00.000Z',
     });
@@ -62,8 +62,8 @@ describe('PricingUpgradeButton — UTM forwarding', () => {
     expect(body.utm_click_timestamp).toBe('2026-05-04T10:00:00.000Z');
   });
 
-  it('omits UTM fields when readUtmCookie returns null', async () => {
-    mockReadUtmCookie.mockReturnValue(null);
+  it('omits UTM fields when readUtmLastTouch returns empty object', async () => {
+    mockReadUtmLastTouch.mockReturnValue({});
 
     const mockFetch = makeFetchMock();
     vi.stubGlobal('fetch', mockFetch);
@@ -81,7 +81,7 @@ describe('PricingUpgradeButton — UTM forwarding', () => {
   });
 
   it('includes locale="en" in the fetch body by default', async () => {
-    mockReadUtmCookie.mockReturnValue(null);
+    mockReadUtmLastTouch.mockReturnValue({});
     const mockFetch = makeFetchMock();
     vi.stubGlobal('fetch', mockFetch);
 
@@ -96,7 +96,7 @@ describe('PricingUpgradeButton — UTM forwarding', () => {
 
   it('includes locale="es" in the fetch body when rendered under /es', async () => {
     hoistedLocale.value = 'es';
-    mockReadUtmCookie.mockReturnValue(null);
+    mockReadUtmLastTouch.mockReturnValue({});
     const mockFetch = makeFetchMock();
     vi.stubGlobal('fetch', mockFetch);
 
@@ -107,5 +107,26 @@ describe('PricingUpgradeButton — UTM forwarding', () => {
 
     const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as Record<string, unknown>;
     expect(body.locale).toBe('es');
+  });
+
+  it('passes URL-derived UTM (last-touch) to checkout body', async () => {
+    mockReadUtmLastTouch.mockReturnValue({
+      utm_source: 'lead-nurture',
+      utm_campaign: 't72',
+    });
+
+    const mockFetch = makeFetchMock();
+    vi.stubGlobal('fetch', mockFetch);
+
+    const { getByRole } = render(<PricingUpgradeButton plan="pro_annual" />);
+
+    await act(async () => {
+      getByRole('button').click();
+    });
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as Record<string, unknown>;
+    expect(body.utm_source).toBe('lead-nurture');
+    expect(body.utm_campaign).toBe('t72');
   });
 });
