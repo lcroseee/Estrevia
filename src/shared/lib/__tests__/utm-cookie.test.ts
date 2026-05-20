@@ -4,6 +4,7 @@ import {
   UTM_COOKIE_NAME,
   parseUtmFromSearch,
   readUtmCookie,
+  readUtmLastTouch,
   writeUtmCookie,
 } from '../utm-cookie';
 
@@ -145,5 +146,40 @@ describe('SSR safety', () => {
     } finally {
       globalThis.document = original;
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// readUtmLastTouch — URL last-touch overrides cookie
+// ---------------------------------------------------------------------------
+
+describe('readUtmLastTouch', () => {
+  beforeEach(() => {
+    document.cookie = `${UTM_COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    Object.defineProperty(window, 'location', {
+      writable: true,
+      value: { search: '' },
+    });
+  });
+
+  it('returns cookie value when URL has no UTM params', () => {
+    document.cookie = `${UTM_COOKIE_NAME}=${encodeURIComponent(JSON.stringify({ utm_source: 'meta' }))}; path=/;`;
+    expect(readUtmLastTouch()).toEqual({ utm_source: 'meta' });
+  });
+
+  it('URL UTM overrides cookie UTM (last-touch)', () => {
+    document.cookie = `${UTM_COOKIE_NAME}=${encodeURIComponent(JSON.stringify({ utm_source: 'meta' }))}; path=/;`;
+    Object.defineProperty(window, 'location', { writable: true, value: { search: '?utm_source=lead-nurture' } });
+    expect(readUtmLastTouch()).toEqual({ utm_source: 'lead-nurture' });
+  });
+
+  it('partial URL UTM merges with cookie (per-key override)', () => {
+    document.cookie = `${UTM_COOKIE_NAME}=${encodeURIComponent(JSON.stringify({ utm_source: 'meta', utm_campaign: 'estrevia_lead_en' }))}; path=/;`;
+    Object.defineProperty(window, 'location', { writable: true, value: { search: '?utm_source=lead-nurture' } });
+    expect(readUtmLastTouch()).toEqual({ utm_source: 'lead-nurture', utm_campaign: 'estrevia_lead_en' });
+  });
+
+  it('returns empty object when both cookie and URL are empty', () => {
+    expect(readUtmLastTouch()).toEqual({});
   });
 });
