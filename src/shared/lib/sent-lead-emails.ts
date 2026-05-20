@@ -42,7 +42,15 @@ export async function tryInsertOneShotLead(
     .values({ leadId, emailType })
     .onConflictDoNothing()
     .returning();
-  if (inserted.length > 0) return 'new';
+  if (inserted.length > 0) {
+    console.info('[sent-lead-emails] claim', {
+      leadId,
+      emailType,
+      result: 'new',
+      insertedRowCount: inserted.length,
+    });
+    return 'new';
+  }
 
   // Conflict — distinguish "delivered" (msgid present) vs "retry" (msgid null,
   // prior send claimed the slot but never completed successfully).
@@ -51,7 +59,15 @@ export async function tryInsertOneShotLead(
     .from(sentLeadEmails)
     .where(and(eq(sentLeadEmails.leadId, leadId), eq(sentLeadEmails.emailType, emailType)))
     .limit(1);
-  return existing[0]?.resendMessageId ? 'delivered' : 'retry';
+  const result: LeadEmailClaim = existing[0]?.resendMessageId ? 'delivered' : 'retry';
+  console.info('[sent-lead-emails] claim', {
+    leadId,
+    emailType,
+    result,
+    insertedRowCount: 0,
+    existingMsgid: existing[0]?.resendMessageId ?? null,
+  });
+  return result;
 }
 
 /**
