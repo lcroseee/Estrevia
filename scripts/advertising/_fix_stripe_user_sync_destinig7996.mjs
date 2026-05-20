@@ -18,8 +18,8 @@ const DRY = process.argv.includes('--dry-run');
 const sql = neon(process.env.DATABASE_URL);
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-12-18.acacia' });
 
-const CUSTOMER_ID = 'cus_UXLi3mJUjr';
-const CLERK_USER_ID = 'user_3DsXX2DHB';
+const CUSTOMER_ID = 'cus_UXLi3mJUjr3wYC';
+const TARGET_EMAIL = 'destinig7996@gmail.com';
 
 // 1. Pull current Stripe subscription state
 const subs = await stripe.subscriptions.list({ customer: CUSTOMER_ID, limit: 5 });
@@ -31,7 +31,9 @@ const sub = subs.data[0];
 const priceId = sub.items.data[0]?.price.id;
 const plan = sub.items.data[0]?.price.recurring?.interval === 'year' ? 'pro_annual' : 'pro_monthly';
 const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : null;
-const currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+// Stripe SDK v22 moved current_period_end off Subscription onto SubscriptionItem
+const periodEndUnix = sub.items?.data?.[0]?.current_period_end ?? null;
+const currentPeriodEnd = periodEndUnix ? new Date(periodEndUnix * 1000) : null;
 
 const upsertData = {
   stripe_customer_id: CUSTOMER_ID,
@@ -53,7 +55,9 @@ if (DRY) {
   process.exit(0);
 }
 
-// 2. Apply upsert (matches webhook handler line 336-367 semantics)
+// 2. Apply upsert by email (idempotent — matches webhook handler line 336-367 semantics).
+// Email lookup is reliable: Clerk webhook fires after sign-up and stores user.email; Stripe
+// customer also has email. They are the only common key when stripe_customer_id linkage is broken.
 const result = await sql`
   UPDATE users SET
     stripe_customer_id = ${CUSTOMER_ID},
@@ -65,12 +69,12 @@ const result = await sql`
     trial_end = ${trialEnd},
     current_period_end = ${currentPeriodEnd},
     updated_at = NOW()
-  WHERE id = ${CLERK_USER_ID}
-  RETURNING id, email, subscription_tier, subscription_status
+  WHERE email = ${TARGET_EMAIL}
+  RETURNING id, email, subscription_tier, subscription_status, stripe_customer_id
 `;
 
 if (result.length === 0) {
-  console.error(`No user row matched id=${CLERK_USER_ID}. Aborting.`);
+  console.error(`No user row matched email=${TARGET_EMAIL}. Aborting.`);
   process.exit(1);
 }
 console.log('\n✓ Updated user:');

@@ -4,6 +4,9 @@ vi.mock('@/shared/lib/cron-auth', () => ({
   assertCronAuth: vi.fn(() => null),
 }));
 
+// Watchdog now does two `select().from(users).where(...)` calls per run:
+// 2a) stripe_customer_id lookup, 2b) email fallback lookup. Each test enqueues
+// rows for each call in order via mockResolvedValueOnce.
 const mockSelect = vi.fn();
 const mockUpdate = vi.fn();
 const mockStripeCustomersList = vi.fn();
@@ -36,10 +39,11 @@ describe('cron/stripe-user-sync', () => {
     expect(body.fixed).toBe(0);
   });
 
-  it('detects missing-user mismatch (customer in Stripe, no users row)', async () => {
+  it('detects missing-user mismatch (Stripe customer with no DB match by id or email)', async () => {
     mockStripeCustomersList.mockResolvedValue({
       data: [{
         id: 'cus_test1',
+        email: 'orphan@example.com',
         subscriptions: { data: [{
           id: 'sub_test1', status: 'trialing',
           items: { data: [{ price: { recurring: { interval: 'month' } } }] },
@@ -47,12 +51,44 @@ describe('cron/stripe-user-sync', () => {
         }] },
       }],
     });
-    mockSelect.mockResolvedValue([]);
+    mockSelect.mockResolvedValue([]);  // both byStripeId and byEmail return empty
     const res = await GET(new Request('http://test'));
     const body = await res.json();
     expect(body.checked).toBe(1);
-    // missing-user without dbUser → cannot fix; logs warning, fixed stays 0
+    // Truly missing-user (no email match either) → cannot UPDATE; logs warning, fixed stays 0
     expect(body.fixed).toBe(0);
+  });
+
+  it('fixes via email-fallback when stripe_customer_id is NULL but email matches', async () => {
+    // destinig7996 scenario: Stripe customer exists with a known email,
+    // but the matching users row has stripe_customer_id=NULL (webhook upsert
+    // never completed). Watchdog should repair the linkage via email lookup.
+    mockStripeCustomersList.mockResolvedValue({
+      data: [{
+        id: 'cus_destinig_like',
+        email: 'destinig7996@example.com',
+        subscriptions: { data: [{
+          id: 'sub_destinig_like', status: 'trialing',
+          items: { data: [{ price: { recurring: { interval: 'year' } } }] },
+          trial_end: 1, current_period_end: 1,
+        }] },
+      }],
+    });
+    // 2a) byStripeId lookup → empty (stripe_customer_id is NULL in DB)
+    mockSelect.mockResolvedValueOnce([]);
+    // 2b) byEmail lookup → finds the user
+    mockSelect.mockResolvedValueOnce([{
+      id: 'user_destinig_like',
+      email: 'destinig7996@example.com',
+      stripeCustomerId: null,
+      subscriptionTier: 'free',
+      subscriptionStatus: 'free',
+    }]);
+    mockUpdate.mockResolvedValue([]);
+    const res = await GET(new Request('http://test'));
+    const body = await res.json();
+    expect(body.fixed).toBe(1);
+    expect(mockUpdate).toHaveBeenCalled();
   });
 
   it('fixes tier-mismatch when users.subscription_tier = free but Stripe = active', async () => {

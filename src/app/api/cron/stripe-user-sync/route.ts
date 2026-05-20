@@ -63,13 +63,24 @@ export async function GET(request: Request) {
       expand: ['data.subscriptions'],
     });
 
-    // 2. Pull matching users from DB (by stripe_customer_id), plus all users
-    //    whose email matches customer.email (for missing-user detection).
+    // 2a. Pull matching users by stripe_customer_id
     const customerIds = customers.data.map((c) => c.id);
-    const matchedUsers = customerIds.length > 0
+    const matchedByStripeId = customerIds.length > 0
       ? await db.select().from(users).where(inArray(users.stripeCustomerId, customerIds))
       : [];
-    const byStripeId = new Map(matchedUsers.map((u) => [u.stripeCustomerId, u]));
+    const byStripeId = new Map(matchedByStripeId.map((u) => [u.stripeCustomerId, u]));
+
+    // 2b. Email fallback: for customers whose stripe_customer_id is NOT yet linked
+    //    in users (e.g. destinig7996 — Stripe webhook upsert failed, Clerk created
+    //    the row separately, leaving stripe_customer_id NULL). Match by email so we
+    //    can repair the linkage in the per-customer loop below.
+    const orphanEmails = customers.data
+      .filter((c) => c.email && !byStripeId.has(c.id))
+      .map((c) => c.email as string);
+    const matchedByEmail = orphanEmails.length > 0
+      ? await db.select().from(users).where(inArray(users.email, orphanEmails))
+      : [];
+    const byEmail = new Map(matchedByEmail.map((u) => [u.email, u]));
 
     // 3. Per-customer diff
     for (const customer of customers.data) {
@@ -77,7 +88,8 @@ export async function GET(request: Request) {
       try {
         const sub = customer.subscriptions?.data?.[0];
         if (!sub) continue;  // no active sub, nothing to sync
-        const dbUser = byStripeId.get(customer.id);
+        const dbUser = byStripeId.get(customer.id)
+          ?? (customer.email ? byEmail.get(customer.email) : undefined);
         const expectedPlan = derivePlanFromInterval(sub.items?.data[0]?.price?.recurring?.interval);
         const expectedTier: 'premium' = 'premium';
         const expectedStatus = sub.status;
