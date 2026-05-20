@@ -34,6 +34,7 @@
 import { headers } from 'next/headers';
 import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import type Stripe from 'stripe';
+import * as Sentry from '@sentry/nextjs';
 import { clerkClient } from '@clerk/nextjs/server';
 import { getStripe } from '@/shared/lib/stripe';
 import { getDb } from '@/shared/lib/db';
@@ -135,6 +136,13 @@ export async function POST(request: Request): Promise<Response> {
 
   const db = getDb();
 
+  Sentry.addBreadcrumb({
+    category: 'stripe-webhook',
+    message: 'event received',
+    data: { eventId: event.id, eventType: event.type },
+    level: 'info',
+  });
+
   // ---------------------------------------------------------------------------
   // Idempotency: deduplicate via processed_stripe_events.
   // INSERT … ON CONFLICT DO NOTHING returns the row only when it was inserted.
@@ -220,6 +228,14 @@ export async function POST(request: Request): Promise<Response> {
             // Capture matched rows via .returning() so we can decide whether to run the
             // utm_content fallback below.
             const anonymousIdMeta = (session.metadata?.anonymous_id ?? null) as string | null;
+
+            Sentry.addBreadcrumb({
+              category: 'stripe-webhook',
+              message: 'clerk user materialized',
+              data: { eventId: event.id, clerkUserId, anonymousId: anonymousIdMeta },
+              level: 'info',
+            });
+
             try {
               const linkedRows = await db
                 .update(emailLeads)
@@ -365,6 +381,13 @@ export async function POST(request: Request): Promise<Response> {
               email: sql`${users.email}`,
             },
           });
+
+        Sentry.addBreadcrumb({
+          category: 'stripe-webhook',
+          message: 'users upserted',
+          data: { eventId: event.id, clerkUserId, plan, subscriptionStatus },
+          level: 'info',
+        });
 
         // Fire subscription_started to PostHog so the agent's funnel
         // reconciler can attribute conversions back to Meta UTMs. Only

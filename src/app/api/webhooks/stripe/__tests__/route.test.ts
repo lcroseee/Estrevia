@@ -86,7 +86,7 @@ vi.mock('@/shared/lib/analytics', () => ({
   AnalyticsEvent: { SUBSCRIPTION_STARTED: 'subscription_started' },
 }));
 
-vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
+vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), addBreadcrumb: vi.fn() }));
 
 // Email helpers — mocked so no real Resend calls happen in tests
 vi.mock('@/shared/lib/email', () => ({
