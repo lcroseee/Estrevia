@@ -32,13 +32,13 @@ vi.mock('@/shared/lib/apiFetch', () => ({
 }));
 
 vi.mock('@/shared/lib/utm-cookie', () => ({
-  readUtmCookie: vi.fn(),
+  readUtmLastTouch: vi.fn(),
 }));
 
-import { readUtmCookie } from '@/shared/lib/utm-cookie';
+import { readUtmLastTouch } from '@/shared/lib/utm-cookie';
 import { CheckoutStartClient } from '../CheckoutStartClient';
 
-const mockReadUtmCookie = vi.mocked(readUtmCookie);
+const mockReadUtmLastTouch = vi.mocked(readUtmLastTouch);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -47,8 +47,8 @@ beforeEach(() => {
 });
 
 describe('CheckoutStartClient — UTM forwarding', () => {
-  it('includes UTM fields in the postJson body when readUtmCookie returns data', async () => {
-    mockReadUtmCookie.mockReturnValue({
+  it('includes UTM fields in the postJson body when readUtmLastTouch returns data', async () => {
+    mockReadUtmLastTouch.mockReturnValue({
       utm_source: 'meta',
       utm_click_timestamp: '2026-05-04T10:00:00.000Z',
     });
@@ -65,8 +65,8 @@ describe('CheckoutStartClient — UTM forwarding', () => {
     expect(body.utm_click_timestamp).toBe('2026-05-04T10:00:00.000Z');
   });
 
-  it('omits UTM fields when readUtmCookie returns null', async () => {
-    mockReadUtmCookie.mockReturnValue(null);
+  it('omits UTM fields when readUtmLastTouch returns empty object', async () => {
+    mockReadUtmLastTouch.mockReturnValue({});
 
     render(<CheckoutStartClient />);
 
@@ -80,7 +80,7 @@ describe('CheckoutStartClient — UTM forwarding', () => {
   });
 
   it('includes locale="en" in the postJson body by default', async () => {
-    mockReadUtmCookie.mockReturnValue(null);
+    mockReadUtmLastTouch.mockReturnValue({});
 
     render(<CheckoutStartClient />);
 
@@ -94,7 +94,7 @@ describe('CheckoutStartClient — UTM forwarding', () => {
 
   it('includes locale="es" in the postJson body when rendered under /es', async () => {
     hoistedLocale.value = 'es';
-    mockReadUtmCookie.mockReturnValue(null);
+    mockReadUtmLastTouch.mockReturnValue({});
 
     render(<CheckoutStartClient />);
 
@@ -104,5 +104,22 @@ describe('CheckoutStartClient — UTM forwarding', () => {
 
     const [, body] = mockPostJson.mock.calls[0] as [string, Record<string, unknown>];
     expect(body.locale).toBe('es');
+  });
+
+  it('passes URL-derived UTM (last-touch) when present', async () => {
+    mockReadUtmLastTouch.mockReturnValue({
+      utm_source: 'lead-nurture',
+      utm_campaign: 't72',
+    });
+
+    render(<CheckoutStartClient />);
+
+    await waitFor(() => {
+      expect(mockPostJson).toHaveBeenCalledTimes(1);
+    });
+
+    const [, body] = mockPostJson.mock.calls[0] as [string, Record<string, unknown>];
+    expect(body.utm_source).toBe('lead-nurture');
+    expect(body.utm_campaign).toBe('t72');
   });
 });
