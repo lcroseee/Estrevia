@@ -163,6 +163,12 @@ export async function GET(request: Request) {
         const chart = await fetchTempChart(lead.chartId);
         const handler = STEP_HANDLERS.find((h) => h.fromStep === lead.nurtureStep);
 
+        console.info('[cron/lead-nurture] dispatch', {
+          leadId: lead.id,
+          step: lead.nurtureStep,
+          handlerFromStep: handler?.fromStep ?? null,
+        });
+
         if (!handler) {
           skipped++;
           continue;
@@ -176,6 +182,12 @@ export async function GET(request: Request) {
           chartId: lead.chartId,
         });
 
+        console.info('[cron/lead-nurture] sendResult', {
+          leadId: lead.id,
+          sent: sendResult.sent,
+          reason: sendResult.reason ?? null,
+        });
+
         const nextAt = handler.nextDelayMs == null ? null : new Date(Date.now() + handler.nextDelayMs);
 
         if (sendResult.sent) {
@@ -184,6 +196,12 @@ export async function GET(request: Request) {
             .set({ nurtureStep: handler.toStep, nurtureNextAt: nextAt })
             .where(eq(emailLeads.id, lead.id));
           sent++;
+          console.info('[cron/lead-nurture] stepAdvanced', {
+            leadId: lead.id,
+            fromStep: lead.nurtureStep,
+            toStep: handler.toStep,
+            nextAtIso: nextAt?.toISOString() ?? null,
+          });
         } else if (sendResult.reason === 'already_sent') {
           // Idempotency hit — advance step anyway so we don't re-select this
           // lead next hour and re-pay the no-op cost.
@@ -192,6 +210,12 @@ export async function GET(request: Request) {
             .set({ nurtureStep: handler.toStep, nurtureNextAt: nextAt })
             .where(eq(emailLeads.id, lead.id));
           skipped++;
+          console.info('[cron/lead-nurture] stepAdvanced', {
+            leadId: lead.id,
+            fromStep: lead.nurtureStep,
+            toStep: handler.toStep,
+            nextAtIso: nextAt?.toISOString() ?? null,
+          });
         }
 
         if (candidates.length > 5) {
