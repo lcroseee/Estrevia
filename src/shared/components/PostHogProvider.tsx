@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 // ---------------------------------------------------------------------------
 // Context
@@ -53,6 +54,7 @@ interface PostHogProviderProps {
 export function PostHogProvider({ children }: PostHogProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const initAttempted = useRef(false);
+  const pathname = usePathname();
 
   async function initPostHog() {
     const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
@@ -120,7 +122,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     initPostHog().catch(() => {
       // Non-fatal — analytics failure must never break the app.
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Listen for consent changes dispatched by CookieConsent component.
@@ -138,8 +140,22 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     return () => {
       window.removeEventListener('estrevia:consent', handleConsentChange);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isInitialized]);
+
+  // Locale super-property: every subsequent posthog.capture() inherits
+  // { locale: 'en' | 'es' }. Re-runs on pathname change (e.g. language
+  // switcher) and on init completion so events fired right after consent
+  // pick up the locale immediately.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const posthog = (window as unknown as {
+      posthog?: { register?: (props: Record<string, unknown>) => void };
+    }).posthog;
+    if (!posthog?.register) return;
+    const locale = pathname?.startsWith('/es') ? 'es' : 'en';
+    posthog.register({ locale });
+  }, [pathname, isInitialized]);
 
   return (
     <PostHogContext.Provider value={{ isInitialized }}>
