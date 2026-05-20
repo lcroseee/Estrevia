@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
-import { readUtmCookie } from '@/shared/lib/utm-cookie';
+import { readUtmLastTouch } from '@/shared/lib/utm-cookie';
 import { readMetaCookies } from '@/shared/lib/meta-cookies';
 
 interface EmailGateModalProps {
@@ -131,7 +131,7 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
 
     setLoading(true);
     try {
-      const utm = readUtmCookie() ?? {};
+      const utm = readUtmLastTouch();
       const meta = readMetaCookies();
       const anonymous_id = getDistinctId();
       const res = await fetch('/api/v1/leads', {
