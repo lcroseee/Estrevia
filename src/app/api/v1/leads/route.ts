@@ -10,6 +10,7 @@ import { emailLeads } from '@/shared/lib/schema';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { sendLeadChartEmail } from '@/shared/lib/email';
 import { fetchTempChart } from '@/shared/lib/temp-chart';
+import { STEP_0_TO_1_DELAY_MS } from '@/app/api/cron/lead-nurture/route';
 import type { ApiResponse } from '@/shared/types';
 
 export const runtime = 'nodejs';
@@ -198,7 +199,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<L
             .update(emailLeads)
             .set({
               nurtureStep: 1,
-              nurtureNextAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+              nurtureNextAt: new Date(Date.now() + STEP_0_TO_1_DELAY_MS),
             })
             .where(eq(emailLeads.id, t0LeadId));
         }

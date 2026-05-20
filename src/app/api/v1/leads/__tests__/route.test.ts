@@ -55,7 +55,7 @@ const selectChain = {
 let lastSelectEmail = '';
 // T+0 waitUntil closure issues db.update(emailLeads).set(...).where(...). We
 // capture each invocation in updateCalls so individual tests can assert state
-// transitions (nurture_step=1, nurture_next_at=NOW()+24h).
+// transitions (nurture_step=1, nurture_next_at=NOW()+STEP_0_TO_1_DELAY_MS=1h).
 const updateCalls: Array<{ vals: Record<string, unknown> }> = [];
 const updateBuilder = {
   set: vi.fn((vals: Record<string, unknown>) => ({
@@ -99,8 +99,20 @@ type SendChartArgs = {
 const sendLeadChartEmailMock = vi.fn<(args: SendChartArgs) => Promise<{ sent: boolean }>>(
   async () => ({ sent: true }),
 );
+// leads/route.ts now imports STEP_0_TO_1_DELAY_MS from cron/lead-nurture/route,
+// which in turn pulls in all 7 sendLead*Email functions for STEP_HANDLERS. The
+// cron route's GET is never called by this test, so the extra stubs only need
+// to exist as functions; they're not invoked. sendLeadChartEmail keeps its
+// mock implementation since the T+0 waitUntil branch in leads/route.ts uses it.
+const noopSend = vi.fn(async () => ({ sent: true }));
 vi.mock('@/shared/lib/email', () => ({
   sendLeadChartEmail: sendLeadChartEmailMock,
+  sendLeadCuriosityHookEmail: noopSend,
+  sendLeadMoonAscEmail: noopSend,
+  sendLeadPaywallTeaserEmail: noopSend,
+  sendLeadSaturnWeeklyEmail: noopSend,
+  sendLeadMiniReadingEmail: noopSend,
+  sendLeadSynastryTeaserEmail: noopSend,
 }));
 
 const fetchTempChartMock = vi.fn<(chartId: string | null | undefined) => Promise<unknown>>(
@@ -292,6 +304,9 @@ describe('POST /api/v1/leads', () => {
   });
 
   it('queues T+0 send via waitUntil after wasNew=true insert', async () => {
+    // Dynamic import — cron/route.ts pulls in temp-chart + email, which need
+    // their vi.mock factory closure vars initialized before the import runs.
+    const { STEP_0_TO_1_DELAY_MS } = await import('@/app/api/cron/lead-nurture/route');
     const POST = await importPOST();
     const res = await POST(makeRequest({
       email: 'newlead@example.com',
@@ -314,14 +329,15 @@ describe('POST /api/v1/leads', () => {
     expect(sendArgs.chartId).toBe('chart_xyz');
     expect(sendArgs.leadId).toMatch(/^[A-Za-z0-9_-]{10,}$/);
 
-    // State transition: nurture_step → 1, nurture_next_at ≈ NOW()+24h.
+    // State transition: nurture_step → 1, nurture_next_at ≈ NOW()+STEP_0_TO_1_DELAY_MS (1h).
     expect(updateCalls).toHaveLength(1);
     const setVals = updateCalls[0]!.vals as { nurtureStep: number; nurtureNextAt: Date };
     expect(setVals.nurtureStep).toBe(1);
     expect(setVals.nurtureNextAt).toBeInstanceOf(Date);
     const deltaMs = setVals.nurtureNextAt.getTime() - Date.now();
-    expect(deltaMs).toBeGreaterThan(23 * 3600_000);
-    expect(deltaMs).toBeLessThan(25 * 3600_000);
+    // Tolerate ±5s wallclock drift between the route's Date.now() and ours.
+    expect(deltaMs).toBeGreaterThan(STEP_0_TO_1_DELAY_MS - 5_000);
+    expect(deltaMs).toBeLessThanOrEqual(STEP_0_TO_1_DELAY_MS);
   });
 
   it('does NOT queue T+0 send when wasNew=false (duplicate email)', async () => {

@@ -66,6 +66,14 @@ const RESEND_PACING_MS = 1100; // 1.1s between sends — well under Resend free-
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
+/**
+ * Delay between step=0 (registered, T+0 chart sent) and step=1 (cron will
+ * pick up to send T+1h curiosity_hook). Exported so the /api/v1/leads
+ * waitUntil block can stay in sync — prevents the drift that produced
+ * the 24h-vs-1h bug found 2026-05-20.
+ */
+export const STEP_0_TO_1_DELAY_MS = 1 * HOUR;
+
 interface StepHandler {
   fromStep: number;
   toStep: number;
@@ -80,7 +88,7 @@ interface StepHandler {
 }
 
 const STEP_HANDLERS: StepHandler[] = [
-  { fromStep: 0, toStep: 1, send: sendLeadChartEmail,           nextDelayMs: 1 * HOUR },
+  { fromStep: 0, toStep: 1, send: sendLeadChartEmail,           nextDelayMs: STEP_0_TO_1_DELAY_MS },
   { fromStep: 1, toStep: 2, send: sendLeadCuriosityHookEmail,   nextDelayMs: 23 * HOUR },
   { fromStep: 2, toStep: 3, send: sendLeadMoonAscEmail,         nextDelayMs: 2 * DAY },
   { fromStep: 3, toStep: 4, send: sendLeadPaywallTeaserEmail,   nextDelayMs: 4 * DAY },
