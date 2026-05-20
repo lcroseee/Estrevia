@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => {
   }));
 
   const mockAuth = vi.fn();
-  const mockCookieGet = vi.fn(() => undefined);
+  const mockCookieGet = vi.fn((): { value: string } | undefined => undefined);
   const mockCookies = vi.fn(() => Promise.resolve({ get: mockCookieGet }));
 
   const mockComputeIsPremium = vi.fn().mockReturnValue(false);
@@ -181,5 +181,93 @@ describe('POST /api/v1/stripe/checkout — UTM metadata forwarding', () => {
 
     expect(callArg.metadata).toEqual({ clerkUserId: USER_ID });
     expect(callArg.subscription_data.metadata).toEqual({ clerkUserId: USER_ID });
+  });
+});
+
+describe('POST /api/v1/stripe/checkout — locale forwarding (authenticated)', () => {
+  it('passes locale="es" to Stripe Checkout when body.locale="es"', async () => {
+    const req = makeRequest({ locale: 'es' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    expect(mocks.mockSessionsCreate).toHaveBeenCalledOnce();
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.locale).toBe('es');
+  });
+
+  it('passes locale="auto" when body.locale="en"', async () => {
+    const req = makeRequest({ locale: 'en' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.locale).toBe('auto');
+  });
+
+  it('passes locale="auto" when body.locale is omitted (backward compat)', async () => {
+    const req = makeRequest({});
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.locale).toBe('auto');
+  });
+
+  it('falls back to locale="auto" on invalid locale (lenient parse pattern)', async () => {
+    // Existing route swallows zod errors silently and defaults to pro_annual
+    // with empty utm. We preserve that contract; invalid locale → 'auto'.
+    const req = makeRequest({ locale: 'fr' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.locale).toBe('auto');
+  });
+
+  it('includes locale in session metadata and subscription_data.metadata when set', async () => {
+    const req = makeRequest({ locale: 'es', utm_source: 'meta' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).toMatchObject({
+      clerkUserId: USER_ID,
+      locale: 'es',
+      utm_source: 'meta',
+    });
+    expect(callArg.subscription_data.metadata).toMatchObject({
+      clerkUserId: USER_ID,
+      locale: 'es',
+      utm_source: 'meta',
+    });
+  });
+
+  it('omits locale key from metadata when locale not set', async () => {
+    const req = makeRequest({ utm_source: 'meta' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('locale');
+    expect(callArg.subscription_data.metadata).not.toHaveProperty('locale');
+  });
+});
+
+describe('POST /api/v1/stripe/checkout — locale forwarding (anonymous)', () => {
+  beforeEach(() => {
+    // Unauthenticate for the anonymous branch.
+    mocks.mockAuth.mockResolvedValue({ userId: null });
+    mocks.mockCookieGet.mockReturnValue({ value: 'anon_abc' });
+  });
+
+  it('passes locale="es" to anonymous Stripe Checkout', async () => {
+    const req = makeRequest({ locale: 'es' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    expect(mocks.mockSessionsCreate).toHaveBeenCalledOnce();
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.locale).toBe('es');
+    expect(callArg.metadata).toMatchObject({ locale: 'es', anonymous_id: 'anon_abc' });
   });
 });

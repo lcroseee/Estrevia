@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { readUtmCookie } from '@/shared/lib/utm-cookie';
 
@@ -17,6 +17,7 @@ export function PricingUpgradeButton({
 }) {
   const t = useTranslations('pricing');
   const tPage = useTranslations('pricingPage');
+  const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +32,7 @@ export function PricingUpgradeButton({
       const res = await fetch('/api/v1/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, ...(utmFields ?? {}) }),
+        body: JSON.stringify({ plan, locale, ...(utmFields ?? {}) }),
       });
 
       const contentType = res.headers.get('content-type') ?? '';

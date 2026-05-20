@@ -14,8 +14,11 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+const hoistedLocale = vi.hoisted(() => ({ value: 'en' as 'en' | 'es' }));
+
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => hoistedLocale.value,
 }));
 
 vi.mock('@/shared/lib/analytics', () => ({
@@ -39,6 +42,7 @@ const mockReadUtmCookie = vi.mocked(readUtmCookie);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  hoistedLocale.value = 'en';
   mockPostJson.mockResolvedValue({ kind: 'error', status: 500, message: 'test' });
 });
 
@@ -73,5 +77,32 @@ describe('CheckoutStartClient — UTM forwarding', () => {
     const [, body] = mockPostJson.mock.calls[0] as [string, Record<string, unknown>];
     expect(body).not.toHaveProperty('utm_source');
     expect(body).not.toHaveProperty('utm_click_timestamp');
+  });
+
+  it('includes locale="en" in the postJson body by default', async () => {
+    mockReadUtmCookie.mockReturnValue(null);
+
+    render(<CheckoutStartClient />);
+
+    await waitFor(() => {
+      expect(mockPostJson).toHaveBeenCalledTimes(1);
+    });
+
+    const [, body] = mockPostJson.mock.calls[0] as [string, Record<string, unknown>];
+    expect(body.locale).toBe('en');
+  });
+
+  it('includes locale="es" in the postJson body when rendered under /es', async () => {
+    hoistedLocale.value = 'es';
+    mockReadUtmCookie.mockReturnValue(null);
+
+    render(<CheckoutStartClient />);
+
+    await waitFor(() => {
+      expect(mockPostJson).toHaveBeenCalledTimes(1);
+    });
+
+    const [, body] = mockPostJson.mock.calls[0] as [string, Record<string, unknown>];
+    expect(body.locale).toBe('es');
   });
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { readUtmCookie } from '@/shared/lib/utm-cookie';
@@ -47,6 +47,7 @@ function formatTrialEndDate(): string {
 export function PaywallModal({ open, onClose, returnUrl, triggerContext }: PaywallModalProps) {
   const t = useTranslations('paywall');
   const tp = useTranslations('pricing');
+  const locale = useLocale();
   const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_annual');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +117,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       const res = await fetch('/api/v1/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, returnUrl, ...(utmFields ?? {}) }),
+        body: JSON.stringify({ plan, returnUrl, locale, ...(utmFields ?? {}) }),
       });
 
       let data: { success: boolean; data?: { url: string }; error?: string };

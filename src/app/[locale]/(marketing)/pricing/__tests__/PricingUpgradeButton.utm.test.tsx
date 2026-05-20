@@ -3,8 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import React from 'react';
 
+const hoistedLocale = vi.hoisted(() => ({ value: 'en' as 'en' | 'es' }));
+
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => hoistedLocale.value,
 }));
 
 vi.mock('@/shared/lib/analytics', () => ({
@@ -34,6 +37,7 @@ function makeFetchMock() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  hoistedLocale.value = 'en';
 });
 
 describe('PricingUpgradeButton — UTM forwarding', () => {
@@ -74,5 +78,34 @@ describe('PricingUpgradeButton — UTM forwarding', () => {
     const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as Record<string, unknown>;
     expect(body).not.toHaveProperty('utm_source');
     expect(body).not.toHaveProperty('utm_click_timestamp');
+  });
+
+  it('includes locale="en" in the fetch body by default', async () => {
+    mockReadUtmCookie.mockReturnValue(null);
+    const mockFetch = makeFetchMock();
+    vi.stubGlobal('fetch', mockFetch);
+
+    const { getByRole } = render(<PricingUpgradeButton plan="pro_annual" />);
+    await act(async () => {
+      getByRole('button').click();
+    });
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as Record<string, unknown>;
+    expect(body.locale).toBe('en');
+  });
+
+  it('includes locale="es" in the fetch body when rendered under /es', async () => {
+    hoistedLocale.value = 'es';
+    mockReadUtmCookie.mockReturnValue(null);
+    const mockFetch = makeFetchMock();
+    vi.stubGlobal('fetch', mockFetch);
+
+    const { getByRole } = render(<PricingUpgradeButton plan="pro_annual" />);
+    await act(async () => {
+      getByRole('button').click();
+    });
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body as string) as Record<string, unknown>;
+    expect(body.locale).toBe('es');
   });
 });

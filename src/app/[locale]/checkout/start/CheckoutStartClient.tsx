@@ -18,7 +18,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { postJson } from '@/shared/lib/apiFetch';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { readUtmCookie } from '@/shared/lib/utm-cookie';
@@ -35,6 +35,7 @@ export function CheckoutStartClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations('pricingPage.checkout');
+  const locale = useLocale();
 
   const planRaw = searchParams.get('plan');
   const plan: Plan = planRaw === 'pro_monthly' ? 'pro_monthly' : 'pro_annual';
@@ -53,7 +54,7 @@ export function CheckoutStartClient() {
       const utmFields = readUtmCookie();
       const result = await postJson<CheckoutResponse>(
         '/api/v1/stripe/checkout',
-        { plan, returnUrl, ...(utmFields ?? {}) },
+        { plan, returnUrl, locale, ...(utmFields ?? {}) },
       );
       if (cancelled) return;
 
@@ -102,8 +103,8 @@ export function CheckoutStartClient() {
     return () => {
       cancelled = true;
     };
-    // attempt drives retries; plan/returnUrl come from URL and don't change mid-session.
-  }, [plan, returnUrl, attempt, t]);
+    // attempt drives retries; plan/returnUrl/locale come from URL and don't change mid-session.
+  }, [plan, returnUrl, locale, attempt, t]);
 
   function retry() {
     setPhase('preparing');

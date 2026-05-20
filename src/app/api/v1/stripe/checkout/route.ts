@@ -30,6 +30,7 @@ import type { ApiResponse } from '@/shared/types';
 
 const checkoutBodySchema = z.object({
   plan: z.enum(['pro_monthly', 'pro_annual']).default('pro_annual'),
+  locale: z.enum(['en', 'es']).optional(),
   utm_source: z.string().optional(),
   utm_medium: z.string().optional(),
   utm_campaign: z.string().optional(),
@@ -69,22 +70,31 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   }
 
   // ---------------------------------------------------------------------------
-  // 3. Parse plan + UTM
+  // 3. Parse plan + locale + UTM
   // ---------------------------------------------------------------------------
   let plan: 'pro_monthly' | 'pro_annual' = 'pro_annual';
+  let localeFromBody: 'en' | 'es' | undefined = undefined;
   let utm: Record<string, string> = {};
   try {
     const body = await request.json();
     const parsed = checkoutBodySchema.parse(body);
     plan = parsed.plan;
+    localeFromBody = parsed.locale;
     utm = Object.fromEntries(
       Object.entries(parsed).filter(
-        (entry): entry is [string, string] => entry[0] !== 'plan' && entry[1] !== undefined,
+        (entry): entry is [string, string] =>
+          entry[0] !== 'plan' && entry[0] !== 'locale' && entry[1] !== undefined,
       ),
     );
   } catch {
     plan = 'pro_annual';
   }
+
+  // Stripe Checkout uses 'auto' (browser language) for EN/missing; explicit
+  // 'es' for Spanish-locale callers. Stripe also supports 'en' explicitly,
+  // but 'auto' is friendlier when the user is on /en but their browser is
+  // set to another language Stripe supports.
+  const stripeLocale: 'auto' | 'es' = localeFromBody === 'es' ? 'es' : 'auto';
 
   // ---------------------------------------------------------------------------
   // 4. Resolve price ID
@@ -157,10 +167,19 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
         line_items: [{ price: priceId, quantity: 1 }],
         ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: userEmail }),
         client_reference_id: userId,
-        metadata: { clerkUserId: userId, ...utm },
+        locale: stripeLocale,
+        metadata: {
+          clerkUserId: userId,
+          ...utm,
+          ...(localeFromBody ? { locale: localeFromBody } : {}),
+        },
         subscription_data: {
           ...(stripeCustomerId ? {} : { trial_period_days: 3 }),
-          metadata: { clerkUserId: userId, ...utm },
+          metadata: {
+            clerkUserId: userId,
+            ...utm,
+            ...(localeFromBody ? { locale: localeFromBody } : {}),
+          },
         },
         success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${appUrl}/pricing`,
@@ -220,12 +239,14 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
     const stripe = getStripe();
     const metadata: Record<string, string> = { ...utm };
     if (anonymousId) metadata.anonymous_id = anonymousId;
+    if (localeFromBody) metadata.locale = localeFromBody;
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
       ...(prefilledEmail ? { customer_email: prefilledEmail } : {}),
       ...(anonymousId ? { client_reference_id: anonymousId } : {}),
+      locale: stripeLocale,
       metadata,
       subscription_data: {
         trial_period_days: 3,

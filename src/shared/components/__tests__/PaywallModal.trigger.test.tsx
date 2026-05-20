@@ -23,6 +23,7 @@ vi.mock('next-intl', () => ({
     t.has = (key: string) => key.startsWith('contextualTitles.') || key === 'title';
     return t;
   },
+  useLocale: () => 'en',
 }));
 
 vi.mock('@/shared/lib/analytics', () => ({
