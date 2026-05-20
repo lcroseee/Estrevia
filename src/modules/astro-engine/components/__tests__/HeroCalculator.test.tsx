@@ -69,7 +69,15 @@ vi.mock('../TimePickerField', () => ({
   TimePickerField: () => null,
 }));
 
+vi.mock('@/shared/lib/analytics', () => ({
+  trackEvent: vi.fn(),
+  AnalyticsEvent: {
+    CHART_CALCULATED: 'chart_calculated',
+  },
+}));
+
 import { HeroCalculator } from '../HeroCalculator';
+import { trackEvent } from '@/shared/lib/analytics';
 
 const fakeChartResponse = {
   success: true,
@@ -91,6 +99,8 @@ beforeEach(() => {
   searchParamsValue = new URLSearchParams();
   window.localStorage.clear();
   lastModalProps = null;
+  vi.mocked(trackEvent).mockClear();
+  delete (window as unknown as { fbq?: unknown }).fbq;
   vi.spyOn(global, 'fetch').mockResolvedValue(new Response(
     JSON.stringify(fakeChartResponse),
     { status: 200, headers: { 'content-type': 'application/json' } },
@@ -165,6 +175,103 @@ describe('HeroCalculator gate state machine', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('gate-modal')).toBeNull();
       expect(screen.getByText('Leo')).toBeTruthy();
+    });
+  });
+});
+
+describe('HeroCalculator analytics (C1 — chart_calculated)', () => {
+  it('fires chart_calculated with source="hero" on successful submit (anonymous, no Moon in payload)', async () => {
+    // Uses the default fakeChartResponse — Sun=Leo, no Moon.
+    render(<HeroCalculator isSignedIn={false} />);
+    await fillFormAndSubmit();
+
+    await waitFor(() => {
+      expect(vi.mocked(trackEvent)).toHaveBeenCalledWith(
+        'chart_calculated',
+        expect.objectContaining({
+          source: 'hero',
+          has_birth_time: false,
+          sun: 'Leo',
+          moon: null,
+          is_authenticated: false,
+        }),
+      );
+    });
+  });
+
+  it('fires chart_calculated with is_authenticated=true when isSignedIn=true', async () => {
+    render(<HeroCalculator isSignedIn={true} />);
+    await fillFormAndSubmit();
+
+    await waitFor(() => {
+      expect(vi.mocked(trackEvent)).toHaveBeenCalledWith(
+        'chart_calculated',
+        expect.objectContaining({ is_authenticated: true }),
+      );
+    });
+  });
+
+  it('includes Moon sign in payload when the chart returns one', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          chartId: 'chart_with_moon',
+          chart: {
+            planets: [
+              { planet: 'Sun', sign: 'Leo', signDegree: 12.34 },
+              { planet: 'Moon', sign: 'Pisces', signDegree: 4.20 },
+            ],
+          },
+        },
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    ));
+
+    render(<HeroCalculator isSignedIn={false} />);
+    await fillFormAndSubmit();
+
+    await waitFor(() => {
+      expect(vi.mocked(trackEvent)).toHaveBeenCalledWith(
+        'chart_calculated',
+        expect.objectContaining({ sun: 'Leo', moon: 'Pisces' }),
+      );
+    });
+  });
+
+  it('does NOT fire chart_calculated when the server returns 500', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(
+      JSON.stringify({ error: 'server_error' }),
+      { status: 500, headers: { 'content-type': 'application/json' } },
+    ));
+
+    render(<HeroCalculator isSignedIn={false} />);
+    await fillFormAndSubmit();
+
+    // Settle: give the rejected branch a tick to run finally{}.
+    await new Promise((r) => setTimeout(r, 30));
+    expect(vi.mocked(trackEvent)).not.toHaveBeenCalled();
+  });
+
+  it('calls fbq("track", "ViewContent", ...) when fbq is on window', async () => {
+    const fbqMock = vi.fn();
+    (window as unknown as { fbq: typeof fbqMock }).fbq = fbqMock;
+
+    render(<HeroCalculator isSignedIn={false} />);
+    await fillFormAndSubmit();
+
+    await waitFor(() => {
+      expect(fbqMock).toHaveBeenCalledWith('track', 'ViewContent', { content_type: 'natal_chart' });
+    });
+  });
+
+  it('does not throw when fbq is absent (PostHog event still fires)', async () => {
+    // beforeEach already deletes window.fbq — assert default behavior.
+    render(<HeroCalculator isSignedIn={false} />);
+    await fillFormAndSubmit();
+
+    await waitFor(() => {
+      expect(vi.mocked(trackEvent)).toHaveBeenCalled();
     });
   });
 });

@@ -25,6 +25,7 @@ import { useSearchParams } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { EmailGateModal } from '@/shared/components/EmailGateModal';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { CityAutocomplete } from './CityAutocomplete';
 import { DateInput } from './DateInput';
 import { TimePickerField } from './TimePickerField';
@@ -264,6 +265,34 @@ export function HeroCalculator({ isSignedIn }: { isSignedIn: boolean }) {
           chartId: json.data.chartId,
         };
         setResult(heroResult);
+
+        // Analytics fire: chart_calculated from landing hero. Mirrors the
+        // BirthDataForm emission but discriminated by source='hero'. No PII
+        // (birth fields are NOT included in the payload). Defensively wrapped
+        // so an analytics failure cannot break the result UI.
+        try {
+          const moonPlanet = json.data?.chart?.planets?.find((p) => p.planet === 'Moon');
+          trackEvent(AnalyticsEvent.CHART_CALCULATED, {
+            source: 'hero',
+            has_birth_time: form.knowsBirthTime,
+            sun: sunPlanet.sign,
+            moon: moonPlanet?.sign ?? null,
+            is_authenticated: isSignedIn ?? false,
+          });
+
+          if (typeof window !== 'undefined' && (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq) {
+            (window as unknown as { fbq: (...args: unknown[]) => void }).fbq(
+              'track',
+              'ViewContent',
+              { content_type: 'natal_chart' },
+            );
+          }
+        } catch (err) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('[HeroCalculator] analytics fire failed (non-fatal):', err);
+          }
+        }
+
         if (shouldShowGate()) {
           setGateOpen(true);
         }
@@ -279,7 +308,7 @@ export function HeroCalculator({ isSignedIn }: { isSignedIn: boolean }) {
         setIsLoading(false);
       }
     },
-    [form, validate, t, shouldShowGate]
+    [form, validate, t, shouldShowGate, isSignedIn]
   );
 
   // ── Result card ──────────────────────────────────────────────────────────
