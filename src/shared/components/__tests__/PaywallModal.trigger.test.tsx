@@ -32,7 +32,7 @@ vi.mock('@/shared/lib/analytics', () => ({
 }));
 
 vi.mock('@/shared/lib/utm-cookie', () => ({
-  readUtmCookie: vi.fn().mockReturnValue(null),
+  readUtmLastTouch: vi.fn().mockReturnValue({}),
 }));
 
 import { trackEvent } from '@/shared/lib/analytics';

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
-import { readUtmCookie } from '@/shared/lib/utm-cookie';
+import { readUtmLastTouch } from '@/shared/lib/utm-cookie';
 import type { PaywallTrigger } from '@/shared/types/paywall';
 
 interface PaywallModalProps {
@@ -113,11 +113,11 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
     });
 
     try {
-      const utmFields = readUtmCookie();
+      const utmFields = readUtmLastTouch();
       const res = await fetch('/api/v1/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, returnUrl, locale, ...(utmFields ?? {}) }),
+        body: JSON.stringify({ plan, returnUrl, locale, ...utmFields }),
       });
 
       let data: { success: boolean; data?: { url: string }; error?: string };
