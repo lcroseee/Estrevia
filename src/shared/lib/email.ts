@@ -380,6 +380,11 @@ export async function sendLeadChartEmail(params: {
   const claim = await tryInsertOneShotLead(params.leadId, 'lead_chart');
   if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
 
+  console.info('[email/lead_chart] start', {
+    leadId: params.leadId,
+    chartIsNull: !params.chart,
+  });
+
   // 2. Build unsubscribe URL with lead-kind token
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -423,6 +428,11 @@ export async function sendLeadChartEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_chart` },
   );
+  console.info('[email/lead_chart] sent', {
+    leadId: params.leadId,
+    resendMessageId: result.data?.id ?? null,
+    resendErrorName: result.error?.name ?? null,
+  });
   if (result.error) {
     throw new Error(
       `Resend rejected lead_chart for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
@@ -447,6 +457,11 @@ export async function sendLeadCuriosityHookEmail(params: {
 }): Promise<{ sent: boolean; reason?: string }> {
   const claim = await tryInsertOneShotLead(params.leadId, 'lead_curiosity_hook');
   if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  console.info('[email/lead_curiosity_hook] start', {
+    leadId: params.leadId,
+    chartIsNull: !params.chart,
+  });
 
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -494,6 +509,11 @@ export async function sendLeadCuriosityHookEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_curiosity_hook` },
   );
+  console.info('[email/lead_curiosity_hook] sent', {
+    leadId: params.leadId,
+    resendMessageId: result.data?.id ?? null,
+    resendErrorName: result.error?.name ?? null,
+  });
   if (result.error) {
     const err = new Error(
       `Resend rejected lead_curiosity_hook for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
@@ -525,6 +545,11 @@ export async function sendLeadMoonAscEmail(params: {
 }): Promise<{ sent: boolean; reason?: string }> {
   const claim = await tryInsertOneShotLead(params.leadId, 'lead_moon_asc');
   if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  console.info('[email/lead_moon_asc] start', {
+    leadId: params.leadId,
+    chartIsNull: !params.chart,
+  });
 
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -569,6 +594,11 @@ export async function sendLeadMoonAscEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_moon_asc` },
   );
+  console.info('[email/lead_moon_asc] sent', {
+    leadId: params.leadId,
+    resendMessageId: result.data?.id ?? null,
+    resendErrorName: result.error?.name ?? null,
+  });
   if (result.error) {
     throw new Error(
       `Resend rejected lead_moon_asc for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
@@ -591,6 +621,11 @@ export async function sendLeadPaywallTeaserEmail(params: {
 }): Promise<{ sent: boolean; reason?: string }> {
   const claim = await tryInsertOneShotLead(params.leadId, 'lead_paywall_teaser');
   if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  console.info('[email/lead_paywall_teaser] start', {
+    leadId: params.leadId,
+    chartIsNull: !params.chart,
+  });
 
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -622,6 +657,11 @@ export async function sendLeadPaywallTeaserEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_paywall_teaser` },
   );
+  console.info('[email/lead_paywall_teaser] sent', {
+    leadId: params.leadId,
+    resendMessageId: result.data?.id ?? null,
+    resendErrorName: result.error?.name ?? null,
+  });
   if (result.error) {
     throw new Error(
       `Resend rejected lead_paywall_teaser for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
@@ -644,6 +684,11 @@ export async function sendLeadSaturnWeeklyEmail(params: {
 }): Promise<{ sent: boolean; reason?: string }> {
   const claim = await tryInsertOneShotLead(params.leadId, 'lead_saturn_weekly');
   if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  console.info('[email/lead_saturn_weekly] start', {
+    leadId: params.leadId,
+    chartIsNull: !params.chart,
+  });
 
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -675,6 +720,11 @@ export async function sendLeadSaturnWeeklyEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_saturn_weekly` },
   );
+  console.info('[email/lead_saturn_weekly] sent', {
+    leadId: params.leadId,
+    resendMessageId: result.data?.id ?? null,
+    resendErrorName: result.error?.name ?? null,
+  });
   if (result.error) {
     throw new Error(
       `Resend rejected lead_saturn_weekly for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
@@ -697,6 +747,11 @@ export async function sendLeadMiniReadingEmail(params: {
 }): Promise<{ sent: boolean; reason?: string }> {
   const claim = await tryInsertOneShotLead(params.leadId, 'lead_mini_reading');
   if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  console.info('[email/lead_mini_reading] start', {
+    leadId: params.leadId,
+    chartIsNull: !params.chart,
+  });
 
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -743,6 +798,11 @@ export async function sendLeadMiniReadingEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_mini_reading` },
   );
+  console.info('[email/lead_mini_reading] sent', {
+    leadId: params.leadId,
+    resendMessageId: result.data?.id ?? null,
+    resendErrorName: result.error?.name ?? null,
+  });
   if (result.error) {
     throw new Error(
       `Resend rejected lead_mini_reading for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
@@ -765,6 +825,11 @@ export async function sendLeadSynastryTeaserEmail(params: {
 }): Promise<{ sent: boolean; reason?: string }> {
   const claim = await tryInsertOneShotLead(params.leadId, 'lead_synastry_teaser');
   if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
+
+  console.info('[email/lead_synastry_teaser] start', {
+    leadId: params.leadId,
+    chartIsNull: !params.chart,
+  });
 
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
@@ -794,6 +859,11 @@ export async function sendLeadSynastryTeaserEmail(params: {
     },
     { idempotencyKey: `${params.leadId}:lead_synastry_teaser` },
   );
+  console.info('[email/lead_synastry_teaser] sent', {
+    leadId: params.leadId,
+    resendMessageId: result.data?.id ?? null,
+    resendErrorName: result.error?.name ?? null,
+  });
   if (result.error) {
     throw new Error(
       `Resend rejected lead_synastry_teaser for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
