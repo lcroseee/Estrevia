@@ -161,32 +161,61 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
       );
     }
 
+    // Stripe-sync gap fallback: if we have an email but no stripeCustomerId
+    // on file, ask Stripe directly. Catches new users between checkout and
+    // T13.1 hourly watchdog reconciliation.
+    if (!stripeCustomerId && userEmail) {
+      try {
+        const stripe = getStripe();
+        const dedup = await findOrPrepareCustomer(stripe, userEmail);
+        if (dedup.kind === 'block') {
+          return NextResponse.json(
+            { success: true, data: { url: `${appUrl}/settings?already_subscribed=1` }, error: null },
+            { status: 200 },
+          );
+        }
+        if (dedup.kind === 'reuse') {
+          stripeCustomerId = dedup.customerId;
+        }
+      } catch (err) {
+        console.warn(
+          '[stripe/checkout] auth-branch dedup lookup failed (non-fatal)',
+          err instanceof Error ? err.message : 'unknown',
+        );
+      }
+    }
+
     try {
       const stripe = getStripe();
-      const session = await stripe.checkout.sessions.create({
-        mode: 'subscription',
-        line_items: [{ price: priceId, quantity: 1 }],
-        ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: userEmail }),
-        client_reference_id: userId,
-        locale: stripeLocale,
-        metadata: {
-          clerkUserId: userId,
-          ...utm,
-          ...(localeFromBody ? { locale: localeFromBody } : {}),
-        },
-        subscription_data: {
-          ...(stripeCustomerId ? {} : { trial_period_days: 3 }),
+      const idempotencyKey = `checkout:${userId}:${plan}:${utcDayBucket()}`;
+
+      const session = await stripe.checkout.sessions.create(
+        {
+          mode: 'subscription',
+          line_items: [{ price: priceId, quantity: 1 }],
+          ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: userEmail }),
+          client_reference_id: userId,
+          locale: stripeLocale,
           metadata: {
             clerkUserId: userId,
             ...utm,
             ...(localeFromBody ? { locale: localeFromBody } : {}),
           },
+          subscription_data: {
+            ...(stripeCustomerId ? {} : { trial_period_days: 3 }),
+            metadata: {
+              clerkUserId: userId,
+              ...utm,
+              ...(localeFromBody ? { locale: localeFromBody } : {}),
+            },
+          },
+          success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${appUrl}/pricing`,
+          allow_promotion_codes: true,
+          billing_address_collection: 'auto',
         },
-        success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${appUrl}/pricing`,
-        allow_promotion_codes: true,
-        billing_address_collection: 'auto',
-      });
+        { idempotencyKey },
+      );
 
       if (!session.url) {
         console.error('[stripe/checkout] session has no URL', { sessionId: session.id });

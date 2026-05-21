@@ -5,8 +5,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ---------------------------------------------------------------------------
 const mocks = vi.hoisted(() => {
   const mockSessionsCreate = vi.fn();
+  const mockCustomersList = vi.fn().mockResolvedValue({ data: [] });
+  const mockSubscriptionsList = vi.fn().mockResolvedValue({ data: [] });
   const mockGetStripe = vi.fn(() => ({
     checkout: { sessions: { create: mockSessionsCreate } },
+    customers: { list: mockCustomersList },
+    subscriptions: { list: mockSubscriptionsList },
   }));
 
   const mockAuth = vi.fn();
@@ -26,6 +30,8 @@ const mocks = vi.hoisted(() => {
 
   return {
     mockSessionsCreate,
+    mockCustomersList,
+    mockSubscriptionsList,
     mockGetStripe,
     mockAuth,
     mockCookieGet,
@@ -138,9 +144,13 @@ beforeEach(() => {
   mocks.mockSelect.mockImplementation(() => ({ from: mocks.mockSelectFrom }));
   mocks.mockGetDb.mockReturnValue({ select: mocks.mockSelect });
 
+  mocks.mockCustomersList.mockResolvedValue({ data: [] });
+  mocks.mockSubscriptionsList.mockResolvedValue({ data: [] });
   mocks.mockSessionsCreate.mockResolvedValue({ id: 'cs_test_abc123', url: CHECKOUT_URL });
   mocks.mockGetStripe.mockReturnValue({
     checkout: { sessions: { create: mocks.mockSessionsCreate } },
+    customers: { list: mocks.mockCustomersList },
+    subscriptions: { list: mocks.mockSubscriptionsList },
   });
 });
 
@@ -269,5 +279,73 @@ describe('POST /api/v1/stripe/checkout — locale forwarding (anonymous)', () =>
     const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
     expect(callArg.locale).toBe('es');
     expect(callArg.metadata).toMatchObject({ locale: 'es', anonymous_id: 'anon_abc' });
+  });
+});
+
+describe('POST /api/v1/stripe/checkout — dedup + idempotency (authenticated)', () => {
+  it('passes idempotencyKey scoped to userId+plan+UTC-day to sessions.create', async () => {
+    const req = makeRequest({ plan: 'pro_annual' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const opts = mocks.mockSessionsCreate.mock.calls[0][1];
+    expect(opts.idempotencyKey).toMatch(/^checkout:user_xyz:pro_annual:\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('reuses existing Stripe customer when DB has no stripeCustomerId but email matches', async () => {
+    // DB returns user with email but no stripeCustomerId (e.g. stripe-sync gap).
+    mocks.mockSelectLimit.mockResolvedValue([{
+      email: 'sync-gap@example.com',
+      stripeCustomerId: null,
+      subscriptionTier: 'free',
+      subscriptionStatus: null,
+      subscriptionExpiresAt: null,
+    }]);
+    mocks.mockCustomersList.mockResolvedValue({
+      data: [{ id: 'cus_recovered', email: 'sync-gap@example.com' }],
+    });
+    mocks.mockSubscriptionsList.mockResolvedValue({ data: [{ status: 'canceled' }] });
+
+    const res = await POST(makeRequest({}));
+    expect(res.status).toBe(200);
+
+    const call = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(call.customer).toBe('cus_recovered');
+    expect(call.customer_email).toBeUndefined();
+  });
+
+  it('blocks with /settings?already_subscribed=1 when fallback lookup finds active sub', async () => {
+    mocks.mockSelectLimit.mockResolvedValue([{
+      email: 'has-active@example.com',
+      stripeCustomerId: null,
+      subscriptionTier: 'free',
+      subscriptionStatus: null,
+      subscriptionExpiresAt: null,
+    }]);
+    mocks.mockCustomersList.mockResolvedValue({
+      data: [{ id: 'cus_active_x', email: 'has-active@example.com' }],
+    });
+    mocks.mockSubscriptionsList.mockResolvedValue({ data: [{ status: 'active' }] });
+
+    const res = await POST(makeRequest({}));
+    const json = await res.json();
+    expect(mocks.mockSessionsCreate).not.toHaveBeenCalled();
+    expect(json.data.url).toBe('https://estrevia.app/settings?already_subscribed=1');
+  });
+
+  it('skips fallback lookup when DB already has stripeCustomerId (uses stored customer)', async () => {
+    mocks.mockSelectLimit.mockResolvedValue([{
+      email: 'stored@example.com',
+      stripeCustomerId: 'cus_stored',
+      subscriptionTier: 'free',
+      subscriptionStatus: null,
+      subscriptionExpiresAt: null,
+    }]);
+
+    const res = await POST(makeRequest({}));
+    expect(res.status).toBe(200);
+    expect(mocks.mockCustomersList).not.toHaveBeenCalled();
+    const call = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(call.customer).toBe('cus_stored');
   });
 });
