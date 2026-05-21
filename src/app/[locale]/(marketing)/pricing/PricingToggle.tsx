@@ -180,6 +180,15 @@ export function PricingToggle() {
                 {t('annualPerMonth')}
               </p>
             )}
+            {/* LATAM currency equivalents — ES-only via locale gate */}
+            {locale === 'es' && (
+              <p
+                className="text-xs text-white/40 mb-3 font-[var(--font-geist-mono)] leading-relaxed"
+                aria-label={tPage('currencyEquivAria')}
+              >
+                {t(billing === 'annual' ? 'annualPriceEquiv' : 'monthlyPriceEquiv')}
+              </p>
+            )}
             <p className="text-sm text-white/45 leading-relaxed">
               {tPage('proDescription')}
             </p>
