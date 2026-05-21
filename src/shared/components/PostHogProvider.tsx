@@ -83,6 +83,11 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
       }
     }
 
+    // Compute locale BEFORE init — pathname is in scope of this provider
+    // render. Required so the first $pageview (fired inside init when
+    // capture_pageview: true) carries the locale super-property.
+    const initialLocale = pathname?.startsWith('/es') ? 'es' : 'en';
+
     posthog.init(apiKey, {
       // Same-origin reverse proxy bypasses ad blockers that block us.i.posthog.com
       // directly. Rewrites in next.config.ts forward /ingest/* → PostHog hosts.
@@ -106,6 +111,9 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
         $referrer: stripPiiFromUrl(properties.$referrer),
         $initial_referrer: stripPiiFromUrl(properties.$initial_referrer),
       }),
+      loaded: (ph: { register: (props: Record<string, unknown>) => void }) => {
+        ph.register({ locale: initialLocale });
+      },
     });
 
     (window as unknown as Record<string, unknown>).posthog = posthog;
