@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const authMock = vi.fn();
 const limitMock = vi.fn().mockResolvedValue({ success: true });
 const sessionsCreateMock = vi.fn();
+const customersListMock = vi.fn();
+const subscriptionsListMock = vi.fn();
 const dbSelectMock = vi.fn();
 
 vi.mock('@clerk/nextjs/server', () => ({
@@ -12,7 +14,11 @@ vi.mock('@/shared/lib/rate-limit', () => ({
   getRateLimiter: () => ({ limit: limitMock }),
 }));
 vi.mock('@/shared/lib/stripe', () => ({
-  getStripe: () => ({ checkout: { sessions: { create: sessionsCreateMock } } }),
+  getStripe: () => ({
+    checkout: { sessions: { create: sessionsCreateMock } },
+    customers: { list: customersListMock },
+    subscriptions: { list: subscriptionsListMock },
+  }),
 }));
 vi.mock('@/shared/lib/db', () => ({
   getDb: () => ({
@@ -46,10 +52,13 @@ beforeEach(() => {
   process.env.STRIPE_PRICE_ID_PRO_ANNUAL = 'price_annual_test';
   process.env.NEXT_PUBLIC_APP_URL = 'https://estrevia.app';
   sessionsCreateMock.mockResolvedValue({ id: 'cs_test_123', url: 'https://stripe.com/cs_test_123' });
+  // Default: no existing Stripe customer.
+  customersListMock.mockResolvedValue({ data: [] });
+  subscriptionsListMock.mockResolvedValue({ data: [] });
 });
 
 describe('POST /api/v1/stripe/checkout — anonymous branch', () => {
-  it('pre-fills customer_email when email_lead exists for the anonymous_id', async () => {
+  it('pre-fills customer_email when email_lead exists and no Stripe customer matches', async () => {
     authMock.mockResolvedValue({ userId: null });
     dbSelectMock.mockReturnValue([{ email: 'lead@example.com' }]);
 
@@ -102,5 +111,54 @@ describe('POST /api/v1/stripe/checkout — anonymous branch', () => {
     const json = await res.json();
     expect(json.success).toBe(true);
     expect(json.data.url).toBe('https://stripe.com/cs_test_123');
+  });
+
+  it('passes idempotencyKey scoped to anonymousId+plan+UTC-day to sessions.create', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    dbSelectMock.mockReturnValue([]);
+
+    await POST(makeRequest({ plan: 'pro_annual' }));
+    expect(sessionsCreateMock).toHaveBeenCalledTimes(1);
+    const opts = sessionsCreateMock.mock.calls[0][1];
+    expect(opts.idempotencyKey).toMatch(/^checkout:anon-xyz:pro_annual:\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('reuses existing customer (passes customer:cus_X, drops customer_email) when lookup finds no active sub', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    dbSelectMock.mockReturnValue([{ email: 'reuse@example.com' }]);
+    customersListMock.mockResolvedValue({ data: [{ id: 'cus_reuse', email: 'reuse@example.com' }] });
+    subscriptionsListMock.mockResolvedValue({ data: [{ status: 'canceled' }] });
+
+    const res = await POST(makeRequest({ plan: 'pro_annual' }));
+    expect(res.status).toBe(200);
+
+    const call = sessionsCreateMock.mock.calls[0][0];
+    expect(call.customer).toBe('cus_reuse');
+    expect(call.customer_email).toBeUndefined();
+  });
+
+  it('blocks and redirects to /settings?already_subscribed=1 when existing customer has active sub', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    dbSelectMock.mockReturnValue([{ email: 'active@example.com' }]);
+    customersListMock.mockResolvedValue({ data: [{ id: 'cus_active', email: 'active@example.com' }] });
+    subscriptionsListMock.mockResolvedValue({ data: [{ status: 'active' }] });
+
+    const res = await POST(makeRequest({ plan: 'pro_annual' }));
+    expect(res.status).toBe(200);
+    expect(sessionsCreateMock).not.toHaveBeenCalled();
+    const json = await res.json();
+    expect(json.data.url).toBe('https://estrevia.app/settings?already_subscribed=1');
+  });
+
+  it('blocks when existing customer has trialing sub', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    dbSelectMock.mockReturnValue([{ email: 'trial@example.com' }]);
+    customersListMock.mockResolvedValue({ data: [{ id: 'cus_trial', email: 'trial@example.com' }] });
+    subscriptionsListMock.mockResolvedValue({ data: [{ status: 'trialing' }] });
+
+    const res = await POST(makeRequest({ plan: 'pro_annual' }));
+    const json = await res.json();
+    expect(sessionsCreateMock).not.toHaveBeenCalled();
+    expect(json.data.url).toBe('https://estrevia.app/settings?already_subscribed=1');
   });
 });

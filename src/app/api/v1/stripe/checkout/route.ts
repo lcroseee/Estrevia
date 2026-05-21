@@ -27,6 +27,7 @@ import { getStripe } from '@/shared/lib/stripe';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import type { ApiResponse } from '@/shared/types';
+import { findOrPrepareCustomer, utcDayBucket } from './findOrPrepareCustomer';
 
 const checkoutBodySchema = z.object({
   plan: z.enum(['pro_monthly', 'pro_annual']).default('pro_annual'),
@@ -235,28 +236,55 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
     }
   }
 
+  // Dedup: if we already know the email, ask Stripe whether a matching
+  // customer + active sub already exists. Block-or-reuse before creating
+  // a fresh Checkout session.
+  let reuseCustomerId: string | undefined = undefined;
+  if (prefilledEmail) {
+    const stripe = getStripe();
+    const dedup = await findOrPrepareCustomer(stripe, prefilledEmail);
+    if (dedup.kind === 'block') {
+      return NextResponse.json(
+        { success: true, data: { url: `${appUrl}/settings?already_subscribed=1` }, error: null },
+        { status: 200 },
+      );
+    }
+    if (dedup.kind === 'reuse') {
+      reuseCustomerId = dedup.customerId;
+    }
+  }
+
   try {
     const stripe = getStripe();
     const metadata: Record<string, string> = { ...utm };
     if (anonymousId) metadata.anonymous_id = anonymousId;
     if (localeFromBody) metadata.locale = localeFromBody;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      line_items: [{ price: priceId, quantity: 1 }],
-      ...(prefilledEmail ? { customer_email: prefilledEmail } : {}),
-      ...(anonymousId ? { client_reference_id: anonymousId } : {}),
-      locale: stripeLocale,
-      metadata,
-      subscription_data: {
-        trial_period_days: 3,
+    const idempotencyKey = `checkout:${anonymousId ?? 'noanon'}:${plan}:${utcDayBucket()}`;
+
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: 'subscription',
+        line_items: [{ price: priceId, quantity: 1 }],
+        ...(reuseCustomerId
+          ? { customer: reuseCustomerId }
+          : prefilledEmail
+          ? { customer_email: prefilledEmail }
+          : {}),
+        ...(anonymousId ? { client_reference_id: anonymousId } : {}),
+        locale: stripeLocale,
         metadata,
+        subscription_data: {
+          trial_period_days: 3,
+          metadata,
+        },
+        success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}/pricing`,
+        allow_promotion_codes: true,
+        billing_address_collection: 'auto',
       },
-      success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/pricing`,
-      allow_promotion_codes: true,
-      billing_address_collection: 'auto',
-    });
+      { idempotencyKey },
+    );
 
     if (!session.url) {
       console.error('[stripe/checkout] session has no URL (anonymous)', { sessionId: session.id });
