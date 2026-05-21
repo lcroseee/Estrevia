@@ -36,16 +36,14 @@ export function PricingUpgradeButton({
       });
 
       const contentType = res.headers.get('content-type') ?? '';
-      const clerkAuthStatus = res.headers.get('x-clerk-auth-status');
+      // True auth-required failure: API explicitly returns 401, or response is not
+      // JSON (auth wall HTML, edge error page). The `x-clerk-auth-status: signed-out`
+      // header alone is NOT a failure — Clerk middleware sets it on every
+      // unauthenticated request, including ones the API route serves anonymously.
       const isAuthFailure =
-        res.status === 401 ||
-        clerkAuthStatus === 'signed-out' ||
-        !contentType.includes('application/json');
+        res.status === 401 || !contentType.includes('application/json');
 
       if (isAuthFailure) {
-        // Seamless funnel: after sign-up, Clerk lands the user on
-        // /checkout/start which auto-creates the Stripe session and
-        // redirects to Stripe without another click.
         const checkoutStart = `/checkout/start?plan=${plan}&return=${encodeURIComponent('/pricing')}`;
         trackEvent(AnalyticsEvent.CHECKOUT_AUTH_REDIRECT, { plan, source: 'pricing' });
         window.location.href = `/sign-up?redirect_url=${encodeURIComponent(checkoutStart)}`;
