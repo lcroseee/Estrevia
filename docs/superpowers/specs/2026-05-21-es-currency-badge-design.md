@@ -51,11 +51,11 @@ These were resolved during brainstorm 2026-05-21:
 
 | File | Change | Lines |
 |---|---|---|
-| `messages/es.json` | Add `monthlyPriceEquiv`, `annualPriceEquiv`, `currencyEquivAria` keys | +3 |
-| `messages/en.json` | Add `monthlyPriceEquiv: null`, `annualPriceEquiv: null`, `currencyEquivAria` keys | +3 |
-| `src/app/[locale]/(marketing)/pricing/PricingToggle.tsx` | Render badge IIFE after `annualPerMonth` block | +12 |
-| `src/app/[locale]/(marketing)/pricing/__tests__/PricingToggle.test.tsx` | 3 test cases for badge rendering | +30 |
-| **Total** | | **~48** |
+| `messages/es.json` | Add `monthlyPriceEquiv`, `annualPriceEquiv` in `pricing` namespace + `currencyEquivAria` in `pricingPage` namespace | +3 |
+| `messages/en.json` | **No changes.** Locale gate ensures `t()` is never called on EN, so missing-key warnings cannot fire. | 0 |
+| `src/app/[locale]/(marketing)/pricing/PricingToggle.tsx` | Render badge after `annualPerMonth` block | +10 |
+| `src/app/[locale]/(marketing)/pricing/__tests__/PricingToggle.currencyBadge.test.tsx` | New sibling file, 3 test cases | +45 |
+| **Total** | | **~58** |
 
 ### 5.2 i18n content
 
@@ -78,16 +78,9 @@ These were resolved during brainstorm 2026-05-21:
 }
 ```
 
-**`messages/en.json` — stub keys (locale gate prevents render, stubs prevent missing-key warnings if call ever leaks):**
+**`messages/en.json`:** intentionally untouched. Locale gate in JSX (`{locale === 'es' && ...}`) short-circuits before any `t()` or `tPage()` call resolves, so `next-intl` never looks up these keys on EN. No missing-key warning will fire because the lookup never happens.
 
-```jsonc
-// pricing section
-"monthlyPriceEquiv": "",
-"annualPriceEquiv": "",
-
-// pricingPage section
-"currencyEquivAria": "Approximate equivalent in local currencies"
-```
+Verified: `grep 'IntlMessages\|AppConfig\|next-intl/global'` returns nothing in `src/` — project has no typed-messages mode enabled, so TypeScript also tolerates ES-only keys.
 
 **FX calculation table** (USD rates as of 2026-05-21, **verify pre-deploy**):
 
@@ -119,7 +112,7 @@ Insert after the existing `annualPerMonth` conditional block in `PricingToggle.t
 
 **Implementation notes:**
 - `locale` is already in scope via `useLocale()` (line 35 of current `PricingToggle.tsx`). No new hook.
-- Gate at JSX level — when `locale !== 'es'`, the `t()` call never fires, so EN stub strings never render.
+- Gate at JSX level — when `locale !== 'es'`, the `t()` call never fires, so missing keys in `en.json` are never looked up.
 - Styling matches sibling `annualPerMonth` (`text-xs text-white/40 font-mono`) for visual rhythm.
 - `leading-relaxed` accommodates wrap on mobile (~360px viewport, badge string ~50-58 chars).
 
