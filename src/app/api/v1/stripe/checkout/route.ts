@@ -192,6 +192,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
       const session = await stripe.checkout.sessions.create(
         {
           mode: 'subscription',
+          payment_method_types: ['card', 'link'],
           line_items: [{ price: priceId, quantity: 1 }],
           ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: userEmail }),
           client_reference_id: userId,
@@ -294,6 +295,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
     const session = await stripe.checkout.sessions.create(
       {
         mode: 'subscription',
+        payment_method_types: ['card', 'link'],
         line_items: [{ price: priceId, quantity: 1 }],
         ...(reuseCustomerId
           ? { customer: reuseCustomerId }

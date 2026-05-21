@@ -349,3 +349,14 @@ describe('POST /api/v1/stripe/checkout — dedup + idempotency (authenticated)',
     expect(call.customer).toBe('cus_stored');
   });
 });
+
+describe('POST /api/v1/stripe/checkout — payment_method_types (authenticated)', () => {
+  it('restricts payment_method_types to ["card", "link"]', async () => {
+    const req = makeRequest({ plan: 'pro_annual' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const call = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(call.payment_method_types).toEqual(['card', 'link']);
+  });
+});

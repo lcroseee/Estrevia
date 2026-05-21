@@ -162,3 +162,14 @@ describe('POST /api/v1/stripe/checkout — anonymous branch', () => {
     expect(json.data.url).toBe('https://estrevia.app/settings?already_subscribed=1');
   });
 });
+
+describe('POST /api/v1/stripe/checkout — payment_method_types (anonymous)', () => {
+  it('restricts payment_method_types to ["card", "link"]', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    dbSelectMock.mockReturnValue([]);
+
+    await POST(makeRequest({ plan: 'pro_annual' }));
+    const call = sessionsCreateMock.mock.calls[0][0];
+    expect(call.payment_method_types).toEqual(['card', 'link']);
+  });
+});
