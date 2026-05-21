@@ -20,17 +20,20 @@ function flattenKeys(obj: unknown, prefix = ''): string[] {
 }
 
 /**
- * KNOWN_DRIFT — pre-existing parity violations not in scope of Cluster A.
+ * KNOWN_DRIFT — keys exempted from EN↔ES parity by explicit founder decision.
  *
- * Populate empirically on first run: any keys this test reports as missing
- * BEFORE Cluster A added new keys are baseline drift, to be cleaned up in a
- * follow-up commit outside this plan. Keys added in T1 (Cluster A) MUST
- * NOT be added here — they should be present on both sides.
- *
- * After cleanup commit, this set should be emptied.
+ * Two categories:
+ *   (1) Pre-existing baseline drift to be cleaned up in a follow-up.
+ *   (2) Intentionally locale-specific keys (e.g. LATAM-only badges on /es/
+ *       gated by `{locale === 'es' && ...}` in the JSX — the EN catalog
+ *       never reads them, so stub keys would be dead code).
  */
 const KNOWN_DRIFT: ReadonlySet<string> = new Set<string>([
-  // Populated empirically on first run (Step 5.3) if pre-existing drift exists.
+  // ES-only LATAM currency-equivalent badge (2026-05-21).
+  // Rendered only when locale === 'es'; adding to en.json would be dead.
+  'pricing.monthlyPriceEquiv',
+  'pricing.annualPriceEquiv',
+  'pricingPage.currencyEquivAria',
 ]);
 
 describe('i18n key parity — messages/en.json ↔ messages/es.json', () => {
