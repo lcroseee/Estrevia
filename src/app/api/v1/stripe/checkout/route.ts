@@ -93,10 +93,23 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   }
 
   // Stripe Checkout uses 'auto' (browser language) for EN/missing; explicit
-  // 'es' for Spanish-locale callers. Stripe also supports 'en' explicitly,
-  // but 'auto' is friendlier when the user is on /en but their browser is
-  // set to another language Stripe supports.
-  const stripeLocale: 'auto' | 'es' = localeFromBody === 'es' ? 'es' : 'auto';
+  // 'es-419' (LATAM Spanish) for Spanish-locale callers — tú form, LATAM
+  // terminology, matches our /es content style guide. Stripe also supports
+  // 'es' (European) but es-419 is more appropriate for our MX/CO/PE/CL/AR audience.
+  const stripeLocale: 'auto' | 'es-419' = localeFromBody === 'es' ? 'es-419' : 'auto';
+
+  // LATAM currency-equivalent shown inside Stripe Checkout (custom_text.submit).
+  // Mirrors messages/es.json pricing.{monthlyPriceEquiv,annualPriceEquiv}.
+  // Server-side hardcode to avoid pulling next-intl runtime into API route;
+  // keep in sync with messages/es.json when FX rates refresh (quarterly).
+  const esCurrencyEquiv =
+    plan === 'pro_annual'
+      ? '≈ 630 MXN · 147 000 COP · 33 200 CLP · 133 PEN · 1 400 UYU'
+      : '≈ 90 MXN · 21 000 COP · 4 740 CLP · 19 PEN · 200 UYU';
+  const customTextForLocale =
+    localeFromBody === 'es'
+      ? { submit: { message: esCurrencyEquiv } }
+      : undefined;
 
   // ---------------------------------------------------------------------------
   // 4. Resolve price ID
@@ -206,6 +219,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
           ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: userEmail }),
           client_reference_id: userId,
           locale: stripeLocale,
+          ...(customTextForLocale ? { custom_text: customTextForLocale } : {}),
           metadata: {
             clerkUserId: userId,
             ...utm,
@@ -325,6 +339,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
           : {}),
         ...(anonymousId ? { client_reference_id: anonymousId } : {}),
         locale: stripeLocale,
+        ...(customTextForLocale ? { custom_text: customTextForLocale } : {}),
         metadata,
         subscription_data: {
           trial_period_days: 3,

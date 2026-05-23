@@ -195,14 +195,43 @@ describe('POST /api/v1/stripe/checkout — UTM metadata forwarding', () => {
 });
 
 describe('POST /api/v1/stripe/checkout — locale forwarding (authenticated)', () => {
-  it('passes locale="es" to Stripe Checkout when body.locale="es"', async () => {
+  it('passes locale="es-419" (LATAM Spanish) to Stripe Checkout when body.locale="es"', async () => {
     const req = makeRequest({ locale: 'es' });
     const res = await POST(req);
     expect(res.status).toBe(200);
 
     expect(mocks.mockSessionsCreate).toHaveBeenCalledOnce();
     const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
-    expect(callArg.locale).toBe('es');
+    expect(callArg.locale).toBe('es-419');
+  });
+
+  it('attaches custom_text.submit.message with LATAM currency equivalents for ES sub-mode session', async () => {
+    const req = makeRequest({ locale: 'es', plan: 'pro_annual' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.custom_text?.submit?.message).toContain('MXN');
+    expect(callArg.custom_text?.submit?.message).toContain('COP');
+    expect(callArg.custom_text?.submit?.message).toContain('630'); // annual amount
+  });
+
+  it('uses monthly currency equivalent string for pro_monthly plan', async () => {
+    const req = makeRequest({ locale: 'es', plan: 'pro_monthly' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.custom_text?.submit?.message).toContain('90'); // monthly amount
+  });
+
+  it('omits custom_text for EN/default locale', async () => {
+    const req = makeRequest({ locale: 'en' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.custom_text).toBeUndefined();
   });
 
   it('passes locale="auto" when body.locale="en"', async () => {
@@ -270,15 +299,25 @@ describe('POST /api/v1/stripe/checkout — locale forwarding (anonymous)', () =>
     mocks.mockCookieGet.mockReturnValue({ value: 'anon_abc' });
   });
 
-  it('passes locale="es" to anonymous Stripe Checkout', async () => {
+  it('passes locale="es-419" (LATAM Spanish) to anonymous Stripe Checkout', async () => {
     const req = makeRequest({ locale: 'es' });
     const res = await POST(req);
     expect(res.status).toBe(200);
 
     expect(mocks.mockSessionsCreate).toHaveBeenCalledOnce();
     const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
-    expect(callArg.locale).toBe('es');
+    expect(callArg.locale).toBe('es-419');
     expect(callArg.metadata).toMatchObject({ locale: 'es', anonymous_id: 'anon_abc' });
+  });
+
+  it('attaches custom_text with LATAM currency to anonymous ES Checkout', async () => {
+    const req = makeRequest({ locale: 'es', plan: 'pro_annual' });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.custom_text?.submit?.message).toContain('MXN');
+    expect(callArg.custom_text?.submit?.message).toContain('630');
   });
 });
 
