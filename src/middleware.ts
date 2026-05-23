@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import createIntlMiddleware from 'next-intl/middleware';
 import { routing } from '@/i18n/routing';
+import { ensureAnonymousIdCookie } from '@/shared/lib/anonymous-id';
 
 // ---------------------------------------------------------------------------
 // lastSeenAt throttled update (fire-and-forget, never blocks the request)
@@ -109,7 +110,7 @@ export default clerkMiddleware(async (auth, req) => {
       // Page route: redirect to sign-in preserving the return path.
       const signInUrl = new URL('/sign-in', req.url);
       signInUrl.searchParams.set('redirect_url', req.url);
-      return NextResponse.redirect(signInUrl);
+      return ensureAnonymousIdCookie(req, NextResponse.redirect(signInUrl));
     }
   }
 
@@ -143,7 +144,9 @@ export default clerkMiddleware(async (auth, req) => {
     pathname.startsWith('/admin/') ||
     pathname === '/opengraph-image'
   ) return;
-  return intlMiddleware(req);
+  // Page routes: ensure a stable anonymous_id cookie rides along on the intl
+  // response so anonymous Stripe Checkout gets a unique idempotency-key identity.
+  return ensureAnonymousIdCookie(req, intlMiddleware(req));
 });
 
 export const config = {

@@ -283,13 +283,13 @@ describe('POST /api/v1/stripe/checkout — locale forwarding (anonymous)', () =>
 });
 
 describe('POST /api/v1/stripe/checkout — dedup + idempotency (authenticated)', () => {
-  it('passes idempotencyKey scoped to userId+plan+UTC-day to sessions.create', async () => {
+  it('passes a param-aware idempotencyKey (checkout:<userId>:<plan>:<day>:<hash>) to sessions.create', async () => {
     const req = makeRequest({ plan: 'pro_annual' });
     const res = await POST(req);
     expect(res.status).toBe(200);
 
     const opts = mocks.mockSessionsCreate.mock.calls[0][1];
-    expect(opts.idempotencyKey).toMatch(/^checkout:user_xyz:pro_annual:\d{4}-\d{2}-\d{2}$/);
+    expect(opts.idempotencyKey).toMatch(/^checkout:user_xyz:pro_annual:\d{4}-\d{2}-\d{2}:[0-9a-f]{16,}$/);
   });
 
   it('reuses existing Stripe customer when DB has no stripeCustomerId but email matches', async () => {

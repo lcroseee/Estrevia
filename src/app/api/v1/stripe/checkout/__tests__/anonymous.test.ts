@@ -113,14 +113,38 @@ describe('POST /api/v1/stripe/checkout — anonymous branch', () => {
     expect(json.data.url).toBe('https://stripe.com/cs_test_123');
   });
 
-  it('passes idempotencyKey scoped to anonymousId+plan+UTC-day to sessions.create', async () => {
+  it('passes a param-aware idempotencyKey (checkout:<id>:<plan>:<day>:<hash>) to sessions.create', async () => {
     authMock.mockResolvedValue({ userId: null });
     dbSelectMock.mockReturnValue([]);
 
     await POST(makeRequest({ plan: 'pro_annual' }));
     expect(sessionsCreateMock).toHaveBeenCalledTimes(1);
     const opts = sessionsCreateMock.mock.calls[0][1];
-    expect(opts.idempotencyKey).toMatch(/^checkout:anon-xyz:pro_annual:\d{4}-\d{2}-\d{2}$/);
+    expect(opts.idempotencyKey).toMatch(/^checkout:anon-xyz:pro_annual:\d{4}-\d{2}-\d{2}:[0-9a-f]{16,}$/);
+  });
+
+  it('produces DIFFERENT idempotencyKeys when only the locale differs (prevents StripeIdempotencyError)', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    dbSelectMock.mockReturnValue([]);
+
+    await POST(makeRequest({ plan: 'pro_annual', locale: 'es' }));
+    await POST(makeRequest({ plan: 'pro_annual', locale: 'en' }));
+
+    const key1 = sessionsCreateMock.mock.calls[0][1].idempotencyKey;
+    const key2 = sessionsCreateMock.mock.calls[1][1].idempotencyKey;
+    expect(key1).not.toBe(key2);
+  });
+
+  it('produces the SAME idempotencyKey for byte-identical requests (double-click dedup preserved)', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    dbSelectMock.mockReturnValue([]);
+
+    await POST(makeRequest({ plan: 'pro_annual', locale: 'es', utm_source: 'meta' }));
+    await POST(makeRequest({ plan: 'pro_annual', locale: 'es', utm_source: 'meta' }));
+
+    const key1 = sessionsCreateMock.mock.calls[0][1].idempotencyKey;
+    const key2 = sessionsCreateMock.mock.calls[1][1].idempotencyKey;
+    expect(key1).toBe(key2);
   });
 
   it('reuses existing customer (passes customer:cus_X, drops customer_email) when lookup finds no active sub', async () => {

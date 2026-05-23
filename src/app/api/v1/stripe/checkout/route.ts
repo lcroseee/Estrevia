@@ -27,7 +27,8 @@ import { getStripe } from '@/shared/lib/stripe';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import type { ApiResponse } from '@/shared/types';
-import { findOrPrepareCustomer, utcDayBucket } from './findOrPrepareCustomer';
+import { randomUUID } from 'node:crypto';
+import { findOrPrepareCustomer, utcDayBucket, buildCheckoutIdempotencyKey } from './findOrPrepareCustomer';
 
 const checkoutBodySchema = z.object({
   plan: z.enum(['pro_monthly', 'pro_annual']).default('pro_annual'),
@@ -187,7 +188,15 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
 
     try {
       const stripe = getStripe();
-      const idempotencyKey = `checkout:${userId}:${plan}:${utcDayBucket()}`;
+      const idempotencyKey = buildCheckoutIdempotencyKey({
+        identity: userId,
+        plan,
+        day: utcDayBucket(),
+        stripeLocale,
+        localeFromBody,
+        utm,
+        customer: stripeCustomerId ?? userEmail ?? 'new',
+      });
 
       const session = await stripe.checkout.sessions.create(
         {
@@ -290,7 +299,19 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
     if (anonymousId) metadata.anonymous_id = anonymousId;
     if (localeFromBody) metadata.locale = localeFromBody;
 
-    const idempotencyKey = `checkout:${anonymousId ?? 'noanon'}:${plan}:${utcDayBucket()}`;
+    // No stable anonymous_id (cookieless-at-checkout race) → randomUUID so the
+    // key is never the shared 'noanon' bucket. The anonymous_id cookie set in
+    // middleware makes this fallback rare; when present it keeps the key stable
+    // across a single user's identical retries (double-click dedup).
+    const idempotencyKey = buildCheckoutIdempotencyKey({
+      identity: anonymousId ?? randomUUID(),
+      plan,
+      day: utcDayBucket(),
+      stripeLocale,
+      localeFromBody,
+      utm,
+      customer: reuseCustomerId ?? prefilledEmail ?? 'new',
+    });
 
     const session = await stripe.checkout.sessions.create(
       {

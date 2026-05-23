@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type Stripe from 'stripe';
 
 /**
@@ -65,4 +66,51 @@ export async function findOrPrepareCustomer(
  */
 export function utcDayBucket(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10);
+}
+
+/**
+ * Build a Stripe idempotency key that is BOTH unique-per-intent and stable for
+ * identical retries.
+ *
+ * Stripe rejects reuse of an idempotency key with *different* parameters
+ * (`StripeIdempotencyError`). The previous key (`checkout:${anonId ?? 'noanon'}:
+ * ${plan}:${day}`) was param-blind AND collapsed every cookieless anonymous
+ * visitor onto the shared `'noanon'` bucket — so the day's first anonymous
+ * checkout claimed the key and every later request with different params
+ * (locale / utm / customer) hard-failed. See
+ * docs/superpowers/plans/2026-05-23-checkout-idempotency-collision.md.
+ *
+ * The key now folds the request-defining params into a hash:
+ *   - identical body (a genuine double-click) → identical key → Stripe dedups
+ *     (the duplicate-customer protection this key was added for), and
+ *   - any genuine difference → a different key → a fresh session, never a
+ *     false `StripeIdempotencyError`.
+ *
+ * `identity` (userId / per-browser anonymous_id / random fallback) keeps
+ * distinct users from ever sharing a key.
+ */
+export function buildCheckoutIdempotencyKey(input: {
+  identity: string;
+  plan: string;
+  day: string;
+  stripeLocale: string;
+  localeFromBody?: string | null;
+  utm: Record<string, string>;
+  /** Resolved Stripe target: customer id, customer_email, or 'new'. */
+  customer: string;
+}): string {
+  const sortedUtm = Object.keys(input.utm)
+    .sort()
+    .reduce<Record<string, string>>((acc, k) => {
+      acc[k] = input.utm[k];
+      return acc;
+    }, {});
+  const canonical = JSON.stringify({
+    stripeLocale: input.stripeLocale,
+    localeFromBody: input.localeFromBody ?? null,
+    utm: sortedUtm,
+    customer: input.customer,
+  });
+  const hash = createHash('sha256').update(canonical).digest('hex').slice(0, 32);
+  return `checkout:${input.identity}:${input.plan}:${input.day}:${hash}`;
 }
