@@ -47,6 +47,7 @@ function formatTrialEndDate(): string {
 export function PaywallModal({ open, onClose, returnUrl, triggerContext }: PaywallModalProps) {
   const t = useTranslations('paywall');
   const tp = useTranslations('pricing');
+  const tPage = useTranslations('pricingPage');
   const locale = useLocale();
   const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_annual');
   const [loading, setLoading] = useState(false);
@@ -229,6 +230,15 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
             {plan === 'pro_annual' && (
               <p className="text-xs text-white/60 mt-1 font-[var(--font-geist-mono)]">
                 {tp('annualPerMonth')}
+              </p>
+            )}
+            {/* LATAM currency equivalents — ES-only via locale gate */}
+            {locale === 'es' && (
+              <p
+                className="text-xs text-white/50 mt-2 font-[var(--font-geist-mono)] leading-relaxed"
+                aria-label={tPage('currencyEquivAria')}
+              >
+                {tp(plan === 'pro_annual' ? 'annualPriceEquiv' : 'monthlyPriceEquiv')}
               </p>
             )}
           </div>
