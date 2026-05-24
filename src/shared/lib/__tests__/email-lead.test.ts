@@ -29,6 +29,13 @@ vi.mock('@/shared/lib/unsubscribe-token', () => ({
   signLeadUnsubscribeToken: vi.fn(async (id: string) => `tok_${id}`),
 }));
 
+vi.mock('@/shared/lib/analytics', () => ({
+  trackServerEvent: vi.fn(),
+  AnalyticsEvent: {
+    PAYWALL_TEASER_EMAIL_SENT: 'paywall_teaser_email_sent',
+  },
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   tryInsertMock.mockResolvedValue('new');
@@ -249,7 +256,7 @@ describe('sendLeadMoonAscEmail', () => {
 });
 
 describe('sendLeadPaywallTeaserEmail', () => {
-  it('sends T+72h with AI reading teaser + trial CTA', async () => {
+  it('T4.6a: variant A (control) sends with generic heading + trial CTA', async () => {
     const { sendLeadPaywallTeaserEmail } = await import('../email');
     const res = await sendLeadPaywallTeaserEmail({
       leadId: 'lead_t72',
@@ -257,6 +264,7 @@ describe('sendLeadPaywallTeaserEmail', () => {
       locale: 'en',
       chart: sampleChart as never,
       chartId: 'chart_t72',
+      variant: 'A',
     });
     expect(res.sent).toBe(true);
     expect(tryInsertMock).toHaveBeenCalledWith('lead_t72', 'lead_paywall_teaser');
@@ -264,6 +272,89 @@ describe('sendLeadPaywallTeaserEmail', () => {
     expect((callArgs.subject as string).toLowerCase()).toMatch(/reading|capricorn/);
     expect((callArgs.html as string).toLowerCase()).toMatch(/trial|free/);
     expect(callArgs.html).toContain('checkout/start');
+    // Variant A should NOT contain "most telling placements" (B/C hook phrase)
+    expect(callArgs.html).not.toContain('most telling placements');
+  });
+
+  it('T4.6b: variant B renders personalized template — subject contains planet name', async () => {
+    const { sendLeadPaywallTeaserEmail } = await import('../email');
+    const res = await sendLeadPaywallTeaserEmail({
+      leadId: 'lead_t72_b',
+      email: 'b@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: 'chart_b',
+      variant: 'B',
+    });
+    expect(res.sent).toBe(true);
+    const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
+    // Subject must mention a planet (Mercury is the dominant-planet fallback for sampleChart)
+    const subjectLower = (callArgs.subject as string).toLowerCase();
+    expect(subjectLower).toMatch(/mercury|saturn|mars|venus/);
+    // Body contains the dominant-planet hook phrase from LeadPaywallTeaserBEmail
+    expect(callArgs.html).toContain('most telling placements');
+    // No discount urgency block in variant B — use specific discount copy
+    expect(callArgs.html).not.toContain('48 hours');
+    // CTA still points to checkout
+    expect(callArgs.html).toContain('checkout/start');
+  });
+
+  it('T4.6c: variant C subject contains "20%" and trialUrl contains coupon param when env var set', async () => {
+    vi.stubEnv('STRIPE_COUPON_TEASER20', 'coupon_test_abc');
+    const { sendLeadPaywallTeaserEmail } = await import('../email');
+    const res = await sendLeadPaywallTeaserEmail({
+      leadId: 'lead_t72_c',
+      email: 'c@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: 'chart_c',
+      variant: 'C',
+    });
+    expect(res.sent).toBe(true);
+    const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
+    // Subject must include discount signal
+    expect(callArgs.subject as string).toMatch(/20%/);
+    // Body contains discount urgency block
+    expect(callArgs.html).toContain('20%');
+    // trialUrl carries coupon param
+    expect(callArgs.html).toContain('coupon=TEASER20');
+    vi.unstubAllEnvs();
+  });
+
+  it('T4.6d: variant C degrades to B-style template (no coupon in URL) when STRIPE_COUPON_TEASER20 not set', async () => {
+    // Ensure env var is absent
+    vi.unstubAllEnvs();
+    const { sendLeadPaywallTeaserEmail } = await import('../email');
+    const res = await sendLeadPaywallTeaserEmail({
+      leadId: 'lead_t72_c_no_env',
+      email: 'c2@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: 'chart_c2',
+      variant: 'C',
+    });
+    expect(res.sent).toBe(true);
+    const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
+    // No coupon in URL when env var absent
+    expect(callArgs.html).not.toContain('coupon=TEASER20');
+    // But still renders C template (urgency block visible)
+    expect(callArgs.html).toContain('20%');
+  });
+
+  it('T4.6e: null/undefined variant defaults to A (pre-experiment leads)', async () => {
+    const { sendLeadPaywallTeaserEmail } = await import('../email');
+    const res = await sendLeadPaywallTeaserEmail({
+      leadId: 'lead_t72_null',
+      email: 'null@example.com',
+      locale: 'en',
+      chart: sampleChart as never,
+      chartId: null,
+      variant: null,
+    });
+    expect(res.sent).toBe(true);
+    const callArgs = resendSendMock.mock.calls[0][0] as Record<string, unknown>;
+    // Null variant → control template → no planet hook phrase
+    expect(callArgs.html).not.toContain('most telling placements');
   });
 
   it("dedups on 'delivered' claim", async () => {
