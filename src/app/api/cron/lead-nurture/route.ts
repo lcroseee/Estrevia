@@ -51,6 +51,7 @@ import {
   sendLeadMiniReadingEmail,
   sendLeadSynastryTeaserEmail,
 } from '@/shared/lib/email';
+import type { PaywallTeaserVariant } from '@/shared/lib/abtest';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -83,6 +84,8 @@ interface StepHandler {
     locale: 'en' | 'es';
     chart: Awaited<ReturnType<typeof fetchTempChart>>;
     chartId: string | null;
+    /** A/B test variant — only used by paywall_teaser step (step 3) */
+    variant?: PaywallTeaserVariant | null;
   }) => Promise<{ sent: boolean; reason?: string }>;
   nextDelayMs: number | null;
 }
@@ -131,6 +134,7 @@ export async function GET(request: Request) {
         nurtureStep: emailLeads.nurtureStep,
         nurtureNextAt: emailLeads.nurtureNextAt,
         createdAt: emailLeads.createdAt,
+        paywallTeaserVariant: emailLeads.paywallTeaserVariant,
       })
       .from(emailLeads)
       .where(
@@ -180,6 +184,8 @@ export async function GET(request: Request) {
           locale: lead.locale,
           chart,
           chartId: lead.chartId,
+          // A/B test variant — passed for step 3 (paywall_teaser); ignored by others
+          variant: lead.paywallTeaserVariant,
         });
 
         console.info('[cron/lead-nurture] sendResult', {
