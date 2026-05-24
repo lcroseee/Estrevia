@@ -92,6 +92,13 @@
       "when": 1779065701170,
       "tag": "0012_lean_preak",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1748044800000,
+      "tag": "0014_paywall_teaser_abtest",
+      "breakpoints": true
     }
   ]
 }
