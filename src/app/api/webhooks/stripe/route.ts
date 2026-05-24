@@ -646,7 +646,8 @@ export async function POST(request: Request): Promise<Response> {
 
       // -----------------------------------------------------------------------
       // customer.subscription.trial_will_end
-      // Trial ending in ~3 days → send reminder email
+      // Trial ending in ~3 days → send T-72h reminder email (step=reminder_3d).
+      // The T-24h and T-0 emails are handled by /api/cron/trial-expiration.
       // -----------------------------------------------------------------------
       case 'customer.subscription.trial_will_end': {
         const sub = event.data.object as Stripe.Subscription;
@@ -659,18 +660,43 @@ export async function POST(request: Request): Promise<Response> {
           .where(eq(users.stripeCustomerId, customerId))
           .limit(1);
 
-        if (rows[0]?.email) {
-          const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : new Date();
-          const { sendTrialEndingEmail } = await import('@/shared/lib/email');
-          await sendTrialEndingEmail({
+        if (!rows[0]?.email) {
+          console.warn('[stripe-webhook] trial_will_end: user not found for customer', {
+            customerId,
+          });
+          break;
+        }
+
+        try {
+          const { sendTrialExpirationEmail } = await import('@/shared/lib/trial-expiration-email');
+          const trialEndDate = sub.trial_end ? new Date(sub.trial_end * 1000) : new Date();
+          await sendTrialExpirationEmail({
+            subscriptionId: sub.id,
             userId: rows[0].id,
             email: rows[0].email,
             locale: (rows[0].locale ?? 'en') as 'en' | 'es',
-            trialEnd,
+            step: 'reminder_3d',
+            trialEndDate,
+            plan: derivePlan(sub),
           });
+          console.info('[stripe-webhook] trial_will_end → reminder_3d sent', {
+            customerId,
+            subscriptionId: sub.id,
+          });
+        } catch (emailErr) {
+          console.error(
+            '[stripe-webhook] trial_will_end reminder_3d email failed (non-fatal)',
+            emailErr instanceof Error ? emailErr.message : 'unknown',
+          );
+          try {
+            const { captureException } = await import('@sentry/nextjs');
+            captureException(emailErr, {
+              tags: { webhook: 'stripe', email_type: 'trial_reminder_3d' },
+            });
+          } catch {
+            // Sentry capture is best-effort.
+          }
         }
-
-        console.info('[stripe-webhook] trial_will_end → email sent', { customerId });
         break;
       }
 
