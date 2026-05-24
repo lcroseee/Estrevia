@@ -247,7 +247,10 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
           // When a specific A/B test coupon is passed and the env var is set,
           // apply it via `discounts` and disable allow_promotion_codes to prevent
           // coupon stacking. If no coupon, allow_promotion_codes remains active.
-          ...(couponCode === 'TEASER20' && process.env.STRIPE_COUPON_TEASER20
+          // ANNUAL-ONLY guard: TEASER20 is an acquisition-discount for the
+          // annual plan. Attaching it to monthly would erode anchoring
+          // (annual already 41.5% cheaper than monthly×12 — see pricing audit).
+          ...(couponCode === 'TEASER20' && plan === 'pro_annual' && process.env.STRIPE_COUPON_TEASER20
             ? { discounts: [{ coupon: process.env.STRIPE_COUPON_TEASER20 }] }
             : { allow_promotion_codes: true }),
           billing_address_collection: 'auto',
@@ -362,7 +365,8 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
         success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${appUrl}/pricing`,
         // When an A/B test coupon is passed, apply it via `discounts` to prevent stacking.
-        ...(couponCode === 'TEASER20' && process.env.STRIPE_COUPON_TEASER20
+        // ANNUAL-ONLY guard: see auth-branch comment above. TEASER20 is annual acquisition only.
+        ...(couponCode === 'TEASER20' && plan === 'pro_annual' && process.env.STRIPE_COUPON_TEASER20
           ? { discounts: [{ coupon: process.env.STRIPE_COUPON_TEASER20 }] }
           : { allow_promotion_codes: true }),
         billing_address_collection: 'auto',

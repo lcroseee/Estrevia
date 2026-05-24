@@ -1030,8 +1030,11 @@ export async function sendCartAbandonEmail(params: {
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
 
-  // 3. CTA URL with coupon + UTM
-  const ctaPath = `/${params.locale === 'es' ? 'es/' : ''}pricing?coupon=ABANDON20&utm_source=cart-abandon&utm_medium=email&utm_campaign=cart-abandon-20off`;
+  // 3. CTA URL — bypass /pricing and go straight to /checkout/start with
+  // pre-applied TEASER20 coupon. Cuts a click and ensures the discount actually
+  // attaches at Stripe Checkout (the /pricing UI does not forward ?coupon).
+  // Server allowlist + annual-plan guard in /api/v1/stripe/checkout re-validate.
+  const ctaPath = `/${params.locale === 'es' ? 'es/' : ''}checkout/start?plan=pro_annual&coupon=TEASER20&utm_source=cart-abandon&utm_medium=email&utm_campaign=cart-abandon-20off`;
   const ctaUrl = `${SITE_URL}${ctaPath}`;
 
   // 4. Extract Saturn sign for personalization (if chart available)

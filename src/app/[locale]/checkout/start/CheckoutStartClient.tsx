@@ -40,6 +40,10 @@ export function CheckoutStartClient() {
   const planRaw = searchParams.get('plan');
   const plan: Plan = planRaw === 'pro_monthly' ? 'pro_monthly' : 'pro_annual';
   const returnUrl = searchParams.get('return') ?? '/';
+  // Coupon from URL (e.g. emailed cart-abandon link with ?coupon=TEASER20).
+  // Server-side allowlist + plan-guard re-validate this; never trust client.
+  const couponRaw = searchParams.get('coupon');
+  const coupon = couponRaw === 'TEASER20' ? 'TEASER20' : undefined;
 
   const [phase, setPhase] = useState<'preparing' | 'redirecting' | 'error'>('preparing');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -54,7 +58,7 @@ export function CheckoutStartClient() {
       const utmFields = readUtmLastTouch();
       const result = await postJson<CheckoutResponse>(
         '/api/v1/stripe/checkout',
-        { plan, returnUrl, locale, ...utmFields },
+        { plan, returnUrl, locale, ...utmFields, ...(coupon ? { coupon } : {}) },
       );
       if (cancelled) return;
 
@@ -103,8 +107,8 @@ export function CheckoutStartClient() {
     return () => {
       cancelled = true;
     };
-    // attempt drives retries; plan/returnUrl/locale come from URL and don't change mid-session.
-  }, [plan, returnUrl, locale, attempt, t]);
+    // attempt drives retries; plan/returnUrl/locale/coupon come from URL and don't change mid-session.
+  }, [plan, returnUrl, locale, coupon, attempt, t]);
 
   function retry() {
     setPhase('preparing');

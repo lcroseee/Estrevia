@@ -6,7 +6,8 @@
  * Queries PostHog for leads who fired `paywall_opened` or
  * `checkout_stripe_redirected` in the last 7 days but have NOT fired
  * `subscription_started`. Joins to `email_leads` table to get email + locale.
- * Sends a single cart-abandon email with a 20% off annual coupon (ABANDON20)
+ * Sends a single cart-abandon email with a 20% off annual coupon (TEASER20 —
+ * shared with paywall_teaser variant C; see T7 consolidation commit)
  * valid for 48h per the email copy.
  *
  * Idempotency: `sent_cart_abandon_emails` table enforces a 90-day frequency

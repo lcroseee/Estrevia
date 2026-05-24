@@ -3,7 +3,7 @@ import { render } from '@react-email/render';
 import CartAbandonEmail from '../CartAbandonEmail';
 
 const BASE_PROPS = {
-  ctaUrl: 'https://estrevia.app/pricing?coupon=ABANDON20&utm_source=cart-abandon',
+  ctaUrl: 'https://estrevia.app/checkout/start?plan=pro_annual&coupon=TEASER20&utm_source=cart-abandon',
   unsubscribeUrl: 'https://estrevia.app/unsubscribe?token=abc',
 };
 
@@ -19,7 +19,7 @@ describe('CartAbandonEmail', () => {
     );
     expect(html).toContain('Saturn');
     expect(html).toContain('Capricorn');
-    expect(html).toContain('ABANDON20');
+    expect(html).toContain('TEASER20');
     expect(html).toContain('Save $7');
   });
 
@@ -34,7 +34,7 @@ describe('CartAbandonEmail', () => {
     );
     expect(html).toContain('Desbloquea');
     expect(html).toContain('Ahorra');
-    expect(html).toContain('ABANDON20');
+    expect(html).toContain('TEASER20');
   });
 
   it('EN render without saturnSign — CTA present, no Saturn personalization line', async () => {
@@ -75,7 +75,7 @@ describe('CartAbandonEmail', () => {
       { plainText: true },
     );
     expect(text).not.toContain('<');
-    expect(text).toContain('ABANDON20');
+    expect(text).toContain('TEASER20');
     expect(text).toContain(BASE_PROPS.unsubscribeUrl);
   });
 });
