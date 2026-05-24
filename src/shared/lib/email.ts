@@ -12,13 +12,19 @@ import LeadChartEmail from '@/emails/LeadChartEmail';
 import LeadCuriosityHookEmail from '@/emails/LeadCuriosityHookEmail';
 import LeadMoonAscEmail from '@/emails/LeadMoonAscEmail';
 import LeadPaywallTeaserEmail from '@/emails/LeadPaywallTeaserEmail';
+import LeadPaywallTeaserBEmail from '@/emails/LeadPaywallTeaserBEmail';
+import LeadPaywallTeaserCEmail from '@/emails/LeadPaywallTeaserCEmail';
 import SaturnWeeklyEmail from '@/emails/SaturnWeeklyEmail';
 import MiniReadingEmail from '@/emails/MiniReadingEmail';
 import SynastryTeaserEmail from '@/emails/SynastryTeaserEmail';
+import CartAbandonEmail from '@/emails/CartAbandonEmail';
 import { PLANET_ES_NAMES } from './planet-i18n';
 import { tryInsertOneShot, recordSent } from './sent-emails';
 import { tryInsertOneShotLead, recordSentLead } from './sent-lead-emails';
+import { hasCartAbandonSentRecently, recordCartAbandonSent } from './sent-cart-abandon-emails';
 import { signUnsubscribeToken, signLeadUnsubscribeToken } from './unsubscribe-token';
+import { trackServerEvent, AnalyticsEvent } from './analytics';
+import { assignPaywallTeaserVariant, type PaywallTeaserVariant } from './abtest';
 import type { ChartResult } from '@/shared/types';
 import { Planet } from '@/shared/types';
 
@@ -81,6 +87,32 @@ const SUBJECTS = {
     es: (sunSign: string | null) =>
       sunSign ? `La lectura completa de tu carta ${sunSign}` : 'La lectura completa de tu carta sideral',
   },
+  // Variant B: personalized subject with dominant planet
+  lead_paywall_teaser_B: {
+    en: (sunSign: string | null, planet: string, sign: string) =>
+      sunSign
+        ? `Your ${sunSign} chart has a reading waiting — ${planet} in ${sign} caught our attention`
+        : `Your sidereal chart has a reading waiting — ${planet} in ${sign} caught our attention`,
+    es: (sunSign: string | null, planet: string, sign: string) =>
+      sunSign
+        ? `Tu carta ${sunSign} tiene una lectura esperándote — ${planet} en ${sign} llamó nuestra atención`
+        : `Tu carta sideral tiene una lectura esperándote — ${planet} en ${sign} llamó nuestra atención`,
+  },
+  // Variant C: personalized + 20% discount urgency in subject
+  lead_paywall_teaser_C: {
+    en: (sunSign: string | null, planet: string, sign: string) => {
+      const base = sunSign
+        ? `Your ${sunSign} chart has a reading waiting — ${planet} in ${sign} caught our attention`
+        : `Your sidereal chart has a reading waiting — ${planet} in ${sign} caught our attention`;
+      return `${base} — 20% off, 48h only`;
+    },
+    es: (sunSign: string | null, planet: string, sign: string) => {
+      const base = sunSign
+        ? `Tu carta ${sunSign} tiene una lectura esperándote — ${planet} en ${sign} llamó nuestra atención`
+        : `Tu carta sideral tiene una lectura esperándote — ${planet} en ${sign} llamó nuestra atención`;
+      return `${base} — 20% de desc., solo 48h`;
+    },
+  },
   lead_saturn_weekly: {
     en: 'A weekly note about Saturn',
     es: 'Una nota semanal sobre Saturno',
@@ -92,6 +124,12 @@ const SUBJECTS = {
   lead_synastry_teaser: {
     en: 'Want to see your compatibility?',
     es: '¿Quieres ver tu compatibilidad?',
+  },
+  cart_abandon: {
+    en: (name: string | null) =>
+      name ? `${name}, you almost unlocked your full chart` : 'You almost unlocked your full chart',
+    es: (name: string | null) =>
+      name ? `${name}, casi desbloqueas tu carta completa` : 'Casi desbloqueas tu carta completa',
   },
 };
 
@@ -611,6 +649,13 @@ export async function sendLeadMoonAscEmail(params: {
 
 // ---------------------------------------------------------------------------
 // sendLeadPaywallTeaserEmail — T+72h nurture drip, one-shot per lead
+//
+// A/B test variants (assigned at lead creation, stored in email_leads.paywall_teaser_variant):
+//   A (control) — current template, no personalization
+//   B — dominant-planet hook in subject + body headline
+//   C — B + 20% off annual discount with 48h urgency
+//
+// Existing leads (NULL variant) default to 'A' and are excluded from analysis.
 // ---------------------------------------------------------------------------
 export async function sendLeadPaywallTeaserEmail(params: {
   leadId: string;
@@ -618,13 +663,18 @@ export async function sendLeadPaywallTeaserEmail(params: {
   locale: 'en' | 'es';
   chart: ChartResult | null;
   chartId: string | null;
+  /** A/B test variant. NULL or undefined → treated as 'A' (pre-experiment leads). */
+  variant?: PaywallTeaserVariant | null;
 }): Promise<{ sent: boolean; reason?: string }> {
   const claim = await tryInsertOneShotLead(params.leadId, 'lead_paywall_teaser');
   if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
 
+  const variant: PaywallTeaserVariant = params.variant ?? 'A';
+
   console.info('[email/lead_paywall_teaser] start', {
     leadId: params.leadId,
     chartIsNull: !params.chart,
+    variant,
   });
 
   const token = await signLeadUnsubscribeToken(params.leadId);
@@ -632,22 +682,73 @@ export async function sendLeadPaywallTeaserEmail(params: {
 
   const signs = pickKeySigns(params.chart);
   const returnPath = `/${params.locale === 'es' ? 'es/' : ''}chart${params.chartId ? `?chartId=${params.chartId}` : ''}`;
-  const trialPath = `/${params.locale === 'es' ? 'es/' : ''}checkout/start?plan=pro_annual&return=${encodeURIComponent(returnPath)}&utm_source=lead-nurture&utm_campaign=t72`;
+  const baseTrialPath = `/${params.locale === 'es' ? 'es/' : ''}checkout/start?plan=pro_annual&return=${encodeURIComponent(returnPath)}&utm_source=lead-nurture&utm_campaign=t72`;
+
+  // Variant C: append coupon param when env var is configured.
+  // Only allowlisted coupon name (TEASER20) is passed — never raw user input.
+  const couponId = process.env.STRIPE_COUPON_TEASER20;
+  const trialPath =
+    variant === 'C' && couponId
+      ? `${baseTrialPath}&coupon=TEASER20`
+      : baseTrialPath;
   const trialUrl = `${SITE_URL}${trialPath}`;
 
-  const html = await render(
-    LeadPaywallTeaserEmail({ locale: params.locale, ...signs, trialUrl }),
+  // Dominant planet data (used by variants B and C)
+  const dominant = pickDominantPlanet(params.chart);
+  const dominantPlanetEs = PLANET_ES_NAMES[dominant.planet as keyof typeof PLANET_ES_NAMES] ?? dominant.planet;
+  // House number from planet position (null when birth time unknown)
+  const dominantPlanetPosition = params.chart?.planets.find(
+    (p) => p.planet === (dominant.planet as string),
   );
-  const text = await render(
-    LeadPaywallTeaserEmail({ locale: params.locale, ...signs, trialUrl }),
-    { plainText: true },
-  );
+  const dominantHouse = dominantPlanetPosition?.house ?? null;
+
+  // Build subject line by variant
+  let subject: string;
+  if (variant === 'B') {
+    subject = SUBJECTS.lead_paywall_teaser_B[params.locale](
+      signs.sunSign,
+      params.locale === 'es' ? dominantPlanetEs : dominant.planet,
+      dominant.signName,
+    );
+  } else if (variant === 'C') {
+    subject = SUBJECTS.lead_paywall_teaser_C[params.locale](
+      signs.sunSign,
+      params.locale === 'es' ? dominantPlanetEs : dominant.planet,
+      dominant.signName,
+    );
+  } else {
+    subject = SUBJECTS.lead_paywall_teaser[params.locale](signs.sunSign);
+  }
+
+  // Build email template by variant
+  const templateProps = {
+    locale: params.locale,
+    ...signs,
+    trialUrl,
+  };
+  const bAndCProps = {
+    ...templateProps,
+    dominantPlanet: dominant.planet,
+    dominantSign: dominant.signName,
+    dominantHouse,
+    dominantPlanetEs,
+  };
+
+  const template =
+    variant === 'B'
+      ? LeadPaywallTeaserBEmail(bAndCProps)
+      : variant === 'C'
+        ? LeadPaywallTeaserCEmail(bAndCProps)
+        : LeadPaywallTeaserEmail(templateProps);
+
+  const html = await render(template);
+  const text = await render(template, { plainText: true });
 
   const result = await getResend().emails.send(
     {
       from: FROM_ADDRESS,
       to: params.email,
-      subject: SUBJECTS.lead_paywall_teaser[params.locale](signs.sunSign),
+      subject,
       html,
       text,
       headers: {
@@ -659,6 +760,7 @@ export async function sendLeadPaywallTeaserEmail(params: {
   );
   console.info('[email/lead_paywall_teaser] sent', {
     leadId: params.leadId,
+    variant,
     resendMessageId: result.data?.id ?? null,
     resendErrorName: result.error?.name ?? null,
   });
@@ -669,6 +771,22 @@ export async function sendLeadPaywallTeaserEmail(params: {
   }
 
   await recordSentLead(params.leadId, 'lead_paywall_teaser', result.data?.id ?? null);
+
+  // PostHog: tag the send with variant for experiment analysis.
+  // distinctId = `lead_{id}` — consistent with leads route convention; never exposes email.
+  try {
+    trackServerEvent(
+      `lead_${params.leadId}`,
+      AnalyticsEvent.PAYWALL_TEASER_EMAIL_SENT,
+      {
+        experiment_variant: variant,
+        locale: params.locale,
+      },
+    );
+  } catch {
+    // Non-fatal — analytics failure must not block email delivery
+  }
+
   return { sent: true };
 }
 
@@ -871,6 +989,112 @@ export async function sendLeadSynastryTeaserEmail(params: {
   }
 
   await recordSentLead(params.leadId, 'lead_synastry_teaser', result.data?.id ?? null);
+  return { sent: true };
+}
+
+// ---------------------------------------------------------------------------
+// sendCartAbandonEmail — one-shot per lead per 90 days (frequency-capped).
+// Side-channel email for leads who viewed the paywall but didn't convert.
+// NOT a drip step — does NOT advance nurture_step.
+// ---------------------------------------------------------------------------
+
+/** Extracts a display-friendly first name from an email address, or null. */
+function extractNameFromEmail(email: string): string | null {
+  const local = email.split('@')[0];
+  if (!local) return null;
+  // Strip numbers and split on separator characters
+  const cleaned = local.split(/[._\-+0-9]/)[0];
+  if (!cleaned || cleaned.length < 2) return null;
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+}
+
+export async function sendCartAbandonEmail(params: {
+  leadId: string;
+  email: string;
+  locale: 'en' | 'es';
+  chart: ChartResult | null;
+  chartId: string | null;
+  checkoutClicks: number;
+  posthogLastPaywallAt?: Date;
+}): Promise<{ sent: boolean; reason?: string }> {
+  // 1. Frequency cap: skip if sent within last 90 days
+  const alreadySent = await hasCartAbandonSentRecently(params.leadId);
+  if (alreadySent) return { sent: false, reason: 'already_sent' };
+
+  console.info('[email/cart_abandon] start', {
+    leadId: params.leadId,
+    checkoutClicks: params.checkoutClicks,
+  });
+
+  // 2. Unsubscribe URL (lead-kind token)
+  const token = await signLeadUnsubscribeToken(params.leadId);
+  const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
+
+  // 3. CTA URL with coupon + UTM
+  const ctaPath = `/${params.locale === 'es' ? 'es/' : ''}pricing?coupon=ABANDON20&utm_source=cart-abandon&utm_medium=email&utm_campaign=cart-abandon-20off`;
+  const ctaUrl = `${SITE_URL}${ctaPath}`;
+
+  // 4. Extract Saturn sign for personalization (if chart available)
+  const saturnPlanet = params.chart?.planets?.find((p) => p.planet === Planet.Saturn);
+  const saturnSign = saturnPlanet?.sign ?? null;
+
+  // 5. Subject — try to extract name from email for personalization
+  const name = extractNameFromEmail(params.email);
+  const subject = SUBJECTS.cart_abandon[params.locale](name);
+
+  // 6. Render
+  const emailProps = {
+    locale: params.locale,
+    saturnSign,
+    checkoutClicks: params.checkoutClicks,
+    ctaUrl,
+    unsubscribeUrl,
+  };
+  const html = await render(CartAbandonEmail(emailProps));
+  const text = await render(CartAbandonEmail(emailProps), { plainText: true });
+
+  // 7. Send
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject,
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    },
+    { idempotencyKey: `${params.leadId}:cart_abandon` },
+  );
+
+  console.info('[email/cart_abandon] sent', {
+    leadId: params.leadId,
+    resendMessageId: result.data?.id ?? null,
+    resendErrorName: result.error?.name ?? null,
+  });
+
+  if (result.error) {
+    const err = new Error(
+      `Resend rejected cart_abandon for ${params.leadId}: ${result.error.message ?? 'unknown'}`,
+    );
+    Sentry.captureException(err, {
+      tags: {
+        component: 'cart-abandon-cron',
+        email_type: 'cart_abandon',
+        lead_id: String(params.leadId),
+      },
+    });
+    throw err;
+  }
+
+  // 8. Record send (frequency cap enforcement + audit)
+  await recordCartAbandonSent(params.leadId, result.data?.id ?? null, {
+    posthogLastPaywallAt: params.posthogLastPaywallAt,
+    checkoutClicks: params.checkoutClicks,
+  });
+
   return { sent: true };
 }
 
