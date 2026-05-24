@@ -9,6 +9,7 @@ import { getDb } from '@/shared/lib/db';
 import { emailLeads } from '@/shared/lib/schema';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { sendLeadChartEmail } from '@/shared/lib/email';
+import { assignPaywallTeaserVariant } from '@/shared/lib/abtest';
 import { fetchTempChart } from '@/shared/lib/temp-chart';
 import { STEP_0_TO_1_DELAY_MS } from '@/app/api/cron/lead-nurture/route';
 import type { ApiResponse } from '@/shared/types';
@@ -95,6 +96,10 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<L
   const userAgent = request.headers.get('user-agent') ?? null;
   const ipHash = ip === 'anonymous' ? null : sha256(ip);
   const newId = nanoid();
+  // Assign A/B test variant deterministically at creation time.
+  // Stored once; never changes. Pre-experiment leads (inserted before migration 0014)
+  // have NULL variant and are excluded from experiment analysis.
+  const paywallTeaserVariant = assignPaywallTeaserVariant(newId);
 
   let leadId: string;
   let wasNew: boolean;
@@ -117,6 +122,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<L
         anonymousId: input.anonymous_id ?? null,
         ipAddressHash: ipHash,
         userAgent,
+        paywallTeaserVariant,
       })
       .onConflictDoNothing({ target: emailLeads.email })
       .returning({ id: emailLeads.id });
