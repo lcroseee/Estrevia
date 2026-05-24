@@ -255,6 +255,8 @@ export const AnalyticsEvent = {
   AVATAR_GENERATION_FAILED: 'avatar_generation_failed',
   AVATAR_QUOTA_EXHAUSTED: 'avatar_quota_exhausted',
   AVATAR_STYLE_LOCKED_CLICKED: 'avatar_style_locked_clicked',
+  // A/B test — paywall_teaser email variant sent
+  PAYWALL_TEASER_EMAIL_SENT: 'paywall_teaser_email_sent',
 } as const;
 
 export type AnalyticsEventName = (typeof AnalyticsEvent)[keyof typeof AnalyticsEvent];

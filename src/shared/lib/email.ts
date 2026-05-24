@@ -24,7 +24,7 @@ import { tryInsertOneShotLead, recordSentLead } from './sent-lead-emails';
 import { hasCartAbandonSentRecently, recordCartAbandonSent } from './sent-cart-abandon-emails';
 import { signUnsubscribeToken, signLeadUnsubscribeToken } from './unsubscribe-token';
 import { trackServerEvent, AnalyticsEvent } from './analytics';
-import { assignPaywallTeaserVariant, type PaywallTeaserVariant } from './abtest';
+import type { PaywallTeaserVariant } from './abtest';
 import type { ChartResult } from '@/shared/types';
 import { Planet } from '@/shared/types';
 
