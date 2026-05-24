@@ -24,6 +24,10 @@ const {
   mockSendPurchaseConfirmationEmail,
   mockSendSubscriptionCanceledEmail,
   mockSendTrialEndingEmail,
+  mockSendDunningEmail,
+  mockChargesRetrieve,
+  mockBillingPortalCreate,
+  mockPaymentIntentsRetrieve,
 } = vi.hoisted(() => {
   const mockReturning = vi.fn().mockResolvedValue([{ eventId: 'evt_test_001' }]);
   const mockOnConflictDoNothing = vi.fn(() => ({ returning: mockReturning }));
@@ -59,6 +63,13 @@ const {
     mockSendPurchaseConfirmationEmail: vi.fn().mockResolvedValue(undefined),
     mockSendSubscriptionCanceledEmail: vi.fn().mockResolvedValue(undefined),
     mockSendTrialEndingEmail: vi.fn().mockResolvedValue(undefined),
+    // T1 dunning mocks — hoisted so the single vi.mock('@/shared/lib/stripe') can reference them
+    mockSendDunningEmail: vi.fn().mockResolvedValue({ sent: true, messageId: 'resend_d0_001' }),
+    mockChargesRetrieve: vi.fn().mockResolvedValue({
+      payment_intent: { last_payment_error: { decline_code: null } },
+    }),
+    mockBillingPortalCreate: vi.fn().mockResolvedValue({ url: 'https://billing.stripe.com/p/test' }),
+    mockPaymentIntentsRetrieve: vi.fn().mockResolvedValue({ last_payment_error: null }),
   };
 });
 
@@ -70,6 +81,9 @@ vi.mock('@/shared/lib/stripe', () => ({
   getStripe: () => ({
     webhooks: { constructEvent: mockConstructEvent },
     subscriptions: { retrieve: mockSubscriptionsRetrieve },
+    paymentIntents: { retrieve: mockPaymentIntentsRetrieve },
+    charges: { retrieve: mockChargesRetrieve },
+    billingPortal: { sessions: { create: mockBillingPortalCreate } },
   }),
 }));
 
@@ -120,6 +134,10 @@ beforeEach(() => {
   mockSelectLimit.mockResolvedValue([]);
   mockSendPurchaseConfirmationEmail.mockResolvedValue(undefined);
   mockSendSubscriptionCanceledEmail.mockResolvedValue(undefined);
+  // T1: dunning defaults
+  mockSendDunningEmail.mockResolvedValue({ sent: true, messageId: 'resend_d0_001' });
+  mockBillingPortalCreate.mockResolvedValue({ url: 'https://billing.stripe.com/p/test' });
+  mockPaymentIntentsRetrieve.mockResolvedValue({ last_payment_error: null });
 });
 
 afterEach(() => {
@@ -477,6 +495,142 @@ describe('POST /api/webhooks/stripe — T3 email hookups', () => {
       { email: 'fail@example.com', locale: 'en' },
     ]);
     mockSendPurchaseConfirmationEmail.mockRejectedValueOnce(new Error('Resend error'));
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T1 (churn): Dunning sequence — invoice.payment_failed
+// ---------------------------------------------------------------------------
+
+vi.mock('@/shared/lib/dunning-emails', () => ({
+  sendDunningEmail: mockSendDunningEmail,
+}));
+
+describe('POST /api/webhooks/stripe — T1 dunning sequence', () => {
+
+  it('invoice.payment_failed attempt_count=1 → dispatches D0 dunning email', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_dunning_d0',
+      type: 'invoice.payment_failed',
+      data: {
+        object: {
+          id: 'in_test_d0',
+          customer: 'cus_dunning_001',
+          attempt_count: 1,
+          period_start: 1748736000, // 2026-06-01
+          payments: { data: [] },
+          parent: {
+            subscription_details: {
+              subscription: 'sub_dunning_001',
+            },
+          },
+        },
+      },
+    });
+    mockSelectLimit.mockResolvedValue([
+      { id: 'user_dunning_001', email: 'dunning@example.com', locale: 'en' },
+    ]);
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+    expect(mockSendDunningEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user_dunning_001',
+        dunningStep: 'd0',
+        subscriptionId: 'sub_dunning_001',
+        stripeInvoiceId: 'in_test_d0',
+        isHardDecline: false,
+      }),
+    );
+  });
+
+  it('invoice.payment_failed attempt_count=3 → dispatches D7 dunning email', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_dunning_d7',
+      type: 'invoice.payment_failed',
+      data: {
+        object: {
+          id: 'in_test_d7',
+          customer: 'cus_dunning_002',
+          attempt_count: 3,
+          period_start: 1748736000,
+          payments: { data: [] },
+          parent: {
+            subscription_details: {
+              subscription: 'sub_dunning_002',
+            },
+          },
+        },
+      },
+    });
+    mockSelectLimit.mockResolvedValue([
+      { id: 'user_dunning_002', email: 'dunning2@example.com', locale: 'en' },
+    ]);
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+    expect(mockSendDunningEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dunningStep: 'd7',
+        subscriptionId: 'sub_dunning_002',
+      }),
+    );
+    // D7: no billing portal session created (D0/D3 only)
+    expect(mockBillingPortalCreate).not.toHaveBeenCalled();
+  });
+
+  it('invoice.payment_failed with no matching user → skips email, returns 200', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_dunning_no_user',
+      type: 'invoice.payment_failed',
+      data: {
+        object: {
+          id: 'in_test_no_user',
+          customer: 'cus_unknown_xyz',
+          attempt_count: 1,
+          period_start: 1748736000,
+          payments: { data: [] },
+          parent: {
+            subscription_details: {
+              subscription: 'sub_unknown',
+            },
+          },
+        },
+      },
+    });
+    mockSelectLimit.mockResolvedValue([]); // user not found
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(200);
+    expect(mockSendDunningEmail).not.toHaveBeenCalled();
+  });
+
+  it('dunning email failure does not fail the webhook — returns 200', async () => {
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_dunning_email_fail',
+      type: 'invoice.payment_failed',
+      data: {
+        object: {
+          id: 'in_test_fail',
+          customer: 'cus_dunning_fail',
+          attempt_count: 1,
+          period_start: 1748736000,
+          payments: { data: [] },
+          parent: {
+            subscription_details: {
+              subscription: 'sub_dunning_fail',
+            },
+          },
+        },
+      },
+    });
+    mockSelectLimit.mockResolvedValue([
+      { id: 'user_dunning_fail', email: 'fail@example.com', locale: 'en' },
+    ]);
+    mockSendDunningEmail.mockRejectedValueOnce(new Error('Resend down'));
 
     const res = await POST(makeReq());
     expect(res.status).toBe(200);
