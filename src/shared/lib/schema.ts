@@ -524,6 +524,12 @@ export const emailLeads = pgTable('email_leads', {
   nurtureStep: integer('nurture_step').notNull().default(0),
   nurtureNextAt: timestamp('nurture_next_at', { withTimezone: true }),
   emailUndeliverable: boolean('email_undeliverable').notNull().default(false),
+  // A/B test variant for paywall_teaser email (T+72h step).
+  // Assigned deterministically at INSERT via sha256(id) mod 3.
+  // NULL = pre-experiment row (created before migration 0014); excluded from analysis.
+  paywallTeaserVariant: text('paywall_teaser_variant', {
+    enum: ['A', 'B', 'C'],
+  }),
 }, (table) => [
   index('email_leads_created_at_idx').on(table.createdAt),
   index('email_leads_converted_to_user_id_idx').on(table.convertedToUserId),
@@ -562,6 +568,56 @@ export type SentLeadEmail = typeof sentLeadEmails.$inferSelect;
 export type NewSentLeadEmail = typeof sentLeadEmails.$inferInsert;
 
 // ---------------------------------------------------------------------------
+// sent_trial_emails — idempotency + audit log for trial expiration sequence
+//
+// Keyed by (subscription_id, step) rather than userId so we can handle
+// subscription changes (cancels, plan swaps) without ambiguity.
+// step enum: 'reminder_3d' (T-72h webhook) | 'reminder_1d' (cron) | 'trial_ended' (cron)
+// ---------------------------------------------------------------------------
+export const sentTrialEmails = pgTable('sent_trial_emails', {
+  id: serial('id').primaryKey(),
+  subscriptionId: text('subscription_id').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  step: text('step', {
+    enum: ['reminder_3d', 'reminder_1d', 'trial_ended'],
+  }).notNull(),
+  resendMessageId: text('resend_message_id'),
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('sent_trial_emails_unique_idx').on(table.subscriptionId, table.step),
+  index('sent_trial_emails_user_id_idx').on(table.userId),
+]);
+
+export type SentTrialEmail = typeof sentTrialEmails.$inferSelect;
+export type NewSentTrialEmail = typeof sentTrialEmails.$inferInsert;
+
+// ---------------------------------------------------------------------------
+// sent_cart_abandon_emails — idempotency + audit log for cart-abandon drip
+//
+// One row per send. No UNIQUE INDEX — the 90-day frequency cap is enforced
+// in application code (WHERE sent_at > NOW() - INTERVAL '90 days').
+// This allows re-sending after the window expires if the lead hits the
+// paywall again without converting.
+// ---------------------------------------------------------------------------
+export const sentCartAbandonEmails = pgTable('sent_cart_abandon_emails', {
+  id: serial('id').primaryKey(),
+  leadId: text('lead_id')
+    .notNull()
+    .references(() => emailLeads.id, { onDelete: 'cascade' }),
+  resendMessageId: text('resend_message_id'),
+  posthogLastPaywallAt: timestamp('posthog_last_paywall_at', { withTimezone: true }),
+  checkoutClicks: integer('checkout_clicks').notNull().default(0),
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('sent_cart_abandon_lead_id_idx').on(table.leadId),
+]);
+
+export type SentCartAbandonEmail = typeof sentCartAbandonEmails.$inferSelect;
+export type NewSentCartAbandonEmail = typeof sentCartAbandonEmails.$inferInsert;
+
+// ---------------------------------------------------------------------------
 // Type aliases
 // ---------------------------------------------------------------------------
 export type User = typeof users.$inferSelect;
@@ -586,3 +642,4 @@ export type AdvertisingAdSetMetricHistory = typeof advertisingAdSetMetricHistory
 export type AdvertisingAdSetPhaseTransition = typeof advertisingAdSetPhaseTransitions.$inferSelect;
 export type AdvertisingThreshold = typeof advertisingThresholds.$inferSelect;
 export type EmailLead = typeof emailLeads.$inferSelect;
+export type SentCartAbandonEmailRow = typeof sentCartAbandonEmails.$inferSelect;
