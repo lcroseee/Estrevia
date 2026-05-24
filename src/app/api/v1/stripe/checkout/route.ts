@@ -30,6 +30,11 @@ import type { ApiResponse } from '@/shared/types';
 import { randomUUID } from 'node:crypto';
 import { findOrPrepareCustomer, utcDayBucket, buildCheckoutIdempotencyKey } from './findOrPrepareCustomer';
 
+// Coupon allowlist: only known internal coupons accepted — never raw user input.
+// Add new coupon codes here when new A/B test discounts are created.
+const ALLOWED_COUPON_CODES = ['TEASER20'] as const;
+type AllowedCouponCode = (typeof ALLOWED_COUPON_CODES)[number];
+
 const checkoutBodySchema = z.object({
   plan: z.enum(['pro_monthly', 'pro_annual']).default('pro_annual'),
   locale: z.enum(['en', 'es']).optional(),
@@ -39,6 +44,8 @@ const checkoutBodySchema = z.object({
   utm_content: z.string().optional(),
   utm_term: z.string().optional(),
   utm_click_timestamp: z.string().datetime().optional(),
+  // A/B test coupon — only allowlisted values accepted (see ALLOWED_COUPON_CODES)
+  coupon: z.enum(ALLOWED_COUPON_CODES).optional(),
 });
 
 interface CheckoutResponse {
@@ -77,15 +84,17 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   let plan: 'pro_monthly' | 'pro_annual' = 'pro_annual';
   let localeFromBody: 'en' | 'es' | undefined = undefined;
   let utm: Record<string, string> = {};
+  let couponCode: AllowedCouponCode | undefined = undefined;
   try {
     const body = await request.json();
     const parsed = checkoutBodySchema.parse(body);
     plan = parsed.plan;
     localeFromBody = parsed.locale;
+    couponCode = parsed.coupon;
     utm = Object.fromEntries(
       Object.entries(parsed).filter(
         (entry): entry is [string, string] =>
-          entry[0] !== 'plan' && entry[0] !== 'locale' && entry[1] !== undefined,
+          entry[0] !== 'plan' && entry[0] !== 'locale' && entry[0] !== 'coupon' && entry[1] !== undefined,
       ),
     );
   } catch {
@@ -235,7 +244,12 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
           },
           success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/pricing`,
-          allow_promotion_codes: true,
+          // When a specific A/B test coupon is passed and the env var is set,
+          // apply it via `discounts` and disable allow_promotion_codes to prevent
+          // coupon stacking. If no coupon, allow_promotion_codes remains active.
+          ...(couponCode === 'TEASER20' && process.env.STRIPE_COUPON_TEASER20
+            ? { discounts: [{ coupon: process.env.STRIPE_COUPON_TEASER20 }] }
+            : { allow_promotion_codes: true }),
           billing_address_collection: 'auto',
         },
         { idempotencyKey },
@@ -347,7 +361,10 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
         },
         success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${appUrl}/pricing`,
-        allow_promotion_codes: true,
+        // When an A/B test coupon is passed, apply it via `discounts` to prevent stacking.
+        ...(couponCode === 'TEASER20' && process.env.STRIPE_COUPON_TEASER20
+          ? { discounts: [{ coupon: process.env.STRIPE_COUPON_TEASER20 }] }
+          : { allow_promotion_codes: true }),
         billing_address_collection: 'auto',
       },
       { idempotencyKey },
