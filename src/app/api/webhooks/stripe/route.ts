@@ -42,6 +42,36 @@ import { users, processedStripeEvents, emailLeads } from '@/shared/lib/schema';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 // ---------------------------------------------------------------------------
+// Helper: map invoice.attempt_count → dunning step key
+// ---------------------------------------------------------------------------
+function attemptCountToStep(attemptCount: number): 'd0' | 'd3' | 'd7' | 'd10' {
+  if (attemptCount <= 1) return 'd0';
+  if (attemptCount === 2) return 'd3';
+  if (attemptCount === 3) return 'd7';
+  return 'd10';
+}
+
+// ---------------------------------------------------------------------------
+// Helper: determine if a Stripe decline_code represents a hard decline
+// Hard declines: card is permanently unusable — don't retry, request new card
+// ---------------------------------------------------------------------------
+const HARD_DECLINE_CODES = new Set([
+  'card_not_supported',
+  'stolen_card',
+  'lost_card',
+  'fraudulent',
+  'do_not_honor',
+  'restricted_card',
+  'security_violation',
+  'card_velocity_exceeded',
+  'pickup_card',
+]);
+
+function isHardDeclineCode(declineCode: string | null | undefined): boolean {
+  return !!declineCode && HARD_DECLINE_CODES.has(declineCode);
+}
+
+// ---------------------------------------------------------------------------
 // Helper: resolve clerkUserId from a Stripe object
 // ---------------------------------------------------------------------------
 function extractClerkUserId(
@@ -625,22 +655,154 @@ export async function POST(request: Request): Promise<Response> {
 
       // -----------------------------------------------------------------------
       // invoice.payment_failed
-      // Log only — Stripe retries for 3 days. We don't downgrade immediately.
-      // The UI should surface a warning by checking subscription status.
+      // Sends a dunning email for the appropriate step (D0/D3/D7/D10).
+      // Does NOT downgrade immediately — Stripe retries; downgrade only fires
+      // when customer.subscription.deleted arrives.
       // -----------------------------------------------------------------------
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId =
           typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
 
-        console.warn('[stripe-webhook] invoice.payment_failed — grace period active', {
+        const attemptCount = invoice.attempt_count ?? 1;
+        console.warn('[stripe-webhook] invoice.payment_failed — dunning sequence triggered', {
           customerId,
           invoiceId: invoice.id,
-          attemptCount: invoice.attempt_count,
+          attemptCount,
         });
 
-        // Optionally send a transactional email (Phase 2 — Resend integration).
-        // For MVP: Stripe Dashboard handles dunning emails automatically.
+        if (!customerId) break;
+
+        // 1. Resolve user from stripeCustomerId
+        const dunningUserRows = await db
+          .select({ id: users.id, email: users.email, locale: users.locale })
+          .from(users)
+          .where(eq(users.stripeCustomerId, customerId))
+          .limit(1);
+
+        if (dunningUserRows.length === 0) {
+          console.warn('[stripe-webhook] invoice.payment_failed: user not found', {
+            customerId,
+          });
+          break;
+        }
+
+        const dunningUser = dunningUserRows[0];
+
+        // 2. Resolve subscription ID.
+        // Stripe SDK v22: invoice.subscription is gone — use parent.subscription_details.
+        let dunningSubscriptionId: string | null = null;
+        const subRef = invoice.parent?.subscription_details?.subscription;
+        if (subRef) {
+          dunningSubscriptionId = typeof subRef === 'string' ? subRef : subRef.id;
+        }
+
+        if (!dunningSubscriptionId) {
+          console.warn('[stripe-webhook] invoice.payment_failed: no subscription ID on invoice', {
+            invoiceId: invoice.id,
+          });
+          break;
+        }
+
+        // 3. Determine dunning step
+        const dunningStep = attemptCountToStep(attemptCount);
+        const billingPeriodStart = new Date(invoice.period_start * 1000);
+
+        // 4. Hard decline detection via invoice.payments (SDK v22).
+        // invoice.payments is an ApiList<InvoicePayment>; the first payment's
+        // payment_intent.last_payment_error carries the decline_code.
+        // For MVP: default to soft decline (false) if detection is unavailable.
+        // This means isHardDecline=true path is reached only if payments are
+        // expanded and a hard decline code is present.
+        let dunningIsHardDecline = false;
+        try {
+          // invoice.payments is optional and may not be expanded on the webhook payload.
+          // If present, check the first InvoicePayment's status for decline signals.
+          // For SDK v22, the cleanest path is: look at the invoice.payments list
+          // and retrieve the payment_intent to check last_payment_error.
+          // For now: if invoice.payments is an ApiList, pull the first item's PI id.
+          const paymentsData = invoice.payments?.data;
+          if (paymentsData && paymentsData.length > 0) {
+            const firstPayment = paymentsData[0] as { payment_intent?: string | { id: string; last_payment_error?: { decline_code?: string } } };
+            const piRef = firstPayment.payment_intent;
+            if (piRef) {
+              if (typeof piRef === 'string') {
+                const stripe = getStripe();
+                const pi = await stripe.paymentIntents.retrieve(piRef);
+                dunningIsHardDecline = isHardDeclineCode(pi.last_payment_error?.decline_code);
+              } else if (typeof piRef === 'object' && piRef.last_payment_error?.decline_code) {
+                dunningIsHardDecline = isHardDeclineCode(piRef.last_payment_error.decline_code);
+              }
+            }
+          }
+        } catch (declineErr) {
+          // Non-fatal — treat as soft decline
+          console.warn('[stripe-webhook] invoice.payment_failed: decline detection failed (non-fatal)', {
+            invoiceId: invoice.id,
+            error: declineErr instanceof Error ? declineErr.message : 'unknown',
+          });
+        }
+
+        // 5. Billing portal session for D0/D3 (direct payment-update link)
+        let dunningBillingPortalUrl: string | undefined;
+        if (dunningStep === 'd0' || dunningStep === 'd3') {
+          try {
+            const stripe = getStripe();
+            const locale = dunningUser.locale ?? 'en';
+            const returnUrl = `https://estrevia.app/${locale === 'es' ? 'es/' : ''}settings`;
+            const portalSession = await stripe.billingPortal.sessions.create({
+              customer: customerId,
+              return_url: returnUrl,
+            });
+            dunningBillingPortalUrl = portalSession.url;
+          } catch (portalErr) {
+            // Non-fatal — email will fall back to /settings link
+            console.warn('[stripe-webhook] invoice.payment_failed: billing portal session failed (non-fatal)', {
+              customerId,
+              error: portalErr instanceof Error ? portalErr.message : 'unknown',
+            });
+          }
+        }
+
+        // 6. Send dunning email (best-effort — errors logged, do not fail webhook)
+        try {
+          const { sendDunningEmail } = await import('@/shared/lib/dunning-emails');
+          const dunningResult = await sendDunningEmail({
+            userId: dunningUser.id,
+            email: dunningUser.email,
+            locale: (dunningUser.locale ?? 'en') as 'en' | 'es',
+            subscriptionId: dunningSubscriptionId,
+            stripeInvoiceId: invoice.id,
+            dunningStep,
+            billingPeriodStart,
+            isHardDecline: dunningIsHardDecline,
+            billingPortalUrl: dunningBillingPortalUrl,
+          });
+          console.info('[stripe-webhook] dunning email dispatch result', {
+            userId: dunningUser.id,
+            dunningStep,
+            sent: dunningResult.sent,
+            reason: dunningResult.reason,
+          });
+        } catch (dunningErr) {
+          // Non-fatal: do not return 500 — Stripe would retry the webhook, which
+          // would re-attempt the dunning email. The idempotency row already guards
+          // against double-send on genuine retries.
+          console.error('[stripe-webhook] dunning email failed (non-fatal)', {
+            userId: dunningUser.id,
+            dunningStep,
+            error: dunningErr instanceof Error ? dunningErr.message : 'unknown',
+          });
+          try {
+            const { captureException } = await import('@sentry/nextjs');
+            captureException(dunningErr, {
+              tags: { webhook: 'stripe', eventType: 'invoice.payment_failed', dunningStep },
+            });
+          } catch {
+            // Sentry capture is best-effort.
+          }
+        }
+
         break;
       }
 
