@@ -67,3 +67,4 @@ next-env.d.ts
 
 # superpowers brainstorming mockups
 .superpowers/
+.env.meta
