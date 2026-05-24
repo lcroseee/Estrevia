@@ -618,6 +618,41 @@ export type SentCartAbandonEmail = typeof sentCartAbandonEmails.$inferSelect;
 export type NewSentCartAbandonEmail = typeof sentCartAbandonEmails.$inferInsert;
 
 // ---------------------------------------------------------------------------
+// sent_dunning_emails — idempotency + audit log for involuntary-churn dunning
+//
+// One row per (subscription_id, dunning_step, billing_period_start).
+// The unique index enforces exactly-once delivery per billing cycle per step.
+// billing_period_start is a DATE (not timestamp) derived from invoice.period_start
+// to make idempotency robust to minor timestamp variations across Stripe retries.
+// ---------------------------------------------------------------------------
+export const sentDunningEmails = pgTable('sent_dunning_emails', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  subscriptionId: text('subscription_id').notNull(),
+  stripeInvoiceId: text('stripe_invoice_id').notNull(),
+  dunningStep: text('dunning_step', {
+    enum: ['d0', 'd3', 'd7', 'd10'],
+  }).notNull(),
+  billingPeriodStart: date('billing_period_start').notNull(),
+  isHardDecline: boolean('is_hard_decline').notNull().default(false),
+  resendMessageId: text('resend_message_id'),
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+  error: text('error'),
+}, (table) => [
+  uniqueIndex('sent_dunning_emails_idempotency_idx').on(
+    table.subscriptionId,
+    table.dunningStep,
+    table.billingPeriodStart,
+  ),
+  index('sent_dunning_emails_user_idx').on(table.userId, table.sentAt),
+]);
+
+export type SentDunningEmail = typeof sentDunningEmails.$inferSelect;
+export type NewSentDunningEmail = typeof sentDunningEmails.$inferInsert;
+
+// ---------------------------------------------------------------------------
 // Type aliases
 // ---------------------------------------------------------------------------
 export type User = typeof users.$inferSelect;
