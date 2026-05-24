@@ -240,6 +240,9 @@ export const AnalyticsEvent = {
   ANONYMOUS_USER_MATERIALIZED: 'anonymous_user_materialized',
   CHECKOUT_TICKET_READY: 'checkout_ticket_ready',
   CHECKOUT_TICKET_TIMEOUT: 'checkout_ticket_timeout',
+  CHECKOUT_RECOVERY_ATTEMPTED: 'checkout_recovery_attempted',
+  CHECKOUT_RECOVERY_SUCCEEDED: 'checkout_recovery_succeeded',
+  CHECKOUT_RECOVERY_FAILED: 'checkout_recovery_failed',
   CHECKOUT_ERROR: 'checkout_error',
   SUBSCRIPTION_STARTED: 'subscription_started',
   // GDPR
