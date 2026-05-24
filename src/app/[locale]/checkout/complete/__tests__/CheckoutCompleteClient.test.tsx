@@ -58,16 +58,35 @@ describe('CheckoutCompleteClient', () => {
     );
   });
 
-  it('fires CHECKOUT_TICKET_TIMEOUT and shows fallback after 30s', async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({ success: true, data: { ready: false } }),
+  it('on 30s timeout, calls /recover and redirects when recovery returns ready=true', async () => {
+    const setLoc = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: {
+        set href(v: string) {
+          setLoc(v);
+        },
+      },
+    });
+    // All status-poll calls return ready=false; the final /recover call returns ready=true.
+    fetchMock.mockImplementation(async (url: string) => {
+      if (typeof url === 'string' && url.includes('/recover')) {
+        return {
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: { ready: true, ticket: 'ticket_recovered' },
+          }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({ success: true, data: { ready: false } }),
+      };
     });
 
     render(<CheckoutCompleteClient sessionId="cs_test_1" />);
 
-    // 15 polls @ 2s = 30s; advance past the deadline to trigger timeout branch.
-    // Wrap in act() so React flushes the setTimedOut(true) state update.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(31_000);
     });
@@ -76,7 +95,61 @@ describe('CheckoutCompleteClient', () => {
       'checkout_ticket_timeout',
       expect.objectContaining({ session_id: 'cs_test_1' }),
     );
-    // getByText throws if no match — a truthy return means the fallback rendered.
+    expect(setLoc).toHaveBeenCalledWith(
+      '/sign-in?__clerk_ticket=ticket_recovered&redirect_url=%2Fsettings',
+    );
+    // Fallback UI must NOT render — recovery succeeded.
+    expect(screen.queryByText(/t:checkEmail/)).toBeNull();
+  });
+
+  it('on 30s timeout, falls back to "check email" UI when /recover returns ready=false', async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (typeof url === 'string' && url.includes('/recover')) {
+        return {
+          ok: true,
+          json: async () => ({ success: true, data: { ready: false } }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({ success: true, data: { ready: false } }),
+      };
+    });
+
+    render(<CheckoutCompleteClient sessionId="cs_test_1" />);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(31_000);
+    });
+
+    expect(trackEventMock).toHaveBeenCalledWith(
+      'checkout_ticket_timeout',
+      expect.objectContaining({ session_id: 'cs_test_1' }),
+    );
+    expect(screen.getByText(/t:checkEmail/)).toBeTruthy();
+  });
+
+  it('on 30s timeout, falls back to "check email" UI when /recover network call throws', async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (typeof url === 'string' && url.includes('/recover')) {
+        throw new Error('network down');
+      }
+      return {
+        ok: true,
+        json: async () => ({ success: true, data: { ready: false } }),
+      };
+    });
+
+    render(<CheckoutCompleteClient sessionId="cs_test_1" />);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(31_000);
+    });
+
+    expect(trackEventMock).toHaveBeenCalledWith(
+      'checkout_ticket_timeout',
+      expect.objectContaining({ session_id: 'cs_test_1' }),
+    );
     expect(screen.getByText(/t:checkEmail/)).toBeTruthy();
   });
 });

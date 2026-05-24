@@ -25,6 +25,11 @@ export function CheckoutCompleteClient({ sessionId }: Props) {
     const startedAt = Date.now();
     let cancelled = false;
 
+    function redirectWithTicket(ticket: string): void {
+      const target = `/sign-in?__clerk_ticket=${encodeURIComponent(ticket)}&redirect_url=${encodeURIComponent('/settings')}`;
+      window.location.href = target;
+    }
+
     async function poll() {
       while (!cancelled && Date.now() - startedAt < POLL_MAX_MS) {
         try {
@@ -34,8 +39,7 @@ export function CheckoutCompleteClient({ sessionId }: Props) {
           if (res.ok) {
             const json = (await res.json()) as StatusResponseOk;
             if (json.success && json.data.ready && json.data.ticket) {
-              const target = `/sign-in?__clerk_ticket=${encodeURIComponent(json.data.ticket)}&redirect_url=${encodeURIComponent('/settings')}`;
-              window.location.href = target;
+              redirectWithTicket(json.data.ticket);
               return;
             }
           }
@@ -44,13 +48,34 @@ export function CheckoutCompleteClient({ sessionId }: Props) {
         }
         await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
       }
-      if (!cancelled) {
-        trackEvent(AnalyticsEvent.CHECKOUT_TICKET_TIMEOUT, {
-          session_id: sessionId,
-          waited_ms: Date.now() - startedAt,
+      if (cancelled) return;
+
+      // Timeout reached. Record it for observability …
+      trackEvent(AnalyticsEvent.CHECKOUT_TICKET_TIMEOUT, {
+        session_id: sessionId,
+        waited_ms: Date.now() - startedAt,
+      });
+
+      // … then ask the server to self-recover by hitting Stripe directly.
+      // Fixes the silent revenue loss when the webhook is delayed/dropped.
+      try {
+        const res = await fetch('/api/v1/checkout/recover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId }),
         });
-        setTimedOut(true);
+        if (res.ok) {
+          const json = (await res.json()) as StatusResponseOk;
+          if (json.success && json.data.ready && json.data.ticket) {
+            redirectWithTicket(json.data.ticket);
+            return;
+          }
+        }
+      } catch {
+        // Network blip on recovery — fall through to fallback UI.
       }
+
+      if (!cancelled) setTimedOut(true);
     }
 
     void poll();
