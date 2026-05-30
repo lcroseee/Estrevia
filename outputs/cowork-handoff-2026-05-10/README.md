@@ -6,7 +6,8 @@ Inventory of files in this directory:
 |---|---|---|
 | `04-cowork-visibility-layer-revised.md` | applied | Patch 04 (revised). Applied via SP2 plan (commits `b1cace0`, `586005b`, `9a2ce43`). |
 | `06-next-claude-code-session.md` | superseded | Claude Code follow-up brief. Phases 1–3 done 2026-05-10; Phase 4 shipped via SP3 (commits `7bba792`, `5cdd1ec`, `183f3a8`). |
-| `07-post-sp2-sp3-followups.md` | **active** | Handoff after SP2+SP3 ship. Founder ops + 1 Cowork-doable code task + SP1 blocked status. |
+| `07-post-sp2-sp3-followups.md` | applied | Handoff after SP2+SP3 ship. All items completed 2026-05-10 in commit `1088d8a` (main session, not Cowork). |
+| `08-cowork-prompt-digest-scheduler.md` | **active** | Self-contained Cowork prompt to set up the daily 09:00 `/digest` scheduled task. Last remaining item from #07's apply order. |
 | `README.md` | this file | Inventory + apply order. |
 
 ## Apply order (future sessions)

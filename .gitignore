@@ -67,4 +67,7 @@ next-env.d.ts
 
 # superpowers brainstorming mockups
 .superpowers/
+.cowork-meta/
+
+# Secrets — Meta Marketing API + advertising status bearer
 .env.meta

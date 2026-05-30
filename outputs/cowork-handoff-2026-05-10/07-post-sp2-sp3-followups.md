@@ -3,6 +3,18 @@
 **Source session:** main @ `9a2ce43`
 **Upstream:** SP2 (Patch 04 apply) + SP3 (brand voice scorer) shipped in 6 commits (`7bba792`..`9a2ce43`). Advertising suite: 1022/1022 tests green across 97 files.
 
+> **STATUS 2026-05-10 — ALL items completed in main Claude Code session (`1088d8a` HEAD), not by Cowork.**
+> - ✅ Founder-A: migration `0009` applied via `npm run db:migrate`
+> - ✅ Founder-B: `ADVERTISING_STATUS_BEARER` set in Vercel prod (mirror to Cowork env still pending — see end-of-session report for the value)
+> - ✅ Founder-B: `ANTHROPIC_API_KEY` verified (was set 21d ago, Preview+Production)
+> - ✅ Cowork-A: `drop-off-monitor.ts:273` marked `{ tier: 2 }` in commit `1088d8a`
+> - ✅ Founder-D: `BRAND_VOICE_SCORER_ENABLED=true` in Vercel prod
+> - ✅ Founder-E: `ADVERTISING_TIER2_VIA_DIGEST=true` in Vercel prod (now boevoy after Cowork-A landed)
+> - 🟡 Founder-C: Cowork scheduled task → `/digest?type=daily` at 09:00 — still needs founder action in Cowork UI
+> - ✅ Deploy: triggered by push of `1088d8a` to main; Vercel auto-deploys.
+>
+> The detailed apply-order below is preserved for historical context. Skip if reading after 2026-05-10.
+
 > Apply this doc strictly. Verify each step before reporting done. If something doesn't match repo state, stop and report — do not improvise.
 
 ---
