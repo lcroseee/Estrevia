@@ -26,15 +26,16 @@
  */
 
 import { NextResponse } from 'next/server';
-import { sql } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type Stripe from 'stripe';
 import { clerkClient } from '@clerk/nextjs/server';
 import { getStripe } from '@/shared/lib/stripe';
 import { getDb } from '@/shared/lib/db';
-import { users, processedStripeEvents } from '@/shared/lib/schema';
+import { users, processedStripeEvents, emailLeads } from '@/shared/lib/schema';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { storeCheckoutTicket, getCheckoutTicket } from '@/shared/lib/checkout-ticket';
 import type { ApiResponse } from '@/shared/types';
 
 const bodySchema = z.object({
@@ -152,8 +153,8 @@ export async function POST(
     );
   }
 
-  // 5. Fast path: ticket already cached on session
-  const existingTicket = session.metadata?.signInTicket;
+  // 5. Fast path: ticket already stored in Redis
+  const existingTicket = await getCheckoutTicket(sessionId);
   if (existingTicket) {
     try {
       trackServerEvent(`cs:${sessionId}`, AnalyticsEvent.CHECKOUT_RECOVERY_SUCCEEDED, {
@@ -218,16 +219,14 @@ export async function POST(
       }
     }
 
-    // 9. Generate sign-in token + write to Stripe metadata
+    // 9. Generate sign-in token + stash in Redis. Stripe metadata caps values
+    // at 500 chars; the Clerk token is ~552. /session-status reads it back too.
     const token = await clerk.signInTokens.createSignInToken({
       userId: clerkUserId,
       expiresInSeconds: 600,
     });
     const ticket = token.token;
-    const existingMetadata = session.metadata ?? {};
-    await stripe.checkout.sessions.update(session.id, {
-      metadata: { ...existingMetadata, signInTicket: ticket },
-    });
+    await storeCheckoutTicket(session.id, ticket);
 
     // 10. Fetch subscription for accurate plan + expiry
     let expiresAt: Date | null = null;
@@ -302,6 +301,27 @@ export async function POST(
       console.warn(
         '[checkout/recover] marker row insert failed (non-fatal)',
         markerErr instanceof Error ? markerErr.message : 'unknown',
+      );
+    }
+
+    // Link the email_lead(s) to the recovered user so the conversion is attributed
+    // and the lead is suppressed from the drip even if the webhook never arrives.
+    // Mirrors webhooks/stripe/route.ts (link-only; the utm_content unsubscribe
+    // fallback stays webhook-side).
+    try {
+      const anonymousIdMeta = (session.metadata?.anonymous_id ?? null) as string | null;
+      await db
+        .update(emailLeads)
+        .set({ convertedToUserId: clerkUserId, convertedAt: new Date() })
+        .where(
+          anonymousIdMeta
+            ? or(eq(emailLeads.anonymousId, anonymousIdMeta), eq(emailLeads.email, email))
+            : eq(emailLeads.email, email),
+        );
+    } catch (linkErr) {
+      console.warn(
+        '[checkout/recover] email_leads link failed (non-fatal)',
+        linkErr instanceof Error ? linkErr.message : 'unknown',
       );
     }
 

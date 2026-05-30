@@ -3,14 +3,18 @@
  *
  * Public (no auth) — used by /checkout/complete client polling fallback when
  * the server-side ticket wait times out. Returns:
- *   { ready: true,  ticket: '...' } when webhook has written signInTicket
- *   { ready: false }                when webhook has not arrived yet
+ *   { ready: true,  ticket: '...' } when the webhook has stored a signInTicket
+ *   { ready: false }                when it has not arrived yet
+ *
+ * The ticket lives in Redis (keyed by session_id), written by the Stripe webhook
+ * (and /recover). A Clerk sign-in token is ~552 chars — too long for Stripe's
+ * 500-char metadata cap — so it is never stored on the session itself.
  *
  * Rate-limited by IP (30 req/min — enough for 15 polls per legitimate session).
  */
 
 import { NextResponse } from 'next/server';
-import { getStripe } from '@/shared/lib/stripe';
+import { getCheckoutTicket } from '@/shared/lib/checkout-ticket';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import type { ApiResponse } from '@/shared/types';
 
@@ -39,35 +43,15 @@ export async function GET(request: Request): Promise<NextResponse<ApiResponse<St
     );
   }
 
-  try {
-    const stripe = getStripe();
-    const session = await stripe.checkout.sessions.retrieve(id);
-    const ticket = session.metadata?.signInTicket;
-    if (ticket) {
-      return NextResponse.json(
-        { success: true, data: { ready: true, ticket }, error: null },
-        { status: 200 },
-      );
-    }
+  const ticket = await getCheckoutTicket(id);
+  if (ticket) {
     return NextResponse.json(
-      { success: true, data: { ready: false }, error: null },
+      { success: true, data: { ready: true, ticket }, error: null },
       { status: 200 },
     );
-  } catch (err) {
-    const code = (err as { code?: string })?.code;
-    if (code === 'resource_missing') {
-      return NextResponse.json(
-        { success: false, data: null, error: 'NOT_FOUND' },
-        { status: 404 },
-      );
-    }
-    console.error(
-      '[checkout/session-status] retrieve failed',
-      err instanceof Error ? err.message : 'unknown',
-    );
-    return NextResponse.json(
-      { success: false, data: null, error: 'INTERNAL_ERROR' },
-      { status: 500 },
-    );
   }
+  return NextResponse.json(
+    { success: true, data: { ready: false }, error: null },
+    { status: 200 },
+  );
 }

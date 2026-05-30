@@ -16,6 +16,9 @@ const {
   trackServerEventMock,
   dbInsertValuesOnConflictDoUpdateMock,
   dbInsertValuesOnConflictDoNothingMock,
+  dbUpdateWhereMock,
+  getTicketMock,
+  storeTicketMock,
 } = vi.hoisted(() => ({
   sessionsRetrieveMock: vi.fn(),
   sessionsUpdateMock: vi.fn(),
@@ -27,6 +30,9 @@ const {
   trackServerEventMock: vi.fn(),
   dbInsertValuesOnConflictDoUpdateMock: vi.fn().mockResolvedValue(undefined),
   dbInsertValuesOnConflictDoNothingMock: vi.fn().mockResolvedValue(undefined),
+  dbUpdateWhereMock: vi.fn().mockResolvedValue(undefined),
+  getTicketMock: vi.fn(),
+  storeTicketMock: vi.fn(),
 }));
 
 vi.mock('@/shared/lib/stripe', () => ({
@@ -56,7 +62,15 @@ vi.mock('@/shared/lib/db', () => ({
         onConflictDoNothing: dbInsertValuesOnConflictDoNothingMock,
       }),
     }),
+    update: () => ({
+      set: () => ({ where: dbUpdateWhereMock }),
+    }),
   }),
+}));
+
+vi.mock('@/shared/lib/checkout-ticket', () => ({
+  getCheckoutTicket: getTicketMock,
+  storeCheckoutTicket: storeTicketMock,
 }));
 
 vi.mock('@/shared/lib/rate-limit', () => ({
@@ -92,6 +106,8 @@ beforeEach(() => {
   limitMock.mockResolvedValue({ success: true });
   dbInsertValuesOnConflictDoUpdateMock.mockResolvedValue(undefined);
   dbInsertValuesOnConflictDoNothingMock.mockResolvedValue(undefined);
+  dbUpdateWhereMock.mockResolvedValue(undefined);
+  getTicketMock.mockResolvedValue(null); // default: no cached ticket → provision path
   process.env.STRIPE_PRICE_ID_PRO_ANNUAL = 'price_annual_test';
 });
 
@@ -159,15 +175,16 @@ describe('POST /api/v1/checkout/recover', () => {
     expect(getUserListMock).not.toHaveBeenCalled();
   });
 
-  it('fast-path: returns existing ticket when session metadata.signInTicket already set', async () => {
+  it('fast-path: returns ticket from Redis when already stored', async () => {
     sessionsRetrieveMock.mockResolvedValue({
       id: 'cs_test_1',
       mode: 'subscription',
       payment_status: 'paid',
       status: 'complete',
-      metadata: { signInTicket: 'ticket_already_here' },
+      metadata: {},
       customer_details: { email: 'u@example.com' },
     });
+    getTicketMock.mockResolvedValue('ticket_already_here');
     const res = await POST(makeRequest({ session_id: 'cs_test_1' }));
     expect(res.status).toBe(200);
     const json = await res.json();
@@ -223,13 +240,9 @@ describe('POST /api/v1/checkout/recover', () => {
       userId: 'user_new_123',
       expiresInSeconds: 600,
     });
-    // Stripe metadata updated
-    expect(sessionsUpdateMock).toHaveBeenCalledWith(
-      'cs_test_1',
-      expect.objectContaining({
-        metadata: expect.objectContaining({ signInTicket: 'ticket_fresh' }),
-      }),
-    );
+    // Ticket stored in Redis, NOT in Stripe metadata
+    expect(storeTicketMock).toHaveBeenCalledWith('cs_test_1', 'ticket_fresh');
+    expect(sessionsUpdateMock).not.toHaveBeenCalled();
     // DB upsert called (users + recovery marker)
     expect(dbInsertValuesOnConflictDoUpdateMock).toHaveBeenCalledTimes(1);
     expect(dbInsertValuesOnConflictDoNothingMock).toHaveBeenCalledTimes(1);
@@ -244,6 +257,32 @@ describe('POST /api/v1/checkout/recover', () => {
       'checkout_recovery_succeeded',
       expect.objectContaining({ cached: false }),
     );
+  });
+
+  it('links the email_lead to the recovered user', async () => {
+    sessionsRetrieveMock.mockResolvedValue({
+      id: 'cs_test_1',
+      mode: 'subscription',
+      payment_status: 'paid',
+      status: 'complete',
+      metadata: { anonymous_id: 'anon_xyz' },
+      customer_details: { email: 'paid@example.com' },
+      customer: 'cus_test_1',
+      subscription: 'sub_test_1',
+    });
+    getUserListMock.mockResolvedValue({ totalCount: 1, data: [{ id: 'user_x' }] });
+    createTokenMock.mockResolvedValue({ token: 'tk' });
+    subsRetrieveMock.mockResolvedValue({
+      id: 'sub_test_1',
+      status: 'trialing',
+      items: { data: [{ price: { id: 'price_annual_test' }, current_period_end: 1735000000 }] },
+    });
+
+    const res = await POST(makeRequest({ session_id: 'cs_test_1' }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.ready).toBe(true);
+    // The email_lead link UPDATE ran (update().set().where()).
+    expect(dbUpdateWhereMock).toHaveBeenCalledTimes(1);
   });
 
   it('provisions: reuses existing Clerk user (find-only, no create)', async () => {

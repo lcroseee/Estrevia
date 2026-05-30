@@ -13,6 +13,7 @@ const dbInsertMock = vi.fn();
 const dbUpdateMock = vi.fn();
 const dbDeleteMock = vi.fn();
 const sendEmailMock = vi.fn();
+const storeTicketMock = vi.fn();
 
 // Captures every db.update().set().where()[.returning()] invocation in order.
 // Tests assert on .length, .setArgs, .whereArgs, and .returningCalled.
@@ -75,6 +76,10 @@ vi.mock('next/headers', () => ({
 vi.mock('@/shared/lib/email', () => ({
   sendPurchaseConfirmationEmail: sendEmailMock,
 }));
+vi.mock('@/shared/lib/checkout-ticket', () => ({
+  storeCheckoutTicket: (...args: unknown[]) => storeTicketMock(...args),
+  getCheckoutTicket: vi.fn(),
+}));
 vi.mock('@/shared/lib/analytics', () => ({
   AnalyticsEvent: {
     SUBSCRIPTION_STARTED: 'subscription_started',
@@ -86,7 +91,7 @@ vi.mock('@/shared/lib/analytics', () => ({
 
 import { POST } from '../route';
 
-function makeSessionCompletedEvent(opts: { metadata?: Record<string, string>; email?: string }): Request {
+function makeSessionCompletedEvent(opts: { metadata?: Record<string, string>; email?: string; clientReferenceId?: string }): Request {
   const event = {
     id: 'evt_test_1',
     type: 'checkout.session.completed',
@@ -96,6 +101,7 @@ function makeSessionCompletedEvent(opts: { metadata?: Record<string, string>; em
         mode: 'subscription',
         customer: 'cus_anonymous_1',
         subscription: 'sub_test_1',
+        client_reference_id: opts.clientReferenceId ?? null,
         metadata: opts.metadata ?? {},
         customer_details: { email: opts.email ?? 'paid@example.com' },
         amount_total: 0,
@@ -161,22 +167,36 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
     expect(createTokenMock).toHaveBeenCalledWith({ userId: 'user_new_xyz', expiresInSeconds: 600 });
   });
 
-  it('writes signInTicket back to Stripe session metadata', async () => {
+  it('stores the sign-in ticket in Redis (not Stripe metadata) and tolerates a 552-char token', async () => {
     getUserListMock.mockResolvedValue({ totalCount: 0, data: [] });
     createUserMock.mockResolvedValue({ id: 'user_new' });
+    const longToken = 'x'.repeat(552); // realistic Clerk JWT length > Stripe's 500-char metadata cap
+    createTokenMock.mockResolvedValue({ token: longToken });
 
-    await POST(makeSessionCompletedEvent({
+    const res = await POST(makeSessionCompletedEvent({
       metadata: { anonymous_id: 'anon-xyz', utm_source: 'meta' },
       email: 'new@example.com',
     }));
 
-    expect(sessionsUpdateMock).toHaveBeenCalledWith('cs_test_xyz', {
-      metadata: expect.objectContaining({
-        signInTicket: 'ticket_abc123',
-        anonymous_id: 'anon-xyz',
-        utm_source: 'meta',
-      }),
-    });
+    expect(res.status).toBe(200);
+    expect(storeTicketMock).toHaveBeenCalledWith('cs_test_xyz', longToken);
+    expect(sessionsUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('still materializes the Clerk user when an anonymous session carries client_reference_id (the prod case)', async () => {
+    getUserListMock.mockResolvedValue({ totalCount: 0, data: [] });
+    createUserMock.mockResolvedValue({ id: 'user_anon_materialized' });
+
+    await POST(makeSessionCompletedEvent({
+      metadata: { anonymous_id: '7f3e9c2a-1b4d-4e5f-8a9b-0c1d2e3f4a5b' },
+      clientReferenceId: '7f3e9c2a-1b4d-4e5f-8a9b-0c1d2e3f4a5b', // anonymous_id, NOT a clerk id
+      email: 'anon@example.com',
+    }));
+
+    // Must NOT be treated as already-signed-in: the materialization branch must run.
+    expect(createUserMock).toHaveBeenCalled();
+    expect(createTokenMock).toHaveBeenCalledWith({ userId: 'user_anon_materialized', expiresInSeconds: 600 });
+    expect(storeTicketMock).toHaveBeenCalledWith('cs_test_xyz', 'ticket_abc123');
   });
 
   it('recovers from createUser race via retry getUserList', async () => {

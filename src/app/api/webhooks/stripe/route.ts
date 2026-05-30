@@ -40,6 +40,7 @@ import { getStripe } from '@/shared/lib/stripe';
 import { getDb } from '@/shared/lib/db';
 import { users, processedStripeEvents, emailLeads } from '@/shared/lib/schema';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { storeCheckoutTicket } from '@/shared/lib/checkout-ticket';
 
 // ---------------------------------------------------------------------------
 // Helper: map invoice.attempt_count → dunning step key
@@ -74,15 +75,18 @@ function isHardDeclineCode(declineCode: string | null | undefined): boolean {
 // ---------------------------------------------------------------------------
 // Helper: resolve clerkUserId from a Stripe object
 // ---------------------------------------------------------------------------
-function extractClerkUserId(
+export function extractClerkUserId(
   obj: { metadata?: Stripe.Metadata | null; client_reference_id?: string | null } | null,
 ): string | null {
   if (!obj) return null;
-  return (
-    (obj.metadata?.clerkUserId ?? null) ||
-    (obj.client_reference_id ?? null) ||
-    null
-  );
+  const fromMetadata = obj.metadata?.clerkUserId ?? null;
+  if (fromMetadata) return fromMetadata;
+  // client_reference_id holds the Clerk user id for AUTHENTICATED checkouts, but
+  // the anonymous_id (a UUID) for ANONYMOUS checkouts. Only treat it as a Clerk id
+  // when it carries the Clerk `user_` prefix, so anonymous sessions resolve to null
+  // and enter the materialization branch in checkout.session.completed.
+  const ref = obj.client_reference_id ?? null;
+  return ref && ref.startsWith('user_') ? ref : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -244,15 +248,14 @@ export async function POST(request: Request): Promise<Response> {
               }
             }
 
-            // Create single-use sign-in ticket and write back to Stripe metadata
+            // Create single-use sign-in ticket and stash it in Redis keyed by
+            // session_id. Stripe metadata caps values at 500 chars; the Clerk
+            // token is ~552. /session-status and /recover read it back.
             const ticket = await clerk.signInTokens.createSignInToken({
               userId: clerkUserId,
               expiresInSeconds: 600,
             });
-            const existingMetadata = session.metadata ?? {};
-            await getStripe().checkout.sessions.update(session.id, {
-              metadata: { ...existingMetadata, signInTicket: ticket.token },
-            });
+            await storeCheckoutTicket(session.id, ticket.token);
 
             // Link the email_lead(s) to the new user — both anonymous_id and email paths.
             // Capture matched rows via .returning() so we can decide whether to run the
