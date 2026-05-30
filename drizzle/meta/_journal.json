@@ -120,6 +120,13 @@
       "when": 1748044803000,
       "tag": "0017_dunning_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1780185031049,
+      "tag": "0018_discount_blast_emails",
+      "breakpoints": true
     }
   ]
 }

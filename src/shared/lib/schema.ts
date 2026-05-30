@@ -653,6 +653,32 @@ export type SentDunningEmail = typeof sentDunningEmails.$inferSelect;
 export type NewSentDunningEmail = typeof sentDunningEmails.$inferInsert;
 
 // ---------------------------------------------------------------------------
+// sent_discount_blast_emails — idempotency + audit log for one-off promo blasts
+//
+// Recipients span BOTH email_leads and users (free / past_due / canceled), so
+// the dedupe key is the recipient EMAIL, not a single FK. lead_id / user_id are
+// optional plain-text source pointers (no FK — a recipient may exist in only one
+// table). The unique index on (recipient, coupon_code) enforces exactly-once per
+// coupon: the send script inserts a row only AFTER a successful Resend send, so a
+// failed send leaves no row and can be retried.
+// ---------------------------------------------------------------------------
+export const sentDiscountBlastEmails = pgTable('sent_discount_blast_emails', {
+  id: serial('id').primaryKey(),
+  recipient: text('recipient').notNull(),
+  leadId: text('lead_id'),
+  userId: text('user_id'),
+  couponCode: text('coupon_code').notNull(),
+  resendMessageId: text('resend_message_id'),
+  sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('sent_discount_blast_idempotency_idx').on(table.recipient, table.couponCode),
+  index('sent_discount_blast_sent_at_idx').on(table.sentAt),
+]);
+
+export type SentDiscountBlastEmail = typeof sentDiscountBlastEmails.$inferSelect;
+export type NewSentDiscountBlastEmail = typeof sentDiscountBlastEmails.$inferInsert;
+
+// ---------------------------------------------------------------------------
 // Type aliases
 // ---------------------------------------------------------------------------
 export type User = typeof users.$inferSelect;
