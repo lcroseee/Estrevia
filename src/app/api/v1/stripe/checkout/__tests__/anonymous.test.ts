@@ -197,3 +197,50 @@ describe('POST /api/v1/stripe/checkout — payment_method_types (anonymous)', ()
     expect(call.payment_method_types).toEqual(['card', 'link']);
   });
 });
+
+describe('POST /api/v1/stripe/checkout — coupon attach (anonymous)', () => {
+  beforeEach(() => {
+    authMock.mockResolvedValue({ userId: null });
+    dbSelectMock.mockReturnValue([]);
+    delete process.env.STRIPE_COUPON_TEASER20;
+    delete process.env.STRIPE_COUPON_HALF50;
+  });
+
+  it('TEASER20 on annual attaches discounts (regression)', async () => {
+    process.env.STRIPE_COUPON_TEASER20 = 'co_teaser';
+    await POST(makeRequest({ plan: 'pro_annual', coupon: 'TEASER20' }));
+    const call = sessionsCreateMock.mock.calls[0][0];
+    expect(call.discounts).toEqual([{ coupon: 'co_teaser' }]);
+    expect(call.allow_promotion_codes).toBeUndefined();
+  });
+
+  it('TEASER20 on monthly does NOT attach — annual-only preserved', async () => {
+    process.env.STRIPE_COUPON_TEASER20 = 'co_teaser';
+    await POST(makeRequest({ plan: 'pro_monthly', coupon: 'TEASER20' }));
+    const call = sessionsCreateMock.mock.calls[0][0];
+    expect(call.discounts).toBeUndefined();
+    expect(call.allow_promotion_codes).toBe(true);
+  });
+
+  it('HALF50 attaches on monthly', async () => {
+    process.env.STRIPE_COUPON_HALF50 = 'co_half';
+    await POST(makeRequest({ plan: 'pro_monthly', coupon: 'HALF50' }));
+    const call = sessionsCreateMock.mock.calls[0][0];
+    expect(call.discounts).toEqual([{ coupon: 'co_half' }]);
+    expect(call.allow_promotion_codes).toBeUndefined();
+  });
+
+  it('HALF50 attaches on annual', async () => {
+    process.env.STRIPE_COUPON_HALF50 = 'co_half';
+    await POST(makeRequest({ plan: 'pro_annual', coupon: 'HALF50' }));
+    const call = sessionsCreateMock.mock.calls[0][0];
+    expect(call.discounts).toEqual([{ coupon: 'co_half' }]);
+  });
+
+  it('HALF50 with env var unset degrades to allow_promotion_codes (no break)', async () => {
+    await POST(makeRequest({ plan: 'pro_monthly', coupon: 'HALF50' }));
+    const call = sessionsCreateMock.mock.calls[0][0];
+    expect(call.discounts).toBeUndefined();
+    expect(call.allow_promotion_codes).toBe(true);
+  });
+});

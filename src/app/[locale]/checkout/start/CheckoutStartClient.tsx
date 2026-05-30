@@ -22,6 +22,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { postJson } from '@/shared/lib/apiFetch';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { readUtmLastTouch } from '@/shared/lib/utm-cookie';
+import { isAllowedCouponCode } from '@/shared/lib/coupons';
 
 type Plan = 'pro_monthly' | 'pro_annual';
 
@@ -40,10 +41,10 @@ export function CheckoutStartClient() {
   const planRaw = searchParams.get('plan');
   const plan: Plan = planRaw === 'pro_monthly' ? 'pro_monthly' : 'pro_annual';
   const returnUrl = searchParams.get('return') ?? '/';
-  // Coupon from URL (e.g. emailed cart-abandon link with ?coupon=TEASER20).
-  // Server-side allowlist + plan-guard re-validate this; never trust client.
+  // Coupon from URL (e.g. emailed discount link with ?coupon=HALF50 or TEASER20).
+  // Allowlist-validated here; server re-validates + plan-guards via coupons.ts. Never trust client.
   const couponRaw = searchParams.get('coupon');
-  const coupon = couponRaw === 'TEASER20' ? 'TEASER20' : undefined;
+  const coupon = isAllowedCouponCode(couponRaw) ? couponRaw : undefined;
 
   const [phase, setPhase] = useState<'preparing' | 'redirecting' | 'error'>('preparing');
   const [errorMessage, setErrorMessage] = useState<string>('');

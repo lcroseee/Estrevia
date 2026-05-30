@@ -29,11 +29,7 @@ import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import type { ApiResponse } from '@/shared/types';
 import { randomUUID } from 'node:crypto';
 import { findOrPrepareCustomer, utcDayBucket, buildCheckoutIdempotencyKey } from './findOrPrepareCustomer';
-
-// Coupon allowlist: only known internal coupons accepted — never raw user input.
-// Add new coupon codes here when new A/B test discounts are created.
-const ALLOWED_COUPON_CODES = ['TEASER20'] as const;
-type AllowedCouponCode = (typeof ALLOWED_COUPON_CODES)[number];
+import { ALLOWED_COUPON_CODES, resolveCouponId, type AllowedCouponCode } from '@/shared/lib/coupons';
 
 const checkoutBodySchema = z.object({
   plan: z.enum(['pro_monthly', 'pro_annual']).default('pro_annual'),
@@ -100,6 +96,11 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   } catch {
     plan = 'pro_annual';
   }
+
+  // Resolve the Stripe coupon id to attach (config-driven, see shared/lib/coupons.ts).
+  // Returns null when no coupon, the code is not eligible for this plan, or its
+  // env var is unset → caller falls back to allow_promotion_codes (no discount, no break).
+  const resolvedCoupon = resolveCouponId(couponCode, plan);
 
   // Stripe Checkout uses 'auto' (browser language) for EN/missing; explicit
   // 'es-419' (LATAM Spanish) for Spanish-locale callers — tú form, LATAM
@@ -244,14 +245,11 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
           },
           success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/pricing`,
-          // When a specific A/B test coupon is passed and the env var is set,
-          // apply it via `discounts` and disable allow_promotion_codes to prevent
-          // coupon stacking. If no coupon, allow_promotion_codes remains active.
-          // ANNUAL-ONLY guard: TEASER20 is an acquisition-discount for the
-          // annual plan. Attaching it to monthly would erode anchoring
-          // (annual already 41.5% cheaper than monthly×12 — see pricing audit).
-          ...(couponCode === 'TEASER20' && plan === 'pro_annual' && process.env.STRIPE_COUPON_TEASER20
-            ? { discounts: [{ coupon: process.env.STRIPE_COUPON_TEASER20 }] }
+          // Attach the resolved coupon via `discounts` (disables allow_promotion_codes
+          // to prevent stacking); else leave promo codes open. Plan-eligibility is
+          // config-driven in coupons.ts (TEASER20 annual-only, HALF50 both plans).
+          ...(resolvedCoupon
+            ? { discounts: [{ coupon: resolvedCoupon }] }
             : { allow_promotion_codes: true }),
           billing_address_collection: 'auto',
         },
@@ -364,10 +362,9 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
         },
         success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${appUrl}/pricing`,
-        // When an A/B test coupon is passed, apply it via `discounts` to prevent stacking.
-        // ANNUAL-ONLY guard: see auth-branch comment above. TEASER20 is annual acquisition only.
-        ...(couponCode === 'TEASER20' && plan === 'pro_annual' && process.env.STRIPE_COUPON_TEASER20
-          ? { discounts: [{ coupon: process.env.STRIPE_COUPON_TEASER20 }] }
+        // Attach resolved coupon (see auth-branch comment + coupons.ts); else open promo codes.
+        ...(resolvedCoupon
+          ? { discounts: [{ coupon: resolvedCoupon }] }
           : { allow_promotion_codes: true }),
         billing_address_collection: 'auto',
       },
