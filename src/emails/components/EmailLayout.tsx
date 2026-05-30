@@ -25,6 +25,10 @@ const FOOTER_TEXT = {
 
 export function EmailLayout({ preview, locale, children, unsubscribeUrl }: Props) {
   const t = FOOTER_TEXT[locale];
+  // CAN-SPAM §5 requires a valid physical postal address in every commercial email.
+  // Founder-provided via env (set in Vercel prod); rendered when present so no
+  // placeholder ever ships. The discount-blast send script refuses to send if unset.
+  const postalAddress = process.env.COMPANY_POSTAL_ADDRESS;
   return (
     <Html lang={locale}>
       <Head />
@@ -52,6 +56,7 @@ export function EmailLayout({ preview, locale, children, unsubscribeUrl }: Props
           <Hr style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '32px 0 16px' }} />
           <Section style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
             <Text>{t.address}</Text>
+            {postalAddress ? <Text style={{ margin: '4px 0 0' }}>{postalAddress}</Text> : null}
             <Text>
               <a href={`${SITE_URL}/${locale === 'es' ? 'es/' : ''}settings`} style={{ color: 'rgba(255,255,255,0.5)' }}>{t.manage}</a>
               {unsubscribeUrl ? (
