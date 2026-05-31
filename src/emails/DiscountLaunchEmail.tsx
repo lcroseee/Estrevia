@@ -27,7 +27,7 @@ const STRINGS = {
     eyebrow: 'Launch week · 7 days only',
     heading: 'Your full sidereal reading — now 50% off',
     body: 'You calculated your chart with us, but the full reading is still waiting: your Sun, Moon, Ascendant, all 8 outer planets, the houses, and your tightest aspects — woven into one personal synthesis for your exact chart.',
-    offer: 'For the next 7 days, claim 50% off your first month or year of Star.',
+    offer: 'For the next 7 days, claim 50% off your first month of Star.',
     disclaimer:
       'The 50% discount applies to your first charge after the free 3-day trial. Cancel anytime before then and you pay nothing.',
     cta: 'Claim 50% off — start free trial',
@@ -38,7 +38,7 @@ const STRINGS = {
     eyebrow: 'Semana de lanzamiento · solo 7 días',
     heading: 'Tu lectura sideral completa — ahora con 50% de descuento',
     body: 'Calculaste tu carta con nosotros, pero la lectura completa sigue esperándote: tu Sol, Luna, Ascendente, los 8 planetas exteriores, las casas y tus aspectos más cerrados — tejidos en una síntesis personal para tu carta exacta.',
-    offer: 'Por los próximos 7 días, reclama 50% de descuento en tu primer mes o año de Star.',
+    offer: 'Por los próximos 7 días, reclama 50% de descuento en tu primer mes de Star.',
     disclaimer:
       'El 50% de descuento aplica a tu primer cobro después de la prueba gratis de 3 días. Cancela antes y no pagas nada.',
     cta: 'Reclamar 50% off — iniciar prueba gratis',

@@ -23,10 +23,17 @@ describe('EmailLayout footer (CAN-SPAM physical postal address)', () => {
     expect(html).toContain(ADDR);
   });
 
-  it('omits the address line (no fake address) when env is unset, tagline still present', async () => {
+  it('omits the address line for TRANSACTIONAL email (no unsubscribeUrl) when env unset', async () => {
     delete process.env.COMPANY_POSTAL_ADDRESS;
     const html = await render(EmailLayout({ locale: 'en', children: 'body' }));
     expect(html).toContain('Sidereal astrology');
     expect(html).not.toContain(ADDR);
+  });
+
+  it('THROWS for a COMMERCIAL email (has unsubscribeUrl) when COMPANY_POSTAL_ADDRESS is unset', () => {
+    delete process.env.COMPANY_POSTAL_ADDRESS;
+    expect(() =>
+      EmailLayout({ locale: 'en', children: 'body', unsubscribeUrl: 'https://estrevia.app/u' }),
+    ).toThrow(/COMPANY_POSTAL_ADDRESS/);
   });
 });

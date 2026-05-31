@@ -16,6 +16,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { auth } from '@clerk/nextjs/server';
@@ -46,6 +47,51 @@ const checkoutBodySchema = z.object({
 
 interface CheckoutResponse {
   url: string;
+}
+
+/**
+ * Create a Checkout session, attaching `resolvedCoupon` via `discounts` (which
+ * disables promo-code entry to prevent stacking). If Stripe rejects the coupon
+ * — e.g. HALF50 past its 7-day redeem_by, or a deleted coupon — retry ONCE
+ * without the discount (open promo codes) under a distinct idempotency key, so
+ * a permanent emailed `&coupon=…` link never hard-fails checkout with a 500.
+ * When there is no coupon, just open promo codes.
+ */
+type CheckoutSessionParams = NonNullable<Parameters<Stripe['checkout']['sessions']['create']>[0]>;
+
+async function createCheckoutSessionWithCouponFallback(
+  stripe: Stripe,
+  baseParams: CheckoutSessionParams,
+  resolvedCoupon: string | null,
+  idempotencyKey: string,
+) {
+  if (!resolvedCoupon) {
+    return stripe.checkout.sessions.create(
+      { ...baseParams, allow_promotion_codes: true },
+      { idempotencyKey },
+    );
+  }
+  try {
+    return await stripe.checkout.sessions.create(
+      { ...baseParams, discounts: [{ coupon: resolvedCoupon }] },
+      { idempotencyKey },
+    );
+  } catch (err) {
+    const e = err as { code?: string; param?: string };
+    const isCouponError =
+      e?.code === 'coupon_expired' ||
+      e?.code === 'resource_missing' ||
+      (typeof e?.param === 'string' && e.param.includes('coupon'));
+    if (!isCouponError) throw err;
+    console.warn('[stripe/checkout] coupon rejected — retrying without discount', {
+      coupon: resolvedCoupon,
+      code: e?.code,
+    });
+    return stripe.checkout.sessions.create(
+      { ...baseParams, allow_promotion_codes: true },
+      { idempotencyKey: `${idempotencyKey}:nc` },
+    );
+  }
 }
 
 export async function POST(request: Request): Promise<NextResponse<ApiResponse<CheckoutResponse>>> {
@@ -219,9 +265,11 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
         localeFromBody,
         utm,
         customer: stripeCustomerId ?? userEmail ?? 'new',
+        coupon: resolvedCoupon,
       });
 
-      const session = await stripe.checkout.sessions.create(
+      const session = await createCheckoutSessionWithCouponFallback(
+        stripe,
         {
           mode: 'subscription',
           payment_method_types: ['card', 'link'],
@@ -245,15 +293,10 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
           },
           success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${appUrl}/pricing`,
-          // Attach the resolved coupon via `discounts` (disables allow_promotion_codes
-          // to prevent stacking); else leave promo codes open. Plan-eligibility is
-          // config-driven in coupons.ts (TEASER20 annual-only, HALF50 both plans).
-          ...(resolvedCoupon
-            ? { discounts: [{ coupon: resolvedCoupon }] }
-            : { allow_promotion_codes: true }),
           billing_address_collection: 'auto',
         },
-        { idempotencyKey },
+        resolvedCoupon,
+        idempotencyKey,
       );
 
       if (!session.url) {
@@ -340,9 +383,11 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
       localeFromBody,
       utm,
       customer: reuseCustomerId ?? prefilledEmail ?? 'new',
+      coupon: resolvedCoupon,
     });
 
-    const session = await stripe.checkout.sessions.create(
+    const session = await createCheckoutSessionWithCouponFallback(
+      stripe,
       {
         mode: 'subscription',
         payment_method_types: ['card', 'link'],
@@ -362,13 +407,10 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
         },
         success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${appUrl}/pricing`,
-        // Attach resolved coupon (see auth-branch comment + coupons.ts); else open promo codes.
-        ...(resolvedCoupon
-          ? { discounts: [{ coupon: resolvedCoupon }] }
-          : { allow_promotion_codes: true }),
         billing_address_collection: 'auto',
       },
-      { idempotencyKey },
+      resolvedCoupon,
+      idempotencyKey,
     );
 
     if (!session.url) {

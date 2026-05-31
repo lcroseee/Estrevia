@@ -114,7 +114,11 @@ for (const r of pending.slice(0, LIMIT)) {
   const locale = r.locale === 'es' ? 'es' : 'en';
   const base = `${SITE_URL}/${locale === 'es' ? 'es/' : ''}`;
   const trialUrl = `${base}checkout/start?plan=pro_monthly&coupon=${COUPON}&utm_source=discount-blast&utm_medium=email&utm_campaign=half50`;
-  const unsubscribeUrl = `${base}unsubscribe?token=${signUnsub(r.kind, r.source_id)}`;
+  const unsubToken = signUnsub(r.kind, r.source_id);
+  // Footer link → human confirmation PAGE (GET); List-Unsubscribe header → POST
+  // API route (RFC 8058 one-click). Same token, two endpoints.
+  const unsubscribeUrl = `${base}unsubscribe?token=${unsubToken}`;
+  const unsubscribePostUrl = `${SITE_URL}/api/v1/unsubscribe?token=${unsubToken}`;
   const subject = locale === 'es'
     ? '50% de descuento en tu lectura sideral — solo esta semana'
     : '50% off your full sidereal reading — this week only';
@@ -134,7 +138,7 @@ for (const r of pending.slice(0, LIMIT)) {
       subject,
       html,
       text,
-      headers: { 'List-Unsubscribe': `<${unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+      headers: { 'List-Unsubscribe': `<${unsubscribePostUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
       tags: [{ name: 'channel', value: 'discount-blast' }, { name: 'coupon', value: COUPON }],
     });
     if (res.error) { failed += 1; console.error(`  FAIL ${r.email}: ${JSON.stringify(res.error)}`); continue; }

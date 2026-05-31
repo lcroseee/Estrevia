@@ -98,6 +98,13 @@ export function buildCheckoutIdempotencyKey(input: {
   utm: Record<string, string>;
   /** Resolved Stripe target: customer id, customer_email, or 'new'. */
   customer: string;
+  /**
+   * Resolved Stripe coupon id (or null). MUST be in the hash: the session
+   * params differ by coupon (`discounts:[{coupon}]` vs `allow_promotion_codes`),
+   * so a same-day coupon vs no-coupon request pair would otherwise share a key
+   * and trigger StripeIdempotencyError → 500 (user loses the discount).
+   */
+  coupon?: string | null;
 }): string {
   const sortedUtm = Object.keys(input.utm)
     .sort()
@@ -110,6 +117,7 @@ export function buildCheckoutIdempotencyKey(input: {
     localeFromBody: input.localeFromBody ?? null,
     utm: sortedUtm,
     customer: input.customer,
+    coupon: input.coupon ?? null,
   });
   const hash = createHash('sha256').update(canonical).digest('hex').slice(0, 32);
   return `checkout:${input.identity}:${input.plan}:${input.day}:${hash}`;

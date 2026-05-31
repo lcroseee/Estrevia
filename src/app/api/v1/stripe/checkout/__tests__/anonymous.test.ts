@@ -243,4 +243,35 @@ describe('POST /api/v1/stripe/checkout — coupon attach (anonymous)', () => {
     expect(call.discounts).toBeUndefined();
     expect(call.allow_promotion_codes).toBe(true);
   });
+
+  it('coupon presence changes the idempotency key (no StripeIdempotencyError on coupon vs no-coupon)', async () => {
+    process.env.STRIPE_COUPON_HALF50 = 'co_half';
+    await POST(makeRequest({ plan: 'pro_monthly', coupon: 'HALF50' }));
+    await POST(makeRequest({ plan: 'pro_monthly' })); // identical except no coupon
+    const key1 = sessionsCreateMock.mock.calls[0][1].idempotencyKey;
+    const key2 = sessionsCreateMock.mock.calls[1][1].idempotencyKey;
+    expect(key1).not.toBe(key2);
+  });
+
+  it('expired/rejected coupon → retry without discount under a distinct :nc key (no 500)', async () => {
+    process.env.STRIPE_COUPON_HALF50 = 'co_half';
+    sessionsCreateMock.mockReset();
+    sessionsCreateMock
+      .mockRejectedValueOnce({ code: 'coupon_expired' })
+      .mockResolvedValue({ id: 'cs_test_123', url: 'https://stripe.com/cs_test_123' });
+
+    const res = await POST(makeRequest({ plan: 'pro_monthly', coupon: 'HALF50' }));
+    expect(res.status).toBe(200);
+    expect(sessionsCreateMock).toHaveBeenCalledTimes(2);
+
+    const first = sessionsCreateMock.mock.calls[0][0];
+    const second = sessionsCreateMock.mock.calls[1][0];
+    expect(first.discounts).toEqual([{ coupon: 'co_half' }]);
+    expect(second.discounts).toBeUndefined();
+    expect(second.allow_promotion_codes).toBe(true);
+
+    const firstKey = sessionsCreateMock.mock.calls[0][1].idempotencyKey;
+    const secondKey = sessionsCreateMock.mock.calls[1][1].idempotencyKey;
+    expect(secondKey).toBe(`${firstKey}:nc`);
+  });
 });

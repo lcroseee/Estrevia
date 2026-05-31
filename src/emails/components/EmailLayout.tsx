@@ -25,10 +25,17 @@ const FOOTER_TEXT = {
 
 export function EmailLayout({ preview, locale, children, unsubscribeUrl }: Props) {
   const t = FOOTER_TEXT[locale];
-  // CAN-SPAM §5 requires a valid physical postal address in every commercial email.
-  // Founder-provided via env (set in Vercel prod); rendered when present so no
-  // placeholder ever ships. The discount-blast send script refuses to send if unset.
+  // CAN-SPAM §5 requires a valid physical postal address in every COMMERCIAL email.
+  // Commercial = has an unsubscribe link (marketing). Founder-provided via env
+  // (set in Vercel prod). Fail LOUD rather than ship a non-compliant email: a
+  // missing address on a marketing email throws here instead of silently omitting.
+  // Transactional emails (no unsubscribeUrl) are exempt and render without it.
   const postalAddress = process.env.COMPANY_POSTAL_ADDRESS;
+  if (unsubscribeUrl && !postalAddress) {
+    throw new Error(
+      'COMPANY_POSTAL_ADDRESS must be set to render a commercial (unsubscribe-bearing) email — CAN-SPAM §5',
+    );
+  }
   return (
     <Html lang={locale}>
       <Head />
