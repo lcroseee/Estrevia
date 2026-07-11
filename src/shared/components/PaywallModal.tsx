@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations, useLocale } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
@@ -49,7 +50,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
   const tp = useTranslations('pricing');
   const tPage = useTranslations('pricingPage');
   const locale = useLocale();
-  const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_annual');
+  const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_monthly');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -146,8 +147,14 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+  // Portal to document.body (same pattern + rationale as EmailGateModal):
+  // escapes ancestor stacking contexts, and z-[60] beats the cookie banner
+  // (z-50, mounted after {children} in the root layout — DOM order would
+  // otherwise put the banner on top of an inline-rendered modal).
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -292,6 +299,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
