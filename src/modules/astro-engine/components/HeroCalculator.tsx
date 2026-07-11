@@ -235,13 +235,16 @@ export function HeroCalculator({ isSignedIn }: { isSignedIn: boolean }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             date: form.date,
-            time: form.knowsBirthTime ? form.time : '12:00',
-            knowsBirthTime: form.knowsBirthTime,
+            // Honest chart when birth time is unknown: `time: null` makes the
+            // engine skip Ascendant + houses (schema accepts null) instead of
+            // fabricating a noon Ascendant from a literal '12:00'. The old
+            // knowsBirthTime/ayanamsa extras were silently stripped by
+            // chartCalculateSchema — dropped.
+            time: form.knowsBirthTime ? form.time : null,
             latitude: form.latitude,
             longitude: form.longitude,
             timezone: form.timezone,
             houseSystem: form.knowsBirthTime ? 'Placidus' : null,
-            ayanamsa: 'lahiri',
           }),
         });
 

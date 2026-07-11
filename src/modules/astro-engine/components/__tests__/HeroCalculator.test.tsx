@@ -66,7 +66,12 @@ vi.mock('../DateInput', () => ({
     }),
 }));
 vi.mock('../TimePickerField', () => ({
-  TimePickerField: () => null,
+  TimePickerField: ({ value, onChange }: { value: string; onChange: (v: string) => void }) =>
+    React.createElement('input', {
+      'data-testid': 'time-input',
+      value,
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value),
+    }),
 }));
 
 vi.mock('@/shared/lib/analytics', () => ({
@@ -273,5 +278,46 @@ describe('HeroCalculator analytics (C1 — chart_calculated)', () => {
     await waitFor(() => {
       expect(vi.mocked(trackEvent)).toHaveBeenCalled();
     });
+  });
+});
+
+describe('HeroCalculator chart-calculate payload (time-unknown honesty)', () => {
+  // The file's top-level beforeEach re-spies fetch via vi.spyOn WITHOUT
+  // clearing it, and vitest config sets neither clearMocks nor restoreMocks —
+  // so .mock.calls ACCUMULATE across every test in this file. This describe
+  // is appended last: without a clear, calls[0] would be the FIRST test's
+  // request and the assertions below would read stale bodies. Clear here so
+  // calls[0] is THIS test's request.
+  beforeEach(() => {
+    vi.mocked(global.fetch).mockClear();
+  });
+
+  it('sends time:null + houseSystem:null and drops schema-stripped extras when birth time is unknown', async () => {
+    render(<HeroCalculator isSignedIn={true} />);
+    await fillFormAndSubmit();
+    await waitFor(() => expect(screen.getByText('Leo')).toBeTruthy());
+
+    const init = vi.mocked(global.fetch).mock.calls[0]![1] as RequestInit;
+    const body = JSON.parse(init.body as string) as Record<string, unknown>;
+    expect(body.time).toBeNull();
+    expect(body.houseSystem).toBeNull();
+    // chartCalculateSchema silently strips these — stop sending them.
+    expect(body).not.toHaveProperty('knowsBirthTime');
+    expect(body).not.toHaveProperty('ayanamsa');
+  });
+
+  it('sends the real time + Placidus when the user knows their birth time', async () => {
+    render(<HeroCalculator isSignedIn={true} />);
+    fireEvent.change(screen.getByTestId('date-input'), { target: { value: '1990-08-15' } });
+    fireEvent.click(screen.getByTestId('pick-city'));
+    fireEvent.click(screen.getByRole('switch'));
+    fireEvent.change(screen.getByTestId('time-input'), { target: { value: '14:30' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    await waitFor(() => expect(screen.getByText('Leo')).toBeTruthy());
+
+    const init = vi.mocked(global.fetch).mock.calls[0]![1] as RequestInit;
+    const body = JSON.parse(init.body as string) as Record<string, unknown>;
+    expect(body.time).toBe('14:30');
+    expect(body.houseSystem).toBe('Placidus');
   });
 });
