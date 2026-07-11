@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
+import { createMetadata, JsonLdScript, breadcrumbSchema, buildTarotCardTitle, isTarotEsRetitleEnabled } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import {
   getCardName,
@@ -87,7 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const localizedDescription = getCardDescription(card, locale);
 
   return createMetadata({
-    title: `${localizedName} — Thoth Tarot`,
+    title: buildTarotCardTitle(localizedName, locale as 'en' | 'es', isTarotEsRetitleEnabled()),
     description: localizedDescription.slice(0, 155),
     path: `/tarot/${cardId}`,
     locale: locale as 'en' | 'es',

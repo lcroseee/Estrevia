@@ -23,6 +23,8 @@
 export { createMetadata } from './metadata';
 export type { CreateMetadataOptions } from './metadata';
 
+export { buildTarotCardTitle, isTarotEsRetitleEnabled } from './tarot-title';
+
 export {
   JsonLdScript,
   organizationSchema,
