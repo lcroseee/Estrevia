@@ -403,6 +403,10 @@
       "title": "Why Sidereal Astrology Differs from Tropical",
       "description": "Sidereal astrology tracks real constellations using the Lahiri ayanamsa. Most sun signs shift one sign earlier vs tropical. Calculate your true chart."
     },
+    "about": {
+      "title": "About the Founder & Sidereal Methodology",
+      "description": "How Estrevia calculates sidereal charts — Swiss Ephemeris (Moshier), Lahiri ayanamsa, CI-verified to ±0.01° — and who builds it."
+    },
     "privacy": {
       "title": "Privacy Policy",
       "description": "How Estrevia collects, uses, and protects your data. Birth data encrypted with AES-256-GCM. GDPR rights: access, rectification, deletion, export."
@@ -756,7 +760,31 @@
     "twitterAria": "Estrevia on X",
     "footerSourceLabel": "Source (AGPL-3.0)",
     "footerSourceAria": "Estrevia source code on GitHub (opens in new tab)",
-    "footerLicenseNotice": "Licensed under AGPL-3.0"
+    "footerLicenseNotice": "Licensed under AGPL-3.0",
+    "footerAbout": "About"
+  },
+  "about": {
+    "breadcrumbAria": "Breadcrumb",
+    "breadcrumbHome": "Home",
+    "breadcrumbCurrent": "About",
+    "eyebrow": "About",
+    "h1": "About Estrevia",
+    "lead": "Estrevia is an independent sidereal astrology platform built and maintained by {name}.",
+    "founderHeading": "The founder",
+    "founderBio": "{name} founded Estrevia to make astronomically-accurate sidereal astrology, and its esoteric correspondences, available in English and Spanish.",
+    "methodologyHeading": "How the charts are calculated",
+    "methodologyP1": "Every chart is computed with the Swiss Ephemeris (Moshier algorithm), accurate to ±0.01°, using the Lahiri ayanamsa — the official sidereal reference defined by the Indian Calendar Reform Committee in 1955.",
+    "methodologyP2": "Positions are verified continuously in CI against 36+ reference charts at a ±0.01° tolerance, so the sidereal signs, houses, and aspects Estrevia reports match the real sky.",
+    "accuracyLabel": "Verified accuracy",
+    "accuracyValue": "±0.01° · CI-tested against 36+ reference charts",
+    "contactHeading": "Contact",
+    "contactBody": "Questions, corrections, or press enquiries are welcome — reach the founder directly.",
+    "contactEmailLabel": "Email",
+    "ctaHeading": "Calculate your sidereal chart",
+    "ctaBody": "See your true sidereal Sun, Moon, and rising in seconds — free.",
+    "ctaButton": "Open the calculator",
+    "roleTitle": "Founder & Sidereal Astrologer",
+    "bioSchema": "Founder of Estrevia, an independent sidereal astrology platform using the Lahiri ayanamsa and the Swiss Ephemeris."
   },
   "landing": {
     "heroTitle": "Discover Your True Zodiac Sign",

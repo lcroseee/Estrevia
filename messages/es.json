@@ -403,6 +403,10 @@
       "title": "Por qué la sideral difiere de la tropical",
       "description": "La astrología sideral sigue las constelaciones reales con el ayanamsa Lahiri. Casi todos los signos solares retroceden uno. Calcula tu carta verdadera."
     },
+    "about": {
+      "title": "Sobre el fundador y la metodología sideral",
+      "description": "Cómo Estrevia calcula las cartas siderales — Swiss Ephemeris (Moshier), ayanamsa Lahiri, verificado con CI a ±0.01° — y quién lo construye."
+    },
     "privacy": {
       "title": "Política de privacidad",
       "description": "Cómo Estrevia recopila, usa y protege tus datos. Datos de nacimiento cifrados con AES-256-GCM. Derechos GDPR: acceso, rectificación y exportación."
@@ -756,7 +760,31 @@
     "twitterAria": "Estrevia en X",
     "footerSourceLabel": "Código fuente (AGPL-3.0)",
     "footerSourceAria": "Código fuente de Estrevia en GitHub (se abre en nueva pestaña)",
-    "footerLicenseNotice": "Licenciado bajo AGPL-3.0"
+    "footerLicenseNotice": "Licenciado bajo AGPL-3.0",
+    "footerAbout": "Acerca de"
+  },
+  "about": {
+    "breadcrumbAria": "Ruta de navegación",
+    "breadcrumbHome": "Inicio",
+    "breadcrumbCurrent": "Acerca de",
+    "eyebrow": "Acerca de",
+    "h1": "Acerca de Estrevia",
+    "lead": "Estrevia es una plataforma independiente de astrología sideral creada y mantenida por {name}.",
+    "founderHeading": "El fundador",
+    "founderBio": "{name} fundó Estrevia para acercar la astrología sideral astronómicamente precisa, y sus correspondencias esotéricas, al público en inglés y español.",
+    "methodologyHeading": "Cómo se calculan las cartas",
+    "methodologyP1": "Cada carta se calcula con el Swiss Ephemeris (algoritmo Moshier), con una precisión de ±0.01°, usando el ayanamsa Lahiri: la referencia sideral oficial definida por el Comité de Reforma del Calendario Indio en 1955.",
+    "methodologyP2": "Las posiciones se verifican de forma continua en CI contra más de 36 cartas de referencia con una tolerancia de ±0.01°, para que los signos siderales, las casas y los aspectos que muestra Estrevia coincidan con el cielo real.",
+    "accuracyLabel": "Precisión verificada",
+    "accuracyValue": "±0.01° · probado en CI contra más de 36 cartas de referencia",
+    "contactHeading": "Contacto",
+    "contactBody": "Preguntas, correcciones o consultas de prensa son bienvenidas: escribe directamente al fundador.",
+    "contactEmailLabel": "Correo",
+    "ctaHeading": "Calcula tu carta sideral",
+    "ctaBody": "Descubre tu verdadero Sol, Luna y ascendente siderales en segundos, gratis.",
+    "ctaButton": "Abrir la calculadora",
+    "roleTitle": "Fundador y astrólogo sideral",
+    "bioSchema": "Fundador de Estrevia, una plataforma independiente de astrología sideral que usa el ayanamsa Lahiri y el Swiss Ephemeris."
   },
   "landing": {
     "heroTitle": "Descubre tu signo zodiacal verdadero",
