@@ -7,6 +7,7 @@ import { Check, X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { readUtmLastTouch } from '@/shared/lib/utm-cookie';
 import type { PaywallTrigger } from '@/shared/types/paywall';
+import { CurrencyEquivNote } from './CurrencyEquivNote';
 
 interface PaywallModalProps {
   open: boolean;
@@ -240,15 +241,8 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
                 {tp('annualPerMonth')}
               </p>
             )}
-            {/* LATAM currency equivalents — ES-only via locale gate */}
-            {locale === 'es' && (
-              <p
-                className="text-xs text-white/50 mt-2 font-[var(--font-geist-mono)] leading-relaxed"
-                aria-label={tPage('currencyEquivAria')}
-              >
-                {tp(plan === 'pro_annual' ? 'annualPriceEquiv' : 'monthlyPriceEquiv')}
-              </p>
-            )}
+            {/* LATAM currency equivalents + billed-in-USD note — ES-only (renders null for en) */}
+            <CurrencyEquivNote plan={plan} className="text-white/50 mt-2" />
           </div>
 
           {/* Features list */}

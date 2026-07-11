@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { PricingUpgradeButton } from './PricingUpgradeButton';
+import { CurrencyEquivNote } from '@/shared/components/CurrencyEquivNote';
 
 const FREE_FEATURE_KEYS = [
   'natalChart',
@@ -183,15 +184,8 @@ export function PricingToggle() {
                 {t('annualPerMonth')}
               </p>
             )}
-            {/* LATAM currency equivalents — ES-only via locale gate */}
-            {locale === 'es' && (
-              <p
-                className="text-xs text-white/40 mb-3 font-[var(--font-geist-mono)] leading-relaxed"
-                aria-label={tPage('currencyEquivAria')}
-              >
-                {t(billing === 'annual' ? 'annualPriceEquiv' : 'monthlyPriceEquiv')}
-              </p>
-            )}
+            {/* LATAM currency equivalents + billed-in-USD note — ES-only (renders null for en) */}
+            <CurrencyEquivNote plan={plan} className="text-white/40 mb-3" />
             <p className="text-sm text-white/45 leading-relaxed">
               {tPage('proDescription')}
             </p>

@@ -22,6 +22,7 @@ describe('PricingToggle — ES currency badge', () => {
     render(<PricingToggle />);
     // Mock returns the i18n key as literal text — assert the key, not the resolved value.
     expect(screen.getByText('monthlyPriceEquiv')).not.toBeNull();
+    expect(screen.getByText('billedInUsd')).not.toBeNull();
   });
 
   it('switches to annual equiv badge when toggle=annual', () => {
@@ -37,5 +38,6 @@ describe('PricingToggle — ES currency badge', () => {
     render(<PricingToggle />);
     expect(screen.queryByText('annualPriceEquiv')).toBeNull();
     expect(screen.queryByText('monthlyPriceEquiv')).toBeNull();
+    expect(screen.queryByText('billedInUsd')).toBeNull();
   });
 });
