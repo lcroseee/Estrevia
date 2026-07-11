@@ -18,13 +18,17 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-// Crimson Pro — esoteric headings, body text in essays
+// Crimson Pro — esoteric headings, body text in essays.
+// preload:false keeps it off the critical preload path (it loads lazily via
+// display:swap when first used). Geist (body / LCP text) stays preloaded.
+// Fixes the essay/`/es/` LCP font cost (~155 KiB of preloaded woff2 variants).
 const crimsonPro = Crimson_Pro({
   variable: "--font-crimson-pro",
   subsets: ["latin"],
   weight: ["300", "400", "600"],
   style: ["normal", "italic"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
