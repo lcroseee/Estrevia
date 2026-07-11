@@ -12,6 +12,7 @@ vi.mock('@/i18n/navigation', () => ({
 import { generateMetadata as compatPairMetadata } from '@/app/[locale]/(marketing)/compatibility/[pair]/page';
 import { ALL_PAIR_SLUGS } from '@/shared/seo/compatibility-pairs';
 import { readyEnrichedPairs } from '@/shared/seo/compatibility-content';
+import { SITE_URL } from '../constants';
 
 describe('sitemap', () => {
   it('emits one entry per locale for every canonical path', () => {
@@ -66,8 +67,8 @@ describe('compatibility pairs removed from sitemap (T2)', () => {
     expect(hubUrls).toHaveLength(2);
   });
 
-  it('total entry count is 514 + 2 per ready enriched pair (T7)', () => {
-    expect(sitemap()).toHaveLength(514 + readyEnrichedPairs().length * 2);
+  it('total entry count is 518 + 2 per ready enriched pair (T7 + batch /support + /tarot/spread)', () => {
+    expect(sitemap()).toHaveLength(518 + readyEnrichedPairs().length * 2);
   });
 });
 
@@ -77,5 +78,26 @@ describe('compatibility pair pages are noindex (T2)', () => {
       params: Promise.resolve({ locale: 'en' as const, pair: ALL_PAIR_SLUGS[0] }),
     });
     expect(md.robots).toEqual({ index: false, follow: true });
+  });
+});
+
+describe('support + tarot spread in sitemap (seo-p2 batch)', () => {
+  it('includes /support for EN and ES', () => {
+    const urls = sitemap().map((e) => e.url);
+    expect(urls).toContain(`${SITE_URL}/support`);
+    expect(urls).toContain(`${SITE_URL}/es/support`);
+  });
+
+  it('includes /tarot/spread for EN and ES', () => {
+    const urls = sitemap().map((e) => e.url);
+    expect(urls).toContain(`${SITE_URL}/tarot/spread`);
+    expect(urls).toContain(`${SITE_URL}/es/tarot/spread`);
+  });
+
+  it('keeps EN and ES entry counts balanced', () => {
+    const entries = sitemap();
+    const en = entries.filter((e) => !/\/es(\/|$)/.test(e.url));
+    const es = entries.filter((e) => /\/es(\/|$)/.test(e.url));
+    expect(en.length).toBe(es.length);
   });
 });

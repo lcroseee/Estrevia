@@ -175,6 +175,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.85,
     }),
+    // Support / contact page — indexable (createMetadata, no noIndex).
+    ...emitLocalized('/support', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(marketing)/support/page.tsx'),
+      changeFrequency: 'monthly',
+      priority: 0.4,
+    }),
   ];
 
   // ── App pages ─────────────────────────────────────────────────────────────
@@ -203,6 +209,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/tarot/page.tsx'),
       changeFrequency: 'weekly',
       priority: 0.8,
+    }),
+    ...emitLocalized('/tarot/spread', {
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/tarot/spread/page.tsx'),
+      changeFrequency: 'weekly',
+      priority: 0.7,
     }),
     ...emitLocalized('/tree-of-life', {
       lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/tree-of-life/page.tsx'),
