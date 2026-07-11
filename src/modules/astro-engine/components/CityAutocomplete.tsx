@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
   type ChangeEvent,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import type { CitySearchResult } from '@/shared/types';
 
 interface CityAutocompleteProps {
@@ -48,7 +49,8 @@ export function CityAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState(false);
+  const t = useTranslations('cityAutocomplete');
 
   const debouncedQuery = useDebounce(query, 300);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,7 +71,7 @@ export function CityAutocomplete({
 
     async function fetchCities() {
       setIsLoading(true);
-      setFetchError(null);
+      setFetchError(false);
       try {
         const res = await fetch(
           `/api/v1/cities?q=${encodeURIComponent(debouncedQuery)}&limit=10`
@@ -83,7 +85,7 @@ export function CityAutocomplete({
         }
       } catch {
         if (!cancelled) {
-          setFetchError('City search unavailable');
+          setFetchError(true);
           setResults([]);
         }
       } finally {
@@ -226,7 +228,7 @@ export function CityAutocomplete({
 
       {/* Fetch error */}
       {fetchError && !isOpen && (
-        <p className="mt-1 text-xs text-amber-400/70">{fetchError}</p>
+        <p className="mt-1 text-xs text-amber-400/70">{t('searchUnavailable')}</p>
       )}
 
       {/* Dropdown */}
@@ -235,7 +237,7 @@ export function CityAutocomplete({
           ref={listRef}
           id={listId}
           role="listbox"
-          aria-label="City suggestions"
+          aria-label={t('suggestionsAria')}
           className={[
             'absolute z-50 mt-1 w-full rounded-xl border border-white/10',
             'bg-[#13131D] shadow-2xl shadow-black/60 backdrop-blur-xl',
