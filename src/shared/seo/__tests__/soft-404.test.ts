@@ -11,8 +11,8 @@ vi.mock('@/i18n/navigation', () => ({
   getPathname: () => '',
 }));
 
-import { dynamicParams as essayDynamicParams } from '../../../app/[locale]/(app)/essays/[slug]/page';
-import { dynamicParams as tarotDynamicParams } from '../../../app/[locale]/(app)/tarot/[cardId]/page';
+import { dynamicParams as essayDynamicParams } from '../../../app/[locale]/(content)/essays/[slug]/page';
+import { dynamicParams as tarotDynamicParams } from '../../../app/[locale]/(content)/tarot/[cardId]/page';
 
 describe('soft-404 guard (T12)', () => {
   it('essay route rejects unknown slugs (dynamicParams=false)', () => {

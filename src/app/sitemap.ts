@@ -176,7 +176,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
     // Index hubs
     ...emitLocalized('/essays', {
-      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/essays/page.tsx'),
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(content)/essays/page.tsx'),
       changeFrequency: 'weekly',
       priority: 0.85,
     }),
@@ -216,12 +216,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     }),
     ...emitLocalized('/tarot', {
-      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/tarot/page.tsx'),
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(content)/tarot/page.tsx'),
       changeFrequency: 'weekly',
       priority: 0.8,
     }),
     ...emitLocalized('/tarot/spread', {
-      lastModified: lastModifiedFor('static', 'src/app/[locale]/(app)/tarot/spread/page.tsx'),
+      lastModified: lastModifiedFor('static', 'src/app/[locale]/(content)/tarot/spread/page.tsx'),
       changeFrequency: 'weekly',
       priority: 0.7,
     }),
