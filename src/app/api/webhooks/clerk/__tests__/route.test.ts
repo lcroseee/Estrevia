@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const mocks = vi.hoisted(() => ({
   verify: vi.fn(),
   trackServerEvent: vi.fn(),
-  onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+  onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
   values: vi.fn(),
   insert: vi.fn(),
   // For select chains used in user.deleted + chart query
@@ -27,8 +27,8 @@ const mocks = vi.hoisted(() => ({
   sendAccountDeletionEmail: vi.fn().mockResolvedValue({ sent: true }),
 }));
 
-// Wire the chainable mocks: insert() → { values } → { onConflictDoNothing }
-mocks.values.mockImplementation(() => ({ onConflictDoNothing: mocks.onConflictDoNothing }));
+// Wire the chainable mocks: insert() → { values } → { onConflictDoUpdate }
+mocks.values.mockImplementation(() => ({ onConflictDoUpdate: mocks.onConflictDoUpdate }));
 mocks.insert.mockImplementation(() => ({ values: mocks.values }));
 
 // Wire select chain: select() → { from } → { where } → { limit }
@@ -98,7 +98,7 @@ beforeEach(() => {
   mocks.trackServerEvent.mockReset();
   mocks.insert.mockClear();
   mocks.values.mockClear();
-  mocks.onConflictDoNothing.mockClear();
+  mocks.onConflictDoUpdate.mockClear();
   mocks.select.mockClear();
   mocks.selectFrom.mockClear();
   mocks.selectWhere.mockClear();
@@ -210,7 +210,44 @@ describe('POST /api/webhooks/clerk — user_registered firing', () => {
     const res = await POST(makeReq({}));
     expect(res.status).toBe(200);
     // DB insert still ran:
-    expect(mocks.onConflictDoNothing).toHaveBeenCalled();
+    expect(mocks.onConflictDoUpdate).toHaveBeenCalled();
+  });
+
+  it('onConflictDoUpdate carries email + locale so Stripe-created placeholder rows heal', async () => {
+    mocks.verify.mockReturnValue({
+      type: 'user.created',
+      data: {
+        id: 'user_heal1',
+        email_addresses: [{ email_address: 'Real@Example.com' }],
+        unsafe_metadata: { locale: 'es' },
+      },
+    });
+    const res = await POST(makeReq({}));
+    expect(res.status).toBe(200);
+    const conflictArg = mocks.onConflictDoUpdate.mock.calls[0][0];
+    expect(conflictArg.set.email).toBe('Real@Example.com');
+    expect(conflictArg.set.locale).toBe('es');
+  });
+
+  it('empty Clerk email is not written into the conflict set', async () => {
+    mocks.verify.mockReturnValue({
+      type: 'user.created',
+      data: { id: 'user_noemail', email_addresses: [], unsafe_metadata: null },
+    });
+    const res = await POST(makeReq({}));
+    expect(res.status).toBe(200);
+    const conflictArg = mocks.onConflictDoUpdate.mock.calls[0][0];
+    expect(conflictArg.set).not.toHaveProperty('email');
+  });
+
+  it('unique violation on insert logs and still returns 200', async () => {
+    mocks.onConflictDoUpdate.mockRejectedValueOnce({ code: '23505' });
+    mocks.verify.mockReturnValue({
+      type: 'user.created',
+      data: { id: 'user_dup', email_addresses: [{ email_address: 'dup@example.com' }], unsafe_metadata: null },
+    });
+    const res = await POST(makeReq({}));
+    expect(res.status).toBe(200);
   });
 
   it('handles email without @ gracefully (email_domain=null, email=undefined)', async () => {
@@ -327,7 +364,7 @@ describe('POST /api/webhooks/clerk — T3 email hookups', () => {
     const res = await POST(makeReq({}));
     expect(res.status).toBe(200);
     // DB insert still completed
-    expect(mocks.onConflictDoNothing).toHaveBeenCalled();
+    expect(mocks.onConflictDoUpdate).toHaveBeenCalled();
   });
 
   it('user.deleted sends account_deletion email BEFORE cascade delete', async () => {
@@ -406,7 +443,7 @@ describe('POST /api/webhooks/clerk — T10 lead conversion linking', () => {
     const res = await POST(makeReq({}));
     expect(res.status).toBe(200);
     // user row was still inserted (the lead-link is best-effort post-step)
-    expect(mocks.onConflictDoNothing).toHaveBeenCalled();
+    expect(mocks.onConflictDoUpdate).toHaveBeenCalled();
   });
 
   it('skips email_leads UPDATE when email is empty (cannot match)', async () => {
