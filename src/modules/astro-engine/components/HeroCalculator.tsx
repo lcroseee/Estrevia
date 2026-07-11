@@ -211,7 +211,14 @@ export function HeroCalculator({ isSignedIn }: { isSignedIn: boolean }) {
     if (gateBypassed) return false;
     if (typeof window === 'undefined') return false;
     try {
+      // Permanent flag — written only on successful email submit.
       if (window.localStorage.getItem('email_gate_passed')) return false;
+    } catch {
+      /* private mode — fall through, gate shows */
+    }
+    try {
+      // Session flag — written on dismissal; re-arms next browser session.
+      if (window.sessionStorage.getItem('email_gate_passed')) return false;
     } catch {
       /* private mode — fall through, gate shows */
     }

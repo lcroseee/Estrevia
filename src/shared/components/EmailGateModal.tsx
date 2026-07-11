@@ -48,9 +48,14 @@ function getDistinctId(): string | undefined {
   }
 }
 
-function safeSetFlag(): void {
+// Submit → permanent localStorage flag (we have the email — never gate again).
+// Dismiss → sessionStorage flag only, so the gate re-arms in the NEXT browser
+// session (LAND-3: dismissal used to be permanent) while same-session repeat
+// calculations stay un-gated.
+function safeSetFlag(store: 'local' | 'session'): void {
   try {
-    window.localStorage.setItem(STORAGE_FLAG, '1');
+    const storage = store === 'local' ? window.localStorage : window.sessionStorage;
+    storage.setItem(STORAGE_FLAG, '1');
   } catch {
     /* private mode / quota — ignore */
   }
@@ -63,9 +68,10 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   const handleDismiss = useCallback(() => {
-    safeSetFlag();
+    safeSetFlag('session');
     trackEvent(AnalyticsEvent.EMAIL_GATE_DISMISSED, { chartId, locale });
     onDismiss();
   }, [chartId, locale, onDismiss]);
@@ -110,7 +116,9 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
       }
     }
     document.addEventListener('keydown', handleKeyDown);
-    closeButtonRef.current?.focus();
+    // LIVE-4: initial focus goes to the email input — the one action we want.
+    // The X button stays first in the Tab order and Escape still dismisses.
+    emailInputRef.current?.focus();
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, handleDismiss]);
 
@@ -180,7 +188,7 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
         trackEvent(AnalyticsEvent.EMAIL_LEAD_RESUBMITTED, { chartId, locale });
       }
 
-      safeSetFlag();
+      safeSetFlag('local');
       onSubmitted();
     } catch {
       setError(t('errNetwork'));
@@ -235,6 +243,7 @@ export function EmailGateModal({ open, onSubmitted, onDismiss, chartId, locale }
           </label>
           <input
             id="email-gate-input"
+            ref={emailInputRef}
             type="email"
             inputMode="email"
             autoComplete="email"

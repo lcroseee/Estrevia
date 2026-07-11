@@ -103,6 +103,7 @@ async function fillFormAndSubmit() {
 beforeEach(() => {
   searchParamsValue = new URLSearchParams();
   window.localStorage.clear();
+  window.sessionStorage.clear();
   lastModalProps = null;
   vi.mocked(trackEvent).mockClear();
   delete (window as unknown as { fbq?: unknown }).fbq;
@@ -181,6 +182,16 @@ describe('HeroCalculator gate state machine', () => {
       expect(screen.queryByTestId('gate-modal')).toBeNull();
       expect(screen.getByText('Leo')).toBeTruthy();
     });
+  });
+
+  it('does NOT mount the modal when the sessionStorage dismiss flag is set (same session)', async () => {
+    window.sessionStorage.setItem('email_gate_passed', '1');
+    render(<HeroCalculator isSignedIn={false} />);
+    await fillFormAndSubmit();
+    await waitFor(() => {
+      expect(screen.getByText('Leo')).toBeTruthy();
+    });
+    expect(screen.queryByTestId('gate-modal')).toBeNull();
   });
 });
 

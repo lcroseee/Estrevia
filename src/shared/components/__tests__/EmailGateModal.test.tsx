@@ -10,6 +10,7 @@ vi.mock('next-intl', () => ({
 beforeEach(() => {
   vi.restoreAllMocks();
   window.localStorage.clear();
+  window.sessionStorage.clear();
   delete (window as unknown as { fbq?: unknown }).fbq;
   delete (window as unknown as { posthog?: unknown }).posthog;
   // Reset cookies between tests — jsdom does not auto-clear them
@@ -174,13 +175,14 @@ describe('EmailGateModal', () => {
     });
   });
 
-  it('dismiss button calls onDismiss, sets flag, tracks email_gate_dismissed, no fbq', () => {
+  it('dismiss writes the SESSION flag only — localStorage stays clear so the gate re-arms next session', () => {
     const ph = makePosthogMock();
     const fbq = makeFbqMock();
     render(<EmailGateModal {...baseProps} />);
     fireEvent.click(screen.getByRole('button', { name: 'dismissCta' }));
     expect(baseProps.onDismiss).toHaveBeenCalled();
-    expect(window.localStorage.getItem('email_gate_passed')).toBe('1');
+    expect(window.sessionStorage.getItem('email_gate_passed')).toBe('1');
+    expect(window.localStorage.getItem('email_gate_passed')).toBeNull();
     expect(ph.capture).toHaveBeenCalledWith('email_gate_dismissed', expect.any(Object));
     expect(fbq).not.toHaveBeenCalled();
   });
@@ -252,5 +254,35 @@ describe('EmailGateModal', () => {
     const body = JSON.parse(init.body as string) as Record<string, unknown>;
     expect(body.fbc).toBeUndefined();
     expect(body.fbp).toBeUndefined();
+  });
+
+  it('successful submit writes the PERMANENT localStorage flag, not the session flag', async () => {
+    makePosthogMock();
+    makeFbqMock();
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response(
+      JSON.stringify({ success: true, data: { leadId: 'lead_s', eventId: 'lead_s:email_lead_submitted', wasNew: true }, error: null }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    ));
+    render(<EmailGateModal {...baseProps} />);
+    fireEvent.change(screen.getByLabelText('emailLabel'), { target: { value: 'perm@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'submitCta' }));
+    await waitFor(() => expect(baseProps.onSubmitted).toHaveBeenCalled());
+    expect(window.localStorage.getItem('email_gate_passed')).toBe('1');
+    expect(window.sessionStorage.getItem('email_gate_passed')).toBeNull();
+  });
+
+  it('focuses the email input on open (not the close button)', () => {
+    render(<EmailGateModal {...baseProps} />);
+    const input = screen.getByLabelText('emailLabel');
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('tolerates sessionStorage throwing on dismiss (still calls onDismiss)', () => {
+    vi.spyOn(window.sessionStorage, 'setItem').mockImplementation(() => {
+      throw new Error('denied');
+    });
+    render(<EmailGateModal {...baseProps} />);
+    fireEvent.click(screen.getByRole('button', { name: 'dismissCta' }));
+    expect(baseProps.onDismiss).toHaveBeenCalled();
   });
 });

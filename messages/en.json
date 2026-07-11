@@ -1056,8 +1056,8 @@
     }
   },
   "emailGate": {
-    "title": "See your sidereal chart",
-    "subtitle": "Enter your email to reveal the chart we just calculated for you.",
+    "title": "Your chart is ready — where do we send the details?",
+    "subtitle": "We'll email your full placements breakdown (Moon, rising & aspects) plus what they mean.",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
     "submitCta": "See My Chart",

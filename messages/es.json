@@ -1059,8 +1059,8 @@
     }
   },
   "emailGate": {
-    "title": "Mira tu carta sideral",
-    "subtitle": "Ingresa tu email para ver la carta que calculamos.",
+    "title": "Tu carta está lista — ¿a dónde te la enviamos?",
+    "subtitle": "Te enviaremos por email el desglose completo de tus posiciones (Luna, ascendente y aspectos) y qué significan.",
     "emailLabel": "Email",
     "emailPlaceholder": "tu@ejemplo.com",
     "submitCta": "Ver mi carta",
