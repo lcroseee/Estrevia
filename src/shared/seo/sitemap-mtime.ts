@@ -10,7 +10,9 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
 
-type RouteType = 'static' | 'essay' | 'sign' | 'tarot' | 'sidereal-dates';
+type RouteType =
+  | 'static' | 'essay' | 'sign' | 'tarot' | 'sidereal-dates'
+  | 'compatibility' | 'planetary-hours-cities';
 
 // Sitemap.ts generates 470 URLs but only ~30 unique source files; memoize.
 const gitMtimeCache = new Map<string, Date>();
@@ -96,6 +98,12 @@ export function lastModifiedFor(type: RouteType, ...args: string[]): Date {
     case 'sidereal-dates':
       // Year-dependent content: bump once per calendar year, not per deploy.
       return new Date(Date.UTC(new Date().getUTCFullYear(), 0, 1));
+    case 'compatibility':
+      // Pair inventory lives in compatibility-pairs.ts — its git mtime is the
+      // honest "last changed" signal for every /compatibility/* URL.
+      return getGitMtime('src/shared/seo/compatibility-pairs.ts');
+    case 'planetary-hours-cities':
+      return getGitMtime('src/shared/seo/cities.ts');
     default: {
       const exhaustive: never = type;
       throw new Error(`Unknown route type: ${exhaustive as string}`);

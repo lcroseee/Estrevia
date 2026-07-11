@@ -263,9 +263,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   );
 
   // ── Compatibility index (EN + ES) ─────────────────────────────────────────
-  // lastModifiedFor() is strict on its RouteType union; new route families fall
-  // back to build-time `new Date()` (acceptable per spec §8 — Google accepts it).
-  const compatibilityBuildTime = new Date();
+  // Real git-mtime of the pair inventory (T11c) — honest <lastmod>, not build time.
+  const compatibilityBuildTime = lastModifiedFor('compatibility');
   const compatibilityIndex: MetadataRoute.Sitemap = emitLocalized('/compatibility', {
     lastModified: compatibilityBuildTime,
     changeFrequency: 'monthly',
@@ -286,7 +285,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   );
 
   // ── Planetary-hours-cities index (EN + ES) ────────────────────────────────
-  const planetaryHoursCitiesBuildTime = new Date();
+  // Real git-mtime of the city inventory (T11c) — honest <lastmod>, not build time.
+  const planetaryHoursCitiesBuildTime = lastModifiedFor('planetary-hours-cities');
   const planetaryHoursCitiesIndex: MetadataRoute.Sitemap = emitLocalized(
     '/planetary-hours-cities',
     {
