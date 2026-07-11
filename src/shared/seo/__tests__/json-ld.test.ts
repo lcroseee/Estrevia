@@ -32,10 +32,11 @@ describe('organizationSchema', () => {
     expect(schema.url.length).toBeGreaterThan(0);
   });
 
-  it('includes logo with url', () => {
+  it('includes logo pointing at the existing icon-512 asset', () => {
     const schema = organizationSchema() as unknown as AnySchema;
     expect(schema.logo['@type']).toBe('ImageObject');
-    expect(schema.logo.url).toContain('logo.png');
+    expect(schema.logo.url).toContain('/icons/icon-512.png');
+    expect(schema.logo.url).not.toContain('logo.png');
   });
 });
 
@@ -97,6 +98,14 @@ describe('articleSchema', () => {
     const schema = articleSchema(options) as unknown as AnySchema;
     expect(schema.publisher['@type']).toBe('Organization');
     expect(schema.publisher.name).toBe('Estrevia');
+  });
+
+  it('publisher logo points at icon-512, not the 404 logo.png', () => {
+    const schema = articleSchema({
+      title: 'T', description: 'D', url: 'https://estrevia.app/essays/x',
+      datePublished: '2026-01-01', dateModified: '2026-01-01',
+    }) as unknown as AnySchema;
+    expect(schema.publisher.logo.url).toContain('/icons/icon-512.png');
   });
 
   it('includes url', () => {
