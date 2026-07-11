@@ -96,12 +96,10 @@ const major = {
   astrology: 'Uranus',
   liber777Column: 'Air',
 };
+// Real cards.json minors OMIT these keys entirely (undefined), not null —
+// e.g. ace-of-wands has no `treeOfLifePath`. The guard must handle undefined.
 const minor = {
-  hebrewLetter: null,
-  treeOfLifePath: null,
-  treeOfLifeConnects: null,
   astrology: 'Mars in Aries',
-  liber777Column: null,
 };
 
 describe('buildCorrespondenceRows', () => {
@@ -148,26 +146,27 @@ export interface CorrespondenceRow {
 }
 
 export interface CardCorrespondences {
-  hebrewLetter: string | null;
-  treeOfLifePath: number | null;
-  treeOfLifeConnects: number[] | null;
+  hebrewLetter?: string | null;
+  treeOfLifePath?: number | null;
+  treeOfLifeConnects?: number[] | null;
   astrology: string;
-  liber777Column: string | null;
+  liber777Column?: string | null;
 }
 
 /**
  * Builds the "777 Correspondences" rows for a tarot card.
  *
- * The 22 Majors carry all five fields; the 56 Minors have path/Hebrew-letter
- * fields = null in cards.json (minors map to sephiroth, not paths). Rendering
+ * The 22 Majors carry all five fields; the 56 Minors OMIT the path/Hebrew-letter
+ * fields in cards.json (undefined — minors map to sephiroth, not paths). Rendering
  * card.treeOfLifeConnects.join() unconditionally threw during SSR for every
  * minor — this helper renders `astrology` always and the null-able fields only
- * when present, so minors get a valid (shorter) block instead of a crash.
+ * when present (loose `!= null` catches both null and undefined), so minors get
+ * a valid (shorter) block instead of a crash.
  */
 export function buildCorrespondenceRows(card: CardCorrespondences): CorrespondenceRow[] {
   const rows: CorrespondenceRow[] = [];
   if (card.hebrewLetter) rows.push({ key: 'detail.hebrewLetter', value: card.hebrewLetter });
-  if (card.treeOfLifePath !== null) rows.push({ key: 'detail.treeOfLifePath', value: String(card.treeOfLifePath) });
+  if (card.treeOfLifePath != null) rows.push({ key: 'detail.treeOfLifePath', value: String(card.treeOfLifePath) });
   if (card.treeOfLifeConnects && card.treeOfLifeConnects.length > 0) {
     rows.push({ key: 'detail.connects', value: card.treeOfLifeConnects.join(' ↔ ') });
   }
@@ -191,12 +190,17 @@ In `src/app/[locale]/(app)/tarot/[cardId]/page.tsx`:
 import { buildCorrespondenceRows } from '@/modules/esoteric/lib/tarotCards';
 ```
 
-(b) Change the `CardData` interface fields (`:30–33`) from required to nullable:
+(b) Change the `CardData` interface fields (`:30–33`) to optional + nullable — the 56 minors OMIT these keys in `cards.json`, so they are `undefined` at runtime (this is the real shape the crash exploited):
 ```ts
-  hebrewLetter: string | null;
-  treeOfLifePath: number | null;
-  treeOfLifeConnects: number[] | null;
-  liber777Column: string | null;
+  hebrewLetter?: string | null;
+  treeOfLifePath?: number | null;
+  treeOfLifeConnects?: number[] | null;
+  liber777Column?: string | null;
+```
+
+(b2) The `generateMetadata` keywords array (`:90`) passes `card.hebrewLetter` into `createMetadata`'s `keywords: string[]`. Now that the field is optional it can be `undefined` (it always was, at runtime, for minors), which no longer type-checks against `string[]`. Guard it:
+```ts
+    keywords: [localizedName, 'thoth tarot', card.suit, card.astrology, ...(card.hebrewLetter ? [card.hebrewLetter] : [])],
 ```
 
 (c) Replace the correspondences `<dl>` body (`:235–251`) — the inline array literal that unconditionally reads `card.treeOfLifeConnects.join(...)`:
@@ -219,7 +223,7 @@ import { buildCorrespondenceRows } from '@/modules/esoteric/lib/tarotCards';
 - [ ] **Step 6: Verify types + the SEO suite are green**
 
 Run: `npm run typecheck && npx vitest run src/modules/esoteric/lib/__tests__/tarotCards.test.ts`
-Expected: typecheck PASS (the nullable interface + helper align); tests PASS.
+Expected: typecheck PASS (the optional interface + helper + guarded keywords align); tests PASS.
 
 - [ ] **Step 7: Commit**
 
