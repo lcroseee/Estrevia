@@ -428,8 +428,8 @@
       "description": "Hora planetaria actual y agenda diaria completa. Horas planetarias caldeas tradicionales calculadas para tu ubicación."
     },
     "signs": {
-      "title": "Signos siderales — Fechas y significados",
-      "description": "Explora los 12 signos siderales con fechas astronómicas reales, elementos, planetas regentes y rasgos clave. Encuentra tu signo con el ayanamsa Lahiri."
+      "title": "Signos siderales: tu signo verdadero (Lahiri)",
+      "description": "Los 12 signos en astrología sideral con el ayanamsa Lahiri: fechas reales, elemento, regente y cómo difieren del zodiaco tropical."
     },
     "signsDetail": {
       "title": "{sign} sideral: rasgos, fechas, significado",
