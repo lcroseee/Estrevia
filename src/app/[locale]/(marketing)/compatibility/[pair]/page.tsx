@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { createMetadata, articleSchema, breadcrumbSchema, JsonLdScript, SITE_URL } from '@/shared/seo';
+import { createMetadata, articleSchema, breadcrumbSchema, faqSchema, JsonLdScript, SITE_URL } from '@/shared/seo';
 import { ALL_PAIR_SLUGS, parsePairSlug } from '@/shared/seo/compatibility-pairs';
+import { getReadyEnrichedPairContent } from '@/shared/seo/compatibility-content';
+import { Link } from '@/i18n/navigation';
 import enSigns from '../../../../../../content/signs/descriptions.json';
 import esSigns from '../../../../../../content/signs/descriptions.es.json';
 
@@ -101,21 +103,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const r1 = findSign(rows as SignRow[], s1);
   const r2 = findSign(rows as SignRow[], s2);
   if (!r1 || !r2) return {};
-  const title = locale === 'es'
+  const content = getReadyEnrichedPairContent(pair);
+  const lc = content?.[locale];
+
+  const title = lc?.metaTitle ?? (locale === 'es'
     ? `${r1.sign} × ${r2.sign} — compatibilidad sideral`
-    : `${r1.sign} × ${r2.sign} — sidereal compatibility`;
-  const description = locale === 'es'
+    : `${r1.sign} × ${r2.sign} — sidereal compatibility`);
+  const description = lc?.metaDescription ?? (locale === 'es'
     ? `Análisis sideral de la compatibilidad ${r1.sign} y ${r2.sign}: elemento, modalidad, regente y tipo de aspecto.`
-    : `Sidereal analysis of ${r1.sign} and ${r2.sign} compatibility: element, modality, ruler, and aspect type.`;
-  const metadata = createMetadata({
-    title,
-    description,
-    path: `/compatibility/${pair}`,
-    locale,
-  });
-  // Thin template pages — noindex until enriched (Phase 2 T7), but follow so
-  // outbound links to the sign essays still pass equity.
-  return { ...metadata, robots: { index: false, follow: true } };
+    : `Sidereal analysis of ${r1.sign} and ${r2.sign} compatibility: element, modality, ruler, and aspect type.`);
+
+  const metadata = createMetadata({ title, description, path: `/compatibility/${pair}`, locale });
+
+  // Enriched (ready) pairs re-index; thin/un-authored pairs stay noindex (T2),
+  // follow so outbound sign-essay links keep passing equity.
+  return content ? metadata : { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function CompatibilityPairPage({ params }: PageProps) {
@@ -136,6 +138,66 @@ export default async function CompatibilityPairPage({ params }: PageProps) {
   const heading = `${r1.sign} × ${r2.sign}`;
   const localePath = locale === 'es' ? '/es' : '';
   const url = `${SITE_URL}${localePath}/compatibility/${pair}`;
+
+  const content = getReadyEnrichedPairContent(pair);
+  if (content) {
+    const lc = content[locale];
+    const dateModified = content.updatedAt && !content.updatedAt.includes('__PLACEHOLDER__')
+      ? content.updatedAt
+      : '2026-07-10';
+    const disclaimer = locale === 'es'
+      ? 'Estrevia es para la reflexión y el entretenimiento; no es consejo médico, psicológico, financiero ni de pareja.'
+      : 'Estrevia is for reflection and entertainment; it is not medical, psychological, financial, or relationship advice.';
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-12">
+        <JsonLdScript
+          schema={articleSchema({
+            title: lc.h1,
+            description: lc.metaDescription,
+            datePublished: '2026-07-10',
+            dateModified,
+            authorName: 'Estrevia',
+            url,
+          })}
+        />
+        <JsonLdScript
+          schema={breadcrumbSchema([
+            { name: locale === 'es' ? 'Inicio' : 'Home', url: `${SITE_URL}${localePath}` },
+            { name: locale === 'es' ? 'Compatibilidad sideral' : 'Sidereal compatibility', url: `${SITE_URL}${localePath}/compatibility` },
+            { name: lc.h1, url },
+          ])}
+        />
+        <JsonLdScript schema={faqSchema(lc.faq)} />
+        <header className="mb-8 text-center">
+          <p className="text-5xl">{r1.symbol} {r2.symbol}</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white/90">{lc.h1}</h1>
+        </header>
+        <p className="text-base text-white/80 leading-relaxed">{lc.intro}</p>
+        {lc.sections.map((section, i) => (
+          <section key={i} className="mt-8">
+            <h2 className="text-xl font-semibold text-white/90">{section.heading}</h2>
+            <p className="mt-2 text-sm text-white/75 leading-relaxed whitespace-pre-line">{section.body}</p>
+          </section>
+        ))}
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold text-white/90">{locale === 'es' ? 'Preguntas frecuentes' : 'FAQ'}</h2>
+          <dl className="mt-3 space-y-4">
+            {lc.faq.map((item, i) => (
+              <div key={i}>
+                <dt className="text-sm font-medium text-white/90">{item.question}</dt>
+                <dd className="mt-1 text-sm text-white/70">{item.answer}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+        <nav className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-sm" aria-label={locale === 'es' ? 'Signos relacionados' : 'Related signs'}>
+          <Link href={`/signs/${s1}`} className="text-amber-300/90 underline underline-offset-4 hover:text-amber-200">{r1.sign}</Link>
+          <Link href={`/signs/${s2}`} className="text-amber-300/90 underline underline-offset-4 hover:text-amber-200">{r2.sign}</Link>
+        </nav>
+        <p className="mt-10 text-xs text-white/40">{disclaimer}</p>
+      </main>
+    );
+  }
 
   const elementText = elementCompatibility(r1.element as ElementName, r2.element as ElementName, locale);
   const modalityText = modalityCompatibility(r1.modality as ModalityName, r2.modality as ModalityName, locale);
