@@ -22,6 +22,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useAuth } from '@clerk/nextjs';
 
 export interface SubscriptionState {
   plan: 'free' | 'pro_monthly' | 'pro_annual';
@@ -55,6 +56,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const lastFetchRef = useRef<number>(0);
   const inflightRef = useRef<boolean>(false);
   const hasLoadedRef = useRef<boolean>(false);
+
+  // Clerk gate (anon-401 fix): the provider mounts inside ClerkProvider in
+  // (app)/layout.tsx, but `/chart` is a PUBLIC route — anonymous visitors
+  // used to hit the Clerk-protected subscription endpoint and print a 401
+  // console error on every view. Signed-out → free tier locally, no fetch.
+  const { isLoaded, isSignedIn } = useAuth();
 
   const fetchSubscription = useCallback(async () => {
     if (inflightRef.current) return;
@@ -141,15 +148,28 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Initial fetch on mount
+  // Initial fetch — only once Clerk has resolved, and only for signed-in
+  // users. While `isLoaded` is false the provider stays in its loading state
+  // (no fetch, no flash of the wrong tier). A client-side sign-in flips
+  // isSignedIn and re-runs this effect, fetching the real plan.
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setState({ ...DEFAULT_STATE, isLoading: false });
+      hasLoadedRef.current = true;
+      lastFetchRef.current = Date.now();
+      return;
+    }
     fetchSubscription();
-  }, [fetchSubscription]);
+  }, [isLoaded, isSignedIn, fetchSubscription]);
 
   // Revalidate on focus (SWR-style). A user upgrading in a Stripe
   // checkout tab will have the new plan reflected when they tab back.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // Same Clerk gate as the initial fetch — anonymous tab-backs must not
+    // re-trigger the 401.
+    if (!isLoaded || !isSignedIn) return;
 
     const onFocus = () => {
       if (Date.now() - lastFetchRef.current < REVALIDATE_DEDUPE_MS) return;
@@ -166,7 +186,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [fetchSubscription]);
+  }, [fetchSubscription, isLoaded, isSignedIn]);
 
   // Memoize the context value so identity-stable consumers (React.memo children)
   // don't re-render on unrelated parent updates.
