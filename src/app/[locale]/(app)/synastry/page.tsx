@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema, faqSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { SynastryClient } from '@/modules/astro-engine/components/SynastryClient';
+import { SYNASTRY_FAQ_KEYS } from '@/modules/astro-engine/lib/synastryFaq';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -57,16 +58,8 @@ export default async function SynastryPage() {
     { name: 'Synastry Calculator', url: `${SITE_URL}/synastry` },
   ]);
 
-  const faqs = [
-    { qKey: 'faq1Q', aKey: 'faq1A' },
-    { qKey: 'faq2Q', aKey: 'faq2A' },
-    { qKey: 'faq3Q', aKey: 'faq3A' },
-    { qKey: 'faq4Q', aKey: 'faq4A' },
-    { qKey: 'faq5Q', aKey: 'faq5A' },
-  ] as const;
-
   const synastryFaq = faqSchema(
-    faqs.map(({ qKey, aKey }) => ({
+    SYNASTRY_FAQ_KEYS.map(({ qKey, aKey }) => ({
       question: t(qKey),
       answer: t(aKey),
     })),
@@ -171,7 +164,7 @@ export default async function SynastryPage() {
           <h2 className="text-xs font-medium uppercase tracking-[0.18em] mb-5 text-white/30" style={{ fontFamily: 'var(--font-geist-sans)' }}>
             {t('aboutHeading')}
           </h2>
-          {faqs.map(({ qKey, aKey }) => (
+          {SYNASTRY_FAQ_KEYS.map(({ qKey, aKey }) => (
             <details
               key={qKey}
               className="group rounded-xl overflow-hidden transition-all"
