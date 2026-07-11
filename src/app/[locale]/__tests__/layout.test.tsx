@@ -1,13 +1,15 @@
+// src/app/[locale]/__tests__/layout.test.tsx
 // @vitest-environment jsdom
 
 /**
- * Smoke test for LocaleLayout — Meta Pixel injection.
+ * Smoke test for LocaleLayout — Meta Pixel mounting (consent-gated, SP-F).
  *
- * The layout is an async Server Component, so we invoke it as a function
- * and pass the resulting JSX through `renderToString` to assert the inline
- * `next/script` body. The Pixel must only render when
- * NEXT_PUBLIC_META_PIXEL_ID is set (graceful degradation in dev/staging
- * without the env var).
+ * The layout no longer inlines the pixel snippet; it renders the client
+ * component <MetaPixelLoader pixelId=…> which gates the snippet on cookie
+ * consent. The layout-level contract is: pass the env pixel id through
+ * (empty string when unset, so decline-cleanup still runs), and never emit
+ * the inline fbq snippet or the un-gateable <noscript> tracking img in
+ * server HTML.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -25,27 +27,15 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-// next/script with strategy="afterInteractive" defers injection to the client
-// and emits no body during SSR. For this smoke test we only care that the
-// inline body the layout passes contains the Pixel init / PageView calls, so
-// we replace it with a plain <script> tag that renders synchronously.
-vi.mock('next/script', () => ({
-  default: ({
-    children,
-    id,
-  }: {
-    children?: React.ReactNode;
-    id?: string;
-  }) => (
-    <script id={id} data-testid="meta-pixel-script">
-      {children}
-    </script>
+vi.mock('@/shared/components/MetaPixelLoader', () => ({
+  MetaPixelLoader: ({ pixelId }: { pixelId: string }) => (
+    <div data-testid="meta-pixel-loader" data-pixel-id={pixelId} />
   ),
 }));
 
 import LocaleLayout from '../layout';
 
-describe('LocaleLayout — Meta Pixel injection', () => {
+describe('LocaleLayout — consent-gated Meta Pixel mounting', () => {
   const ORIGINAL_PIXEL = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
   beforeEach(() => {
@@ -60,20 +50,27 @@ describe('LocaleLayout — Meta Pixel injection', () => {
     }
   });
 
-  it('renders Pixel script when NEXT_PUBLIC_META_PIXEL_ID is set', async () => {
+  it('passes the env pixel id through to MetaPixelLoader', async () => {
     process.env.NEXT_PUBLIC_META_PIXEL_ID = 'PIX_TEST';
     const element = await LocaleLayout({
       children: 'CHILDREN',
       params: Promise.resolve({ locale: 'en' }),
     });
     const html = renderToString(element as React.ReactElement);
-    expect(html).toContain("fbq('init', 'PIX_TEST')");
-    expect(html).toContain("fbq('track', 'PageView')");
-    // noscript fallback img with the same pixel id
-    expect(html).toContain('id=PIX_TEST&amp;ev=PageView&amp;noscript=1');
+    expect(html).toContain('data-pixel-id="PIX_TEST"');
   });
 
-  it('does NOT render Pixel script when NEXT_PUBLIC_META_PIXEL_ID is unset', async () => {
+  it('mounts the loader with an empty pixelId when the env var is unset (decline cleanup still runs)', async () => {
+    const element = await LocaleLayout({
+      children: 'CHILDREN',
+      params: Promise.resolve({ locale: 'en' }),
+    });
+    const html = renderToString(element as React.ReactElement);
+    expect(html).toContain('data-pixel-id=""');
+  });
+
+  it('never emits the inline fbq snippet or the noscript tracking img (LIVE-7)', async () => {
+    process.env.NEXT_PUBLIC_META_PIXEL_ID = 'PIX_TEST';
     const element = await LocaleLayout({
       children: 'CHILDREN',
       params: Promise.resolve({ locale: 'en' }),
@@ -81,5 +78,7 @@ describe('LocaleLayout — Meta Pixel injection', () => {
     const html = renderToString(element as React.ReactElement);
     expect(html).not.toContain('fbq(');
     expect(html).not.toContain('connect.facebook.net');
+    expect(html).not.toContain('facebook.com/tr');
+    expect(html).not.toContain('<noscript>');
   });
 });
