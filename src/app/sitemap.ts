@@ -63,7 +63,7 @@ function buildAlternates(canonicalPath: string): { languages: Record<string, str
   const en = `${base}${canonicalPath}`;
   const es = `${base}/es${canonicalPath}`;
   return {
-    languages: { 'en-US': en, 'es': es, 'x-default': en },
+    languages: { 'en': en, 'es': es, 'x-default': en },
   };
 }
 

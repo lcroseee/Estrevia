@@ -186,7 +186,7 @@ describe('createMetadata locale-aware behaviour', () => {
     const m = createMetadata({ title: 'Chart', description: 'd', path: '/chart', locale: 'en' });
     expect(m.alternates?.canonical).toBe('https://estrevia.app/chart');
     expect(m.alternates?.languages).toMatchObject({
-      'en-US': 'https://estrevia.app/chart',
+      'en': 'https://estrevia.app/chart',
       'es': 'https://estrevia.app/es/chart',
       'x-default': 'https://estrevia.app/chart',
     });
@@ -196,10 +196,17 @@ describe('createMetadata locale-aware behaviour', () => {
     const m = createMetadata({ title: 'Chart', description: 'd', path: '/chart', locale: 'es' });
     expect(m.alternates?.canonical).toBe('https://estrevia.app/es/chart');
     expect(m.alternates?.languages).toMatchObject({
-      'en-US': 'https://estrevia.app/chart',
+      'en': 'https://estrevia.app/chart',
       'es': 'https://estrevia.app/es/chart',
       'x-default': 'https://estrevia.app/chart',
     });
+  });
+
+  it('uses "en" (not "en-US") as the hreflang key', () => {
+    const m = createMetadata({ title: 'T', description: 'D', path: '/x', locale: 'en' });
+    const langs = m.alternates?.languages as Record<string, string>;
+    expect(langs['en']).toBeDefined();
+    expect(langs['en-US']).toBeUndefined();
   });
 
   it('does not double-prefix /es when path already starts with /es', () => {

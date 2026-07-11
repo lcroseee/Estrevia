@@ -17,7 +17,7 @@ describe('sitemap', () => {
   it('every entry has hreflang alternates for both locales', () => {
     const entries = sitemap();
     for (const e of entries) {
-      expect(e.alternates?.languages?.['en-US']).toBeTruthy();
+      expect(e.alternates?.languages?.['en']).toBeTruthy();
       expect(e.alternates?.languages?.['es']).toBeTruthy();
       expect(e.alternates?.languages?.['x-default']).toBeTruthy();
     }

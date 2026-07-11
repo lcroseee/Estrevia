@@ -135,7 +135,7 @@ export function createMetadata(options: CreateMetadataOptions): Metadata {
   // Locale-specific hreflang map: each locale gets its own URL.
   // x-default points to the EN (default) version.
   const hreflangLanguages: Record<string, string> = {
-    'en-US': enUrl,
+    'en': enUrl,
     'es': esUrl,
     'x-default': enUrl,
   };
