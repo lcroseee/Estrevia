@@ -21,17 +21,15 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
+        // Single User-Agent group for all crawlers. robots.txt matching is
+        // longest-match, so the specific /api/og/, /api/v1/docs and
+        // /api/v1/sidereal/ Allows override the broad /api/ Disallow, while
+        // everything else under /api/ (and every /s/ share page) stays blocked.
+        // Previously these lived in a SECOND `User-Agent: *` group that a crawler
+        // never reached (it obeys only the first matching group) — now merged.
         userAgent: '*',
-        allow: '/',
+        allow: ['/', '/api/og/', '/api/v1/docs', '/api/v1/sidereal/'],
         disallow: ['/api/', '/s/'],
-      },
-      {
-        // Allow public API surfaces explicitly — these override the /api/ disallow
-        // above. OG images power Google rich previews & social sharing; /api/v1/docs
-        // and /api/v1/sidereal/ are intentionally public + documented in OpenAPI 3.1
-        // so that LLM crawlers can discover and cite the sidereal sun-sign endpoint.
-        userAgent: '*',
-        allow: ['/api/og/', '/api/v1/docs', '/api/v1/sidereal/'],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
