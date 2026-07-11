@@ -34,6 +34,9 @@ const KNOWN_DRIFT: ReadonlySet<string> = new Set<string>([
   'pricing.monthlyPriceEquiv',
   'pricing.annualPriceEquiv',
   'pricingPage.currencyEquivAria',
+  // ES-only USD-billing disclosure (SP-B T2). EN prices are already in USD,
+  // so "billed in USD" is redundant there — rendered only when locale === 'es'.
+  'pricing.billedInUsd',
 ]);
 
 describe('i18n key parity — messages/en.json ↔ messages/es.json', () => {
