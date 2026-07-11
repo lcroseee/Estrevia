@@ -111,6 +111,7 @@ export default async function EssaySlugPage(props: {
     url: canonicalUrl,
     datePublished: meta.publishedAt,
     dateModified: meta.updatedAt,
+    imageUrl: `${SITE_URL}/api/og/essay/${slug}`,
   });
 
   const faqItems = extractFaqItems(content);
