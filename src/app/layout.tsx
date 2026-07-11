@@ -55,6 +55,20 @@ export default async function RootLayout({
   const locale = await getLocale();
   const tAppShell = await getTranslations('appShell');
 
+  // CookieConsent mounts outside NextIntlClientProvider (below), so its
+  // strings are resolved here server-side and passed as props (appShell pattern).
+  const tCookie = await getTranslations('cookieConsent');
+  const cookieConsentStrings = {
+    ariaLabel: tCookie('ariaLabel'),
+    shortCopy: tCookie('shortCopy'),
+    shortPrivacyLabel: tCookie('shortPrivacyLabel'),
+    shortPrivacyAria: tCookie('shortPrivacyAria'),
+    fullCopy: tCookie('fullCopy'),
+    privacyPolicyLabel: tCookie('privacyPolicyLabel'),
+    decline: tCookie('decline'),
+    accept: tCookie('accept'),
+  };
+
   return (
     // ClerkProvider is intentionally NOT here — it is scoped to (app)/ layout
     // and sign-in/sign-up route layouts to avoid loading Clerk's ~324 KB bundle
@@ -82,7 +96,10 @@ export default async function RootLayout({
         </a>
         <PostHogProvider>
           {children}
-          <CookieConsent />
+          <CookieConsent
+            strings={cookieConsentStrings}
+            privacyHref={locale === 'es' ? '/es/privacy' : '/privacy'}
+          />
         </PostHogProvider>
       </body>
     </html>
