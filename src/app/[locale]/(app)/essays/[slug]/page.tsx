@@ -7,7 +7,7 @@
 
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import {
   createMetadata,
   JsonLdScript,
@@ -16,6 +16,7 @@ import {
   breadcrumbSchema,
   getAllEssaySlugs,
   parseEssaySlug,
+  relatedEssaySlugs,
   essayLocaleUrls,
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
@@ -23,6 +24,7 @@ import { getEssayBySlug } from '@/modules/esoteric/lib/essays';
 import { extractFaqItems } from '@/modules/esoteric/lib/faq';
 import { EssayPage } from '@/modules/esoteric/components/EssayPage';
 import { EssayPageClient } from '@/modules/esoteric/components/EssayPageClient';
+import { RelatedPlacements } from '@/shared/components/RelatedPlacements';
 
 // ---------------------------------------------------------------------------
 // Static params — all 120 essays pre-rendered at build time
@@ -118,6 +120,8 @@ export default async function EssaySlugPage(props: {
     { name: meta.title, url: canonicalUrl },
   ]);
 
+  const tRelated = await getTranslations('essayDetail.related');
+
   return (
     <>
       {/* JSON-LD structured data */}
@@ -129,6 +133,11 @@ export default async function EssaySlugPage(props: {
       <EssayPageClient>
         <EssayPage meta={meta} content={content} />
       </EssayPageClient>
+
+      {/* Related placements mesh — rendered OUTSIDE the paywall so the 6-8
+          sibling anchors are always present in SSR HTML (crawlable) and visible
+          to anon/free users below the paywall CTA (T9, audit finding #4). */}
+      <RelatedPlacements slugs={relatedEssaySlugs(slug)} heading={tRelated('placementsHeading')} />
     </>
   );
 }

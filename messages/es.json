@@ -568,7 +568,8 @@
       "anchorPlanetInSign": "{planet} en {sign} sideral",
       "anchorSignOverview": "{sign} sideral",
       "anchorWhySidereal": "astrología sideral vs tropical",
-      "anchorChartCta": "calcular tu carta natal sideral"
+      "anchorChartCta": "calcular tu carta natal sideral",
+      "placementsHeading": "Más posiciones siderales"
     },
     "disclaimer": {
       "label": "Aviso del contenido",

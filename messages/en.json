@@ -568,7 +568,8 @@
       "anchorPlanetInSign": "{planet} in sidereal {sign}",
       "anchorSignOverview": "sidereal {sign}",
       "anchorWhySidereal": "sidereal vs tropical astrology",
-      "anchorChartCta": "calculate your sidereal natal chart"
+      "anchorChartCta": "calculate your sidereal natal chart",
+      "placementsHeading": "More sidereal placements"
     },
     "disclaimer": {
       "label": "Content disclaimer",
