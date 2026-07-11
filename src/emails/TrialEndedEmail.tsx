@@ -26,7 +26,7 @@ const STRINGS = {
     ],
     body2: "Your base chart is still saved — the positions, signs, and houses are always free.",
     couponIntro: (code: string) =>
-      `Want to continue? Use code ${code} at checkout for 10% off your first month.`,
+      `Want to continue? Your link applies code ${code} automatically — 50% off your first charge.`,
     cta: "Restart with Pro",
     secondaryLabel: "See what's free →",
     closing: "— The Estrevia team",
@@ -47,7 +47,7 @@ const STRINGS = {
     body2:
       "Tu carta base sigue guardada — las posiciones, signos y casas son siempre gratuitas.",
     couponIntro: (code: string) =>
-      `¿Quieres continuar? Usa el código ${code} al pagar para obtener un 10% de descuento en tu primer mes.`,
+      `¿Quieres continuar? Tu enlace aplica el código ${code} automáticamente — 50% de descuento en tu primer cobro.`,
     cta: "Reiniciar con Pro",
     secondaryLabel: "Ver qué es gratuito →",
     closing: "— El equipo de Estrevia",

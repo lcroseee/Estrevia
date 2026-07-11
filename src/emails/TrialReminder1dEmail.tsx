@@ -7,6 +7,8 @@ interface Props {
   trialEndDate: Date;
   proUrl: string;
   billingPortalUrl: string;
+  /** Registry code (SAVE50) — proUrl already carries &coupon=; block hidden when absent */
+  couponCode?: string;
 }
 
 // TODO i18n: ES strings are structural stubs (español neutro LATAM, tú form).
@@ -21,6 +23,8 @@ const STRINGS = {
       "After that, your access to the full chart reading, Saturn timing, synastry, and tarot interpretation will be restricted. Your base chart stays free — the interpretation layer goes Pro-only.",
     body3:
       "If you've been finding value in the readings, now is the moment to continue. If you'd rather not subscribe right now, you can pause or cancel anytime from your account settings — no pressure.",
+    saveOffer: (code: string) =>
+      `Not ready to decide? Keep Pro at half price — the button below applies code ${code} automatically: 50% off your first charge.`,
     cta: "Keep Pro access",
     secondaryLabel: "Need to manage your subscription?",
     secondaryLink: "Account settings",
@@ -36,6 +40,8 @@ const STRINGS = {
       "Después de eso, tu acceso a la lectura completa de carta, el timing de Saturno, la sinastría y la interpretación de tarot estará restringido. Tu carta base sigue siendo gratuita — la capa de interpretación es solo Pro.",
     body3:
       "Si has encontrado valor en las lecturas, este es el momento de continuar. Si prefieres no suscribirte ahora, puedes pausar o cancelar en cualquier momento desde la configuración de tu cuenta — sin presión.",
+    saveOffer: (code: string) =>
+      `¿No estás seguro todavía? Conserva Pro a mitad de precio — el botón de abajo aplica el código ${code} automáticamente: 50% de descuento en tu primer cobro.`,
     cta: "Conservar acceso Pro",
     secondaryLabel: "¿Necesitas gestionar tu suscripción?",
     secondaryLink: "Configuración de cuenta",
@@ -55,7 +61,7 @@ function formatDateTime(date: Date, locale: 'en' | 'es'): string {
   });
 }
 
-export default function TrialReminder1dEmail({ locale, trialEndDate, proUrl, billingPortalUrl }: Props) {
+export default function TrialReminder1dEmail({ locale, trialEndDate, proUrl, billingPortalUrl, couponCode }: Props) {
   const t = STRINGS[locale];
   const formattedDateTime = formatDateTime(trialEndDate, locale);
 
@@ -76,6 +82,22 @@ export default function TrialReminder1dEmail({ locale, trialEndDate, proUrl, bil
       <Text style={{ fontSize: 15, lineHeight: 1.7, marginBottom: 28, color: 'rgba(255,255,255,0.85)' }}>
         {t.body3}
       </Text>
+
+      {couponCode ? (
+        <Text
+          style={{
+            fontSize: 14,
+            lineHeight: 1.6,
+            marginBottom: 24,
+            padding: '12px 16px',
+            backgroundColor: 'rgba(255,215,0,0.08)',
+            borderLeft: '3px solid #FFD700',
+            color: 'rgba(255,255,255,0.85)',
+          }}
+        >
+          {t.saveOffer(couponCode)}
+        </Text>
+      ) : null}
 
       <Button href={proUrl}>{t.cta}</Button>
 

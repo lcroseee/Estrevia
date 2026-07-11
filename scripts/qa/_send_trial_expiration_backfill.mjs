@@ -17,7 +17,7 @@
  * Prerequisites:
  *   - DATABASE_URL, RESEND_API_KEY in .env
  *   - npm run db:migrate (migration 0014 must be applied first)
- *   - TRIAL_WINBACK_COUPON_CODE (optional, for trial_ended win-back)
+ *   - STRIPE_COUPON_SAVE50 (optional — enables the SAVE50 save offer in reminder_1d/trial_ended)
  */
 
 import 'dotenv/config';

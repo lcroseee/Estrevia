@@ -118,12 +118,12 @@ beforeEach(() => {
   vi.resetModules();
   process.env.RESEND_API_KEY = 'test_resend_key';
   delete process.env.DRY_RUN;
-  delete process.env.TRIAL_WINBACK_COUPON_CODE;
+  delete process.env.STRIPE_COUPON_SAVE50;
 });
 
 afterEach(() => {
   delete process.env.DRY_RUN;
-  delete process.env.TRIAL_WINBACK_COUPON_CODE;
+  delete process.env.STRIPE_COUPON_SAVE50;
 });
 
 // ---------------------------------------------------------------------------
@@ -243,15 +243,51 @@ describe('sendTrialExpirationEmail', () => {
     ).rejects.toThrow(/Resend rejected/);
   });
 
-  it('TRIAL_WINBACK_COUPON_CODE is passed to trial_ended template', async () => {
-    process.env.TRIAL_WINBACK_COUPON_CODE = 'WINBACK10';
-    // Ensure TrialEndedEmail mock captures props
+  it('SAVE50 env set → reminder_1d gets couponCode + &coupon=SAVE50 on proUrl', async () => {
+    process.env.STRIPE_COUPON_SAVE50 = 'SAVE50';
+    const TrialReminder1dEmail = await import('@/emails/TrialReminder1dEmail');
+    const mockDefault = vi.spyOn(TrialReminder1dEmail, 'default');
+    const { sendTrialExpirationEmail } = await import('../trial-expiration-email');
+    await sendTrialExpirationEmail({ ...baseParams, step: 'reminder_1d' });
+    expect(mockDefault).toHaveBeenCalledWith(
+      expect.objectContaining({
+        couponCode: 'SAVE50',
+        proUrl: expect.stringContaining('&coupon=SAVE50'),
+      }),
+    );
+  });
+
+  it('SAVE50 env set → trial_ended win-back gets couponCode + coupon on URL', async () => {
+    process.env.STRIPE_COUPON_SAVE50 = 'SAVE50';
     const TrialEndedEmail = await import('@/emails/TrialEndedEmail');
     const mockDefault = vi.spyOn(TrialEndedEmail, 'default');
     const { sendTrialExpirationEmail } = await import('../trial-expiration-email');
     await sendTrialExpirationEmail({ ...baseParams, step: 'trial_ended' });
     expect(mockDefault).toHaveBeenCalledWith(
-      expect.objectContaining({ couponCode: 'WINBACK10' }),
+      expect.objectContaining({
+        couponCode: 'SAVE50',
+        proUrl: expect.stringContaining('&coupon=SAVE50'),
+      }),
     );
+  });
+
+  it('SAVE50 env set → reminder_3d proUrl carries NO coupon (offer is T-1d + post-trial only)', async () => {
+    process.env.STRIPE_COUPON_SAVE50 = 'SAVE50';
+    const TrialReminder3dEmail = await import('@/emails/TrialReminder3dEmail');
+    const mockDefault = vi.spyOn(TrialReminder3dEmail, 'default');
+    const { sendTrialExpirationEmail } = await import('../trial-expiration-email');
+    await sendTrialExpirationEmail({ ...baseParams, step: 'reminder_3d' });
+    const props = mockDefault.mock.calls[0]![0] as { proUrl: string };
+    expect(props.proUrl).not.toContain('coupon=');
+  });
+
+  it('SAVE50 env unset → reminder_1d renders exactly as before (no coupon prop, no URL param)', async () => {
+    const TrialReminder1dEmail = await import('@/emails/TrialReminder1dEmail');
+    const mockDefault = vi.spyOn(TrialReminder1dEmail, 'default');
+    const { sendTrialExpirationEmail } = await import('../trial-expiration-email');
+    await sendTrialExpirationEmail({ ...baseParams, step: 'reminder_1d' });
+    const props = mockDefault.mock.calls[0]![0] as { proUrl: string; couponCode?: string };
+    expect(props.couponCode).toBeUndefined();
+    expect(props.proUrl).not.toContain('coupon=');
   });
 });
