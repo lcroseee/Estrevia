@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { createMetadata, articleSchema, breadcrumbSchema, JsonLdScript, SITE_URL } from '@/shared/seo';
+import { createMetadata, articleSchema, breadcrumbSchema, JsonLdScript, SITE_URL, getAllEssaySlugsByPlanet } from '@/shared/seo';
 import { ALL_CITY_SLUGS, findCityBySlug } from '@/shared/seo/cities';
 import { calculatePlanetaryHours } from '@/modules/astro-engine';
+import { RelatedPlacements } from '@/shared/components/RelatedPlacements';
 
 interface PageProps {
   params: Promise<{ locale: 'en' | 'es'; city: string }>;
@@ -192,6 +193,14 @@ export default async function PlanetaryHoursCityPage({ params }: PageProps) {
           ? 'Calculado con Swiss Ephemeris (algoritmo Moshier) — precisión ±0.01°. Actualizado cada 24 horas.'
           : 'Computed with Swiss Ephemeris (Moshier algorithm) at ±0.01° accuracy. Refreshes every 24 hours.'}
       </p>
+
+      {/* Essay-mesh entry links from this ranking ES surface (T9). */}
+      <div className="mt-10 border-t border-white/6 pt-6">
+        <RelatedPlacements
+          slugs={getAllEssaySlugsByPlanet('sun')}
+          heading={locale === 'es' ? 'Explora posiciones siderales' : 'Explore sidereal placements'}
+        />
+      </div>
     </main>
   );
 }
