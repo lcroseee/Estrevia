@@ -7,9 +7,21 @@ import { DateInput } from '../DateInput';
 
 // ----- Helpers --------------------------------------------------------------
 
+const enMessages = {
+  dateInput: {
+    monthAria: 'Month',
+    dayAria: 'Day',
+    yearAria: 'Year',
+    openCalendarAria: 'Open calendar',
+    calendarDialogAria: 'Date picker calendar',
+    prevMonthAria: 'Previous month',
+    nextMonthAria: 'Next month',
+  },
+};
+
 function renderDateInput(value = '1990-05-17') {
   return render(
-    <NextIntlClientProvider locale="en" messages={{}}>
+    <NextIntlClientProvider locale="en" messages={enMessages}>
       <DateInput value={value} onChange={vi.fn()} max="2026-01-01" />
     </NextIntlClientProvider>,
   );

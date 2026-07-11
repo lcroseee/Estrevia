@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type Segment = 'day' | 'month' | 'year';
@@ -34,15 +34,32 @@ interface DateInputProps {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
+const MONTH_NAMES: Record<'en' | 'es', readonly string[]> = {
+  en: [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ],
+  // Spanish month names are lowercase by convention (RAE).
+  es: [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+  ],
+};
 
-const MONTH_ABBR = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
+const MONTH_ABBR: Record<'en' | 'es', readonly string[]> = {
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  es: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
+};
+
+const WEEKDAY_HEADERS: Record<'en' | 'es', readonly string[]> = {
+  en: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+  es: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'],
+};
+
+/** App locales are 'en' | 'es'; anything unexpected falls back to English. */
+function localeKey(locale: string): 'en' | 'es' {
+  return locale === 'es' ? 'es' : 'en';
+}
 
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate();
@@ -89,6 +106,7 @@ export function DateInput({
 }: DateInputProps) {
   const locale = useLocale();
   const order = orderForLocale(locale);
+  const t = useTranslations('dateInput');
   const parsed = parseDate(value);
   const [month, setMonth] = useState(parsed.month);
   const [day, setDay] = useState(parsed.day);
@@ -283,7 +301,7 @@ export function DateInput({
                 disabled={disabled}
                 className={`${segmentClass} w-7`}
                 maxLength={2}
-                aria-label="Month"
+                aria-label={t('monthAria')}
               />
             ) : seg === 'day' ? (
               <input
@@ -300,7 +318,7 @@ export function DateInput({
                 disabled={disabled}
                 className={`${segmentClass} w-7`}
                 maxLength={2}
-                aria-label="Day"
+                aria-label={t('dayAria')}
               />
             ) : (
               <input
@@ -317,7 +335,7 @@ export function DateInput({
                 disabled={disabled}
                 className={`${segmentClass} w-11 !text-left`}
                 maxLength={4}
-                aria-label="Year"
+                aria-label={t('yearAria')}
               />
             );
           return (
@@ -350,7 +368,7 @@ export function DateInput({
           }}
           disabled={disabled}
           className="ml-1 p-1 rounded text-white/40 hover:text-white/70 transition-colors focus:outline-none focus:ring-1 focus:ring-white/20"
-          aria-label="Open calendar"
+          aria-label={t('openCalendarAria')}
           aria-expanded={calendarOpen}
         >
           <CalendarDays className="size-4" />
@@ -389,6 +407,9 @@ interface CalendarPopoverProps {
 
 const CalendarPopover = forwardRef<HTMLDivElement, CalendarPopoverProps>(
   function CalendarPopover({ selectedYear, selectedMonth, selectedDay, max, onSelect, style }, ref) {
+    const locale = useLocale();
+    const lk = localeKey(locale);
+    const t = useTranslations('dateInput');
     const today = new Date();
 
     // Move focus into popover when it opens, trap Tab within it
@@ -487,7 +508,7 @@ const CalendarPopover = forwardRef<HTMLDivElement, CalendarPopoverProps>(
         }}
         className="w-[320px] rounded-xl border border-white/10 p-4"
         role="dialog"
-        aria-label="Date picker calendar"
+        aria-label={t('calendarDialogAria')}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
@@ -495,19 +516,19 @@ const CalendarPopover = forwardRef<HTMLDivElement, CalendarPopoverProps>(
             type="button"
             onClick={handlePrev}
             className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/8 transition-colors"
-            aria-label="Previous month"
+            aria-label={t('prevMonthAria')}
           >
             <ChevronLeft className="size-5" />
           </button>
           <span className="text-sm font-medium text-white">
-            {MONTH_NAMES[viewMonth - 1]} {viewYear}
+            {MONTH_NAMES[lk][viewMonth - 1]} {viewYear}
           </span>
           <button
             type="button"
             onClick={handleNext}
             disabled={!canGoNext}
             className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/8 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
-            aria-label="Next month"
+            aria-label={t('nextMonthAria')}
           >
             <ChevronRight className="size-5" />
           </button>
@@ -515,7 +536,7 @@ const CalendarPopover = forwardRef<HTMLDivElement, CalendarPopoverProps>(
 
         {/* Weekday headers */}
         <div className="grid grid-cols-7 gap-0 mb-1">
-          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+          {WEEKDAY_HEADERS[lk].map((d) => (
             <div key={d} className="text-center text-xs text-white/30 py-1 font-medium">
               {d}
             </div>
@@ -543,7 +564,11 @@ const CalendarPopover = forwardRef<HTMLDivElement, CalendarPopoverProps>(
                         : 'text-white/70 hover:bg-white/8 hover:text-white',
                     isDisabled(d) ? 'opacity-25 cursor-not-allowed' : '',
                   ].join(' ')}
-                  aria-label={`${MONTH_ABBR[viewMonth - 1]} ${d}, ${viewYear}`}
+                  aria-label={
+                    lk === 'es'
+                      ? `${d} ${MONTH_ABBR.es[viewMonth - 1]} ${viewYear}`
+                      : `${MONTH_ABBR.en[viewMonth - 1]} ${d}, ${viewYear}`
+                  }
                   aria-pressed={isSelected(d)}
                 >
                   {d}
