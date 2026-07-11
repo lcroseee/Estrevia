@@ -30,7 +30,7 @@ import type {
   Product,
   DefinedTerm,
 } from 'schema-dts';
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from './constants';
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, FOUNDER_NAME, isFounderIdentityPublished } from './constants';
 
 // ---------------------------------------------------------------------------
 // Organization
@@ -52,6 +52,10 @@ export function organizationSchema(): WithContext<Organization> {
       width: '512',
       height: '512',
     },
+    // Founder entity anchor — gated on T13 publish so no placeholder name leaks.
+    ...(isFounderIdentityPublished()
+      ? { founder: { '@type': 'Person' as const, name: FOUNDER_NAME, url: `${SITE_URL}/about` } }
+      : {}),
     sameAs: ['https://x.com/estrevia_app'],
   };
 }
@@ -159,6 +163,21 @@ export function websiteSchema(): WithContext<WebSite> {
 // Article
 // ---------------------------------------------------------------------------
 
+type ArticleAuthor =
+  | { '@type': 'Organization'; name: string }
+  | { '@type': 'Person'; name: string; url: string };
+
+/**
+ * Article author node (T13, gated). A named Person once the founder identity is
+ * published (isFounderIdentityPublished), otherwise the anonymous Organization
+ * author — the pre-T13 behaviour, so this ships DORMANT until FOUNDER_NAME is set.
+ */
+export function articleAuthorNode(name: string, url: string, published: boolean): ArticleAuthor {
+  return published
+    ? { '@type': 'Person', name, url }
+    : { '@type': 'Organization', name };
+}
+
 export interface ArticleSchemaOptions {
   title: string;
   description: string;
@@ -166,6 +185,7 @@ export interface ArticleSchemaOptions {
   datePublished: string;
   dateModified: string;
   authorName?: string;
+  authorUrl?: string;
   imageUrl?: string;
 }
 
@@ -174,13 +194,15 @@ export interface ArticleSchemaOptions {
  * Inject this on every /essays/[slug] page.
  */
 export function articleSchema(options: ArticleSchemaOptions): WithContext<Article> {
+  const published = isFounderIdentityPublished();
   const {
     title,
     description,
     url,
     datePublished,
     dateModified,
-    authorName = SITE_NAME,
+    authorName = published ? FOUNDER_NAME : SITE_NAME,
+    authorUrl = `${SITE_URL}/about`,
     imageUrl,
   } = options;
 
@@ -192,10 +214,7 @@ export function articleSchema(options: ArticleSchemaOptions): WithContext<Articl
     url,
     datePublished,
     dateModified,
-    author: {
-      '@type': 'Organization',
-      name: authorName,
-    },
+    author: articleAuthorNode(authorName, authorUrl, published),
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,

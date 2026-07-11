@@ -9,6 +9,7 @@ import {
   websiteSchema,
   definedTermSchema,
   personSchema,
+  articleAuthorNode,
 } from '../json-ld';
 import { FOUNDER_NAME, isFounderIdentityPublished } from '../constants';
 
@@ -392,5 +393,37 @@ describe('T13 ships DORMANT (founder identity gate)', () => {
   it('FOUNDER_NAME is the unset placeholder — nothing publishes the name yet', () => {
     expect(FOUNDER_NAME).toBe('__FOUNDER_NAME__');
     expect(isFounderIdentityPublished()).toBe(false);
+  });
+});
+
+describe('articleAuthorNode — T13 author gate (dormant → Person on publish)', () => {
+  it('is the anonymous Organization author while the founder is unpublished', () => {
+    const a = articleAuthorNode('Estrevia', 'https://estrevia.app/about', false) as AnySchema;
+    expect(a['@type']).toBe('Organization');
+    expect(a.name).toBe('Estrevia');
+    expect('url' in a).toBe(false);
+  });
+
+  it('becomes a named Person once the founder identity is published', () => {
+    const a = articleAuthorNode('Kirill Kovalenko', 'https://estrevia.app/about', true) as AnySchema;
+    expect(a['@type']).toBe('Person');
+    expect(a.name).toBe('Kirill Kovalenko');
+    expect(a.url).toContain('/about');
+  });
+
+  it('essay Article author matches the current (dormant) gate state', () => {
+    const schema = articleSchema({
+      title: 'T', description: 'D', url: 'https://estrevia.app/essays/x',
+      datePublished: '2026-01-01', dateModified: '2026-01-01',
+    }) as unknown as AnySchema;
+    // Dormant: FOUNDER_NAME is the placeholder, so author stays Organization.
+    expect(schema.author['@type']).toBe(isFounderIdentityPublished() ? 'Person' : 'Organization');
+  });
+});
+
+describe('organizationSchema.founder is gated on T13 publish', () => {
+  it('omits founder while dormant (no placeholder name leaks)', () => {
+    const schema = organizationSchema() as unknown as AnySchema;
+    expect('founder' in schema).toBe(isFounderIdentityPublished());
   });
 });
