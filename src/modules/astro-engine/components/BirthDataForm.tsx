@@ -163,6 +163,9 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
       onSubmit={handleSubmit}
       noValidate
       aria-label={t('formAria')}
+      // Session-recording text mask: birth date/time/place echoes (calendar,
+      // time labels, city suggestions) must never appear in recordings.
+      data-ph-mask
       className="w-full max-w-md space-y-5"
     >
       {/* Date */}

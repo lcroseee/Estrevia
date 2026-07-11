@@ -193,6 +193,11 @@ describe('HeroCalculator gate state machine', () => {
     });
     expect(screen.queryByTestId('gate-modal')).toBeNull();
   });
+
+  it('tags the hero form with data-ph-mask (session-recording text mask)', () => {
+    const { container } = render(<HeroCalculator isSignedIn={false} />);
+    expect(container.querySelector('form')?.hasAttribute('data-ph-mask')).toBe(true);
+  });
 });
 
 describe('HeroCalculator analytics (C1 — chart_calculated)', () => {

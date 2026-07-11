@@ -250,4 +250,9 @@ describe('BirthDataForm — chart-calculate payload (time unknown → time:null)
     expect(body.time).toBe('10:15');
     expect(body.houseSystem).toBe('Placidus');
   });
+
+  it('tags the form root with data-ph-mask so session recordings mask birth-data text', () => {
+    const { container } = renderForm();
+    expect(container.querySelector('form')?.hasAttribute('data-ph-mask')).toBe(true);
+  });
 });

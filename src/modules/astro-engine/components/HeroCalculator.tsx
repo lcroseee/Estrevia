@@ -423,6 +423,8 @@ export function HeroCalculator({ isSignedIn }: { isSignedIn: boolean }) {
       <form
         onSubmit={handleSubmit}
         noValidate
+        // Session-recording text mask — see BirthDataForm.
+        data-ph-mask
         className="w-full space-y-3 hc-form"
         aria-label={t('formAria')}
       >
