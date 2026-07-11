@@ -50,6 +50,7 @@
     "errTimeRequired": "Ingresa tu hora de nacimiento o desactiva la opción"
   },
   "timePicker": {
+    "timeGroupAria": "Hora",
     "hourLabel": "Hora",
     "minuteLabel": "Minutos",
     "meridiemLabel": "AM o PM",
@@ -575,6 +576,29 @@
       "body": "La astrología es un sistema simbólico para la autorreflexión y la indagación cultural. Nada en esta página constituye consejo médico, psicológico, financiero o legal. Las interpretaciones describen tendencias arquetípicas — no resultados garantizados ni un destino fijo. Consulta a profesionales calificados para decisiones que afecten tu salud, tus finanzas o tu situación legal."
     }
   },
+  "cityAutocomplete": {
+    "suggestionsAria": "Sugerencias de ciudades",
+    "searchUnavailable": "Búsqueda de ciudades no disponible"
+  },
+  "dateInput": {
+    "monthAria": "Mes",
+    "dayAria": "Día",
+    "yearAria": "Año",
+    "openCalendarAria": "Abrir calendario",
+    "calendarDialogAria": "Calendario para elegir fecha",
+    "prevMonthAria": "Mes anterior",
+    "nextMonthAria": "Mes siguiente"
+  },
+  "cookieConsent": {
+    "ariaLabel": "Consentimiento de cookies",
+    "shortCopy": "Cookies de analítica y anuncios.",
+    "shortPrivacyLabel": "Privacidad",
+    "shortPrivacyAria": "Política de privacidad",
+    "fullCopy": "Usamos cookies para analítica y medición de anuncios — solo después de que aceptes.",
+    "privacyPolicyLabel": "Política de privacidad",
+    "decline": "Rechazar",
+    "accept": "Aceptar"
+  },
   "appShell": {
     "skipToContent": "Saltar al contenido principal",
     "languageAriaLabel": "Idioma",
@@ -947,13 +971,14 @@
     "freePrice": "$0",
     "freeForever": "para siempre",
     "proTitle": "Pro",
-    "monthlyPrice": "$4.99",
+    "monthlyPrice": "US$4.99",
     "monthlyLabel": "/mes",
-    "annualPrice": "$34.99",
+    "annualPrice": "US$34.99",
     "annualLabel": "/año",
-    "annualPerMonth": "~$2,92/mes",
+    "annualPerMonth": "~US$2,92/mes",
     "monthlyPriceEquiv": "≈ 90 MXN · 21 000 COP · 4 740 CLP · 19 PEN · 200 UYU",
     "annualPriceEquiv": "≈ 630 MXN · 147 000 COP · 33 200 CLP · 133 PEN · 1 400 UYU",
+    "billedInUsd": "Se factura en dólares (USD)",
     "saveBadge": "Ahorra 42 %",
     "monthly": "Mensual",
     "annual": "Anual",
@@ -1040,6 +1065,7 @@
     "features": "Todo en Gratis, más:",
     "trialCta": "Comienza tu prueba gratis de 3 días",
     "noCharge": "No se te cobrará hasta el {date}",
+    "trustRow": "Cancela cuando quieras · Garantía de 14 días · Pago seguro con Stripe",
     "alreadyPro": "Ya tienes acceso Pro",
     "contextualTitles": {
       "celticCross": "Desbloquea tu lectura de la Cruz Celta",
