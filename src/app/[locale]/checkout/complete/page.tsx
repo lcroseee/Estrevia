@@ -73,7 +73,12 @@ async function resolveRedirectTarget(sessionId: string, locale: string): Promise
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     const returnUrl = session.metadata?.return_url;
-    if (returnUrl && /^\/(?!\/)/.test(returnUrl) && returnUrl.length <= 500) return returnUrl;
+    // Reject a leading `/` followed by `/` or `\`, and any backslash elsewhere:
+    // browsers normalize `\` to `/`, so `/\evil.com` is protocol-relative
+    // (open-redirect) and no legitimate path contains a backslash. Mirrors the
+    // checkout route's validation; metadata is dashboard-editable so re-check here.
+    if (returnUrl && /^\/(?![/\\])(?!.*\\)/.test(returnUrl) && returnUrl.length <= 500)
+      return returnUrl;
   } catch {
     // Session lookup failed — the redirect hint degrades to /chart.
   }

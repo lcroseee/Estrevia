@@ -44,10 +44,13 @@ const checkoutBodySchema = z.object({
   // A/B test coupon — only allowlisted values accepted (see ALLOWED_COUPON_CODES)
   coupon: z.enum(ALLOWED_COUPON_CODES).optional(),
   // Post-purchase return target — same-origin, single-slash-rooted path only
-  // (e.g. /tarot/celtic-cross). .catch(undefined) degrades an invalid value to
-  // absent instead of failing the whole parse: checkout must never break over
-  // a redirect hint. 500-char cap = Stripe metadata value limit.
-  returnUrl: z.string().max(500).regex(/^\/(?!\/)/).optional().catch(undefined),
+  // (e.g. /tarot/celtic-cross). Reject a leading `/` followed by `/` or `\`, AND
+  // any backslash elsewhere: browsers normalize `\` to `/`, so `/\evil.com`
+  // becomes protocol-relative (https://evil.com) — an open-redirect vector — and
+  // no legitimate rooted path contains a backslash. .catch(undefined) degrades an
+  // invalid value to absent instead of failing the whole parse: checkout must
+  // never break over a redirect hint. 500-char cap = Stripe metadata value limit.
+  returnUrl: z.string().max(500).regex(/^\/(?![/\\])(?!.*\\)/).optional().catch(undefined),
 });
 
 interface CheckoutResponse {

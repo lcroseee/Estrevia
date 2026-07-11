@@ -107,6 +107,52 @@ describe('/checkout/complete page (SP-A D2/D3/D4)', () => {
     );
   });
 
+  it('re-validates return_url server-side: a protocol-relative //host in metadata falls back to /chart', async () => {
+    getCheckoutTicketMock.mockResolvedValue('ticket_xyz');
+    sessionsRetrieveMock.mockResolvedValue({
+      id: 'cs_test_1',
+      metadata: { return_url: '//evil.example/phish' },
+    });
+
+    await expect(CheckoutCompletePage(pageProps('cs_test_1'))).rejects.toThrow('NEXT_REDIRECT');
+
+    expect(redirectMock).toHaveBeenCalledWith(
+      '/sign-in?__clerk_ticket=ticket_xyz&redirect_url=%2Fchart',
+    );
+  });
+
+  it('re-validates return_url server-side: a backslash-normalized /\\host in metadata falls back to /chart', async () => {
+    // Browsers normalize `\` to `/`, so `/\evil.example` resolves to the
+    // protocol-relative //evil.example (open-redirect). Must NOT reach redirect_url.
+    getCheckoutTicketMock.mockResolvedValue('ticket_xyz');
+    sessionsRetrieveMock.mockResolvedValue({
+      id: 'cs_test_1',
+      metadata: { return_url: '/\\evil.example/phish' },
+    });
+
+    await expect(CheckoutCompletePage(pageProps('cs_test_1'))).rejects.toThrow('NEXT_REDIRECT');
+
+    expect(redirectMock).toHaveBeenCalledWith(
+      '/sign-in?__clerk_ticket=ticket_xyz&redirect_url=%2Fchart',
+    );
+  });
+
+  it('re-validates return_url server-side: a /es\\host path in metadata falls back to /chart', async () => {
+    // Any backslash disqualifies the path — no legitimate rooted path contains one.
+    getCheckoutTicketMock.mockResolvedValue('ticket_xyz');
+    sessionsRetrieveMock.mockResolvedValue({
+      id: 'cs_test_1',
+      metadata: { return_url: '/es\\evil.example/phish' },
+    });
+
+    await expect(CheckoutCompletePage(pageProps('cs_test_1', 'es'))).rejects.toThrow('NEXT_REDIRECT');
+
+    // ES route locale → falls back to the localized /es/chart default.
+    expect(redirectMock).toHaveBeenCalledWith(
+      '/sign-in?__clerk_ticket=ticket_xyz&redirect_url=%2Fes%2Fchart',
+    );
+  });
+
   it('a failed Stripe session fetch is non-fatal — redirects to /chart', async () => {
     getCheckoutTicketMock.mockResolvedValue('ticket_xyz');
     sessionsRetrieveMock.mockRejectedValue(new Error('stripe down'));

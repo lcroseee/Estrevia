@@ -429,6 +429,21 @@ describe('POST /api/v1/stripe/checkout — returnUrl metadata (SP-A D1)', () => 
     expect(callArg.metadata).not.toHaveProperty('return_url');
   });
 
+  it('rejects a backslash-normalized /\\host path (browsers treat \\ as /)', async () => {
+    const res = await POST(makeRequest({ returnUrl: '/\\evil.example/phish' }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+  });
+
+  it('rejects a /es\\host path — backslash after a path segment still normalizes to protocol-relative', async () => {
+    const res = await POST(makeRequest({ returnUrl: '/es\\evil.example/phish' }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    // A real rooted path never starts with `/\`; `/es\...` here is `/` + `\` so it's rejected.
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+  });
+
   it('rejects a path longer than 500 chars (Stripe metadata value cap)', async () => {
     const res = await POST(makeRequest({ returnUrl: `/${'a'.repeat(500)}` }));
     expect(res.status).toBe(200);
