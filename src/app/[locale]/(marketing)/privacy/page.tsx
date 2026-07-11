@@ -195,6 +195,13 @@ export default async function PrivacyPage() {
               data={t('tpSentryData')}
               dataPrefix={t('tpDataSharedPrefix')}
             />
+            <ThirdParty
+              name="Meta"
+              purpose={t('tpMetaPurpose')}
+              link="https://www.facebook.com/privacy/policy/"
+              data={t('tpMetaData')}
+              dataPrefix={t('tpDataSharedPrefix')}
+            />
           </div>
         </Section>
 
