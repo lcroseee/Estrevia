@@ -5,6 +5,7 @@ import { createMetadata, JsonLdScript, softwareAppSchema, breadcrumbSchema } fro
 import { SITE_URL } from '@/shared/seo/constants';
 import { ChartDisplay } from '@/modules/astro-engine/components/ChartDisplay';
 import { Disclaimer } from '@/shared/components/Disclaimer';
+import { fetchTempChart } from '@/shared/lib/temp-chart';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -47,7 +48,19 @@ async function ChartSkeleton() {
   );
 }
 
-export default async function ChartPage() {
+export default async function ChartPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ chartId?: string }>;
+}) {
+  const { chartId } = await searchParams;
+  // P0-3: drip emails + the hero CTA deep-link to /chart?chartId=… — fetch the
+  // stored temp chart server-side so ad-driven links render the result view
+  // instead of dead-ending on the empty form. No PII in the URL: the nanoid
+  // resolves only to computed positions. Missing/expired id (cleanup cron
+  // deletes temp charts after 7d) → null → graceful empty-form fallback.
+  const initialChart = chartId ? await fetchTempChart(chartId) : null;
+
   const t = await getTranslations('chart');
   const schema = softwareAppSchema();
 
@@ -63,7 +76,10 @@ export default async function ChartPage() {
       <JsonLdScript schema={schema} />
       <JsonLdScript schema={chartBreadcrumb} />
       <Suspense fallback={await ChartSkeleton()}>
-        <ChartDisplay />
+        <ChartDisplay
+          initialChart={initialChart ?? undefined}
+          initialChartId={initialChart && chartId ? chartId : undefined}
+        />
       </Suspense>
       <div className="px-4 pb-10 max-w-2xl mx-auto">
         <Disclaimer />
