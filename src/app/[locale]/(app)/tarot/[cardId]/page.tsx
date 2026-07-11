@@ -10,6 +10,7 @@ import {
   getCardName,
   getCardDescription,
   getCardKeywords,
+  getCardDeckBridge,
 } from '@/modules/esoteric/components/tarotLocalize';
 import { buildCorrespondenceRows } from '@/modules/esoteric/lib/tarotCards';
 
@@ -33,6 +34,7 @@ interface CardData {
   treeOfLifeConnects?: number[] | null;
   liber777Column?: string | null;
   description: { en: string; es?: string };
+  deckBridge?: { en: string; es?: string };
 }
 
 async function loadCard(cardId: string): Promise<CardData | null> {
@@ -117,6 +119,7 @@ export default async function CardDetailPage({ params }: Props) {
   const color = SUIT_COLORS[card.suit] ?? SUIT_COLORS.major;
   const localizedName = getCardName(card, locale);
   const localizedDescription = getCardDescription(card, locale);
+  const deckBridge = getCardDeckBridge(card, locale);
   const upright = getCardKeywords(card, 'upright', locale);
   const reversed = getCardKeywords(card, 'reversed', locale);
 
@@ -200,6 +203,23 @@ export default async function CardDetailPage({ params }: Props) {
           >
             {localizedDescription}
           </p>
+
+          {/* Public-domain deck bridge (Marseille / Rider-Waite naming) — SEO
+              intent for "tarot de marsella" / "rider waite" queries. Rendered
+              only when authored; progressive rollout. Prose founder-authored. */}
+          {deckBridge && (
+            <section className="rounded-xl border border-white/8 p-4 space-y-1.5" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <h3 className="text-xs text-white/40 uppercase tracking-wider font-medium">
+                {tPage('detail.deckBridgeHeading')}
+              </h3>
+              <p
+                className="text-sm text-white/70 leading-relaxed"
+                style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}
+              >
+                {deckBridge}
+              </p>
+            </section>
+          )}
 
           {/* Keywords */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

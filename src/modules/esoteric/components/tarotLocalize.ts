@@ -22,6 +22,7 @@ interface LocalizedStringArray {
 interface CardLike {
   name: LocalizedString;
   description?: LocalizedString;
+  deckBridge?: LocalizedString;
   keywords?: {
     upright?: LocalizedStringArray;
     reversed?: LocalizedStringArray;
@@ -55,6 +56,14 @@ function pickStringArray(
 
 export function getCardName(card: CardLike, locale: string): string {
   return pickString(card.name, locale);
+}
+
+/**
+ * Public-domain deck-bridge line (Marseille / Rider-Waite naming) — T17b.
+ * Founder-authored, optional; '' when absent so the page renders nothing.
+ */
+export function getCardDeckBridge(card: CardLike, locale: string): string {
+  return pickString(card.deckBridge, locale);
 }
 
 export function getCardDescription(card: CardLike, locale: string): string {
