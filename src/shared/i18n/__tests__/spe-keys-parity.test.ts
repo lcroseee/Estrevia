@@ -93,3 +93,14 @@ describe('SP-E policy invariants', () => {
     }
   });
 });
+
+describe('SP-E synastry subline (D5 — inline paywall had 0/9 lifetime opens, switched to card)', () => {
+  it('subline sells the card CTA in both locales', () => {
+    expect(get(en, 'paywall.cta.subline.synastryAi')).toBe(
+      'See how your two charts actually interact — full AI reading with Pro.',
+    );
+    expect(get(es, 'paywall.cta.subline.synastryAi')).toBe(
+      'Mira cómo interactúan realmente sus dos cartas — lectura completa con IA, incluida en Pro.',
+    );
+  });
+});

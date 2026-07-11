@@ -231,9 +231,12 @@ export function SynastryClient() {
             )}
 
             {!isPro && (
+              // Card variant: the inline strip logged 0/9 lifetime opens
+              // (CRO audit 07-paywall STR-6); card has measured opens on
+              // chart-reading, three-card, and celtic-cross.
               <PaywallCta
                 trigger="synastry-ai"
-                variant="inline"
+                variant="card"
                 onClick={() => setPaywallOpen(true)}
               />
             )}
