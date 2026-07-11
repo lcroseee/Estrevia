@@ -302,12 +302,20 @@ export async function POST(
           ),
         );
     } catch (err) {
+      // Non-fatal side-effect: the email UPDATE must never fail recovery. Swallow ALL
+      // errors (mirrors webhooks/stripe/route.ts) so a transient DB error can't 500 the
+      // recovery and strand the just-provisioned paying user.
       if (isUniqueViolation(err)) {
         console.warn('[checkout/recover] payer email already owned by another user row — kept placeholder', {
           userId: clerkUserId,
         });
       } else {
-        throw err;
+        // PII-safe: log only message+name — never the email or the raw err.
+        console.error('[checkout/recover] payer email update failed (non-fatal) — kept placeholder', {
+          userId: clerkUserId,
+          message: (err as Error)?.message,
+          name: (err as Error)?.name,
+        });
       }
     }
 
@@ -334,13 +342,17 @@ export async function POST(
     // fallback stays webhook-side).
     try {
       const anonymousIdMeta = (session.metadata?.anonymous_id ?? null) as string | null;
+      // emailLeads.email is stored lowercase (mirrors the Stripe webhook). Lowercase
+      // the checkout email before comparing so a mixed-case payer email still matches —
+      // otherwise the drip keeps emailing a paying customer + the conversion is unattributed.
+      const emailLower = email.toLowerCase();
       await db
         .update(emailLeads)
         .set({ convertedToUserId: clerkUserId, convertedAt: new Date() })
         .where(
           anonymousIdMeta
-            ? or(eq(emailLeads.anonymousId, anonymousIdMeta), eq(emailLeads.email, email))
-            : eq(emailLeads.email, email),
+            ? or(eq(emailLeads.anonymousId, anonymousIdMeta), eq(emailLeads.email, emailLower))
+            : eq(emailLeads.email, emailLower),
         );
     } catch (linkErr) {
       console.warn(

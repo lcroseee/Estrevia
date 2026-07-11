@@ -434,12 +434,21 @@ export async function POST(request: Request): Promise<Response> {
                 ),
               );
           } catch (err) {
+            // Non-fatal side-effect: the email UPDATE must NEVER fail the webhook.
+            // A thrown error here would 500 → Stripe retries → the dedup guard
+            // short-circuits the retry → the SUBSCRIPTION_STARTED event + purchase
+            // confirmation email are permanently dropped. Swallow ALL errors.
             if (isUniqueViolation(err)) {
               console.warn('[stripe-webhook] payer email already owned by another user row — kept placeholder', {
                 userId: clerkUserId,
               });
             } else {
-              throw err;
+              // PII-safe: log only message+name — never the email or the raw err.
+              console.error('[stripe-webhook] payer email update failed (non-fatal) — kept placeholder', {
+                userId: clerkUserId,
+                message: (err as Error)?.message,
+                name: (err as Error)?.name,
+              });
             }
           }
         }

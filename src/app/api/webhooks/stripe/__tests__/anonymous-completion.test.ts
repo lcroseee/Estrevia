@@ -129,6 +129,9 @@ vi.mock('@/shared/lib/analytics', () => ({
 }));
 
 import { POST } from '../route';
+// Mocked by the vi.mock('@/shared/lib/analytics') factory above — imported so the
+// SUBSCRIPTION_STARTED regression test can assert the event still fires.
+import { trackServerEvent } from '@/shared/lib/analytics';
 
 function makeSessionCompletedEvent(opts: { metadata?: Record<string, string>; email?: string; clientReferenceId?: string }): Request {
   const event = {
@@ -413,5 +416,25 @@ describe('placeholder email replacement (P0-1)', () => {
     failNextUpdateMatching('stripe-pending-%@placeholder.invalid', { code: '23505' });
     const res = await POST(makeSessionCompletedEvent({ email: 'taken@example.com' }));
     expect(res.status).toBe(200);
+  });
+
+  it('NON-unique error on the email update is swallowed — webhook still 200 and still fires SUBSCRIPTION_STARTED', async () => {
+    // A transient DB error on the placeholder-email UPDATE must NOT 500 the webhook.
+    // If it did, Stripe would retry, hit the dedup guard, and permanently drop the
+    // SUBSCRIPTION_STARTED event + confirmation email. Arm a generic (non-23505) Error.
+    getUserListMock.mockResolvedValue({ totalCount: 1, data: [{ id: 'user_abc123' }] });
+    failNextUpdateMatching('stripe-pending-%@placeholder.invalid', new Error('connection reset'));
+
+    const res = await POST(makeSessionCompletedEvent({ email: 'payer@example.com' }));
+
+    // Did not throw / 500 — the error was swallowed, not rethrown to the outer handler.
+    expect(res.status).toBe(200);
+    // SUBSCRIPTION_STARTED fires AFTER the email UPDATE in the handler, so its presence
+    // proves execution continued past the swallowed error.
+    expect(vi.mocked(trackServerEvent)).toHaveBeenCalledWith(
+      'user_abc123',
+      'subscription_started',
+      expect.objectContaining({ plan: expect.any(String) }),
+    );
   });
 });
