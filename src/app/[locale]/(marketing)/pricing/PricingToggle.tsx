@@ -33,7 +33,9 @@ export function PricingToggle() {
   const t = useTranslations('pricing');
   const tPage = useTranslations('pricingPage');
   const locale = useLocale();
-  const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
+  // Monthly preselected: annual-first trials converted 0/6 vs 4/9 monthly
+  // (CRO audit 2026-07-10, P2 pricing batch). Matches Phase 0's modal flip.
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
 
   const plan = billing === 'monthly' ? 'pro_monthly' : 'pro_annual';
 
@@ -101,9 +103,10 @@ export function PricingToggle() {
 
       {/* Pricing cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-        {/* Free tier */}
+        {/* Free tier — second in the mobile column (Pro CTA must be in viewport 1),
+            left on desktop */}
         <div
-          className="flex flex-col rounded-2xl border border-white/8 p-8"
+          className="flex flex-col rounded-2xl border border-white/8 p-8 order-2 md:order-1"
           style={{ background: 'rgba(255,255,255,0.02)' }}
         >
           <div className="mb-6">
@@ -143,9 +146,9 @@ export function PricingToggle() {
           </div>
         </div>
 
-        {/* Pro tier */}
+        {/* Pro tier — first in the mobile column, right on desktop */}
         <div
-          className="flex flex-col rounded-2xl border border-[#FFD700]/25 p-8 relative overflow-hidden"
+          className="flex flex-col rounded-2xl border border-[#FFD700]/25 p-8 relative overflow-hidden order-1 md:order-2"
           style={{ background: 'rgba(255,215,0,0.03)' }}
         >
           {/* Glow */}

@@ -17,19 +17,19 @@ vi.mock('../PricingUpgradeButton', () => ({
 }));
 
 describe('PricingToggle — ES currency badge', () => {
-  it('renders annual equiv badge when locale=es (default toggle is annual)', () => {
+  it('renders monthly equiv badge when locale=es (default toggle is monthly)', () => {
     mockLocale.mockReturnValue('es');
     render(<PricingToggle />);
     // Mock returns the i18n key as literal text — assert the key, not the resolved value.
-    expect(screen.getByText('annualPriceEquiv')).not.toBeNull();
+    expect(screen.getByText('monthlyPriceEquiv')).not.toBeNull();
   });
 
-  it('switches to monthly equiv badge when toggle=monthly', () => {
+  it('switches to annual equiv badge when toggle=annual', () => {
     mockLocale.mockReturnValue('es');
     render(<PricingToggle />);
-    fireEvent.click(screen.getByRole('radio', { name: 'monthly' }));
-    expect(screen.getByText('monthlyPriceEquiv')).not.toBeNull();
-    expect(screen.queryByText('annualPriceEquiv')).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: /annual/ }));
+    expect(screen.getByText('annualPriceEquiv')).not.toBeNull();
+    expect(screen.queryByText('monthlyPriceEquiv')).toBeNull();
   });
 
   it('renders NO badge when locale=en (gate active)', () => {
