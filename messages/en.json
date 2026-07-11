@@ -784,8 +784,9 @@
     "heroEyebrow": "Sidereal · Lahiri · Swiss Ephemeris",
     "heroLine1": "Your True",
     "heroLine2": "Zodiac Sign",
-    "heroSubtext": "Western astrology froze the zodiac to the seasons in 100 AD. The sky has shifted 24° since then. Sidereal astrology tracks the actual constellations — most people discover their Sun is in a different sign entirely.",
-    "heroTrust": "No account needed · Calculation takes under 2 seconds",
+    "heroSubtext": "Western horoscopes are off by 24°. The sky has drifted since the zodiac was frozen in 100 AD — sidereal astrology reads the constellations as they actually are tonight. Most people's real Sun sign is different.",
+    "heroProof": "Positions computed from Swiss Ephemeris — the professional standard, accurate to ±0.01°.",
+    "heroTrust": "Free · No credit card · Under 60 seconds",
     "howHeading": "How it works",
     "howSubtitle": "From birth data to shareable card in under a minute.",
     "stepEnterTitle": "Enter birth data",
@@ -806,7 +807,7 @@
     "feature4Title": "777 Correspondences",
     "feature4Desc": "Crowley's 777 — colors, gems, incense, deities, Kabbalistic paths — mapped to every planet and sign. Pre-1929 texts, public domain.",
     "newFeaturesAria": "New features",
-    "statsHeading": "Join astrologers discovering their sidereal signs",
+    "statsHeading": "Built on the ephemeris professional astrologers trust",
     "statsSubtitle": "Most discover they carry the energy of the sign before their tropical Sun — not the one on their horoscope app.",
     "stat1Value": "±0.01°",
     "stat1Label": "Calculation accuracy",
@@ -934,7 +935,7 @@
   },
   "essays": {
     "title": "Essays",
-    "readMore": "Read more",
+    "unlockFull": "Unlock the full essay",
     "siderealLabel": "Sidereal · Lahiri",
     "tropicalComparison": "Tropical: {sign}",
     "disclaimer": "Astrology is not medical, legal, or financial advice. Content is for educational and entertainment purposes only.",
@@ -981,8 +982,8 @@
       "prioritySupport": "Priority support — reply in < 24h"
     },
     "eyebrow": "Plans & Pricing",
-    "heading": "Sidereal Vedic charts — Lahiri-accurate",
-    "subheading": "The way the ancient texts intended. Try Pro risk-free for 14 days.",
+    "heading": "See your true sidereal chart",
+    "subheading": "Three days free, cancel anytime. 14-day money-back guarantee if you stay.",
     "saveBadgeLong": "Save 42% — pay $34.99 once vs $59.88 monthly",
     "guaranteeHeading": "14-day money-back guarantee, no questions asked",
     "guaranteeSubcopy": "Try Pro risk-free. Full refund within 14 days. Just email us.",
@@ -1045,11 +1046,11 @@
       "natalChart": "Get your full natal chart reading"
     },
     "cta": {
-      "eyebrow": "Locked behind Star",
+      "eyebrow": "Included in Pro",
       "subline": {
         "celticCross": "Get the full interpretation tying all 10 cards into one narrative.",
         "threeCard": "Get the LLM reading that connects past, present, and future.",
-        "synastryAi": "Get a detailed analysis of how your charts interact.",
+        "synastryAi": "See how your two charts actually interact — full AI reading with Pro.",
         "natalChart": "An AI-crafted synthesis of all your planets, houses, and aspects — written for your chart, not a generic horoscope."
       },
       "ctaLabel": "Start 3-Day Free Trial"

@@ -784,8 +784,9 @@
     "heroEyebrow": "Sideral · Lahiri · Swiss Ephemeris",
     "heroLine1": "Tu signo",
     "heroLine2": "zodiacal verdadero",
-    "heroSubtext": "La astrología occidental congeló el zodíaco a las estaciones en el año 100 d.C. El cielo se ha desplazado 24° desde entonces. La astrología sideral rastrea las constelaciones reales — la mayoría descubre que su Sol está en un signo completamente diferente.",
-    "heroTrust": "Sin cuenta necesaria · El cálculo tarda menos de 2 segundos",
+    "heroSubtext": "Los horóscopos occidentales están desviados 24°. El cielo se ha desplazado desde que el zodíaco se congeló en el año 100 d.C. — la astrología sideral lee las constelaciones tal como están esta noche. El verdadero signo solar de la mayoría de las personas es otro.",
+    "heroProof": "Posiciones calculadas con Swiss Ephemeris — el estándar profesional, con precisión de ±0,01°.",
+    "heroTrust": "Gratis · Sin tarjeta de crédito · En menos de 60 segundos",
     "howHeading": "Cómo funciona",
     "howSubtitle": "De tus datos de nacimiento a una tarjeta compartible en menos de un minuto.",
     "stepEnterTitle": "Ingresa tus datos",
@@ -806,7 +807,7 @@
     "feature4Title": "Correspondencias 777",
     "feature4Desc": "Las 777 de Crowley — colores, gemas, inciensos, deidades, caminos cabalísticos — mapeadas a cada planeta y signo. Textos anteriores a 1929, dominio público.",
     "newFeaturesAria": "Nuevas características",
-    "statsHeading": "Únete a astrólogos que descubren sus signos siderales",
+    "statsHeading": "Construido sobre las efemérides en las que confían los astrólogos profesionales",
     "statsSubtitle": "La mayoría descubre que llevan la energía del signo anterior a su Sol tropical — no el del horóscopo de su app.",
     "stat1Value": "±0,01°",
     "stat1Label": "Precisión de cálculo",
@@ -934,7 +935,7 @@
   },
   "essays": {
     "title": "Ensayos",
-    "readMore": "Leer más",
+    "unlockFull": "Desbloquea el ensayo completo",
     "siderealLabel": "Sideral · Lahiri",
     "tropicalComparison": "Tropical: {sign}",
     "disclaimer": "La astrología es para reflexión personal y entretenimiento. Nada en este sitio constituye consejo médico, financiero, legal o psicológico.",
@@ -983,8 +984,8 @@
       "prioritySupport": "Soporte prioritario — respuesta en < 24h"
     },
     "eyebrow": "Planes y precios",
-    "heading": "Cartas védicas siderales — precisión Lahiri",
-    "subheading": "Como los textos antiguos las querían. Prueba Pro sin riesgo por 14 días.",
+    "heading": "Mira tu verdadera carta sideral",
+    "subheading": "Tres días gratis, cancela cuando quieras. Garantía de devolución de 14 días si te quedas.",
     "saveBadgeLong": "Ahorra 42% — paga $34.99 una vez vs $59.88 mensual",
     "guaranteeHeading": "Garantía de devolución de 14 días, sin preguntas",
     "guaranteeSubcopy": "Prueba Pro sin riesgo. Reembolso total en 14 días. Solo escríbenos.",
@@ -1048,11 +1049,11 @@
       "natalChart": "Obtén la lectura completa de tu carta natal"
     },
     "cta": {
-      "eyebrow": "Bloqueado tras Star",
+      "eyebrow": "Incluido en Pro",
       "subline": {
         "celticCross": "Obtén la interpretación completa que conecta las 10 cartas en una narrativa.",
         "threeCard": "Obtén la lectura que conecta pasado, presente y futuro.",
-        "synastryAi": "Obtén un análisis detallado de cómo interactúan tus cartas.",
+        "synastryAi": "Mira cómo interactúan realmente sus dos cartas — lectura completa con IA, incluida en Pro.",
         "natalChart": "Síntesis hecha con IA de todos tus planetas, casas y aspectos — escrita para tu carta, no un horóscopo genérico."
       },
       "ctaLabel": "Comienza tu prueba gratis de 3 días"
