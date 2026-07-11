@@ -104,6 +104,7 @@ vi.mock('@sentry/nextjs', () => ({
 // Import route under test AFTER all mocks are wired up.
 // ---------------------------------------------------------------------------
 import { POST } from '../route';
+import { CURRENCY_EQUIV } from '@/shared/lib/currency-equiv';
 
 const USER_ID = 'user_xyz';
 const CHECKOUT_URL = 'https://stripe.com/pay/cs_test_abc123';
@@ -223,6 +224,16 @@ describe('POST /api/v1/stripe/checkout — locale forwarding (authenticated)', (
 
     const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
     expect(callArg.custom_text?.submit?.message).toContain('90'); // monthly amount
+  });
+
+  it('custom_text.submit.message comes verbatim from the shared CURRENCY_EQUIV source (SP-B D2)', async () => {
+    await POST(makeRequest({ locale: 'es', plan: 'pro_annual' }));
+    let callArg = mocks.mockSessionsCreate.mock.calls.at(-1)![0];
+    expect(callArg.custom_text?.submit?.message).toBe(CURRENCY_EQUIV.pro_annual);
+
+    await POST(makeRequest({ locale: 'es', plan: 'pro_monthly' }));
+    callArg = mocks.mockSessionsCreate.mock.calls.at(-1)![0];
+    expect(callArg.custom_text?.submit?.message).toBe(CURRENCY_EQUIV.pro_monthly);
   });
 
   it('omits custom_text for EN/default locale', async () => {

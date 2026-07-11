@@ -31,6 +31,7 @@ import type { ApiResponse } from '@/shared/types';
 import { randomUUID } from 'node:crypto';
 import { findOrPrepareCustomer, utcDayBucket, buildCheckoutIdempotencyKey } from './findOrPrepareCustomer';
 import { ALLOWED_COUPON_CODES, resolveCouponId, type AllowedCouponCode } from '@/shared/lib/coupons';
+import { CURRENCY_EQUIV } from '@/shared/lib/currency-equiv';
 
 const checkoutBodySchema = z.object({
   plan: z.enum(['pro_monthly', 'pro_annual']).default('pro_annual'),
@@ -176,16 +177,12 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   const stripeLocale: 'auto' | 'es-419' = localeFromBody === 'es' ? 'es-419' : 'auto';
 
   // LATAM currency-equivalent shown inside Stripe Checkout (custom_text.submit).
-  // Mirrors messages/es.json pricing.{monthlyPriceEquiv,annualPriceEquiv}.
-  // Server-side hardcode to avoid pulling next-intl runtime into API route;
-  // keep in sync with messages/es.json when FX rates refresh (quarterly).
-  const esCurrencyEquiv =
-    plan === 'pro_annual'
-      ? '≈ 630 MXN · 147 000 COP · 33 200 CLP · 133 PEN · 1 400 UYU'
-      : '≈ 90 MXN · 21 000 COP · 4 740 CLP · 19 PEN · 200 UYU';
+  // Single source: src/shared/lib/currency-equiv.ts (mirrored into
+  // messages/es.json for the UI, sync-tested — see the module header for the
+  // quarterly FX refresh procedure).
   const customTextForLocale =
     localeFromBody === 'es'
-      ? { submit: { message: esCurrencyEquiv } }
+      ? { submit: { message: CURRENCY_EQUIV[plan] } }
       : undefined;
 
   // ---------------------------------------------------------------------------
