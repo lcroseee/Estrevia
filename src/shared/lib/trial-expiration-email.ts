@@ -5,6 +5,7 @@ import { render } from '@react-email/render';
 import TrialReminder3dEmail from '@/emails/TrialReminder3dEmail';
 import TrialReminder1dEmail from '@/emails/TrialReminder1dEmail';
 import TrialEndedEmail from '@/emails/TrialEndedEmail';
+import { resolveCouponId } from './coupons';
 import { claimTrialEmailSlot, recordSentTrial } from './sent-trial-emails';
 import type { TrialEmailStep } from './sent-trial-emails';
 
@@ -92,12 +93,23 @@ export async function sendTrialExpirationEmail(params: TrialExpirationEmailParam
 
   // 3. Build URLs
   const localePath = locale === 'es' ? 'es/' : '';
+  const checkoutPlan = plan === 'pro_annual' ? 'pro_annual' : 'pro_monthly';
+  // SAVE50 save offer (50% off first charge, duration: once) — env-gated via
+  // the coupon registry: resolveCouponId returns null while STRIPE_COUPON_SAVE50
+  // is unset, so the emails render exactly as before (no offer, no URL param).
+  // Offered at T-1d and the post-trial win-back ONLY — never at T-3d (don't
+  // discount people who might convert at full price). Supersedes the old
+  // display-only TRIAL_WINBACK_COUPON_CODE (it was never appended to the URL).
+  const saveOfferActive =
+    (step === 'reminder_1d' || step === 'trial_ended') &&
+    resolveCouponId('SAVE50', checkoutPlan) !== null;
+  const couponCode = saveOfferActive ? 'SAVE50' : undefined;
   const proUrl =
-    `${SITE_URL}/${localePath}checkout/start?plan=${plan === 'pro_annual' ? 'pro_annual' : 'pro_monthly'}` +
-    `&utm_source=trial-expiration&utm_campaign=${step}`;
+    `${SITE_URL}/${localePath}checkout/start?plan=${checkoutPlan}` +
+    `&utm_source=trial-expiration&utm_campaign=${step}` +
+    (saveOfferActive ? '&coupon=SAVE50' : '');
   const billingPortalUrl = `${SITE_URL}/${localePath}settings`;
   const chartUrl = `${SITE_URL}/${localePath}chart?utm_source=trial-expiration&utm_campaign=${step}`;
-  const couponCode = process.env.TRIAL_WINBACK_COUPON_CODE;
 
   // 4. Render the correct template
   let html: string;
@@ -108,7 +120,7 @@ export async function sendTrialExpirationEmail(params: TrialExpirationEmailParam
     html = await render(TrialReminder3dEmail(props));
     text = await render(TrialReminder3dEmail(props), { plainText: true });
   } else if (step === 'reminder_1d') {
-    const props = { locale, trialEndDate, proUrl, billingPortalUrl };
+    const props = { locale, trialEndDate, proUrl, billingPortalUrl, couponCode };
     html = await render(TrialReminder1dEmail(props));
     text = await render(TrialReminder1dEmail(props), { plainText: true });
   } else {

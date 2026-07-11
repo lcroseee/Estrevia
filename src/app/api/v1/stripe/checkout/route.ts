@@ -31,6 +31,7 @@ import type { ApiResponse } from '@/shared/types';
 import { randomUUID } from 'node:crypto';
 import { findOrPrepareCustomer, utcDayBucket, buildCheckoutIdempotencyKey } from './findOrPrepareCustomer';
 import { ALLOWED_COUPON_CODES, resolveCouponId, type AllowedCouponCode } from '@/shared/lib/coupons';
+import { CURRENCY_EQUIV } from '@/shared/lib/currency-equiv';
 
 const checkoutBodySchema = z.object({
   plan: z.enum(['pro_monthly', 'pro_annual']).default('pro_annual'),
@@ -43,6 +44,14 @@ const checkoutBodySchema = z.object({
   utm_click_timestamp: z.string().datetime().optional(),
   // A/B test coupon — only allowlisted values accepted (see ALLOWED_COUPON_CODES)
   coupon: z.enum(ALLOWED_COUPON_CODES).optional(),
+  // Post-purchase return target — same-origin, single-slash-rooted path only
+  // (e.g. /tarot/celtic-cross). Reject a leading `/` followed by `/` or `\`, AND
+  // any backslash elsewhere: browsers normalize `\` to `/`, so `/\evil.com`
+  // becomes protocol-relative (https://evil.com) — an open-redirect vector — and
+  // no legitimate rooted path contains a backslash. .catch(undefined) degrades an
+  // invalid value to absent instead of failing the whole parse: checkout must
+  // never break over a redirect hint. 500-char cap = Stripe metadata value limit.
+  returnUrl: z.string().max(500).regex(/^\/(?![/\\])(?!.*\\)/).optional().catch(undefined),
 });
 
 interface CheckoutResponse {
@@ -125,6 +134,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   // ---------------------------------------------------------------------------
   let plan: 'pro_monthly' | 'pro_annual' = 'pro_annual';
   let localeFromBody: 'en' | 'es' | undefined = undefined;
+  let returnUrl: string | undefined = undefined;
   let utm: Record<string, string> = {};
   let couponCode: AllowedCouponCode | undefined = undefined;
   try {
@@ -132,16 +142,28 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
     const parsed = checkoutBodySchema.parse(body);
     plan = parsed.plan;
     localeFromBody = parsed.locale;
+    returnUrl = parsed.returnUrl;
     couponCode = parsed.coupon;
     utm = Object.fromEntries(
       Object.entries(parsed).filter(
         (entry): entry is [string, string] =>
-          entry[0] !== 'plan' && entry[0] !== 'locale' && entry[0] !== 'coupon' && entry[1] !== undefined,
+          entry[0] !== 'plan' &&
+          entry[0] !== 'locale' &&
+          entry[0] !== 'coupon' &&
+          entry[0] !== 'returnUrl' &&
+          entry[1] !== undefined,
       ),
     );
   } catch {
     plan = 'pro_annual';
   }
+  // Normalize trivially-useless return targets to absent. CheckoutStartClient
+  // ALWAYS POSTs returnUrl (default '/'), and PricingUpgradeButton's auth-failure
+  // fallback routes through /checkout/start?return=%2Fpricing — storing those
+  // would land payers on the marketing landing page (ES payers on EN '/') or
+  // back on /pricing instead of the default localized /chart.
+  // Drops: '/', '/es', '/es/', '/pricing', '/es/pricing'.
+  if (returnUrl && /^\/(es\/?)?(pricing)?$/.test(returnUrl)) returnUrl = undefined;
 
   // Resolve the Stripe coupon id to attach (config-driven, see shared/lib/coupons.ts).
   // Returns null when no coupon, the code is not eligible for this plan, or its
@@ -155,16 +177,12 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   const stripeLocale: 'auto' | 'es-419' = localeFromBody === 'es' ? 'es-419' : 'auto';
 
   // LATAM currency-equivalent shown inside Stripe Checkout (custom_text.submit).
-  // Mirrors messages/es.json pricing.{monthlyPriceEquiv,annualPriceEquiv}.
-  // Server-side hardcode to avoid pulling next-intl runtime into API route;
-  // keep in sync with messages/es.json when FX rates refresh (quarterly).
-  const esCurrencyEquiv =
-    plan === 'pro_annual'
-      ? '≈ 630 MXN · 147 000 COP · 33 200 CLP · 133 PEN · 1 400 UYU'
-      : '≈ 90 MXN · 21 000 COP · 4 740 CLP · 19 PEN · 200 UYU';
+  // Single source: src/shared/lib/currency-equiv.ts (mirrored into
+  // messages/es.json for the UI, sync-tested — see the module header for the
+  // quarterly FX refresh procedure).
   const customTextForLocale =
     localeFromBody === 'es'
-      ? { submit: { message: esCurrencyEquiv } }
+      ? { submit: { message: CURRENCY_EQUIV[plan] } }
       : undefined;
 
   // ---------------------------------------------------------------------------
@@ -184,6 +202,10 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://estrevia.app';
+  // Locale-prefixed success/cancel URLs. next-intl localePrefix is 'as-needed':
+  // EN lives at root (unchanged), ES under /es — so ES payers stay in Spanish
+  // through Checkout success AND cancel instead of landing on EN /pricing.
+  const localePath = localeFromBody === 'es' ? '/es' : '';
 
   // ---------------------------------------------------------------------------
   // 5a. AUTHENTICATED branch (preserves existing behavior)
@@ -282,6 +304,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
             clerkUserId: userId,
             ...utm,
             ...(localeFromBody ? { locale: localeFromBody } : {}),
+            ...(returnUrl ? { return_url: returnUrl } : {}),
           },
           subscription_data: {
             ...(stripeCustomerId ? {} : { trial_period_days: 3 }),
@@ -291,8 +314,8 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
               ...(localeFromBody ? { locale: localeFromBody } : {}),
             },
           },
-          success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${appUrl}/pricing`,
+          success_url: `${appUrl}${localePath}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${appUrl}${localePath}/pricing`,
           billing_address_collection: 'auto',
         },
         resolvedCoupon,
@@ -370,6 +393,7 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
     const metadata: Record<string, string> = { ...utm };
     if (anonymousId) metadata.anonymous_id = anonymousId;
     if (localeFromBody) metadata.locale = localeFromBody;
+    if (returnUrl) metadata.return_url = returnUrl;
 
     // No stable anonymous_id (cookieless-at-checkout race) → randomUUID so the
     // key is never the shared 'noanon' bucket. The anonymous_id cookie set in
@@ -405,8 +429,8 @@ export async function POST(request: Request): Promise<NextResponse<ApiResponse<C
           trial_period_days: 3,
           metadata,
         },
-        success_url: `${appUrl}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${appUrl}/pricing`,
+        success_url: `${appUrl}${localePath}/checkout/complete?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}${localePath}/pricing`,
         billing_address_collection: 'auto',
       },
       resolvedCoupon,

@@ -47,14 +47,14 @@ describe('CheckoutCompleteClient', () => {
       json: async () => ({ success: true, data: { ready: true, ticket: 'ticket_zzz' } }),
     });
 
-    render(<CheckoutCompleteClient sessionId="cs_test_1" />);
+    render(<CheckoutCompleteClient sessionId="cs_test_1" redirectTarget="/chart" />);
 
     // Flush microtasks for the first fetch + json resolution.
     await vi.advanceTimersByTimeAsync(0);
     await vi.advanceTimersByTimeAsync(0);
 
     expect(setLoc).toHaveBeenCalledWith(
-      '/sign-in?__clerk_ticket=ticket_zzz&redirect_url=%2Fsettings',
+      '/sign-in?__clerk_ticket=ticket_zzz&redirect_url=%2Fchart',
     );
   });
 
@@ -85,7 +85,7 @@ describe('CheckoutCompleteClient', () => {
       };
     });
 
-    render(<CheckoutCompleteClient sessionId="cs_test_1" />);
+    render(<CheckoutCompleteClient sessionId="cs_test_1" redirectTarget="/chart" />);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(31_000);
@@ -96,7 +96,7 @@ describe('CheckoutCompleteClient', () => {
       expect.objectContaining({ session_id: 'cs_test_1' }),
     );
     expect(setLoc).toHaveBeenCalledWith(
-      '/sign-in?__clerk_ticket=ticket_recovered&redirect_url=%2Fsettings',
+      '/sign-in?__clerk_ticket=ticket_recovered&redirect_url=%2Fchart',
     );
     // Fallback UI must NOT render — recovery succeeded.
     expect(screen.queryByText(/t:checkEmail/)).toBeNull();
@@ -116,7 +116,7 @@ describe('CheckoutCompleteClient', () => {
       };
     });
 
-    render(<CheckoutCompleteClient sessionId="cs_test_1" />);
+    render(<CheckoutCompleteClient sessionId="cs_test_1" redirectTarget="/chart" />);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(31_000);
@@ -140,7 +140,7 @@ describe('CheckoutCompleteClient', () => {
       };
     });
 
-    render(<CheckoutCompleteClient sessionId="cs_test_1" />);
+    render(<CheckoutCompleteClient sessionId="cs_test_1" redirectTarget="/chart" />);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(31_000);
@@ -151,5 +151,32 @@ describe('CheckoutCompleteClient', () => {
       expect.objectContaining({ session_id: 'cs_test_1' }),
     );
     expect(screen.getByText(/t:checkEmail/)).toBeTruthy();
+  });
+
+  it('encodes a non-default redirectTarget into the sign-in URL', async () => {
+    const setLoc = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: {
+        set href(v: string) {
+          setLoc(v);
+        },
+      },
+    });
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, data: { ready: true, ticket: 'ticket_zzz' } }),
+    });
+
+    render(
+      <CheckoutCompleteClient sessionId="cs_test_1" redirectTarget="/tarot/celtic-cross" />,
+    );
+
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(setLoc).toHaveBeenCalledWith(
+      '/sign-in?__clerk_ticket=ticket_zzz&redirect_url=%2Ftarot%2Fceltic-cross',
+    );
   });
 });

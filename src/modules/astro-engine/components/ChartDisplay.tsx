@@ -150,7 +150,18 @@ function SpinnerIcon() {
   );
 }
 
-export function ChartDisplay() {
+interface ChartDisplayProps {
+  /**
+   * Server-fetched temp chart for the /chart?chartId= handoff (P0-3).
+   * Positions only — NO PII. Lets ad/drip deep links render the result view
+   * directly instead of dead-ending on the empty birth-data form.
+   */
+  initialChart?: ChartResult;
+  /** Opaque nanoid of the hydrated temp chart (safe in URL — not PII). */
+  initialChartId?: string;
+}
+
+export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps = {}) {
   const t = useTranslations('chartDisplay');
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -174,8 +185,8 @@ export function ChartDisplay() {
     mountParamsRef.current.tz
   );
 
-  const [chart, setChart] = useState<ChartResult | null>(null);
-  const [chartId, setChartId] = useState<string | null>(null);
+  const [chart, setChart] = useState<ChartResult | null>(initialChart ?? null);
+  const [chartId, setChartId] = useState<string | null>(initialChartId ?? null);
   const [activeTab, setActiveTab] = useState<Tab>('wheel');
   const [showAspects, setShowAspects] = useState(true);
   const [showHouses, setShowHouses] = useState(true);
@@ -201,7 +212,9 @@ export function ChartDisplay() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         date: bd,
-        time: knowsTime ? bt : '12:00',
+        // Honest chart when birth time is unknown — see HeroCalculator's
+        // payload comment; `time: null` skips Ascendant/houses server-side.
+        time: knowsTime ? bt : null,
         latitude: parseFloat(lat),
         longitude: parseFloat(lon),
         timezone: tz,
@@ -333,8 +346,11 @@ export function ChartDisplay() {
         <div>
           <h1 className="text-lg font-semibold text-white/90">{t('headerTitle')}</h1>
           <p className="text-xs text-white/60 font-mono mt-0.5">
-            {chart.system === 'sidereal' ? 'Sidereal' : 'Tropical'} · {chart.houseSystem}
-            {!chart.houses && ` · ${t('noHouses')}`}
+            {chart.system === 'sidereal' ? 'Sidereal' : 'Tropical'}
+            {/* houseSystem persists as 'Placidus' in ChartResult even when no
+                houses were computed (schema transform) — only show it when
+                houses actually exist. */}
+            {chart.houses ? ` · ${chart.houseSystem}` : ` · ${t('noHouses')}`}
           </p>
         </div>
         <button

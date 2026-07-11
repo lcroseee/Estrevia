@@ -214,3 +214,45 @@ describe('BirthDataForm — Meta Pixel ViewContent companion', () => {
     expect((window as unknown as { fbq?: unknown }).fbq).toBeUndefined();
   });
 });
+
+describe('BirthDataForm — chart-calculate payload (time unknown → time:null)', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it('sends time:null + houseSystem:null when birth time is unknown (default toggle state)', async () => {
+    const fetchMock = stubFetchOk();
+    const onChartCalculated = vi.fn();
+    renderForm(onChartCalculated);
+    await fillAndSubmit();
+    await waitFor(() => expect(onChartCalculated).toHaveBeenCalled());
+
+    const init = fetchMock.mock.calls[0]![1] as RequestInit;
+    const body = JSON.parse(init.body as string) as Record<string, unknown>;
+    expect(body.time).toBeNull();
+    expect(body.houseSystem).toBeNull();
+  });
+
+  it('sends the real time + house system when the birth-time toggle is on', async () => {
+    const fetchMock = stubFetchOk();
+    const onChartCalculated = vi.fn();
+    renderForm(onChartCalculated);
+    fireEvent.change(screen.getByTestId('date-input'), { target: { value: '1990-01-01' } });
+    fireEvent.click(screen.getByTestId('select-city'));
+    fireEvent.click(screen.getByRole('switch'));
+    fireEvent.change(screen.getByTestId('time-input'), { target: { value: '10:15' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Calculate Chart' }));
+    await waitFor(() => expect(onChartCalculated).toHaveBeenCalled());
+
+    const init = fetchMock.mock.calls[0]![1] as RequestInit;
+    const body = JSON.parse(init.body as string) as Record<string, unknown>;
+    expect(body.time).toBe('10:15');
+    expect(body.houseSystem).toBe('Placidus');
+  });
+
+  it('tags the form root with data-ph-mask so session recordings mask birth-data text', () => {
+    const { container } = renderForm();
+    expect(container.querySelector('form')?.hasAttribute('data-ph-mask')).toBe(true);
+  });
+});

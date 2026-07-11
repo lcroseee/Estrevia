@@ -20,10 +20,11 @@ describe('sent_emails table', () => {
   it('has cascade delete on user_id FK', () => {
     expect(sentEmails.userId.notNull).toBe(true);
   });
-  it('declares all 6 email types', () => {
+  it('declares all 7 email types', () => {
     expect(sentEmails.emailType.enumValues).toEqual([
       'welcome', 'purchase_confirmation', 'subscription_canceled',
       'account_deletion', 'trial_ending', 're_engagement_28d',
+      'paid_onboarding',
     ]);
   });
 });

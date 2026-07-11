@@ -11,7 +11,7 @@
  * `&coupon=<CODE>` to the CTA deep-link.
  */
 
-export const ALLOWED_COUPON_CODES = ['TEASER20', 'HALF50'] as const;
+export const ALLOWED_COUPON_CODES = ['TEASER20', 'HALF50', 'SAVE50'] as const;
 export type AllowedCouponCode = (typeof ALLOWED_COUPON_CODES)[number];
 
 type Plan = 'pro_monthly' | 'pro_annual';
@@ -28,6 +28,10 @@ export const COUPON_CONFIG: Record<AllowedCouponCode, CouponConfig> = {
   TEASER20: { envVar: 'STRIPE_COUPON_TEASER20', allowedPlans: ['pro_annual'] },
   // Launch-week 50%-off — both plans, first charge only (duration: once), 7-day window.
   HALF50: { envVar: 'STRIPE_COUPON_HALF50', allowedPlans: ['pro_monthly', 'pro_annual'] },
+  // Trial-end save offer — both plans, first charge only (duration: once).
+  // NO redeem_by: per-send urgency lives in the email copy, not in coupon
+  // immutability (the HALF50 7-day window expired unsent — lesson learned).
+  SAVE50: { envVar: 'STRIPE_COUPON_SAVE50', allowedPlans: ['pro_monthly', 'pro_annual'] },
 };
 
 export function isAllowedCouponCode(value: string | null | undefined): value is AllowedCouponCode {

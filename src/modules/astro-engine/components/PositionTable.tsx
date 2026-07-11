@@ -252,8 +252,9 @@ export function PositionTable({ chart }: PositionTableProps) {
 
       <p className="mt-2 text-xs text-white/30">
         {isTropical ? 'Tropical zodiac' : `Sidereal (Lahiri ayanamsa: ${chart.ayanamsa.toFixed(4)}°)`}
-        {' · '}
-        {chart.houseSystem} houses
+        {/* Suppress the house-system mention on no-houses charts — houseSystem
+            persists as 'Placidus' in ChartResult even without computed houses. */}
+        {chart.houses ? ` · ${chart.houseSystem} houses` : ''}
       </p>
     </div>
   );

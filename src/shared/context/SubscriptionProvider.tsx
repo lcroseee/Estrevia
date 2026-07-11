@@ -23,6 +23,20 @@ import {
   type ReactNode,
 } from 'react';
 
+/**
+ * Clerk-optional signed-in probe. `SubscriptionProvider` renders in BOTH a
+ * Clerk context ((app)/layout) AND the Clerk-free (content) route group
+ * (essays) — so it must NOT call `useAuth()`, which throws without a
+ * <ClerkProvider/>. Clerk's own `__client_uat` client cookie is the stable,
+ * non-httpOnly signed-in indicator (absent or "0" = signed out). Reading it
+ * needs no provider, so essays render Clerk-free without throwing.
+ */
+function hasClerkSession(): boolean {
+  if (typeof document === 'undefined') return false;
+  const match = document.cookie.match(/(?:^|;\s*)__client_uat=(\d+)/);
+  return match ? Number(match[1]) > 0 : false;
+}
+
 export interface SubscriptionState {
   plan: 'free' | 'pro_monthly' | 'pro_annual';
   status: 'trialing' | 'active' | 'canceled' | 'past_due' | null;
@@ -55,6 +69,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const lastFetchRef = useRef<number>(0);
   const inflightRef = useRef<boolean>(false);
   const hasLoadedRef = useRef<boolean>(false);
+
+  // Anon-401 fix: `/chart` and essays are PUBLIC routes — anonymous visitors
+  // used to hit the Clerk-protected subscription endpoint and print a 401
+  // console error on every view. `hasClerkSession()` (cookie, no provider
+  // needed) gates the fetch: signed-out or Clerk-free → free tier locally.
 
   const fetchSubscription = useCallback(async () => {
     if (inflightRef.current) return;
@@ -141,8 +160,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Initial fetch on mount
+  // Initial fetch — only for signed-in users (a live `__client_uat` session
+  // cookie). Signed-out or Clerk-free (essays) → free tier locally, no fetch
+  // and no flash of the wrong tier.
   useEffect(() => {
+    if (!hasClerkSession()) {
+      setState({ ...DEFAULT_STATE, isLoading: false });
+      hasLoadedRef.current = true;
+      lastFetchRef.current = Date.now();
+      return;
+    }
     fetchSubscription();
   }, [fetchSubscription]);
 
@@ -150,6 +177,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // checkout tab will have the new plan reflected when they tab back.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // Same session gate as the initial fetch — anonymous tab-backs must not
+    // re-trigger the 401.
+    if (!hasClerkSession()) return;
 
     const onFocus = () => {
       if (Date.now() - lastFetchRef.current < REVALIDATE_DEDUPE_MS) return;

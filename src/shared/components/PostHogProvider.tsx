@@ -83,10 +83,42 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
       }
     }
 
+    // Recording-URL PII scrub (CLAUDE.md PII rule): enabling session
+    // recording ships window.location.href inside rrweb $snapshot payloads,
+    // and the replay player displays it — on /chart?bd=…&bt=…&place=… that
+    // href IS birth PII. sanitize_properties never runs on $snapshot events,
+    // and maskAllInputs/maskTextSelector cannot mask the recorded URL, so
+    // scrub here, before anything leaves the browser. Reuses PII_PARAMS +
+    // stripPiiFromUrl above.
+    type RRWebEvent = { type: number; data?: { href?: unknown } & Record<string, unknown> };
+    type CaptureEvent = { event?: string; properties?: Record<string, unknown> } | null;
+    function scrubEventUrls(event: CaptureEvent): CaptureEvent {
+      if (!event) return event;
+      const props = event.properties ?? {};
+      // Every event: strip PII params from URL-bearing properties
+      // ($snapshot events carry $current_url/$session_entry_url that
+      // sanitize_properties does not reach).
+      for (const key of ['$current_url', '$session_entry_url', '$referrer', '$initial_referrer']) {
+        if (key in props) props[key] = stripPiiFromUrl(props[key]);
+      }
+      // $snapshot events: rrweb Meta (type 4) carries the href the replay
+      // player's URL bar shows; FullSnapshot (type 2) is scrubbed too,
+      // defensively, in case the href appears in its payload.
+      if (Array.isArray(props.$snapshot_data)) {
+        for (const rr of props.$snapshot_data as RRWebEvent[]) {
+          if (rr && (rr.type === 4 || rr.type === 2) && rr.data && typeof rr.data.href === 'string') {
+            rr.data.href = stripPiiFromUrl(rr.data.href) as string;
+          }
+        }
+      }
+      event.properties = props;
+      return event;
+    }
+
     // Compute locale BEFORE init — pathname is in scope of this provider
     // render. Required so the first $pageview (fired inside init when
     // capture_pageview: true) carries the locale super-property.
-    const initialLocale = pathname?.startsWith('/es') ? 'es' : 'en';
+    const initialLocale = pathname === '/es' || pathname?.startsWith('/es/') ? 'es' : 'en';
 
     posthog.init(apiKey, {
       // Same-origin reverse proxy bypasses ad blockers that block us.i.posthog.com
@@ -95,7 +127,18 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
       api_host: '/ingest',
       ui_host: 'https://us.posthog.com',
       capture_pageview: true,
-      disable_session_recording: true,
+      // Session recordings ON, masked — the "payers go silent on day one"
+      // investigation needs them. maskAllInputs hides every typed value
+      // (birth data included); maskTextSelector masks text inside elements
+      // tagged data-ph-mask (birth-data form surfaces that echo PII back);
+      // before_send (below) scrubs the recorded page URL itself.
+      // Recording stays consent-gated: this init only runs after the cookie
+      // banner is accepted, so decliners remain unrecorded.
+      disable_session_recording: false,
+      session_recording: {
+        maskAllInputs: true,
+        maskTextSelector: '[data-ph-mask]',
+      },
       persistence: 'localStorage',
       autocapture: false,
       // Heatmaps + rage clicks + scroll depth without enabling full autocapture.
@@ -105,6 +148,10 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
       // Web Vitals dashboard. Lightweight, runs in browser idle time.
       capture_performance: { web_vitals: true },
       bootstrap: {},
+      // PII gate for recordings — see scrubEventUrls above. Cast: the loose
+      // CaptureEvent shape is intentionally narrower than posthog-js's
+      // CaptureResult (uuid/timestamp are irrelevant to the URL scrub).
+      before_send: scrubEventUrls as unknown as import('posthog-js').BeforeSendFn,
       sanitize_properties: (properties: Record<string, unknown>) => ({
         ...properties,
         $current_url: stripPiiFromUrl(properties.$current_url),
@@ -161,7 +208,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
       posthog?: { register?: (props: Record<string, unknown>) => void };
     }).posthog;
     if (!posthog?.register) return;
-    const locale = pathname?.startsWith('/es') ? 'es' : 'en';
+    const locale = pathname === '/es' || pathname?.startsWith('/es/') ? 'es' : 'en';
     posthog.register({ locale });
   }, [pathname, isInitialized]);
 

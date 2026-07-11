@@ -66,7 +66,7 @@ export function BirthDataFormStandalone({
   const timeToggleId = `${formId}-time-toggle`;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-ph-mask="">
       {/* Name (optional) */}
       {nameField && (
         <div className="space-y-1.5">

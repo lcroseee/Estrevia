@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,7 @@ export function TimeInput({
   ...ariaProps
 }: TimeInputProps) {
   const parsed = parseTime(value);
+  const t = useTranslations('timePicker');
   const [hour, setHour] = useState(parsed.hour);
   const [minute, setMinute] = useState(parsed.minute);
 
@@ -153,7 +155,7 @@ export function TimeInput({
           borderClass,
         ].join(' ')}
         role="group"
-        aria-label="Time"
+        aria-label={t('timeGroupAria')}
       >
         {/* Hour */}
         <input
@@ -168,7 +170,7 @@ export function TimeInput({
           disabled={disabled}
           className={`${segmentClass} w-8`}
           maxLength={2}
-          aria-label="Hour"
+          aria-label={t('hourLabel')}
           {...ariaProps}
         />
         <span className="text-white/25 text-sm select-none">:</span>
@@ -185,7 +187,7 @@ export function TimeInput({
           disabled={disabled}
           className={`${segmentClass} w-8`}
           maxLength={2}
-          aria-label="Minute"
+          aria-label={t('minuteLabel')}
         />
       </div>
     </div>

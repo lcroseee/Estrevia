@@ -13,7 +13,7 @@ interface Props {
 const STRINGS = {
   en: {
     preview: 'An AI synthesis of your chart — written for you, not a generic horoscope.',
-    eyebrow: 'Locked behind Star',
+    eyebrow: 'Included in Pro',
     heading: (sun: string | null, moon: string | null, asc: string | null) => {
       const parts = [sun, moon, asc].filter(Boolean);
       if (parts.length === 0) return 'The full reading for your chart';
@@ -26,7 +26,7 @@ const STRINGS = {
   },
   es: {
     preview: 'Una síntesis IA de tu carta — escrita para ti, no un horóscopo genérico.',
-    eyebrow: 'Bloqueado por Star',
+    eyebrow: 'Incluido en Pro',
     heading: (sun: string | null, moon: string | null, asc: string | null) => {
       const parts = [sun, moon, asc].filter(Boolean);
       if (parts.length === 0) return 'La lectura completa de tu carta';

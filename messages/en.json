@@ -50,6 +50,7 @@
     "errTimeRequired": "Please enter your birth time or turn off the toggle"
   },
   "timePicker": {
+    "timeGroupAria": "Time",
     "hourLabel": "Hour",
     "minuteLabel": "Minute",
     "meridiemLabel": "AM or PM",
@@ -580,6 +581,29 @@
       "body": "Astrology is a symbolic system for self-reflection and cultural inquiry. Nothing on this page constitutes medical, psychological, financial, or legal advice. Interpretations describe archetypal tendencies — not guaranteed outcomes or fixed destiny. Consult qualified professionals for decisions affecting your health, finances, or legal standing."
     }
   },
+  "cityAutocomplete": {
+    "suggestionsAria": "City suggestions",
+    "searchUnavailable": "City search unavailable"
+  },
+  "dateInput": {
+    "monthAria": "Month",
+    "dayAria": "Day",
+    "yearAria": "Year",
+    "openCalendarAria": "Open calendar",
+    "calendarDialogAria": "Date picker calendar",
+    "prevMonthAria": "Previous month",
+    "nextMonthAria": "Next month"
+  },
+  "cookieConsent": {
+    "ariaLabel": "Cookie consent",
+    "shortCopy": "Analytics & ad cookies.",
+    "shortPrivacyLabel": "Privacy",
+    "shortPrivacyAria": "Privacy Policy",
+    "fullCopy": "We use cookies for analytics and ad measurement — only after you accept.",
+    "privacyPolicyLabel": "Privacy Policy",
+    "decline": "Decline",
+    "accept": "Accept"
+  },
   "appShell": {
     "skipToContent": "Skip to main content",
     "languageAriaLabel": "Language",
@@ -813,8 +837,9 @@
     "heroEyebrow": "Sidereal · Lahiri · Swiss Ephemeris",
     "heroLine1": "Your True",
     "heroLine2": "Zodiac Sign",
-    "heroSubtext": "Western astrology froze the zodiac to the seasons in 100 AD. The sky has shifted 24° since then. Sidereal astrology tracks the actual constellations — most people discover their Sun is in a different sign entirely.",
-    "heroTrust": "No account needed · Calculation takes under 2 seconds",
+    "heroSubtext": "Western horoscopes are off by 24°. The sky has drifted since the zodiac was frozen in 100 AD — sidereal astrology reads the constellations as they actually are tonight. Most people's real Sun sign is different.",
+    "heroProof": "Positions computed from Swiss Ephemeris — the professional standard, accurate to ±0.01°.",
+    "heroTrust": "Free · No credit card · Under 60 seconds",
     "howHeading": "How it works",
     "howSubtitle": "From birth data to shareable card in under a minute.",
     "stepEnterTitle": "Enter birth data",
@@ -835,7 +860,7 @@
     "feature4Title": "777 Correspondences",
     "feature4Desc": "Crowley's 777 — colors, gems, incense, deities, Kabbalistic paths — mapped to every planet and sign. Pre-1929 texts, public domain.",
     "newFeaturesAria": "New features",
-    "statsHeading": "Join astrologers discovering their sidereal signs",
+    "statsHeading": "Built on the ephemeris professional astrologers trust",
     "statsSubtitle": "Most discover they carry the energy of the sign before their tropical Sun — not the one on their horoscope app.",
     "stat1Value": "±0.01°",
     "stat1Label": "Calculation accuracy",
@@ -964,7 +989,7 @@
   },
   "essays": {
     "title": "Essays",
-    "readMore": "Read more",
+    "unlockFull": "Unlock the full essay",
     "siderealLabel": "Sidereal · Lahiri",
     "tropicalComparison": "Tropical: {sign}",
     "disclaimer": "Astrology is not medical, legal, or financial advice. Content is for educational and entertainment purposes only.",
@@ -1011,8 +1036,8 @@
       "prioritySupport": "Priority support — reply in < 24h"
     },
     "eyebrow": "Plans & Pricing",
-    "heading": "Sidereal Vedic charts — Lahiri-accurate",
-    "subheading": "The way the ancient texts intended. Try Pro risk-free for 14 days.",
+    "heading": "See your true sidereal chart",
+    "subheading": "Three days free, cancel anytime. 14-day money-back guarantee if you stay.",
     "saveBadgeLong": "Save 42% — pay $34.99 once vs $59.88 monthly",
     "guaranteeHeading": "14-day money-back guarantee, no questions asked",
     "guaranteeSubcopy": "Try Pro risk-free. Full refund within 14 days. Just email us.",
@@ -1066,6 +1091,7 @@
     "features": "Everything in Free, plus:",
     "trialCta": "Start 3-Day Free Trial",
     "noCharge": "You won't be charged until {date}",
+    "trustRow": "Cancel anytime · 14-day money-back · Secured by Stripe",
     "alreadyPro": "You already have Pro access",
     "contextualTitles": {
       "celticCross": "Unlock your Celtic Cross reading",
@@ -1075,19 +1101,19 @@
       "natalChart": "Get your full natal chart reading"
     },
     "cta": {
-      "eyebrow": "Locked behind Star",
+      "eyebrow": "Included in Pro",
       "subline": {
         "celticCross": "Get the full interpretation tying all 10 cards into one narrative.",
         "threeCard": "Get the LLM reading that connects past, present, and future.",
-        "synastryAi": "Get a detailed analysis of how your charts interact.",
+        "synastryAi": "See how your two charts actually interact — full AI reading with Pro.",
         "natalChart": "An AI-crafted synthesis of all your planets, houses, and aspects — written for your chart, not a generic horoscope."
       },
       "ctaLabel": "Start 3-Day Free Trial"
     }
   },
   "emailGate": {
-    "title": "See your sidereal chart",
-    "subtitle": "Enter your email to reveal the chart we just calculated for you.",
+    "title": "Your chart is ready — where do we send the details?",
+    "subtitle": "We'll email your full placements breakdown (Moon, rising & aspects) plus what they mean.",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
     "submitCta": "See My Chart",
@@ -1472,6 +1498,8 @@
     "tpResendData": "Email address, email content",
     "tpSentryPurpose": "Error monitoring",
     "tpSentryData": "Error stack traces, anonymised user context",
+    "tpMetaPurpose": "Ad measurement (Meta Pixel + Conversions API)",
+    "tpMetaData": "Page-view and conversion events; the browser pixel loads only after you accept cookies — never birth data",
     "tpDataSharedPrefix": "Data shared: ",
     "s5Title": "5. Data Retention",
     "tableHeaderData": "Data",
@@ -1511,7 +1539,7 @@
     "s7L1Suffix": " — Clerk session tokens. Necessary for the Service to function. No consent required.",
     "s7L2Strong": "Analytics",
     "s7L2Suffix": " — PostHog client identifier (localStorage). Requires explicit consent via the cookie banner.",
-    "s7Footer": "You can withdraw analytics consent at any time by clearing your browser's localStorage or contacting us. We do not use advertising cookies.",
+    "s7Footer": "You can withdraw analytics consent at any time by clearing your browser's localStorage or contacting us. Advertising cookies (Meta Pixel) are set only after you accept cookies — if you decline, they are never installed, and we never send your birth data to advertisers.",
     "s8Title": "8. International Data Transfers",
     "s8P1": "Our analytics data (PostHog) is processed in the EU. Database infrastructure (Neon) may store data in the US. Where applicable, transfers are governed by Standard Contractual Clauses (SCCs) approved by the European Commission.",
     "s9Title": "9. Children's Privacy",

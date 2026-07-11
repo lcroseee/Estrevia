@@ -7,6 +7,10 @@
  * Stores preference in localStorage under COOKIE_CONSENT_KEY.
  * Dispatches `estrevia:consent` custom event so PostHogProvider
  * can initialize immediately on acceptance without a full page reload.
+ *
+ * i18n: mounts OUTSIDE NextIntlClientProvider (root layout), so strings are
+ * resolved server-side in RootLayout (getTranslations('cookieConsent')) and
+ * passed via the required `strings` prop — see src/app/layout.tsx.
  */
 
 import { useState, useEffect } from 'react';
@@ -15,7 +19,25 @@ import type { CookieConsentValue } from './PostHogProvider';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { shouldShowConsentBanner } from '@/shared/lib/consent';
 
-export function CookieConsent() {
+export interface CookieConsentStrings {
+  ariaLabel: string;
+  shortCopy: string;
+  shortPrivacyLabel: string;
+  shortPrivacyAria: string;
+  fullCopy: string;
+  privacyPolicyLabel: string;
+  decline: string;
+  accept: string;
+}
+
+interface CookieConsentProps {
+  /** Server-resolved i18n strings (component mounts outside NextIntlClientProvider). */
+  strings: CookieConsentStrings;
+  /** Locale-prefixed privacy policy path, e.g. "/es/privacy". */
+  privacyHref: string;
+}
+
+export function CookieConsent({ strings, privacyHref }: CookieConsentProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -58,7 +80,7 @@ export function CookieConsent() {
     <div
       role="dialog"
       aria-live="polite"
-      aria-label="Cookie consent"
+      aria-label={strings.ariaLabel}
       className={[
         // z-50 keeps cookie banner above bottom nav (z-40)
         'fixed left-0 right-0 z-50 bottom-0',
@@ -79,24 +101,23 @@ export function CookieConsent() {
       <p className="text-xs sm:text-sm text-white/70 leading-snug sm:leading-relaxed sm:max-w-prose truncate sm:whitespace-normal min-w-0">
         {/* Short copy visible only on mobile */}
         <span className="sm:hidden">
-          Analytics cookies only.{' '}
+          {strings.shortCopy}{' '}
           <a
-            href="/privacy"
+            href={privacyHref}
             className="text-[#C8A84B] underline underline-offset-2 hover:text-[#E0C06A] transition-colors"
-            aria-label="Privacy Policy"
+            aria-label={strings.shortPrivacyAria}
           >
-            Privacy
+            {strings.shortPrivacyLabel}
           </a>
         </span>
         {/* Full copy visible on sm+ */}
         <span className="hidden sm:inline">
-          We use analytics cookies to understand how you use Estrevia and improve
-          the experience. No ads, no third-party tracking.{' '}
+          {strings.fullCopy}{' '}
           <a
-            href="/privacy"
+            href={privacyHref}
             className="text-[#C8A84B] underline underline-offset-2 hover:text-[#E0C06A] transition-colors"
           >
-            Privacy Policy
+            {strings.privacyPolicyLabel}
           </a>
         </span>
       </p>
@@ -116,7 +137,7 @@ export function CookieConsent() {
             'active:scale-[0.97]',
           ].join(' ')}
         >
-          Decline
+          {strings.decline}
         </button>
 
         <button
@@ -133,7 +154,7 @@ export function CookieConsent() {
             color: '#0A0A0F',
           }}
         >
-          Accept
+          {strings.accept}
         </button>
       </div>
     </div>

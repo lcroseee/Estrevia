@@ -104,6 +104,7 @@ vi.mock('@sentry/nextjs', () => ({
 // Import route under test AFTER all mocks are wired up.
 // ---------------------------------------------------------------------------
 import { POST } from '../route';
+import { CURRENCY_EQUIV } from '@/shared/lib/currency-equiv';
 
 const USER_ID = 'user_xyz';
 const CHECKOUT_URL = 'https://stripe.com/pay/cs_test_abc123';
@@ -223,6 +224,16 @@ describe('POST /api/v1/stripe/checkout — locale forwarding (authenticated)', (
 
     const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
     expect(callArg.custom_text?.submit?.message).toContain('90'); // monthly amount
+  });
+
+  it('custom_text.submit.message comes verbatim from the shared CURRENCY_EQUIV source (SP-B D2)', async () => {
+    await POST(makeRequest({ locale: 'es', plan: 'pro_annual' }));
+    let callArg = mocks.mockSessionsCreate.mock.calls.at(-1)![0];
+    expect(callArg.custom_text?.submit?.message).toBe(CURRENCY_EQUIV.pro_annual);
+
+    await POST(makeRequest({ locale: 'es', plan: 'pro_monthly' }));
+    callArg = mocks.mockSessionsCreate.mock.calls.at(-1)![0];
+    expect(callArg.custom_text?.submit?.message).toBe(CURRENCY_EQUIV.pro_monthly);
   });
 
   it('omits custom_text for EN/default locale', async () => {
@@ -397,5 +408,143 @@ describe('POST /api/v1/stripe/checkout — payment_method_types (authenticated)'
 
     const call = mocks.mockSessionsCreate.mock.calls[0][0];
     expect(call.payment_method_types).toEqual(['card', 'link']);
+  });
+});
+
+describe('POST /api/v1/stripe/checkout — returnUrl metadata (SP-A D1)', () => {
+  it('stores a valid same-origin path as metadata.return_url (authenticated)', async () => {
+    const res = await POST(makeRequest({ returnUrl: '/tarot/celtic-cross', locale: 'en' }));
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata.return_url).toBe('/tarot/celtic-cross');
+  });
+
+  it('rejects an absolute URL — return_url omitted, sibling fields NOT wiped', async () => {
+    const res = await POST(
+      makeRequest({ returnUrl: 'https://evil.example/phish', locale: 'es', utm_source: 'meta' }),
+    );
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+    // .catch(undefined) must degrade ONLY the returnUrl field — locale/utm survive.
+    expect(callArg.metadata).toMatchObject({ locale: 'es', utm_source: 'meta' });
+    expect(callArg.locale).toBe('es-419');
+  });
+
+  it('rejects a protocol-relative //host path', async () => {
+    const res = await POST(makeRequest({ returnUrl: '//evil.example/phish' }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+  });
+
+  it('rejects a backslash-normalized /\\host path (browsers treat \\ as /)', async () => {
+    const res = await POST(makeRequest({ returnUrl: '/\\evil.example/phish' }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+  });
+
+  it('rejects a /es\\host path — backslash after a path segment still normalizes to protocol-relative', async () => {
+    const res = await POST(makeRequest({ returnUrl: '/es\\evil.example/phish' }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    // A real rooted path never starts with `/\`; `/es\...` here is `/` + `\` so it's rejected.
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+  });
+
+  it('rejects a path longer than 500 chars (Stripe metadata value cap)', async () => {
+    const res = await POST(makeRequest({ returnUrl: `/${'a'.repeat(500)}` }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+  });
+
+  it('never leaks returnUrl into the UTM passthrough key set', async () => {
+    const res = await POST(makeRequest({ returnUrl: '/chart', utm_source: 'meta' }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('returnUrl');
+    expect(callArg.subscription_data.metadata).not.toHaveProperty('returnUrl');
+  });
+
+  it('stores return_url in the anonymous branch too', async () => {
+    mocks.mockAuth.mockResolvedValue({ userId: null });
+    mocks.mockCookieGet.mockReturnValue({ value: 'anon_abc' });
+
+    const res = await POST(makeRequest({ returnUrl: '/synastry', locale: 'es' }));
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata.return_url).toBe('/synastry');
+  });
+
+  it("normalizes the CheckoutStartClient default '/' to absent — no return_url stored", async () => {
+    // CheckoutStartClient.tsx:43 always POSTs returnUrl ?? '/' — storing '/'
+    // would land payers on the marketing landing page instead of /chart.
+    const res = await POST(makeRequest({ returnUrl: '/', locale: 'en' }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+  });
+
+  it("normalizes '/pricing' to absent — /pricing payers get the /chart default", async () => {
+    // PricingUpgradeButton.tsx:47 auth-failure fallback routes through
+    // /checkout/start?return=%2Fpricing — must not bounce payers back to /pricing.
+    const res = await POST(makeRequest({ returnUrl: '/pricing' }));
+    expect(res.status).toBe(200);
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.metadata).not.toHaveProperty('return_url');
+  });
+});
+
+describe('POST /api/v1/stripe/checkout — locale-prefixed success/cancel URLs (SP-A D5)', () => {
+  it('prefixes both URLs with /es for ES callers (authenticated)', async () => {
+    const res = await POST(makeRequest({ locale: 'es' }));
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.success_url).toBe(
+      'https://estrevia.app/es/checkout/complete?session_id={CHECKOUT_SESSION_ID}',
+    );
+    expect(callArg.cancel_url).toBe('https://estrevia.app/es/pricing');
+  });
+
+  it('keeps EN URLs unprefixed (byte-identical to current behavior)', async () => {
+    const res = await POST(makeRequest({ locale: 'en' }));
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.success_url).toBe(
+      'https://estrevia.app/checkout/complete?session_id={CHECKOUT_SESSION_ID}',
+    );
+    expect(callArg.cancel_url).toBe('https://estrevia.app/pricing');
+  });
+
+  it('keeps URLs unprefixed when locale is omitted', async () => {
+    const res = await POST(makeRequest({}));
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.success_url).toBe(
+      'https://estrevia.app/checkout/complete?session_id={CHECKOUT_SESSION_ID}',
+    );
+    expect(callArg.cancel_url).toBe('https://estrevia.app/pricing');
+  });
+
+  it('prefixes both URLs with /es for ES callers (anonymous branch)', async () => {
+    mocks.mockAuth.mockResolvedValue({ userId: null });
+    mocks.mockCookieGet.mockReturnValue({ value: 'anon_abc' });
+
+    const res = await POST(makeRequest({ locale: 'es' }));
+    expect(res.status).toBe(200);
+
+    const callArg = mocks.mockSessionsCreate.mock.calls[0][0];
+    expect(callArg.success_url).toBe(
+      'https://estrevia.app/es/checkout/complete?session_id={CHECKOUT_SESSION_ID}',
+    );
+    expect(callArg.cancel_url).toBe('https://estrevia.app/es/pricing');
   });
 });

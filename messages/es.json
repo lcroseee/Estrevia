@@ -50,6 +50,7 @@
     "errTimeRequired": "Ingresa tu hora de nacimiento o desactiva la opción"
   },
   "timePicker": {
+    "timeGroupAria": "Hora",
     "hourLabel": "Hora",
     "minuteLabel": "Minutos",
     "meridiemLabel": "AM o PM",
@@ -580,6 +581,29 @@
       "body": "La astrología es un sistema simbólico para la autorreflexión y la indagación cultural. Nada en esta página constituye consejo médico, psicológico, financiero o legal. Las interpretaciones describen tendencias arquetípicas — no resultados garantizados ni un destino fijo. Consulta a profesionales calificados para decisiones que afecten tu salud, tus finanzas o tu situación legal."
     }
   },
+  "cityAutocomplete": {
+    "suggestionsAria": "Sugerencias de ciudades",
+    "searchUnavailable": "Búsqueda de ciudades no disponible"
+  },
+  "dateInput": {
+    "monthAria": "Mes",
+    "dayAria": "Día",
+    "yearAria": "Año",
+    "openCalendarAria": "Abrir calendario",
+    "calendarDialogAria": "Calendario para elegir fecha",
+    "prevMonthAria": "Mes anterior",
+    "nextMonthAria": "Mes siguiente"
+  },
+  "cookieConsent": {
+    "ariaLabel": "Consentimiento de cookies",
+    "shortCopy": "Cookies de analítica y anuncios.",
+    "shortPrivacyLabel": "Privacidad",
+    "shortPrivacyAria": "Política de privacidad",
+    "fullCopy": "Usamos cookies para analítica y medición de anuncios — solo después de que aceptes.",
+    "privacyPolicyLabel": "Política de privacidad",
+    "decline": "Rechazar",
+    "accept": "Aceptar"
+  },
   "appShell": {
     "skipToContent": "Saltar al contenido principal",
     "languageAriaLabel": "Idioma",
@@ -813,8 +837,9 @@
     "heroEyebrow": "Sideral · Lahiri · Swiss Ephemeris",
     "heroLine1": "Tu signo",
     "heroLine2": "zodiacal verdadero",
-    "heroSubtext": "La astrología occidental congeló el zodíaco a las estaciones en el año 100 d.C. El cielo se ha desplazado 24° desde entonces. La astrología sideral rastrea las constelaciones reales — la mayoría descubre que su Sol está en un signo completamente diferente.",
-    "heroTrust": "Sin cuenta necesaria · El cálculo tarda menos de 2 segundos",
+    "heroSubtext": "Los horóscopos occidentales están desviados 24°. El cielo se ha desplazado desde que el zodíaco se congeló en el año 100 d.C. — la astrología sideral lee las constelaciones tal como están esta noche. El verdadero signo solar de la mayoría de las personas es otro.",
+    "heroProof": "Posiciones calculadas con Swiss Ephemeris — el estándar profesional, con precisión de ±0,01°.",
+    "heroTrust": "Gratis · Sin tarjeta de crédito · En menos de 60 segundos",
     "howHeading": "Cómo funciona",
     "howSubtitle": "De tus datos de nacimiento a una tarjeta compartible en menos de un minuto.",
     "stepEnterTitle": "Ingresa tus datos",
@@ -835,7 +860,7 @@
     "feature4Title": "Correspondencias 777",
     "feature4Desc": "Las 777 de Crowley — colores, gemas, inciensos, deidades, caminos cabalísticos — mapeadas a cada planeta y signo. Textos anteriores a 1929, dominio público.",
     "newFeaturesAria": "Nuevas características",
-    "statsHeading": "Únete a astrólogos que descubren sus signos siderales",
+    "statsHeading": "Construido sobre las efemérides en las que confían los astrólogos profesionales",
     "statsSubtitle": "La mayoría descubre que llevan la energía del signo anterior a su Sol tropical — no el del horóscopo de su app.",
     "stat1Value": "±0,01°",
     "stat1Label": "Precisión de cálculo",
@@ -964,7 +989,7 @@
   },
   "essays": {
     "title": "Ensayos",
-    "readMore": "Leer más",
+    "unlockFull": "Desbloquea el ensayo completo",
     "siderealLabel": "Sideral · Lahiri",
     "tropicalComparison": "Tropical: {sign}",
     "disclaimer": "La astrología es para reflexión personal y entretenimiento. Nada en este sitio constituye consejo médico, financiero, legal o psicológico.",
@@ -976,17 +1001,18 @@
     "freePrice": "$0",
     "freeForever": "para siempre",
     "proTitle": "Pro",
-    "monthlyPrice": "$4.99",
+    "monthlyPrice": "US$4.99",
     "monthlyLabel": "/mes",
-    "annualPrice": "$34.99",
+    "annualPrice": "US$34.99",
     "annualLabel": "/año",
-    "annualPerMonth": "~$2,92/mes",
+    "annualPerMonth": "~US$2,92/mes",
     "monthlyPriceEquiv": "≈ 90 MXN · 21 000 COP · 4 740 CLP · 19 PEN · 200 UYU",
     "annualPriceEquiv": "≈ 630 MXN · 147 000 COP · 33 200 CLP · 133 PEN · 1 400 UYU",
+    "billedInUsd": "Se factura en dólares (USD)",
     "saveBadge": "Ahorra 42 %",
     "monthly": "Mensual",
     "annual": "Anual",
-    "startTrial": "Comenzar prueba de 3 días",
+    "startTrial": "Comienza tu prueba gratis de 3 días",
     "currentPlan": "Plan actual",
     "trialEndNote": "Cancela cuando quieras. No se te cobrará hasta el {date}.",
     "freeFeatures": {
@@ -1013,8 +1039,8 @@
       "prioritySupport": "Soporte prioritario — respuesta en < 24h"
     },
     "eyebrow": "Planes y precios",
-    "heading": "Cartas védicas siderales — precisión Lahiri",
-    "subheading": "Como los textos antiguos las querían. Prueba Pro sin riesgo por 14 días.",
+    "heading": "Mira tu verdadera carta sideral",
+    "subheading": "Tres días gratis, cancela cuando quieras. Garantía de devolución de 14 días si te quedas.",
     "saveBadgeLong": "Ahorra 42% — paga $34.99 una vez vs $59.88 mensual",
     "guaranteeHeading": "Garantía de devolución de 14 días, sin preguntas",
     "guaranteeSubcopy": "Prueba Pro sin riesgo. Reembolso total en 14 días. Solo escríbenos.",
@@ -1067,8 +1093,9 @@
     "title": "Desbloquea el acceso completo",
     "subtitle": "Continúa leyendo con Estrevia Pro",
     "features": "Todo en Gratis, más:",
-    "trialCta": "Comenzar prueba de 3 días",
+    "trialCta": "Comienza tu prueba gratis de 3 días",
     "noCharge": "No se te cobrará hasta el {date}",
+    "trustRow": "Cancela cuando quieras · Garantía de 14 días · Pago seguro con Stripe",
     "alreadyPro": "Ya tienes acceso Pro",
     "contextualTitles": {
       "celticCross": "Desbloquea tu lectura de la Cruz Celta",
@@ -1078,19 +1105,19 @@
       "natalChart": "Obtén la lectura completa de tu carta natal"
     },
     "cta": {
-      "eyebrow": "Bloqueado tras Star",
+      "eyebrow": "Incluido en Pro",
       "subline": {
         "celticCross": "Obtén la interpretación completa que conecta las 10 cartas en una narrativa.",
         "threeCard": "Obtén la lectura que conecta pasado, presente y futuro.",
-        "synastryAi": "Obtén un análisis detallado de cómo interactúan tus cartas.",
+        "synastryAi": "Mira cómo interactúan realmente sus dos cartas — lectura completa con IA, incluida en Pro.",
         "natalChart": "Síntesis hecha con IA de todos tus planetas, casas y aspectos — escrita para tu carta, no un horóscopo genérico."
       },
       "ctaLabel": "Comienza tu prueba gratis de 3 días"
     }
   },
   "emailGate": {
-    "title": "Mira tu carta sideral",
-    "subtitle": "Ingresa tu email para ver la carta que calculamos.",
+    "title": "Tu carta está lista — ¿a dónde te la enviamos?",
+    "subtitle": "Te enviaremos por email el desglose completo de tus posiciones (Luna, ascendente y aspectos) y qué significan.",
     "emailLabel": "Email",
     "emailPlaceholder": "tu@ejemplo.com",
     "submitCta": "Ver mi carta",
@@ -1475,6 +1502,8 @@
     "tpResendData": "Dirección de correo, contenido del correo",
     "tpSentryPurpose": "Monitoreo de errores",
     "tpSentryData": "Rastros de error, contexto de usuario anonimizado",
+    "tpMetaPurpose": "Medición de anuncios (Meta Pixel + API de Conversiones)",
+    "tpMetaData": "Eventos de vista de página y conversión; el píxel del navegador se carga solo si aceptas las cookies — nunca datos de nacimiento",
     "tpDataSharedPrefix": "Datos compartidos: ",
     "s5Title": "5. Retención de datos",
     "tableHeaderData": "Datos",
@@ -1514,7 +1543,7 @@
     "s7L1Suffix": " — tokens de sesión de Clerk. Necesarios para que el Servicio funcione. No requieren consentimiento.",
     "s7L2Strong": "Análisis",
     "s7L2Suffix": " — identificador de cliente de PostHog (localStorage). Requiere consentimiento explícito vía el banner de cookies.",
-    "s7Footer": "Puedes retirar el consentimiento de análisis en cualquier momento borrando el localStorage de tu navegador o contactándonos. No usamos cookies de publicidad.",
+    "s7Footer": "Puedes retirar el consentimiento de análisis en cualquier momento borrando el localStorage de tu navegador o contactándonos. Las cookies publicitarias (Meta Pixel) se activan solo si aceptas las cookies — si las rechazas, nunca se instalan, y nunca enviamos tus datos de nacimiento a anunciantes.",
     "s8Title": "8. Transferencias internacionales de datos",
     "s8P1": "Nuestros datos de análisis (PostHog) se procesan en la UE. La infraestructura de base de datos (Neon) puede almacenar datos en EE.UU. Cuando corresponda, las transferencias se rigen por las Cláusulas Contractuales Estándar (CCE) aprobadas por la Comisión Europea.",
     "s9Title": "9. Privacidad de menores",

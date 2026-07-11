@@ -281,8 +281,9 @@ describe('POST /api/v1/checkout/recover', () => {
     const res = await POST(makeRequest({ session_id: 'cs_test_1' }));
     expect(res.status).toBe(200);
     expect((await res.json()).data.ready).toBe(true);
-    // The email_lead link UPDATE ran (update().set().where()).
-    expect(dbUpdateWhereMock).toHaveBeenCalledTimes(1);
+    // Two update().set().where() calls ran: the P0-1 placeholder-email
+    // replacement and the email_lead link.
+    expect(dbUpdateWhereMock).toHaveBeenCalledTimes(2);
   });
 
   it('provisions: reuses existing Clerk user (find-only, no create)', async () => {

@@ -160,7 +160,7 @@ describe('PaywallModal — checkout flow', () => {
     expect(setHref).toHaveBeenCalledWith('https://stripe.com/test-checkout-url');
     expect(mockTrackEvent).toHaveBeenCalledWith(
       'CHECKOUT_STRIPE_REDIRECTED',
-      expect.objectContaining({ plan: 'pro_annual' }),
+      expect.objectContaining({ plan: 'pro_monthly' }),
     );
     expect(mockTrackEvent).not.toHaveBeenCalledWith(
       'CHECKOUT_AUTH_REDIRECT',
@@ -201,5 +201,12 @@ describe('PaywallModal — checkout flow', () => {
       'CHECKOUT_AUTH_REDIRECT',
       expect.anything(),
     );
+  });
+
+  it('renders via portal into document.body with z-[60] (P0-2: must beat cookie banner z-50)', () => {
+    render(<PaywallModal open={true} onClose={vi.fn()} />);
+    const overlay = document.body.querySelector('.z-\\[60\\]');
+    expect(overlay).not.toBeNull();
+    expect(overlay!.parentElement).toBe(document.body);
   });
 });

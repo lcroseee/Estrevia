@@ -14,7 +14,7 @@
  * Idempotent via:
  *   - Clerk find-or-create with race recovery
  *   - DB upsert (onConflictDoUpdate)
- *   - Fast-path step skipping if signInTicket already in session metadata
+ *   - Fast-path step skipping if a ticket is already stored in Redis (checkout-ticket)
  *   - `recovery:<session_id>` marker row in processed_stripe_events
  *
  * Public endpoint, rate-limited by IP. The Stripe session_id IS the
@@ -26,13 +26,14 @@
  */
 
 import { NextResponse } from 'next/server';
-import { eq, or, sql } from 'drizzle-orm';
+import { and, eq, like, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type Stripe from 'stripe';
 import { clerkClient } from '@clerk/nextjs/server';
 import { getStripe } from '@/shared/lib/stripe';
 import { getDb } from '@/shared/lib/db';
 import { users, processedStripeEvents, emailLeads } from '@/shared/lib/schema';
+import { isUniqueViolation } from '@/shared/lib/db-errors';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { storeCheckoutTicket, getCheckoutTicket } from '@/shared/lib/checkout-ticket';
@@ -287,6 +288,37 @@ export async function POST(
         },
       });
 
+    // P0-1 mirror of webhooks/stripe checkout.session.completed (see header contract).
+    // Replace the stripe-pending placeholder with the real payer address. LIKE guard
+    // never clobbers a real (Clerk-owned) email; unique-violation is non-fatal.
+    try {
+      await db
+        .update(users)
+        .set({ email, emailUndeliverable: false, updatedAt: new Date() })
+        .where(
+          and(
+            eq(users.id, clerkUserId),
+            like(users.email, 'stripe-pending-%@placeholder.invalid'),
+          ),
+        );
+    } catch (err) {
+      // Non-fatal side-effect: the email UPDATE must never fail recovery. Swallow ALL
+      // errors (mirrors webhooks/stripe/route.ts) so a transient DB error can't 500 the
+      // recovery and strand the just-provisioned paying user.
+      if (isUniqueViolation(err)) {
+        console.warn('[checkout/recover] payer email already owned by another user row — kept placeholder', {
+          userId: clerkUserId,
+        });
+      } else {
+        // PII-safe: log only message+name — never the email or the raw err.
+        console.error('[checkout/recover] payer email update failed (non-fatal) — kept placeholder', {
+          userId: clerkUserId,
+          message: (err as Error)?.message,
+          name: (err as Error)?.name,
+        });
+      }
+    }
+
     // 12. Marker row for observability. `recovery:` prefix cannot collide with
     // real Stripe event IDs (which start with `evt_`).
     try {
@@ -310,13 +342,17 @@ export async function POST(
     // fallback stays webhook-side).
     try {
       const anonymousIdMeta = (session.metadata?.anonymous_id ?? null) as string | null;
+      // emailLeads.email is stored lowercase (mirrors the Stripe webhook). Lowercase
+      // the checkout email before comparing so a mixed-case payer email still matches —
+      // otherwise the drip keeps emailing a paying customer + the conversion is unattributed.
+      const emailLower = email.toLowerCase();
       await db
         .update(emailLeads)
         .set({ convertedToUserId: clerkUserId, convertedAt: new Date() })
         .where(
           anonymousIdMeta
-            ? or(eq(emailLeads.anonymousId, anonymousIdMeta), eq(emailLeads.email, email))
-            : eq(emailLeads.email, email),
+            ? or(eq(emailLeads.anonymousId, anonymousIdMeta), eq(emailLeads.email, emailLower))
+            : eq(emailLeads.email, emailLower),
         );
     } catch (linkErr) {
       console.warn(

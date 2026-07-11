@@ -214,7 +214,7 @@ describe('/api/cron/lead-nurture', () => {
     expect(scheduled).toBeGreaterThanOrEqual(before + 168 * 3600_000);
   });
 
-  it('dispatches to sendLeadMiniReadingEmail when step=5 and due (was step=4)', async () => {
+  it('dispatches to sendLeadMiniReadingEmail when step=5 and due (terminal — synastry retired)', async () => {
     candidates = [{
       id: 'lead_s5',
       email: 's5@example.com',
@@ -224,17 +224,15 @@ describe('/api/cron/lead-nurture', () => {
       nurtureNextAt: new Date(Date.now() - 60_000),
       createdAt: new Date(Date.now() - 340 * 3600_000),
     }];
-    const before = Date.now();
     const { GET } = await import('../route');
     await GET(new Request('http://localhost/api/cron/lead-nurture'));
     expect(sendMiniReadingMock).toHaveBeenCalledTimes(1);
     expect(updates).toHaveLength(1);
     expect(updates[0]!.vals.nurtureStep).toBe(6);
-    const scheduled = (updates[0]!.vals.nurtureNextAt as Date).getTime();
-    expect(scheduled).toBeGreaterThanOrEqual(before + 168 * 3600_000);
+    expect(updates[0]!.vals.nurtureNextAt).toBeNull();
   });
 
-  it('dispatches to sendLeadSynastryTeaserEmail when step=6 and due (terminal, was step=5)', async () => {
+  it('step=6 lead gets NO send and NO step change (synastry_teaser retired)', async () => {
     candidates = [{
       id: 'lead_s6',
       email: 's6@example.com',
@@ -245,11 +243,11 @@ describe('/api/cron/lead-nurture', () => {
       createdAt: new Date(Date.now() - 508 * 3600_000),
     }];
     const { GET } = await import('../route');
-    await GET(new Request('http://localhost/api/cron/lead-nurture'));
-    expect(sendSynastryMock).toHaveBeenCalledTimes(1);
-    expect(updates).toHaveLength(1);
-    expect(updates[0]!.vals.nurtureStep).toBe(7);
-    expect(updates[0]!.vals.nurtureNextAt).toBeNull();
+    const res = await GET(new Request('http://localhost/api/cron/lead-nurture'));
+    const json = await res.json();
+    expect(sendSynastryMock).not.toHaveBeenCalled();
+    expect(updates).toHaveLength(0);
+    expect(json.skipped).toBe(1);
   });
 
   it('does NOT advance step when sendLeadMiniReadingEmail throws (Sev1 regression)', async () => {

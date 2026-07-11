@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import WelcomeEmail from '@/emails/WelcomeEmail';
 import PurchaseConfirmationEmail from '@/emails/PurchaseConfirmationEmail';
+import PaidOnboardingEmail from '@/emails/PaidOnboardingEmail';
 import SubscriptionCanceledEmail from '@/emails/SubscriptionCanceledEmail';
 import AccountDeletionEmail from '@/emails/AccountDeletionEmail';
 import ReEngagementEmail from '@/emails/ReEngagementEmail';
@@ -19,7 +20,13 @@ import MiniReadingEmail from '@/emails/MiniReadingEmail';
 import SynastryTeaserEmail from '@/emails/SynastryTeaserEmail';
 import CartAbandonEmail from '@/emails/CartAbandonEmail';
 import { PLANET_ES_NAMES } from './planet-i18n';
-import { tryInsertOneShot, recordSent } from './sent-emails';
+import {
+  tryInsertOneShot,
+  recordSent,
+  wasSentWithin,
+  tryInsertOneShotUser,
+  recordSentUpdate,
+} from './sent-emails';
 import { tryInsertOneShotLead, recordSentLead } from './sent-lead-emails';
 import { hasCartAbandonSentRecently, recordCartAbandonSent } from './sent-cart-abandon-emails';
 import { signUnsubscribeToken, signLeadUnsubscribeToken } from './unsubscribe-token';
@@ -54,6 +61,10 @@ const SUBJECTS = {
   purchase_confirmation: {
     en: 'Welcome to Estrevia Pro',
     es: 'Bienvenido a Estrevia Pro',
+  },
+  paid_onboarding: {
+    en: 'Your first AI reading is waiting',
+    es: 'Tu primera lectura con IA te espera',
   },
   subscription_canceled: {
     en: 'Your Estrevia Pro subscription has been canceled',
@@ -137,6 +148,21 @@ const SETTINGS_URL = (locale: 'en' | 'es') =>
   `${SITE_URL}/${locale === 'es' ? 'es/' : ''}settings`;
 
 // ---------------------------------------------------------------------------
+// UTM suffix for drip CTA links (audit 2026-07-10 finding #5: utm_content was
+// null on 77/77 drip pageviews — per-template attribution was blind).
+//   utm_content = leadId — the Stripe-webhook lead-link fallback regex-matches
+//     a 21-char leadId in session metadata (webhooks/stripe/route.ts:289-291)
+//     to attribute anonymous purchases back to the lead. Never put template
+//     names here: that would permanently disable the fallback.
+//   utm_term = email template (sent_lead_emails.email_type) — joins sends to
+//     pageviews/checkouts per template in PostHog + Stripe metadata.
+//   utm_campaign keeps the historic step names (t0/t1h/…) for old dashboards.
+// ---------------------------------------------------------------------------
+function dripUtm(campaign: string, leadId: string, template: string): string {
+  return `utm_source=lead-nurture&utm_medium=email&utm_campaign=${campaign}&utm_content=${leadId}&utm_term=${template}`;
+}
+
+// ---------------------------------------------------------------------------
 // sendWelcomeEmail — one-shot, deduped via sent_emails UNIQUE index
 // ---------------------------------------------------------------------------
 export async function sendWelcomeEmail(params: {
@@ -145,9 +171,11 @@ export async function sendWelcomeEmail(params: {
   locale: 'en' | 'es';
   hasSavedChart: boolean;
 }): Promise<{ sent: boolean; reason?: string }> {
-  // 1. DB-layer dedup (welcome is one-shot per user)
-  const inserted = await tryInsertOneShot(params.userId, 'welcome');
-  if (!inserted) return { sent: false, reason: 'already_sent' };
+  // 1. DB-layer dedup — claim/update pattern (mirrors sent-lead-emails).
+  // 'delivered' = a prior send recorded a Resend message id; 'retry' = a prior
+  // attempt claimed the slot but never delivered (msgid NULL) — safe to retry.
+  const claim = await tryInsertOneShotUser(params.userId, 'welcome');
+  if (claim === 'delivered') return { sent: false, reason: 'already_sent' };
 
   // 2. Render
   const html = await render(
@@ -173,10 +201,17 @@ export async function sendWelcomeEmail(params: {
     { idempotencyKey: `${params.userId}:welcome` },
   );
 
-  // 4. Record Resend message ID (best-effort)
-  if (result.data?.id) {
-    await recordSent(params.userId, 'welcome', result.data.id);
+  // Throw on rejection so the caller's try/catch surfaces via Sentry and the
+  // claim row keeps its NULL msgid ('retry' next time) — no false "sent".
+  if (result.error) {
+    throw new Error(
+      `Resend rejected welcome for ${params.userId}: ${result.error.message ?? 'unknown'}`,
+    );
   }
+
+  // 4. UPDATE the claimed row with the message id. An INSERT here collides
+  // with sent_emails_oneshot_idx (partial UNIQUE on welcome) → 23505.
+  await recordSentUpdate(params.userId, 'welcome', result.data?.id ?? null);
   return { sent: true };
 }
 
@@ -220,6 +255,54 @@ export async function sendPurchaseConfirmationEmail(params: {
     { idempotencyKey: `${params.userId}:purchase:${params.subscriptionId}` },
   );
   await recordSent(params.userId, 'purchase_confirmation', result.data?.id ?? null);
+}
+
+// ---------------------------------------------------------------------------
+// sendPaidOnboardingEmail — one activation nudge ~24h after subscribing.
+//
+// Dedup layers: wasSentWithin 30d belt here + the paid-onboarding cron's
+// NOT EXISTS query guard + the Resend idempotencyKey. result.error IS checked
+// (the welcome-email lesson): a rejected send records nothing, so the user
+// stays eligible and the next cron run retries.
+// ---------------------------------------------------------------------------
+const PAID_ONBOARDING_DEDUP_MS = 30 * 24 * 60 * 60 * 1000;
+
+export async function sendPaidOnboardingEmail(params: {
+  userId: string;
+  email: string;
+  locale: 'en' | 'es';
+  subscriptionId: string;
+}): Promise<{ sent: boolean; reason?: string }> {
+  if (process.env.DRY_RUN === 'true') {
+    console.info('[email] paid_onboarding DRY_RUN — skipping send', { userId: params.userId });
+    return { sent: false, reason: 'dry_run' };
+  }
+
+  const already = await wasSentWithin(params.userId, 'paid_onboarding', PAID_ONBOARDING_DEDUP_MS);
+  if (already) return { sent: false, reason: 'already_sent' };
+
+  const html = await render(PaidOnboardingEmail({ locale: params.locale }));
+  const text = await render(PaidOnboardingEmail({ locale: params.locale }), { plainText: true });
+
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject: SUBJECTS.paid_onboarding[params.locale],
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${SETTINGS_URL(params.locale)}>`,
+      },
+    },
+    { idempotencyKey: `${params.userId}:paid_onboarding:${params.subscriptionId}` },
+  );
+  if (result.error) {
+    // Do NOT recordSent — no row means the next cron run retries this user.
+    throw new Error(`Resend rejected paid_onboarding send: ${result.error.message}`);
+  }
+  await recordSent(params.userId, 'paid_onboarding', result.data?.id ?? null);
+  return { sent: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -432,8 +515,8 @@ export async function sendLeadChartEmail(params: {
   const signs = pickKeySigns(params.chart);
   const dominant = pickDominantPlanet(params.chart);
   const chartPath = params.chartId
-    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t0`
-    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t0`;
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&${dripUtm('t0', params.leadId, 'lead_chart')}`
+    : `/${params.locale === 'es' ? 'es' : ''}?${dripUtm('t0', params.leadId, 'lead_chart')}`;
   const chartUrl = `${SITE_URL}${chartPath}`;
 
   // 4. Render with cliffhanger props (moon/asc presence-only, dominant planet name-only)
@@ -506,8 +589,8 @@ export async function sendLeadCuriosityHookEmail(params: {
 
   const dominant = pickDominantPlanet(params.chart);
   const chartPath = params.chartId
-    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t1h`
-    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t1h`;
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&${dripUtm('t1h', params.leadId, 'lead_curiosity_hook')}`
+    : `/${params.locale === 'es' ? 'es' : ''}?${dripUtm('t1h', params.leadId, 'lead_curiosity_hook')}`;
   const chartUrl = `${SITE_URL}${chartPath}`;
 
   const html = await render(
@@ -596,8 +679,8 @@ export async function sendLeadMoonAscEmail(params: {
   // T+24h CTA now points to /chart (paywall surface), not /sign-up.
   // utm_campaign updated from t24 → t24h for consistency with t0/t1h naming.
   const chartPath = params.chartId
-    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t24h`
-    : `/${params.locale === 'es' ? 'es/' : ''}?utm_source=lead-nurture&utm_campaign=t24h`;
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&${dripUtm('t24h', params.leadId, 'lead_moon_asc')}`
+    : `/${params.locale === 'es' ? 'es/' : ''}?${dripUtm('t24h', params.leadId, 'lead_moon_asc')}`;
   const chartUrl = `${SITE_URL}${chartPath}`;
 
   const html = await render(
@@ -682,7 +765,7 @@ export async function sendLeadPaywallTeaserEmail(params: {
 
   const signs = pickKeySigns(params.chart);
   const returnPath = `/${params.locale === 'es' ? 'es/' : ''}chart${params.chartId ? `?chartId=${params.chartId}` : ''}`;
-  const baseTrialPath = `/${params.locale === 'es' ? 'es/' : ''}checkout/start?plan=pro_annual&return=${encodeURIComponent(returnPath)}&utm_source=lead-nurture&utm_campaign=t72`;
+  const baseTrialPath = `/${params.locale === 'es' ? 'es/' : ''}checkout/start?plan=pro_annual&return=${encodeURIComponent(returnPath)}&${dripUtm('t72', params.leadId, 'lead_paywall_teaser')}`;
 
   // Variant C: append coupon param when env var is configured.
   // Only allowlisted coupon name (TEASER20) is passed — never raw user input.
@@ -812,8 +895,8 @@ export async function sendLeadSaturnWeeklyEmail(params: {
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
 
   const chartPath = params.chartId
-    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t7d`
-    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t7d`;
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&${dripUtm('t7d', params.leadId, 'lead_saturn_weekly')}`
+    : `/${params.locale === 'es' ? 'es' : ''}?${dripUtm('t7d', params.leadId, 'lead_saturn_weekly')}`;
   const chartUrl = `${SITE_URL}${chartPath}`;
 
   const html = await render(
@@ -876,8 +959,8 @@ export async function sendLeadMiniReadingEmail(params: {
 
   const signs = pickKeySigns(params.chart);
   const chartPath = params.chartId
-    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&utm_source=lead-nurture&utm_campaign=t14d`
-    : `/${params.locale === 'es' ? 'es' : ''}?utm_source=lead-nurture&utm_campaign=t14d`;
+    ? `/${params.locale === 'es' ? 'es/' : ''}chart?chartId=${params.chartId}&${dripUtm('t14d', params.leadId, 'lead_mini_reading')}`
+    : `/${params.locale === 'es' ? 'es' : ''}?${dripUtm('t14d', params.leadId, 'lead_mini_reading')}`;
   const chartUrl = `${SITE_URL}${chartPath}`;
 
   const html = await render(
@@ -952,7 +1035,7 @@ export async function sendLeadSynastryTeaserEmail(params: {
   const token = await signLeadUnsubscribeToken(params.leadId);
   const unsubscribeUrl = `${SITE_URL}/${params.locale === 'es' ? 'es/' : ''}unsubscribe?token=${token}`;
 
-  const synastryPath = `/${params.locale === 'es' ? 'es/' : ''}synastry?utm_source=lead-nurture&utm_campaign=t21d`;
+  const synastryPath = `/${params.locale === 'es' ? 'es/' : ''}synastry?${dripUtm('t21d', params.leadId, 'lead_synastry_teaser')}`;
   const synastryUrl = `${SITE_URL}${synastryPath}`;
 
   const html = await render(
@@ -1034,7 +1117,7 @@ export async function sendCartAbandonEmail(params: {
   // pre-applied TEASER20 coupon. Cuts a click and ensures the discount actually
   // attaches at Stripe Checkout (the /pricing UI does not forward ?coupon).
   // Server allowlist + annual-plan guard in /api/v1/stripe/checkout re-validate.
-  const ctaPath = `/${params.locale === 'es' ? 'es/' : ''}checkout/start?plan=pro_annual&coupon=TEASER20&utm_source=cart-abandon&utm_medium=email&utm_campaign=cart-abandon-20off`;
+  const ctaPath = `/${params.locale === 'es' ? 'es/' : ''}checkout/start?plan=pro_annual&coupon=TEASER20&utm_source=cart-abandon&utm_medium=email&utm_campaign=cart-abandon-20off&utm_content=${params.leadId}&utm_term=cart_abandon`;
   const ctaUrl = `${SITE_URL}${ctaPath}`;
 
   // 4. Extract Saturn sign for personalization (if chart available)

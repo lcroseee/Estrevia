@@ -6,6 +6,8 @@ import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
 interface Props {
   sessionId: string;
+  /** Resolved by the server (return_url metadata or localized /chart) — never re-derived here. */
+  redirectTarget: string;
 }
 
 const POLL_INTERVAL_MS = 2000;
@@ -17,8 +19,8 @@ interface StatusResponseOk {
   error: null;
 }
 
-export function CheckoutCompleteClient({ sessionId }: Props) {
-  const t = useTranslations('checkout.complete');
+export function CheckoutCompleteClient({ sessionId, redirectTarget }: Props) {
+  const t = useTranslations('pricingPage.checkout.complete');
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export function CheckoutCompleteClient({ sessionId }: Props) {
     let cancelled = false;
 
     function redirectWithTicket(ticket: string): void {
-      const target = `/sign-in?__clerk_ticket=${encodeURIComponent(ticket)}&redirect_url=${encodeURIComponent('/settings')}`;
+      const target = `/sign-in?__clerk_ticket=${encodeURIComponent(ticket)}&redirect_url=${encodeURIComponent(redirectTarget)}`;
       window.location.href = target;
     }
 
@@ -82,7 +84,7 @@ export function CheckoutCompleteClient({ sessionId }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [sessionId, redirectTarget]);
 
   if (!timedOut) {
     return <p className="text-xs text-white/40">{t('redirecting')}</p>;

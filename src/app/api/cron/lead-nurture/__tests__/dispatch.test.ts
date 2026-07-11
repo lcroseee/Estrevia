@@ -27,11 +27,17 @@ vi.mock('@/shared/lib/temp-chart', () => ({
 }));
 
 const updateMock = vi.fn(async () => undefined);
+const setCalls: Array<Record<string, unknown>> = [];
 const selectMock = vi.fn();
 vi.mock('@/shared/lib/db', () => ({
   getDb: () => ({
     select: () => ({ from: () => ({ where: () => ({ limit: () => selectMock() }) }) }),
-    update: () => ({ set: () => ({ where: () => updateMock() }) }),
+    update: () => ({
+      set: (vals: Record<string, unknown>) => {
+        setCalls.push(vals);
+        return { where: () => updateMock() };
+      },
+    }),
   }),
 }));
 
@@ -39,6 +45,7 @@ vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
 
 beforeEach(() => {
   vi.clearAllMocks();
+  setCalls.length = 0;
 });
 
 function makeLead(step: number, idSuffix: string) {
@@ -106,7 +113,7 @@ describe('cron lead-nurture dispatch (new step schema)', () => {
     expect(sendLeadSaturnWeeklyEmailMock).toHaveBeenCalledTimes(1);
   });
 
-  it('step=5 invokes sendLeadMiniReadingEmail', async () => {
+  it('step=5 invokes sendLeadMiniReadingEmail and is now TERMINAL (synastry retired)', async () => {
     selectMock.mockResolvedValueOnce([makeLead(5, 'f')]);
     const { GET } = await import('../route');
     const req = new Request('http://localhost/api/cron/lead-nurture', {
@@ -114,16 +121,19 @@ describe('cron lead-nurture dispatch (new step schema)', () => {
     });
     await GET(req);
     expect(sendLeadMiniReadingEmailMock).toHaveBeenCalledTimes(1);
+    expect(setCalls[0]).toMatchObject({ nurtureStep: 6, nurtureNextAt: null });
   });
 
-  it('step=6 invokes sendLeadSynastryTeaserEmail (was step=5)', async () => {
+  it('step=6 no longer sends synastry_teaser (retired 2026-07-10 — 6/10 lifetime unsubs)', async () => {
     selectMock.mockResolvedValueOnce([makeLead(6, 'g')]);
     const { GET } = await import('../route');
     const req = new Request('http://localhost/api/cron/lead-nurture', {
       headers: { authorization: 'Bearer test' },
     });
-    await GET(req);
-    expect(sendLeadSynastryTeaserEmailMock).toHaveBeenCalledTimes(1);
+    const res = await GET(req);
+    const body = await res.json();
+    expect(sendLeadSynastryTeaserEmailMock).not.toHaveBeenCalled();
+    expect(body.sent).toBe(0);
   });
 
   it('step=7 is terminal — no send invoked, lead skipped', async () => {

@@ -51,6 +51,44 @@ function mockHeaders() {
   headersMock.mockResolvedValue({ get: (k: string) => map.get(k) ?? null });
 }
 
+// REAL Resend payload shape — matches resend@6.10.0 SDK types
+// (node_modules/resend/dist/index.d.mts: BaseEmailEventData.to: string[],
+// EmailBouncedEvent.data.bounce: { message, subType, type }). The pre-2026-07-10
+// version of this file used a fictional { email, bounce_type } shape that made
+// the handler a permanent no-op in prod (audit 04-resend.md R-2).
+function bouncedEvent(to: string[], bounceType: string) {
+  return {
+    type: 'email.bounced',
+    created_at: '2026-07-10T12:00:00.000Z',
+    data: {
+      created_at: '2026-07-10T12:00:00.000Z',
+      email_id: 'ae2014de-c168-4c61-8f4b-1f4e2f3a1b2c',
+      from: 'Estrevia <hello@estrevia.app>',
+      to,
+      subject: 'Your sidereal chart',
+      bounce: {
+        message: 'smtp; 550 5.1.1 user unknown',
+        subType: 'General',
+        type: bounceType,
+      },
+    },
+  };
+}
+
+function complainedEvent(to: string[]) {
+  return {
+    type: 'email.complained',
+    created_at: '2026-07-10T12:00:00.000Z',
+    data: {
+      created_at: '2026-07-10T12:00:00.000Z',
+      email_id: 'ae2014de-c168-4c61-8f4b-1f4e2f3a1b2c',
+      from: 'Estrevia <hello@estrevia.app>',
+      to,
+      subject: 'Your sidereal chart',
+    },
+  };
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv('RESEND_WEBHOOK_SECRET', 'test-resend-secret');
@@ -64,9 +102,6 @@ beforeEach(() => {
 });
 
 describe('POST /api/webhooks/resend', () => {
-  // -------------------------------------------------------------------------
-  // Test 1: bad svix signature → 401
-  // -------------------------------------------------------------------------
   it('returns 401 on bad signature', async () => {
     verifyMock.mockImplementation(() => {
       throw new Error('Invalid signature');
@@ -80,21 +115,15 @@ describe('POST /api/webhooks/resend', () => {
     expect(dbUpdateMock).not.toHaveBeenCalled();
   });
 
-  // -------------------------------------------------------------------------
-  // Test 2: hard bounce → emailUndeliverable=true on BOTH users + email_leads
-  // -------------------------------------------------------------------------
-  it('marks emailUndeliverable on users AND email_leads on hard bounce', async () => {
-    verifyMock.mockReturnValue({
-      type: 'email.bounced',
-      data: { email: 'bounced@example.com', bounce_type: 'hard' },
-    });
+  it('Permanent bounce flags users AND email_leads (single recipient)', async () => {
+    verifyMock.mockReturnValue(bouncedEvent(['bounced@example.com'], 'Permanent'));
 
     const res = await POST(makeResendRequest());
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.received).toBe(true);
-    // Two UPDATEs: one for `users`, one for `email_leads`
+    // Two UPDATEs per recipient: users, then email_leads
     expect(dbUpdateMock).toHaveBeenCalledTimes(2);
     const usersSet = dbUpdateMock.mock.results[0].value.set;
     const leadsSet = dbUpdateMock.mock.results[1].value.set;
@@ -102,14 +131,47 @@ describe('POST /api/webhooks/resend', () => {
     expect(leadsSet).toHaveBeenCalledWith({ emailUndeliverable: true });
   });
 
-  // -------------------------------------------------------------------------
-  // Test 3: complaint → emailUndeliverable=true on users; both flags on leads
-  // -------------------------------------------------------------------------
-  it('marks emailUndeliverable on users AND unsubscribes lead on complaint', async () => {
+  it('Permanent bounce iterates data.to[] — every recipient gets flagged', async () => {
+    verifyMock.mockReturnValue(
+      bouncedEvent(['first@example.com', 'Second@Example.COM'], 'Permanent'),
+    );
+
+    const res = await POST(makeResendRequest());
+    expect(res.status).toBe(200);
+    // 2 recipients × (users + email_leads) = 4 UPDATEs
+    expect(dbUpdateMock).toHaveBeenCalledTimes(4);
+  });
+
+  it('Transient bounce is log-only (no DB write)', async () => {
+    verifyMock.mockReturnValue(bouncedEvent(['soft@example.com'], 'Transient'));
+
+    const res = await POST(makeResendRequest());
+    expect(res.status).toBe(200);
+    expect(dbUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('Undetermined bounce is log-only (no DB write)', async () => {
+    verifyMock.mockReturnValue(bouncedEvent(['maybe@example.com'], 'Undetermined'));
+
+    const res = await POST(makeResendRequest());
+    expect(res.status).toBe(200);
+    expect(dbUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('REGRESSION: old fictional payload shape must NOT flag anything and must not 500', async () => {
+    // The shape this handler (and its tests) wrongly assumed before 2026-07-10.
     verifyMock.mockReturnValue({
-      type: 'email.complained',
-      data: { email: 'complained@example.com' },
+      type: 'email.bounced',
+      data: { email: 'bounced@example.com', bounce_type: 'hard' },
     });
+
+    const res = await POST(makeResendRequest());
+    expect(res.status).toBe(200);
+    expect(dbUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('complaint flags users + unsubscribes lead for every recipient', async () => {
+    verifyMock.mockReturnValue(complainedEvent(['complained@example.com']));
 
     const res = await POST(makeResendRequest());
     const body = await res.json();
@@ -120,7 +182,6 @@ describe('POST /api/webhooks/resend', () => {
     const usersSet = dbUpdateMock.mock.results[0].value.set;
     const leadsSet = dbUpdateMock.mock.results[1].value.set;
     expect(usersSet).toHaveBeenCalledWith({ emailUndeliverable: true });
-    // Complaint propagation: BOTH undeliverable AND unsubscribed_at=now
     expect(leadsSet).toHaveBeenCalledWith(
       expect.objectContaining({
         emailUndeliverable: true,
@@ -129,69 +190,41 @@ describe('POST /api/webhooks/resend', () => {
     );
   });
 
-  // -------------------------------------------------------------------------
-  // Test 4: soft bounce → ignored (no DB write)
-  // -------------------------------------------------------------------------
-  it('ignores soft bounces (no DB write)', async () => {
-    verifyMock.mockReturnValue({
-      type: 'email.bounced',
-      data: { email: 'softbounce@example.com', bounce_type: 'soft' },
-    });
-
-    const res = await POST(makeResendRequest());
-    const body = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(body.received).toBe(true);
-    // Must NOT touch the database
-    expect(dbUpdateMock).not.toHaveBeenCalled();
-  });
-
-  // -------------------------------------------------------------------------
-  // T11: lowercase the email before matching email_leads (stored normalized)
-  // -------------------------------------------------------------------------
-  it('lowercases email when querying email_leads on hard bounce', async () => {
-    verifyMock.mockReturnValue({
-      type: 'email.bounced',
-      data: { email: 'MixedCase@Example.COM', bounce_type: 'hard' },
-    });
-
-    const res = await POST(makeResendRequest());
-    expect(res.status).toBe(200);
-    expect(dbUpdateMock).toHaveBeenCalledTimes(2);
-    // Both updates fired (users + email_leads). The leads where() clause uses
-    // lowercase — we can't inspect the where args easily but coverage here
-    // ensures the code path was exercised + didn't throw on mixed-case input.
-  });
-
-  // -------------------------------------------------------------------------
-  // T11: email_leads UPDATE failure is non-blocking (analytics, not auth)
-  // -------------------------------------------------------------------------
-  it('returns 200 even when email_leads UPDATE throws on hard bounce', async () => {
-    verifyMock.mockReturnValue({
-      type: 'email.bounced',
-      data: { email: 'bounced@example.com', bounce_type: 'hard' },
-    });
-    // First update (users) succeeds; second (email_leads) rejects.
+  it('per-address failure is isolated — other recipients still get flagged, 200', async () => {
+    verifyMock.mockReturnValue(
+      bouncedEvent(['dead-row@example.com', 'fine@example.com'], 'Permanent'),
+    );
+    // 1st update (users, recipient 1) rejects → its leads update is skipped;
+    // recipient 2 proceeds (calls 2 and 3 succeed).
     let callIdx = 0;
     dbUpdateMock.mockImplementation(() => {
       callIdx += 1;
-      if (callIdx === 1) {
-        return {
-          set: vi.fn().mockReturnValue({
-            where: vi.fn().mockResolvedValue(undefined),
-          }),
-        };
-      }
+      const rejects = callIdx === 1;
       return {
         set: vi.fn().mockReturnValue({
-          where: vi.fn().mockRejectedValue(new Error('leads db down')),
+          where: rejects
+            ? vi.fn().mockRejectedValue(new Error('row lock timeout'))
+            : vi.fn().mockResolvedValue(undefined),
         }),
       };
     });
 
     const res = await POST(makeResendRequest());
     expect(res.status).toBe(200);
-    expect(dbUpdateMock).toHaveBeenCalledTimes(2);
+    expect(dbUpdateMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('ALL addresses failing returns 500 so Resend retries', async () => {
+    verifyMock.mockReturnValue(
+      bouncedEvent(['a@example.com', 'b@example.com'], 'Permanent'),
+    );
+    dbUpdateMock.mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockRejectedValue(new Error('db down')),
+      }),
+    });
+
+    const res = await POST(makeResendRequest());
+    expect(res.status).toBe(500);
   });
 });

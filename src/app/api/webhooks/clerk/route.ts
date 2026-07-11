@@ -5,6 +5,7 @@ import { getDb } from '@/shared/lib/db';
 import { users, natalCharts, emailLeads } from '@/shared/lib/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { isUniqueViolation } from '@/shared/lib/db-errors';
 
 /**
  * POST /api/webhooks/clerk
@@ -89,16 +90,36 @@ export async function POST(req: Request) {
           ? 'es' as const
           : 'en' as const;
 
-      await db
-        .insert(users)
-        .values({
-          id: data.id,
-          email,
-          locale,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .onConflictDoNothing(); // idempotent — safe to retry
+      try {
+        await db
+          .insert(users)
+          .values({
+            id: data.id,
+            email,
+            locale,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: users.id,
+            set: {
+              // Heal Stripe-created rows: Clerk's email/locale are authoritative
+              // at signup. Guard: never clobber with '' (payload without addresses).
+              ...(email ? { email, locale } : { locale }),
+              updatedAt: new Date(),
+            },
+          });
+      } catch (err) {
+        if (isUniqueViolation(err)) {
+          // The real email already belongs to another users row (e.g. an old
+          // orphan). Keep both rows; log-and-continue so Clerk doesn't retry-loop.
+          console.warn('[clerk-webhook] user.created email conflicts with existing row — insert skipped', {
+            userId: data.id,
+          });
+        } else {
+          throw err;
+        }
+      }
 
       console.info('[clerk-webhook] user.created', { userId: data.id });
 

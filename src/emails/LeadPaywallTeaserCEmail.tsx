@@ -33,7 +33,7 @@ const STRINGS = {
   en: {
     preview: (planet: string, sign: string) =>
       `Your ${planet} in ${sign} has a reading waiting — plus 20% off for the next 48 hours.`,
-    eyebrow: 'Locked behind Star',
+    eyebrow: 'Included in Pro',
     hook: (planet: string, sign: string, house: number | null) =>
       house !== null
         ? `Your ${planet} in ${sign} (house ${house}) is one of the most telling placements in your chart.`
@@ -52,7 +52,7 @@ const STRINGS = {
   es: {
     preview: (planet: string, sign: string) =>
       `Tu ${planet} en ${sign} tiene una lectura esperándote — más 20% de descuento por 48h.`,
-    eyebrow: 'Bloqueado por Star',
+    eyebrow: 'Incluido en Pro',
     hook: (planet: string, sign: string, house: number | null) =>
       house !== null
         ? `Tu ${planet} en ${sign} (casa ${house}) es uno de los posicionamientos más reveladores de tu carta.`

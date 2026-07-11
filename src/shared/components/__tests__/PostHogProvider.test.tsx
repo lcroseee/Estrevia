@@ -85,6 +85,22 @@ describe('PostHogProvider — locale super-property', () => {
     await new Promise((r) => setTimeout(r, 10));
     expect(hoisted.mockRegister).not.toHaveBeenCalled();
   });
+
+  it('does NOT mislabel /essays/* as es (startsWith bug)', async () => {
+    hoisted.mockUsePathname.mockReturnValue('/essays/what-is-sidereal');
+    render(<PostHogProvider><div /></PostHogProvider>);
+    await waitFor(() => {
+      expect(hoisted.mockRegister).toHaveBeenCalledWith({ locale: 'en' });
+    });
+  });
+
+  it('labels the bare /es root as es', async () => {
+    hoisted.mockUsePathname.mockReturnValue('/es');
+    render(<PostHogProvider><div /></PostHogProvider>);
+    await waitFor(() => {
+      expect(hoisted.mockRegister).toHaveBeenCalledWith({ locale: 'es' });
+    });
+  });
 });
 
 describe('PostHogProvider — first-pageview locale via loaded callback', () => {
@@ -130,5 +146,93 @@ describe('PostHogProvider — first-pageview locale via loaded callback', () => 
     options.loaded(fakePh);
 
     expect(hoisted.mockRegister).toHaveBeenCalledWith({ locale: 'en' });
+  });
+
+  it('loaded callback does NOT mislabel /essays/* as es (startsWith bug)', async () => {
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test_key';
+    hoisted.mockUsePathname.mockReturnValue('/essays/what-is-sidereal');
+    window.localStorage.setItem('estrevia_cookie_consent', 'accepted');
+    delete (window as unknown as Record<string, unknown>).posthog;
+
+    render(<PostHogProvider><div /></PostHogProvider>);
+
+    await waitFor(() => {
+      expect(hoisted.mockInit).toHaveBeenCalledTimes(1);
+    });
+
+    const [, options] = hoisted.mockInit.mock.calls[0];
+    const fakePh = { register: hoisted.mockRegister };
+    options.loaded(fakePh);
+
+    expect(hoisted.mockRegister).toHaveBeenCalledWith({ locale: 'en' });
+  });
+});
+
+describe('PostHogProvider — session recording (masked)', () => {
+  it('init enables recording with maskAllInputs + data-ph-mask text masking', async () => {
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test_key';
+    hoisted.mockUsePathname.mockReturnValue('/en');
+    window.localStorage.setItem('estrevia_cookie_consent', 'accepted');
+    delete (window as unknown as Record<string, unknown>).posthog;
+
+    render(<PostHogProvider><div /></PostHogProvider>);
+
+    await waitFor(() => {
+      expect(hoisted.mockInit).toHaveBeenCalledTimes(1);
+    });
+
+    const [, options] = hoisted.mockInit.mock.calls[0];
+    expect(options.disable_session_recording).toBe(false);
+    expect(options.session_recording).toEqual({
+      maskAllInputs: true,
+      maskTextSelector: '[data-ph-mask]',
+    });
+  });
+
+  it('before_send scrubs birth-PII params from URL props and rrweb snapshot hrefs', async () => {
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test_key';
+    hoisted.mockUsePathname.mockReturnValue('/en');
+    window.localStorage.setItem('estrevia_cookie_consent', 'accepted');
+    delete (window as unknown as Record<string, unknown>).posthog;
+
+    render(<PostHogProvider><div /></PostHogProvider>);
+
+    await waitFor(() => {
+      expect(hoisted.mockInit).toHaveBeenCalledTimes(1);
+    });
+
+    const [, options] = hoisted.mockInit.mock.calls[0];
+    // sanitize_properties never runs on $snapshot events and the input/text
+    // masks cannot reach the recorded URL — before_send is the PII gate.
+    expect(typeof options.before_send).toBe('function');
+
+    const piiUrl =
+      'https://estrevia.app/en/chart?bd=1990-06-15&bt=14%3A30&lat=40.7128&lon=-74.006&place=New+York&tz=America%2FNew_York&utm_source=meta';
+    const scrubbed = options.before_send({
+      event: '$snapshot',
+      properties: {
+        $current_url: piiUrl,
+        $session_entry_url: piiUrl,
+        $snapshot_data: [
+          // rrweb Meta event — its href is what the replay player's URL bar shows
+          { type: 4, data: { href: piiUrl, width: 390, height: 844 } },
+          // incremental event without href — must pass through untouched
+          { type: 3, data: { source: 2 } },
+        ],
+      },
+    });
+
+    for (const url of [
+      scrubbed.properties.$current_url,
+      scrubbed.properties.$session_entry_url,
+      scrubbed.properties.$snapshot_data[0].data.href,
+    ] as string[]) {
+      expect(url).not.toMatch(/[?&](bd|bt|lat|lon|place|tz|ktb)=/);
+    }
+    // Non-PII params survive the scrub (attribution stays intact).
+    expect(scrubbed.properties.$current_url).toContain('utm_source=meta');
+    // Events without URL props pass through unchanged.
+    const plain = options.before_send({ event: 'paywall_opened', properties: { trigger: 'three-card' } });
+    expect(plain.properties.trigger).toBe('three-card');
   });
 });
