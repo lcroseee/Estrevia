@@ -6,6 +6,7 @@ import {
   getAllEssaySlugsBySign,
   getAllEssaySlugsByPlanet,
   getRelatedPages,
+  relatedEssaySlugs,
 } from '../internal-links';
 
 describe('parseEssaySlug', () => {
@@ -223,5 +224,52 @@ describe('getRelatedPages — no broken routes', () => {
     const whySidereal = pages.find((p) => p.anchorText === 'sidereal vs tropical astrology');
     expect(whySidereal).toBeDefined();
     expect(whySidereal?.href).toBe('/why-sidereal');
+  });
+});
+
+describe('relatedEssaySlugs (Phase 2 T9)', () => {
+  it('returns 6-8 slugs for a planet-in-sign essay', () => {
+    const out = relatedEssaySlugs('sun-in-aries');
+    expect(out.length).toBeGreaterThanOrEqual(6);
+    expect(out.length).toBeLessThanOrEqual(8);
+  });
+
+  it('every essay gets 6-8 links (mesh coverage — no orphans)', () => {
+    getAllEssaySlugs().forEach((slug) => {
+      const n = relatedEssaySlugs(slug).length;
+      expect(n).toBeGreaterThanOrEqual(6);
+      expect(n).toBeLessThanOrEqual(8);
+    });
+  });
+
+  it('never includes the input slug and never duplicates', () => {
+    getAllEssaySlugs().forEach((slug) => {
+      const out = relatedEssaySlugs(slug);
+      expect(out).not.toContain(slug);
+      expect(new Set(out).size).toBe(out.length);
+    });
+  });
+
+  it('every returned slug is a real, parseable essay slug', () => {
+    const all = new Set(getAllEssaySlugs());
+    getAllEssaySlugs().forEach((slug) => {
+      relatedEssaySlugs(slug).forEach((rel) => {
+        expect(all.has(rel)).toBe(true);
+        expect(parseEssaySlug(rel)).not.toBeNull();
+      });
+    });
+  });
+
+  it('mixes same-sign and same-planet siblings', () => {
+    const out = relatedEssaySlugs('sun-in-aries');
+    expect(out).toContain('moon-in-aries'); // same sign, other planet
+    expect(out).toContain('sun-in-taurus'); // same planet, next sign
+    expect(out).toContain('sun-in-libra');  // same planet, opposite sign
+  });
+
+  it('returns [] for non-essay slugs', () => {
+    expect(relatedEssaySlugs('aries')).toEqual([]);
+    expect(relatedEssaySlugs('unknown')).toEqual([]);
+    expect(relatedEssaySlugs('')).toEqual([]);
   });
 });

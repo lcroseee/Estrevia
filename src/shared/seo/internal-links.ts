@@ -288,6 +288,56 @@ export function getAllSignSlugs(): string[] {
   return [...SIGNS];
 }
 
+// ---------------------------------------------------------------------------
+// Related placements mesh (Phase 2 T9)
+// ---------------------------------------------------------------------------
+
+// "Same sign, other planets" companions in priority order (Sun/Moon lead —
+// highest search intent), then the personal/social planets.
+const COMPANION_PLANETS: readonly PlanetSlug[] = ['sun', 'moon', 'mars', 'venus', 'saturn'];
+
+/**
+ * Returns 6-8 sibling essay slugs for a planet-in-sign essay: the same sign
+ * across other planets + the same planet across neighbouring/opposite signs.
+ *
+ * This is the internal-linking mesh that spreads crawl equity across all 120
+ * essays (fixes the "4/120 ES essays with impressions" orphan problem — audit
+ * finding #4). Every returned slug is a valid essay slug and never equals the
+ * input. Returns [] for non-essay slugs.
+ *
+ * @example relatedEssaySlugs('sun-in-aries')
+ * // ['moon-in-aries','mars-in-aries','venus-in-aries','saturn-in-aries',
+ * //  'sun-in-taurus','sun-in-pisces','sun-in-libra']  (7 links)
+ */
+export function relatedEssaySlugs(slug: string): string[] {
+  const parsed = parseEssaySlug(slug);
+  if (!parsed) return [];
+  const { planet, sign } = parsed;
+
+  const idx = SIGNS.indexOf(sign);
+  const nextSign = SIGNS[(idx + 1) % SIGNS.length];
+  const prevSign = SIGNS[(idx + SIGNS.length - 1) % SIGNS.length];
+  const oppositeSign = SIGNS[(idx + 6) % SIGNS.length];
+
+  // Same sign, other planets (current planet filtered out).
+  const sameSign = COMPANION_PLANETS
+    .filter((p) => p !== planet)
+    .map((p) => `${p}-in-${sign}`);
+
+  // Same planet, neighbouring + opposite signs.
+  const samePlanet = [nextSign, prevSign, oppositeSign].map((s) => `${planet}-in-${s}`);
+
+  const seen = new Set<string>([slug]);
+  const out: string[] = [];
+  for (const candidate of [...sameSign, ...samePlanet]) {
+    if (seen.has(candidate)) continue;
+    seen.add(candidate);
+    out.push(candidate);
+    if (out.length === 8) break;
+  }
+  return out;
+}
+
 // Export planet/sign slug arrays for use in generateStaticParams
 export { PLANETS, SIGNS };
 export type { PlanetSlug, SignSlug };

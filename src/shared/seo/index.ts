@@ -52,6 +52,7 @@ export {
   getAllEssaySlugsBySign,
   getAllEssaySlugsByPlanet,
   parseEssaySlug,
+  relatedEssaySlugs,
   PLANETS,
   SIGNS,
 } from './internal-links';
