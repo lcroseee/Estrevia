@@ -13,6 +13,17 @@ import {
   isPairReady,
   readyEnrichedPairs,
 } from '../compatibility-content';
+// The compat page imports `Link` from `@/i18n/navigation`, whose next-intl
+// createNavigation transitively imports `next/navigation` — unresolvable in the
+// vitest node env (same limitation as middleware-auth). We only exercise
+// generateMetadata here (never the rendered Link), so stub the module.
+vi.mock('@/i18n/navigation', () => ({
+  Link: () => null,
+  redirect: () => undefined,
+  usePathname: () => '',
+  useRouter: () => ({}),
+  getPathname: () => '',
+}));
 import { generateMetadata as compatPairMetadata } from '../../../app/[locale]/(marketing)/compatibility/[pair]/page';
 
 const ENRICHED_DIR = path.join(process.cwd(), 'content', 'compatibility', 'enriched');

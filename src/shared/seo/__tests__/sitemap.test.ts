@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import sitemap from '@/app/sitemap';
+// The compat page imports next-intl's `Link` (→ next/navigation), unresolvable
+// in the vitest node env; we only test its generateMetadata, so stub it.
+vi.mock('@/i18n/navigation', () => ({
+  Link: () => null,
+  redirect: () => undefined,
+  usePathname: () => '',
+  useRouter: () => ({}),
+  getPathname: () => '',
+}));
 import { generateMetadata as compatPairMetadata } from '@/app/[locale]/(marketing)/compatibility/[pair]/page';
 import { ALL_PAIR_SLUGS } from '@/shared/seo/compatibility-pairs';
 
