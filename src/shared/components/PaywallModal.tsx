@@ -35,10 +35,10 @@ function triggerToKey(trigger: PaywallTrigger): string {
     .join('');
 }
 
-function formatTrialEndDate(): string {
+function formatTrialEndDate(locale: string): string {
   const d = new Date();
   d.setDate(d.getDate() + 3);
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString(locale === 'es' ? 'es-MX' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -49,6 +49,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
   const t = useTranslations('paywall');
   const tp = useTranslations('pricing');
   const tPage = useTranslations('pricingPage');
+  const tCommon = useTranslations('common');
   const locale = useLocale();
   const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_monthly');
   const [loading, setLoading] = useState(false);
@@ -102,7 +103,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
 
   if (!open) return null;
 
-  const trialEndDate = formatTrialEndDate();
+  const trialEndDate = formatTrialEndDate(locale);
 
   async function handleCheckout() {
     if (loading) return;
@@ -126,12 +127,12 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       try {
         data = (await res.json()) as typeof data;
       } catch {
-        setError('Unexpected response from server. Please try again.');
+        setError(tPage('errUnexpected'));
         return;
       }
 
       if (!data.success || !data.data?.url) {
-        setError('Something went wrong. Please try again.');
+        setError(tPage('errGeneric'));
         return;
       }
 
@@ -141,7 +142,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       });
       window.location.href = data.data.url;
     } catch {
-      setError('Network error. Please check your connection and try again.');
+      setError(tPage('errNetwork'));
     } finally {
       setLoading(false);
     }
@@ -175,7 +176,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
           ref={closeButtonRef}
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-          aria-label="Close"
+          aria-label={tCommon('close')}
         >
           <X size={18} />
         </button>
@@ -283,7 +284,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
             }}
             aria-busy={loading}
           >
-            {loading ? 'Redirecting...' : t('trialCta')}
+            {loading ? tPage('redirecting') : t('trialCta')}
           </button>
 
           {/* Error */}

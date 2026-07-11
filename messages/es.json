@@ -956,7 +956,7 @@
     "saveBadge": "Ahorra 42 %",
     "monthly": "Mensual",
     "annual": "Anual",
-    "startTrial": "Comenzar prueba de 3 días",
+    "startTrial": "Comienza tu prueba gratis de 3 días",
     "currentPlan": "Plan actual",
     "trialEndNote": "Cancela cuando quieras. No se te cobrará hasta el {date}.",
     "freeFeatures": {
@@ -1037,7 +1037,7 @@
     "title": "Desbloquea el acceso completo",
     "subtitle": "Continúa leyendo con Estrevia Pro",
     "features": "Todo en Gratis, más:",
-    "trialCta": "Comenzar prueba de 3 días",
+    "trialCta": "Comienza tu prueba gratis de 3 días",
     "noCharge": "No se te cobrará hasta el {date}",
     "alreadyPro": "Ya tienes acceso Pro",
     "contextualTitles": {
