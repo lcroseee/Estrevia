@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { createMetadata, articleSchema, breadcrumbSchema, faqSchema, JsonLdScript, SITE_URL } from '@/shared/seo';
 import { ALL_PAIR_SLUGS, parsePairSlug } from '@/shared/seo/compatibility-pairs';
+import { localizeElement, localizeModality } from '@/shared/lib/astro-i18n';
 import { getReadyEnrichedPairContent } from '@/shared/seo/compatibility-content';
 import { Link } from '@/i18n/navigation';
 import enSigns from '../../../../../../content/signs/descriptions.json';
@@ -52,9 +53,10 @@ function elementCompatibility(e1: ElementName, e2: ElementName, locale: 'en' | '
     'Water-Air':   { en: 'Mixed (Air ripples Water).', es: 'Mixta (el Aire agita el Agua).' },
   };
   if (same) {
+    const el = localizeElement(e1, locale).toLowerCase();
     return locale === 'es'
-      ? `Doble intensidad ${e1.toLowerCase()} — afinidad fuerte, sin contraste.`
-      : `Double ${e1.toLowerCase()} intensity — strong affinity, no contrast.`;
+      ? `Doble intensidad ${el} — afinidad fuerte, sin contraste.`
+      : `Double ${el} intensity — strong affinity, no contrast.`;
   }
   const entry = pairs[pair];
   return entry ? entry[locale] : (locale === 'es' ? 'Combinación poco estudiada.' : 'Less-studied combination.');
@@ -229,11 +231,11 @@ export default async function CompatibilityPairPage({ params }: PageProps) {
       <dl className="space-y-6">
         <div>
           <dt className="text-xs uppercase tracking-wider text-white/40">{locale === 'es' ? 'Elemento' : 'Element'}</dt>
-          <dd className="mt-1 text-sm text-white/80"><strong className="text-white">{r1.element} + {r2.element}</strong> — {elementText}</dd>
+          <dd className="mt-1 text-sm text-white/80"><strong className="text-white">{localizeElement(r1.element, locale)} + {localizeElement(r2.element, locale)}</strong> — {elementText}</dd>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wider text-white/40">{locale === 'es' ? 'Modalidad' : 'Modality'}</dt>
-          <dd className="mt-1 text-sm text-white/80"><strong className="text-white">{r1.modality} + {r2.modality}</strong> — {modalityText}</dd>
+          <dd className="mt-1 text-sm text-white/80"><strong className="text-white">{localizeModality(r1.modality, locale)} + {localizeModality(r2.modality, locale)}</strong> — {modalityText}</dd>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wider text-white/40">{locale === 'es' ? 'Regentes' : 'Rulers'}</dt>

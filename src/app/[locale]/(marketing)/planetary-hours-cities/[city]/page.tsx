@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { createMetadata, articleSchema, breadcrumbSchema, JsonLdScript, SITE_URL, getAllEssaySlugsByPlanet } from '@/shared/seo';
 import { ALL_CITY_SLUGS, findCityBySlug } from '@/shared/seo/cities';
 import { calculatePlanetaryHours } from '@/modules/astro-engine';
+import { localizePlanet } from '@/shared/lib/astro-i18n';
 import { RelatedPlacements } from '@/shared/components/RelatedPlacements';
 
 interface PageProps {
@@ -145,7 +146,7 @@ export default async function PlanetaryHoursCityPage({ params }: PageProps) {
                     timeZone: entry.tz,
                   })}
                 </td>
-                <td className="py-2 pr-4 capitalize">{String(hour.planet)}</td>
+                <td className="py-2 pr-4 capitalize">{localizePlanet(String(hour.planet), locale)}</td>
                 <td className="py-2 text-xs text-white/40">
                   {hour.isDay
                     ? locale === 'es'
