@@ -8,6 +8,7 @@ import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator
 import { LandingAnimations } from './LandingAnimations';
 import { NewFeatureCards } from './NewFeatureCards';
 import { LandingViewTracker } from './LandingViewTracker';
+import { captureServerLandingView } from '@/shared/lib/landing-view-server';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,6 +35,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LandingPage() {
   const t = await getTranslations('landing');
   const locale = await getLocale();
+  // Track 5b: consent-independent server-side landing_view (never throws).
+  await captureServerLandingView(locale as 'en' | 'es');
   // Read auth state on the server via Clerk middleware context. HeroCalculator
   // is a client component without a ClerkProvider ancestor (marketing tree
   // intentionally omits it for bundle size), so we cannot call useUser() there.
