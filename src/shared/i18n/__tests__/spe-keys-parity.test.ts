@@ -104,3 +104,26 @@ describe('SP-E synastry subline (D5 — inline paywall had 0/9 lifetime opens, s
     );
   });
 });
+
+describe('SP-E copy-reframe removal guards (T3 proof honesty, T5 pricing jargon)', () => {
+  it('T3 statsHeading drops the unearned "Join astrologers" social frame in both locales', () => {
+    // D7: proof section stops faking social proof at n≈1 payers.
+    expect(get(en, 'landing.statsHeading')).not.toMatch(/Join\s+astrologers/i);
+    expect(get(es, 'landing.statsHeading')).not.toMatch(/Únete/i);
+  });
+
+  it('T5 pricing H1 leads with the benefit, not Lahiri/Vedic jargon, in both locales', () => {
+    // D3: jargon moves to the trust row; the H1 is benefit-led.
+    expect(get(en, 'pricing.heading')).not.toMatch(/Lahiri|Vedic/i);
+    expect(get(es, 'pricing.heading')).not.toMatch(/Lahiri|Vedic/i);
+  });
+
+  it('T5 pricing subheading makes the 3-day trial / 14-day guarantee relationship explicit (both locales)', () => {
+    // D3: resolves the "risk-free for 14 days" vs "3-Day Free Trial" collision.
+    for (const [label, tree] of [['en', en], ['es', es]] as const) {
+      const sub = get(tree, 'pricing.subheading');
+      expect(sub, `${label}.pricing.subheading missing`).toBeTypeOf('string');
+      expect(sub, `${label} subheading must mention the 14-day guarantee`).toMatch(/14/);
+    }
+  });
+});
