@@ -22,6 +22,7 @@ import {
 import { SITE_URL } from '@/shared/seo/constants';
 import { getEssayBySlug } from '@/modules/esoteric/lib/essays';
 import { extractFaqItems } from '@/modules/esoteric/lib/faq';
+import { esEssaySignPhrase } from '@/shared/lib/astro-i18n';
 import { EssayPage } from '@/modules/esoteric/components/EssayPage';
 import { EssayPageClient } from '@/modules/esoteric/components/EssayPageClient';
 import { RelatedPlacements } from '@/shared/components/RelatedPlacements';
@@ -59,6 +60,13 @@ export async function generateMetadata(props: {
     });
   }
 
+  const esPhrase = locale === 'es' ? esEssaySignPhrase(slug) : null;
+  const baseKeywords = essay.meta.keywords;
+  const keywords =
+    esPhrase && !baseKeywords.includes(esPhrase)
+      ? [...baseKeywords, esPhrase]
+      : baseKeywords;
+
   return createMetadata({
     title: essay.meta.title,
     description: essay.meta.description,
@@ -67,7 +75,7 @@ export async function generateMetadata(props: {
     locale: locale as 'en' | 'es',
     publishedTime: essay.meta.publishedAt,
     modifiedTime: essay.meta.updatedAt,
-    keywords: essay.meta.keywords,
+    keywords,
     ogImage: `${SITE_URL}/api/og/essay/${slug}`,
   });
 }
