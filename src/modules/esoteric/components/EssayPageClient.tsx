@@ -40,7 +40,7 @@ export function EssayPageClient({ children }: EssayPageClientProps) {
           aria-hidden="true"
         />
 
-        {/* Read more button positioned over the fade */}
+        {/* Unlock button positioned over the fade — label matches the paywall it opens */}
         <div className="absolute bottom-0 inset-x-0 flex justify-center pb-4">
           <button
             onClick={() => setPaywallOpen(true)}
@@ -50,7 +50,7 @@ export function EssayPageClient({ children }: EssayPageClientProps) {
               color: '#0A0A0F',
             }}
           >
-            {t('readMore')}
+            {t('unlockFull')}
           </button>
         </div>
       </div>
