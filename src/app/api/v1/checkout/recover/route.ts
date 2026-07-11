@@ -26,13 +26,14 @@
  */
 
 import { NextResponse } from 'next/server';
-import { eq, or, sql } from 'drizzle-orm';
+import { and, eq, like, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type Stripe from 'stripe';
 import { clerkClient } from '@clerk/nextjs/server';
 import { getStripe } from '@/shared/lib/stripe';
 import { getDb } from '@/shared/lib/db';
 import { users, processedStripeEvents, emailLeads } from '@/shared/lib/schema';
+import { isUniqueViolation } from '@/shared/lib/db-errors';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { storeCheckoutTicket, getCheckoutTicket } from '@/shared/lib/checkout-ticket';
@@ -286,6 +287,29 @@ export async function POST(
           email: sql`${users.email}`,
         },
       });
+
+    // P0-1 mirror of webhooks/stripe checkout.session.completed (see header contract).
+    // Replace the stripe-pending placeholder with the real payer address. LIKE guard
+    // never clobbers a real (Clerk-owned) email; unique-violation is non-fatal.
+    try {
+      await db
+        .update(users)
+        .set({ email, emailUndeliverable: false, updatedAt: new Date() })
+        .where(
+          and(
+            eq(users.id, clerkUserId),
+            like(users.email, 'stripe-pending-%@placeholder.invalid'),
+          ),
+        );
+    } catch (err) {
+      if (isUniqueViolation(err)) {
+        console.warn('[checkout/recover] payer email already owned by another user row — kept placeholder', {
+          userId: clerkUserId,
+        });
+      } else {
+        throw err;
+      }
+    }
 
     // 12. Marker row for observability. `recovery:` prefix cannot collide with
     // real Stripe event IDs (which start with `evt_`).

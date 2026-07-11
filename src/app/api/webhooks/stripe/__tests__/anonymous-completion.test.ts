@@ -26,6 +26,33 @@ const dbUpdateCalls: UpdateCall[] = [];
 // Result returned when the link UPDATE chains .returning(). Empty array = "no rows linked".
 let dbUpdateReturningRows: Array<{ id: string }> = [];
 
+// Arms the db.update() shim to REJECT the next UPDATE whose rendered `where`
+// contains `substring` — simulates a unique-violation on the guarded email update.
+let failUpdateWhereSubstring: string | null = null;
+let failUpdateError: unknown = null;
+function failNextUpdateMatching(substring: string, error: unknown): void {
+  failUpdateWhereSubstring = substring;
+  failUpdateError = error;
+}
+
+// Renders a drizzle SQL fragment (sql text + bound params) so tests can assert
+// on the LIKE pattern, which drizzle emits as a bound parameter, not inline SQL.
+function renderSql(fragment: unknown): string {
+  const dialect = new PgDialect({ casing: 'snake_case' });
+  const query = dialect.sqlToQuery(fragment as SQL);
+  return `${query.sql} ${JSON.stringify(query.params)}`;
+}
+
+// UPDATE calls EXCLUDING the P0-1 placeholder-email replacement, so the
+// email_leads link/utm-fallback assertions count only those UPDATEs. The email
+// UPDATE fires after the users upsert, so it is always appended last — index
+// references into this filtered list match the pre-P0-1 ordering.
+function leadUpdateCalls(): UpdateCall[] {
+  return dbUpdateCalls.filter(
+    (c) => !renderSql(c.whereArgs).includes('stripe-pending-%@placeholder.invalid'),
+  );
+}
+
 vi.mock('@/shared/lib/stripe', () => ({
   getStripe: () => ({
     webhooks: { constructEvent: constructEventMock },
@@ -53,6 +80,18 @@ vi.mock('@/shared/lib/db', () => ({
           const call: UpdateCall = { setArgs, whereArgs, returningCalled: false };
           dbUpdateCalls.push(call);
           dbUpdateMock();
+          // Armed failure: reject when this UPDATE's where matches the given
+          // substring (simulates a unique-violation on the guarded email update).
+          if (failUpdateWhereSubstring && renderSql(whereArgs).includes(failUpdateWhereSubstring)) {
+            failUpdateWhereSubstring = null;
+            const err = failUpdateError;
+            failUpdateError = null;
+            return {
+              then: (_res: unknown, rej: (e: unknown) => unknown) =>
+                Promise.reject(err).then(_res as never, rej),
+              returning: () => Promise.reject(err),
+            } as PromiseLike<undefined> & { returning: () => Promise<Array<{ id: string }>> };
+          }
           // The fallback path awaits .where() directly (thenable resolves to undefined).
           // The link path calls .returning() first, which resolves to dbUpdateReturningRows.
           const thenable: PromiseLike<undefined> & { returning: () => Promise<Array<{ id: string }>> } = {
@@ -121,6 +160,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   dbUpdateCalls.length = 0;
   dbUpdateReturningRows = [{ id: 'lead-default' }]; // default: link succeeds → fallback skipped
+  failUpdateWhereSubstring = null;
+  failUpdateError = null;
   process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
   process.env.STRIPE_PRICE_ID_PRO_ANNUAL = 'price_annual_test';
   dbInsertMock.mockReturnValue([{ eventId: 'evt_test_1' }]);
@@ -250,9 +291,10 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
       email: 'paid@example.com',
     }));
 
-    // Exactly one UPDATE: the link itself. No fallback UPDATE.
-    expect(dbUpdateCalls).toHaveLength(1);
-    expect(dbUpdateCalls[0].returningCalled).toBe(true);
+    // Exactly one lead UPDATE: the link itself. No fallback UPDATE.
+    const leadUpdates = leadUpdateCalls();
+    expect(leadUpdates).toHaveLength(1);
+    expect(leadUpdates[0].returningCalled).toBe(true);
   });
 
   it('emailMismatch_utmFallbackSetsUnsubscribed', async () => {
@@ -266,10 +308,11 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
       email: 'destinig7996@example.com',
     }));
 
-    expect(dbUpdateCalls).toHaveLength(2);
-    expect(dbUpdateCalls[0].returningCalled).toBe(true); // link UPDATE
-    expect(dbUpdateCalls[1].returningCalled).toBe(false); // fallback UPDATE (no .returning())
-    expect(dbUpdateCalls[1].setArgs).toMatchObject({ unsubscribedAt: expect.any(Date) });
+    const leadUpdates = leadUpdateCalls();
+    expect(leadUpdates).toHaveLength(2);
+    expect(leadUpdates[0].returningCalled).toBe(true); // link UPDATE
+    expect(leadUpdates[1].returningCalled).toBe(false); // fallback UPDATE (no .returning())
+    expect(leadUpdates[1].setArgs).toMatchObject({ unsubscribedAt: expect.any(Date) });
   });
 
   it('utmFallback_invalidFormatNoOp', async () => {
@@ -283,7 +326,7 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
       email: 'paid@example.com',
     }));
 
-    expect(dbUpdateCalls).toHaveLength(1); // only link UPDATE; no fallback
+    expect(leadUpdateCalls()).toHaveLength(1); // only link UPDATE; no fallback
   });
 
   it('utmFallback_idempotentOnRetry', async () => {
@@ -303,8 +346,9 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
       email: 'paid@example.com',
     }));
 
-    expect(dbUpdateCalls).toHaveLength(2);
-    const fallbackWhere = inspect(dbUpdateCalls[1].whereArgs, { depth: 12 });
+    const leadUpdates = leadUpdateCalls();
+    expect(leadUpdates).toHaveLength(2);
+    const fallbackWhere = inspect(leadUpdates[1].whereArgs, { depth: 12 });
     // drizzle-orm renders isNull() as the SQL text ' is null' inside a StringChunk
     expect(fallbackWhere).toMatch(/is null/i);
     expect(fallbackWhere).toMatch(/unsubscribed_at/i);
@@ -326,9 +370,10 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
       email: 'paid@example.com',
     }));
 
-    expect(dbUpdateCalls).toHaveLength(2);
+    const leadUpdates = leadUpdateCalls();
+    expect(leadUpdates).toHaveLength(2);
     const dialect = new PgDialect({ casing: 'snake_case' });
-    const fallbackSql = dialect.sqlToQuery(dbUpdateCalls[1].whereArgs as SQL).sql;
+    const fallbackSql = dialect.sqlToQuery(leadUpdates[1].whereArgs as SQL).sql;
     expect(fallbackSql).toMatch(/unsubscribed_at.*is null/i);
     expect(fallbackSql).toMatch(/converted_to_user_id.*is null/i);
   });
@@ -344,6 +389,29 @@ describe('webhook checkout.session.completed — anonymous branch', () => {
       email: 'paid@example.com',
     }));
 
-    expect(dbUpdateCalls).toHaveLength(1); // only link UPDATE
+    expect(leadUpdateCalls()).toHaveLength(1); // only link UPDATE
+  });
+});
+
+describe('placeholder email replacement (P0-1)', () => {
+  it('updates users.email to the payer email, guarded by the placeholder LIKE', async () => {
+    getUserListMock.mockResolvedValue({ totalCount: 1, data: [{ id: 'user_abc123' }] });
+    const res = await POST(makeSessionCompletedEvent({ email: 'real.payer@example.com' }));
+    expect(res.status).toBe(200);
+
+    const emailUpdate = dbUpdateCalls.find((c) =>
+      renderSql(c.whereArgs).includes('stripe-pending-%@placeholder.invalid'),
+    );
+    expect(emailUpdate).toBeDefined();
+    expect((emailUpdate!.setArgs as { email: string }).email).toBe('real.payer@example.com');
+    expect((emailUpdate!.setArgs as { emailUndeliverable: boolean }).emailUndeliverable).toBe(false);
+  });
+
+  it('unique-violation on the email update logs and still returns 200', async () => {
+    getUserListMock.mockResolvedValue({ totalCount: 1, data: [{ id: 'user_abc123' }] });
+    // Make ONLY the guarded email update throw 23505; other updates succeed.
+    failNextUpdateMatching('stripe-pending-%@placeholder.invalid', { code: '23505' });
+    const res = await POST(makeSessionCompletedEvent({ email: 'taken@example.com' }));
+    expect(res.status).toBe(200);
   });
 });

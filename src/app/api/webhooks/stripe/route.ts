@@ -32,7 +32,7 @@
  */
 
 import { headers } from 'next/headers';
-import { and, eq, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, isNull, like, or, sql } from 'drizzle-orm';
 import type Stripe from 'stripe';
 import * as Sentry from '@sentry/nextjs';
 import { clerkClient } from '@clerk/nextjs/server';
@@ -41,6 +41,7 @@ import { getDb } from '@/shared/lib/db';
 import { users, processedStripeEvents, emailLeads } from '@/shared/lib/schema';
 import { trackServerEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { storeCheckoutTicket } from '@/shared/lib/checkout-ticket';
+import { isUniqueViolation } from '@/shared/lib/db-errors';
 
 // ---------------------------------------------------------------------------
 // Helper: map invoice.attempt_count → dunning step key
@@ -277,9 +278,9 @@ export async function POST(request: Request): Promise<Response> {
                   anonymousIdMeta
                     ? or(
                         eq(emailLeads.anonymousId, anonymousIdMeta),
-                        eq(emailLeads.email, email),
+                        eq(emailLeads.email, email.toLowerCase()),
                       )
-                    : eq(emailLeads.email, email),
+                    : eq(emailLeads.email, email.toLowerCase()),
                 )
                 .returning({ id: emailLeads.id });
 
@@ -414,6 +415,34 @@ export async function POST(request: Request): Promise<Response> {
               email: sql`${users.email}`,
             },
           });
+
+        // P0-1: replace the stripe-pending placeholder with the real payer
+        // address so lifecycle/dunning/trial email can reach anonymous payers.
+        // LIKE guard: never clobber a real (Clerk-owned) email with checkout
+        // input. Non-fatal: a unique-violation (email already on another row)
+        // must not fail the webhook.
+        const payerEmail = session.customer_details?.email ?? null;
+        if (payerEmail) {
+          try {
+            await db
+              .update(users)
+              .set({ email: payerEmail, emailUndeliverable: false, updatedAt: new Date() })
+              .where(
+                and(
+                  eq(users.id, clerkUserId),
+                  like(users.email, 'stripe-pending-%@placeholder.invalid'),
+                ),
+              );
+          } catch (err) {
+            if (isUniqueViolation(err)) {
+              console.warn('[stripe-webhook] payer email already owned by another user row — kept placeholder', {
+                userId: clerkUserId,
+              });
+            } else {
+              throw err;
+            }
+          }
+        }
 
         Sentry.addBreadcrumb({
           category: 'stripe-webhook',
