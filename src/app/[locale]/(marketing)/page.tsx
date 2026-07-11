@@ -139,10 +139,7 @@ export default async function LandingPage() {
 
           <div className="relative z-10 w-full max-w-2xl mx-auto text-center">
             {/* Eyebrow */}
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FFD700]/20 text-[11px] tracking-[0.2em] uppercase text-[#FFD700]/60 mb-8"
-              data-animate="fade-down"
-            >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#FFD700]/20 text-[11px] tracking-[0.2em] uppercase text-[#FFD700]/60 mb-8">
               <span aria-hidden="true">☉</span>
               {t('heroEyebrow')}
             </div>
@@ -152,7 +149,6 @@ export default async function LandingPage() {
               id="hero-heading"
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-[1.08] tracking-tight text-white mb-6"
               style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
-              data-animate="fade-up-1"
             >
               {t('heroLine1')}
               <br />
@@ -160,10 +156,7 @@ export default async function LandingPage() {
             </h1>
 
             {/* Subtext */}
-            <p
-              className="text-base sm:text-lg text-white/50 leading-relaxed max-w-xl mx-auto mb-10"
-              data-animate="fade-up-2"
-            >
+            <p className="text-base sm:text-lg text-white/50 leading-relaxed max-w-xl mx-auto mb-10">
               {t('heroSubtext')}
             </p>
 
@@ -171,7 +164,6 @@ export default async function LandingPage() {
             <div
               className="relative rounded-2xl border border-white/8 p-5 sm:p-7 text-left"
               style={{ background: 'rgba(255,255,255,0.02)' }}
-              data-animate="fade-up-3"
             >
               <Suspense fallback={<CalculatorSkeleton />}>
                 <HeroCalculator isSignedIn={isSignedIn} />
@@ -179,10 +171,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Trust line */}
-            <p
-              className="mt-5 text-xs text-white/60 tracking-wide"
-              data-animate="fade-up-4"
-            >
+            <p className="mt-5 text-xs text-white/60 tracking-wide">
               {t('heroTrust')}
             </p>
           </div>
