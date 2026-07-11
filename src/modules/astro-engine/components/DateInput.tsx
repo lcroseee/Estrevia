@@ -472,6 +472,12 @@ const CalendarPopover = forwardRef<HTMLDivElement, CalendarPopoverProps>(
     return (
       <div
         ref={ref}
+        // PII: this popover is portaled to document.body, so rrweb's
+        // closest('[data-ph-mask]') never reaches a birth-data form root.
+        // Tag it directly so the visible month/year label and highlighted
+        // birth day are masked in session replay. A React portal escapes DOM
+        // ancestry, so masking must be applied on the portaled root itself.
+        data-ph-mask=""
         style={{
           ...style,
           zIndex: 99999,

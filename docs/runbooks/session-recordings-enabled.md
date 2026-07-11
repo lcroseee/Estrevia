@@ -12,10 +12,23 @@ had zero investigation instrumentation. Recordings make it answerable.
   time / place fields. Non-negotiable (CLAUDE.md PII rule).
 - `[data-ph-mask]` — masks ALL descendant text of tagged elements. Currently
   tagged: `BirthDataForm` form root, `HeroCalculator` form root,
-  `BirthDataFormStandalone` root (synastry). rrweb applies the selector via
-  `closest()`, so tagging a container masks everything inside it.
+  `BirthDataFormStandalone` root (synastry), and the `DateInput` calendar
+  popover root (`CalendarPopover` in `DateInput.tsx`). rrweb applies the
+  selector by walking DOM ancestry (`closest()`), so tagging a container masks
+  everything inside it **only for elements that are actual DOM descendants**.
+- **Portal caveat (why the calendar popover is tagged separately):** rrweb
+  masks by DOM ancestry, which a React **portal escapes**. `CalendarPopover`
+  is rendered via `createPortal(..., document.body)`, so its DOM parent is
+  `<body>`, NOT the birth-data form — a form-root `data-ph-mask` does NOT
+  reach it, and its visible month/year label + highlighted birth day would
+  record UNMASKED (the birth date is reconstructable). It therefore carries
+  its own `data-ph-mask`. A single form-root tag does NOT cover portaled
+  surfaces.
 - **Rule going forward:** any new component that echoes birth data back as
-  TEXT (not an input) must carry `data-ph-mask` on its container.
+  TEXT (not an input) must carry `data-ph-mask` on its container — and any
+  PII surface rendered through a **portal, `Dialog`/`Popover`/`Tooltip`
+  overlay, or otherwise reparented outside the form DOM subtree** needs its
+  OWN `data-ph-mask` because `closest()` will not find the form's tag.
 
 ## Recorded-URL scrub (PII)
 - rrweb `$snapshot` payloads embed `window.location.href` and the replay
