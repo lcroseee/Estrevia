@@ -3,6 +3,7 @@ import { getAllEssaySlugs, getAllSignSlugs, SIGNS } from '@/shared/seo';
 import { ALL_CITY_SLUGS } from '@/shared/seo/cities';
 import { SITE_URL } from '@/shared/seo/constants';
 import { lastModifiedFor } from '@/shared/seo/sitemap-mtime';
+import { readyEnrichedPairs } from '@/shared/seo/compatibility-content';
 
 // ---------------------------------------------------------------------------
 // Image sitemap helpers
@@ -271,6 +272,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   });
 
+  // ── Compatibility enriched pairs (Phase 2 T7) ─────────────────────────────
+  // Only pairs whose EN + ES content passes validation (300+ words, no
+  // placeholder) are re-indexed and re-added here. The other 144 stay out
+  // (noindex, Phase 1 T2). Dormant until content/compatibility/enriched/* is
+  // authored — readyEnrichedPairs() returns [] while files are stubs.
+  const compatibilityEnrichedPairs: MetadataRoute.Sitemap = readyEnrichedPairs().flatMap((pair) =>
+    emitLocalized(`/compatibility/${pair}`, {
+      lastModified: compatibilityBuildTime,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    }),
+  );
+
   // ── Planetary-hours-cities index (EN + ES) ────────────────────────────────
   const planetaryHoursCitiesBuildTime = new Date();
   const planetaryHoursCitiesIndex: MetadataRoute.Sitemap = emitLocalized(
@@ -299,6 +313,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...signPages,
     ...siderealDatesPages,
     ...compatibilityIndex,
+    ...compatibilityEnrichedPairs,
     ...planetaryHoursCitiesIndex,
     ...planetaryHoursCities,
   ];

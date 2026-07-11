@@ -11,6 +11,7 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 import { generateMetadata as compatPairMetadata } from '@/app/[locale]/(marketing)/compatibility/[pair]/page';
 import { ALL_PAIR_SLUGS } from '@/shared/seo/compatibility-pairs';
+import { readyEnrichedPairs } from '@/shared/seo/compatibility-content';
 
 describe('sitemap', () => {
   it('emits one entry per locale for every canonical path', () => {
@@ -53,10 +54,10 @@ describe('sitemap', () => {
 });
 
 describe('compatibility pairs removed from sitemap (T2)', () => {
-  it('emits zero /compatibility/<pair> URLs', () => {
+  it('emits /compatibility/<pair> URLs only for ready enriched pairs (T7)', () => {
     const urls = sitemap().map((e) => e.url);
     const pairUrls = urls.filter((u) => /\/compatibility\/[^/]+$/.test(u));
-    expect(pairUrls).toHaveLength(0);
+    expect(pairUrls).toHaveLength(readyEnrichedPairs().length * 2);
   });
 
   it('keeps the /compatibility hub (EN + ES)', () => {
@@ -65,8 +66,8 @@ describe('compatibility pairs removed from sitemap (T2)', () => {
     expect(hubUrls).toHaveLength(2);
   });
 
-  it('total entry count drops to 514', () => {
-    expect(sitemap()).toHaveLength(514);
+  it('total entry count is 514 + 2 per ready enriched pair (T7)', () => {
+    expect(sitemap()).toHaveLength(514 + readyEnrichedPairs().length * 2);
   });
 });
 
