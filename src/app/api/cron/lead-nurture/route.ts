@@ -11,9 +11,9 @@
  *   step 2 → T+24h moon-asc            (deeper reveals + AI-reading teaser)
  *   step 3 → T+72h paywall teaser      (third paywall push)
  *   step 4 → T+7d saturn weekly        (brand-building)
- *   step 5 → T+14d mini reading        (brand-building)
- *   step 6 → T+21d synastry teaser     (brand-building)
- *   step 7 → terminal                  (no further sends)
+ *   step 5 → T+14d mini reading        (brand-building, TERMINAL)
+ *   step 6 → terminal                  (synastry_teaser retired 2026-07-10 —
+ *                                       drove 6/10 lifetime unsubs, audit #6)
  *
  * Also handles T+0 recovery: leads with `nurture_step=0 AND nurture_next_at
  * IS NULL AND created_at < NOW() - 15min` had the initial waitUntil send
@@ -49,7 +49,6 @@ import {
   sendLeadPaywallTeaserEmail,
   sendLeadSaturnWeeklyEmail,
   sendLeadMiniReadingEmail,
-  sendLeadSynastryTeaserEmail,
 } from '@/shared/lib/email';
 import type { PaywallTeaserVariant } from '@/shared/lib/abtest';
 
@@ -96,8 +95,10 @@ const STEP_HANDLERS: StepHandler[] = [
   { fromStep: 2, toStep: 3, send: sendLeadMoonAscEmail,         nextDelayMs: 2 * DAY },
   { fromStep: 3, toStep: 4, send: sendLeadPaywallTeaserEmail,   nextDelayMs: 4 * DAY },
   { fromStep: 4, toStep: 5, send: sendLeadSaturnWeeklyEmail,    nextDelayMs: 7 * DAY },
-  { fromStep: 5, toStep: 6, send: sendLeadMiniReadingEmail,     nextDelayMs: 7 * DAY },
-  { fromStep: 6, toStep: 7, send: sendLeadSynastryTeaserEmail,  nextDelayMs: null },
+  // Terminal: synastry_teaser (step 6→7) retired 2026-07-10 — it drove 6 of 10
+  // lifetime unsubscribes (CRO audit finding #6). Leads already AT step 6 are
+  // excluded by the step<6 filter below and simply never get the last send.
+  { fromStep: 5, toStep: 6, send: sendLeadMiniReadingEmail,     nextDelayMs: null },
 ];
 
 export async function GET(request: Request) {
@@ -121,9 +122,9 @@ export async function GET(request: Request) {
     // -------------------------------------------------------------------------
     // 2. Select due candidates (cap at BATCH_LIMIT).
     //    Filters: not yet converted, not unsubscribed, not undeliverable,
-    //    step < 7 (final step is 7 after T+21d synastry teaser), AND one of:
+    //    step < 6 (terminal after T+14d mini reading; synastry retired), AND one of:
     //      - stuck T+0 (step=0, no nextAt, created >15min ago)
-    //      - steps 1..6 with nextAt <= NOW()
+    //      - steps 1..5 with nextAt <= NOW()
     // -------------------------------------------------------------------------
     const candidates = await db
       .select({
@@ -139,7 +140,7 @@ export async function GET(request: Request) {
       .from(emailLeads)
       .where(
         and(
-          lt(emailLeads.nurtureStep, 7),
+          lt(emailLeads.nurtureStep, 6),
           isNull(emailLeads.convertedToUserId),
           isNull(emailLeads.unsubscribedAt),
           eq(emailLeads.emailUndeliverable, false),
@@ -150,7 +151,7 @@ export async function GET(request: Request) {
               isNull(emailLeads.nurtureNextAt),
               lt(emailLeads.createdAt, stuckCutoff),
             ),
-            // steps 1..6 with due nextAt (T+1h, T+24h, T+72h, T+7d, T+14d, T+21d)
+            // steps 1..5 with due nextAt (T+1h, T+24h, T+72h, T+7d, T+14d)
             sql`${emailLeads.nurtureNextAt} IS NOT NULL AND ${emailLeads.nurtureNextAt} <= NOW()`,
           ),
         ),
