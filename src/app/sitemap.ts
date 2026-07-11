@@ -1,7 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { getAllEssaySlugs, getAllSignSlugs, SIGNS } from '@/shared/seo';
 import { ALL_CITY_SLUGS } from '@/shared/seo/cities';
-import { ALL_PAIR_SLUGS } from '@/shared/seo/compatibility-pairs';
 import { SITE_URL } from '@/shared/seo/constants';
 import { lastModifiedFor } from '@/shared/seo/sitemap-mtime';
 
@@ -272,15 +271,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   });
 
-  // ── Compatibility pairs (78 × 2 locales = 156) ────────────────────────────
-  const compatibilityPairs: MetadataRoute.Sitemap = ALL_PAIR_SLUGS.flatMap((pair) =>
-    emitLocalized(`/compatibility/${pair}`, {
-      lastModified: compatibilityBuildTime,
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    }),
-  );
-
   // ── Planetary-hours-cities index (EN + ES) ────────────────────────────────
   const planetaryHoursCitiesBuildTime = new Date();
   const planetaryHoursCitiesIndex: MetadataRoute.Sitemap = emitLocalized(
@@ -309,7 +299,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...signPages,
     ...siderealDatesPages,
     ...compatibilityIndex,
-    ...compatibilityPairs,
     ...planetaryHoursCitiesIndex,
     ...planetaryHoursCities,
   ];

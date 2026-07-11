@@ -107,12 +107,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = locale === 'es'
     ? `Análisis sideral de la compatibilidad ${r1.sign} y ${r2.sign}: elemento, modalidad, regente y tipo de aspecto.`
     : `Sidereal analysis of ${r1.sign} and ${r2.sign} compatibility: element, modality, ruler, and aspect type.`;
-  return createMetadata({
+  const metadata = createMetadata({
     title,
     description,
     path: `/compatibility/${pair}`,
     locale,
   });
+  // Thin template pages — noindex until enriched (Phase 2 T7), but follow so
+  // outbound links to the sign essays still pass equity.
+  return { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function CompatibilityPairPage({ params }: PageProps) {
