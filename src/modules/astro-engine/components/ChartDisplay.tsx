@@ -212,7 +212,9 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         date: bd,
-        time: knowsTime ? bt : '12:00',
+        // Honest chart when birth time is unknown — see HeroCalculator's
+        // payload comment; `time: null` skips Ascendant/houses server-side.
+        time: knowsTime ? bt : null,
         latitude: parseFloat(lat),
         longitude: parseFloat(lon),
         timezone: tz,
@@ -344,8 +346,11 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
         <div>
           <h1 className="text-lg font-semibold text-white/90">{t('headerTitle')}</h1>
           <p className="text-xs text-white/60 font-mono mt-0.5">
-            {chart.system === 'sidereal' ? 'Sidereal' : 'Tropical'} · {chart.houseSystem}
-            {!chart.houses && ` · ${t('noHouses')}`}
+            {chart.system === 'sidereal' ? 'Sidereal' : 'Tropical'}
+            {/* houseSystem persists as 'Placidus' in ChartResult even when no
+                houses were computed (schema transform) — only show it when
+                houses actually exist. */}
+            {chart.houses ? ` · ${chart.houseSystem}` : ` · ${t('noHouses')}`}
           </p>
         </div>
         <button
