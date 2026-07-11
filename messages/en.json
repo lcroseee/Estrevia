@@ -1214,6 +1214,7 @@
   "tarotPage": {
     "h1": "Thoth Tarot",
     "subtitle": "78 cards of the Thoth deck with Kabbalistic correspondences",
+    "browseAllHeading": "Browse all 78 cards",
     "openSpreads": "Open Spreads",
     "tapToDraw": "Tap the card to draw",
     "drawAriaLabel": "Draw your daily card",

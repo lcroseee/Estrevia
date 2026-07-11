@@ -1,3 +1,5 @@
+import { getCardName } from '@/modules/esoteric/components/tarotLocalize';
+
 export type CorrespondenceKey =
   | 'detail.hebrewLetter'
   | 'detail.treeOfLifePath'
@@ -38,4 +40,36 @@ export function buildCorrespondenceRows(card: CardCorrespondences): Corresponden
   rows.push({ key: 'detail.astrological', value: card.astrology });
   if (card.liber777Column) rows.push({ key: 'detail.liber777Column', value: card.liber777Column });
   return rows;
+}
+
+export interface TarotGridCard {
+  id: string;
+  name: string;
+  suit: string;
+  number: number;
+}
+
+export interface TarotGridGroup {
+  suit: string;
+  cards: TarotGridCard[];
+}
+
+const SUIT_ORDER = ['major', 'wands', 'cups', 'swords', 'disks'] as const;
+
+/**
+ * Groups tarot cards by suit in canonical order for the server-rendered hub
+ * grid. Every card becomes a crawlable anchor in the initial HTML (fixes the
+ * minor-arcana orphan problem — see audit §2b).
+ */
+export function groupTarotCards(
+  cards: Array<{ id: string; number: number; name: { en: string; es?: string }; suit: string }>,
+  locale: string,
+): TarotGridGroup[] {
+  return SUIT_ORDER.map((suit) => ({
+    suit,
+    cards: cards
+      .filter((c) => c.suit === suit)
+      .sort((a, b) => a.number - b.number)
+      .map((c) => ({ id: c.id, name: getCardName(c, locale), suit: c.suit, number: c.number })),
+  })).filter((g) => g.cards.length > 0);
 }

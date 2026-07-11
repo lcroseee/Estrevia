@@ -1217,6 +1217,7 @@
   "tarotPage": {
     "h1": "Tarot Thoth",
     "subtitle": "78 cartas del mazo Thoth con correspondencias kabalísticas",
+    "browseAllHeading": "Explora las 78 cartas",
     "openSpreads": "Abrir tiradas",
     "tapToDraw": "Toca la carta para sacar",
     "drawAriaLabel": "Saca tu carta del día",

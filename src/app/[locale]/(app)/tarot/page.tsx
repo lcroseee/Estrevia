@@ -6,6 +6,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { createMetadata, JsonLdScript, breadcrumbSchema } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { TarotCatalogClient } from '@/modules/esoteric/components/TarotCatalogClient';
+import { groupTarotCards } from '@/modules/esoteric/lib/tarotCards';
 
 // ISR: rebuild the tarot catalog daily. R10 CWV win.
 export const revalidate = 86400;
@@ -57,6 +58,8 @@ const tarotBreadcrumb = breadcrumbSchema([
 export default async function TarotPage() {
   const cards = await loadCards();
   const t = await getTranslations('tarotPage');
+  const locale = await getLocale();
+  const groups = groupTarotCards(cards, locale);
 
   return (
     <>
@@ -85,6 +88,33 @@ export default async function TarotPage() {
           </div>
 
           <TarotCatalogClient cards={cards} />
+
+          {/* Server-rendered crawlable index — guarantees all 78 card anchors
+              exist in the initial HTML (not only the client gallery). SEO §2b. */}
+          <nav aria-label={t('browseAllHeading')} className="space-y-6 pt-4">
+            <h2 className="text-xs uppercase tracking-wider text-white/40 font-medium">
+              {t('browseAllHeading')}
+            </h2>
+            {groups.map((group) => (
+              <section key={group.suit} className="space-y-2">
+                <h3 className="text-[11px] uppercase tracking-wider text-white/30">
+                  {t(`suits.${group.suit}` as 'suits.major' | 'suits.wands' | 'suits.cups' | 'suits.swords' | 'suits.disks')}
+                </h3>
+                <ul className="flex flex-wrap gap-2">
+                  {group.cards.map((card) => (
+                    <li key={card.id}>
+                      <Link
+                        href={`/tarot/${card.id}`}
+                        className="inline-block px-2.5 py-1 rounded-md text-xs bg-white/5 text-white/60 hover:text-white/90 hover:bg-white/10 transition-colors"
+                      >
+                        {card.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </nav>
         </div>
       </div>
     </>
