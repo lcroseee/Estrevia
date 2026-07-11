@@ -8,7 +8,6 @@ import { useSubscription } from '@/shared/hooks/useSubscription';
 import { postJson } from '@/shared/lib/apiFetch';
 import { TarotCard } from './TarotCard';
 import type { TarotCardData } from './TarotCard';
-import { Link } from '@/i18n/navigation';
 import { getCardName, getCardDescription, getCardKeywords } from './tarotLocalize';
 import { PaywallCta } from '@/shared/components/PaywallCta';
 import { PaywallModal } from '@/shared/components/PaywallModal';
@@ -87,7 +86,15 @@ export function ThreeCardSpread({ allCards }: ThreeCardSpreadProps) {
   }, [allCards]);
 
   const handleInterpret = useCallback(async () => {
-    if (!isPro) return;
+    if (!isPro) {
+      // Free-user click on the interpret button is the strongest paywall
+      // trigger we have — open the modal (PaywallModal fires PAYWALL_OPENED
+      // with trigger=three-card via triggerContext) instead of the old
+      // silent no-op. Server-side 403 on /api/v1/tarot/interpret remains
+      // the enforcement layer.
+      setPaywallOpen(true);
+      return;
+    }
     if (drawnCards.length === 0) return;
     setIsInterpreting(true);
     setInterpretError(null);

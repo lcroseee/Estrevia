@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, fireEvent, act, waitFor } from '@testing-library/react';
 import React from 'react';
 
 const cards = [
@@ -46,6 +46,16 @@ vi.mock('@/shared/lib/apiFetch', () => ({
   postJson: (...args: unknown[]) => mockPostJson(...args),
 }));
 
+vi.mock('@/shared/components/PaywallModal', () => ({
+  PaywallModal: ({ open, triggerContext }: { open: boolean; triggerContext?: string }) =>
+    open
+      ? React.createElement('div', {
+          'data-testid': 'paywall-modal',
+          'data-trigger': triggerContext ?? '',
+        })
+      : null,
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockPostJson.mockResolvedValue({ kind: 'ok', data: { success: true, data: null } });
@@ -81,5 +91,48 @@ describe('ThreeCardSpread — value-then-block', () => {
       '/api/v1/tarot/interpret',
       expect.anything(),
     );
+  });
+});
+
+describe('ThreeCardSpread — interpret button routes free clicks to the paywall (STR-4)', () => {
+  it('free user click opens the paywall (trigger=three-card) and fires NO interpret fetch', () => {
+    vi.useFakeTimers();
+    mockUseSubscription.mockReturnValue({ isPro: false, isLoading: false });
+    const { getByRole, getByTestId, queryByTestId } = render(<ThreeCardSpread allCards={cards} />);
+
+    fireEvent.click(getByRole('button', { name: /drawCards/i }));
+    // Reveal timeouts: 400/900/1400ms — advance past the last one.
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    expect(queryByTestId('paywall-modal')).toBeNull();
+    fireEvent.click(getByRole('button', { name: /aiInterpretation/i }));
+
+    expect(getByTestId('paywall-modal')).toBeTruthy();
+    expect(getByTestId('paywall-modal').getAttribute('data-trigger')).toBe('three-card');
+    expect(mockPostJson).not.toHaveBeenCalledWith('/api/v1/tarot/interpret', expect.anything());
+    vi.useRealTimers();
+  });
+
+  it('Pro click still fires the interpret fetch (unchanged)', async () => {
+    vi.useFakeTimers();
+    mockUseSubscription.mockReturnValue({ isPro: true, isLoading: false });
+    mockPostJson.mockResolvedValue({
+      kind: 'ok',
+      data: { success: true, data: { interpretation: 'The cards align.' } },
+    });
+    const { getByRole } = render(<ThreeCardSpread allCards={cards} />);
+
+    fireEvent.click(getByRole('button', { name: /drawCards/i }));
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    fireEvent.click(getByRole('button', { name: /aiInterpretation/i }));
+    vi.useRealTimers();
+
+    await waitFor(() => {
+      expect(mockPostJson).toHaveBeenCalledWith('/api/v1/tarot/interpret', expect.anything());
+    });
   });
 });
