@@ -281,6 +281,11 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
             {loading ? tPage('redirecting') : t('trialCta')}
           </button>
 
+          {/* Trust row — card-decision reassurance, both locales (SP-B D3) */}
+          <p className="text-xs text-white/35 text-center mt-3">
+            {t('trustRow')}
+          </p>
+
           {/* Error */}
           {error && (
             <p className="text-xs text-red-400 text-center mt-2" role="alert">
