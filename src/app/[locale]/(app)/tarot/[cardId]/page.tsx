@@ -46,6 +46,9 @@ async function loadCard(cardId: string): Promise<CardData | null> {
 // R10 CWV win — serves from CDN edge cache, TTFB ~500ms → ~50ms.
 export const revalidate = 86400;
 
+// Only the 78 enumerated card ids render; unknown ids 404 instead of soft-404.
+export const dynamicParams = false;
+
 /**
  * Pre-render all 78 tarot card pages at build time.
  * Without this, Next.js App Router defaults to dynamic SSR on first request —

@@ -35,6 +35,10 @@ import { RelatedPlacements } from '@/shared/components/RelatedPlacements';
 // R10 CWV win — serves from CDN edge cache, TTFB ~500ms → ~50ms.
 export const revalidate = 86400;
 
+// Only the 120 enumerated slugs render; any other slug is a real 404 (not a
+// soft-404 200+noindex shell). generateStaticParams below is the allowlist.
+export const dynamicParams = false;
+
 export function generateStaticParams(): Array<{ slug: string }> {
   return getAllEssaySlugs().map((slug) => ({ slug }));
 }
