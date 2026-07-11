@@ -11,6 +11,7 @@ describe('coupons registry', () => {
     it('accepts known codes', () => {
       expect(isAllowedCouponCode('TEASER20')).toBe(true);
       expect(isAllowedCouponCode('HALF50')).toBe(true);
+      expect(isAllowedCouponCode('SAVE50')).toBe(true);
     });
     it('rejects unknown / nullish', () => {
       expect(isAllowedCouponCode('NOPE')).toBe(false);
@@ -30,6 +31,7 @@ describe('coupons registry', () => {
     const envBoth: Record<string, string | undefined> = {
       STRIPE_COUPON_TEASER20: 'co_teaser',
       STRIPE_COUPON_HALF50: 'co_half',
+      STRIPE_COUPON_SAVE50: 'co_save',
     };
 
     it('TEASER20 stays annual-only (regression)', () => {
@@ -40,6 +42,15 @@ describe('coupons registry', () => {
     it('HALF50 applies to BOTH plans', () => {
       expect(resolveCouponId('HALF50', 'pro_monthly', envBoth)).toBe('co_half');
       expect(resolveCouponId('HALF50', 'pro_annual', envBoth)).toBe('co_half');
+    });
+
+    it('SAVE50 applies to BOTH plans (trial-end save offer)', () => {
+      expect(resolveCouponId('SAVE50', 'pro_monthly', envBoth)).toBe('co_save');
+      expect(resolveCouponId('SAVE50', 'pro_annual', envBoth)).toBe('co_save');
+    });
+
+    it('SAVE50 returns null when env unset (save offer fully disabled)', () => {
+      expect(resolveCouponId('SAVE50', 'pro_monthly', {})).toBeNull();
     });
 
     it('returns null when the env var is unset (degrade to promo codes)', () => {
