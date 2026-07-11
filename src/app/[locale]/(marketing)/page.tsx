@@ -170,8 +170,13 @@ export default async function LandingPage() {
               </Suspense>
             </div>
 
+            {/* Proof line — cites Swiss Ephemeris only (never implies NASA endorsement) */}
+            <p className="mt-4 text-xs text-white/45 tracking-wide max-w-xl mx-auto">
+              {t('heroProof')}
+            </p>
+
             {/* Trust line */}
-            <p className="mt-5 text-xs text-white/60 tracking-wide">
+            <p className="mt-3 text-xs text-white/60 tracking-wide">
               {t('heroTrust')}
             </p>
           </div>

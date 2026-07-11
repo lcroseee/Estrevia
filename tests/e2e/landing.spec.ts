@@ -154,3 +154,42 @@ test.describe('Marketing landing page (/why-sidereal as representative)', () => 
     expect(count).toBeGreaterThanOrEqual(1);
   });
 });
+
+test.describe('Landing first paint + message match (SP-E)', () => {
+  // Worst-case proxy for slow-JS Meta in-app browsers: with JS disabled the
+  // arming attribute is never set, so the base (visible) state must show
+  // everything. LAND-2 regression: this used to render the whole fold at
+  // opacity: 0 until hydration.
+  test.describe('with JavaScript disabled', () => {
+    test.use({ javaScriptEnabled: false });
+
+    test('hero H1 and subtext are fully visible — no animation gate', async ({ page }) => {
+      await page.goto('/');
+      await page.waitForLoadState('domcontentloaded');
+      const h1 = page.locator('#hero-heading');
+      await expect(h1).toBeVisible();
+      expect(await h1.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+      const subtext = page.getByText(/off by 24°/);
+      await expect(subtext).toBeVisible();
+      expect(await subtext.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+    });
+  });
+
+  test('hero paints visible at domcontentloaded with JS enabled', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const h1 = page.locator('#hero-heading');
+    await expect(h1).toBeVisible();
+    // Hero elements carry no data-animate — computed opacity must be 1
+    // regardless of hydration timing (no race in this assertion).
+    expect(await h1.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+  });
+
+  test('hero echoes the proven hooks and the honest trust line', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.getByText(/off by 24°/)).toBeVisible();
+    await expect(page.getByText(/professional standard/)).toBeVisible();
+    await expect(page.getByText(/No credit card/)).toBeVisible();
+    await expect(page.getByText(/No account needed/)).toHaveCount(0);
+  });
+});
