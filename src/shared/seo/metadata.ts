@@ -50,7 +50,12 @@ export interface CreateMetadataOptions {
  */
 function truncate(value: string, maxLength: number): string {
   if (value.length <= maxLength) return value;
-  return value.slice(0, maxLength - 1) + '…';
+  const hard = value.slice(0, maxLength - 1);
+  const lastSpace = hard.lastIndexOf(' ');
+  // Back off to the last word boundary only if it isn't too aggressive
+  // (>60% of the budget kept), so we never emit a 1-word truncation.
+  const body = lastSpace > (maxLength - 1) * 0.6 ? hard.slice(0, lastSpace) : hard;
+  return body.replace(/[\s.,;:—–-]+$/, '') + '…';
 }
 
 /**

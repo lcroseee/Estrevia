@@ -232,3 +232,21 @@ describe('createMetadata locale-aware behaviour', () => {
     expect((m.alternates?.languages as Record<string, string>)?.['es']).toBe('https://estrevia.app/es/');
   });
 });
+
+describe('title truncation is word-boundary aware (T8a)', () => {
+  it('does not cut mid-word and trims trailing punctuation', () => {
+    const long = 'Sidereal Capricorn Dates 2026 — When The Sun Enters Sea Goat Constellation';
+    const m = createMetadata({ title: long, description: 'D', path: '/x', locale: 'en' });
+    const title = m.title as string;
+    expect(title.endsWith('…')).toBe(true);
+    // the char before the ellipsis must be a letter/digit (no space/dash/comma)
+    expect(title.slice(-2, -1)).toMatch(/[A-Za-z0-9]/);
+    // no partial word: the truncated body is a prefix ending at a whole word
+    const body = title.replace('…', '').trim();
+    expect(long.startsWith(body)).toBe(true);
+    // discriminating: the body must end exactly at a word boundary in the
+    // original (the next original char is a space or end) — a mid-word cut like
+    // "…Sea Goa" (old slice behaviour) would leave 't' here and fail.
+    expect(body.length === long.length || long[body.length] === ' ').toBe(true);
+  });
+});
