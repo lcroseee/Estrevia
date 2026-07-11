@@ -15,6 +15,7 @@
  */
 
 import ReactMarkdown from 'react-markdown';
+import { PROSE_COMPONENTS } from './proseComponents';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { EssayMeta } from '@/modules/esoteric/lib/essays';
 import type { Sign } from '@/shared/types/astrology';
@@ -49,109 +50,6 @@ const PLANET_GLYPHS: Record<string, string> = {
   Pluto:   '♇',
 };
 
-// ---------------------------------------------------------------------------
-// Prose styles for react-markdown output
-// ---------------------------------------------------------------------------
-
-const PROSE_COMPONENTS = {
-  h2: ({ children, ...props }: React.ComponentProps<'h2'>) => (
-    <h2
-      {...props}
-      className="mt-10 mb-4 text-xl font-semibold text-white/90 font-[var(--font-geist-sans)] tracking-tight border-b border-white/6 pb-2"
-    >
-      {children}
-    </h2>
-  ),
-  h3: ({ children, ...props }: React.ComponentProps<'h3'>) => (
-    <h3
-      {...props}
-      className="mt-7 mb-3 text-base font-medium text-white/80 font-[var(--font-geist-sans)]"
-    >
-      {children}
-    </h3>
-  ),
-  p: ({ children, ...props }: React.ComponentProps<'p'>) => (
-    <p
-      {...props}
-      className="mb-5 text-base text-white/70 leading-[1.8] font-[var(--font-crimson-pro),_'Crimson_Pro',_Georgia,_serif]"
-    >
-      {children}
-    </p>
-  ),
-  ul: ({ children, ...props }: React.ComponentProps<'ul'>) => (
-    <ul
-      {...props}
-      className="mb-5 space-y-2 pl-5"
-    >
-      {children}
-    </ul>
-  ),
-  li: ({ children, ...props }: React.ComponentProps<'li'>) => (
-    <li
-      {...props}
-      className="text-base text-white/65 leading-[1.75] font-[var(--font-crimson-pro),_'Crimson_Pro',_Georgia,_serif] list-disc marker:text-white/25"
-    >
-      {children}
-    </li>
-  ),
-  strong: ({ children, ...props }: React.ComponentProps<'strong'>) => (
-    <strong {...props} className="font-semibold text-white/85">
-      {children}
-    </strong>
-  ),
-  em: ({ children, ...props }: React.ComponentProps<'em'>) => (
-    <em {...props} className="italic text-white/75">
-      {children}
-    </em>
-  ),
-  blockquote: ({ children, ...props }: React.ComponentProps<'blockquote'>) => (
-    <blockquote
-      {...props}
-      className="my-6 border-l-2 border-white/15 pl-5 text-sm text-white/40 italic font-[var(--font-geist-sans)]"
-    >
-      {children}
-    </blockquote>
-  ),
-  table: ({ children, ...props }: React.ComponentProps<'table'>) => (
-    <div className="overflow-x-auto my-6 rounded-xl border border-white/8">
-      <table {...props} className="w-full text-sm">
-        {children}
-      </table>
-    </div>
-  ),
-  thead: ({ children, ...props }: React.ComponentProps<'thead'>) => (
-    <thead {...props} className="bg-white/5 border-b border-white/8">
-      {children}
-    </thead>
-  ),
-  th: ({ children, ...props }: React.ComponentProps<'th'>) => (
-    <th
-      {...props}
-      className="px-4 py-2.5 text-left text-[10px] text-white/35 uppercase tracking-widest font-[var(--font-geist-sans)]"
-    >
-      {children}
-    </th>
-  ),
-  td: ({ children, ...props }: React.ComponentProps<'td'>) => (
-    <td
-      {...props}
-      className="px-4 py-2.5 text-white/65 border-t border-white/5 font-[var(--font-geist-sans)]"
-    >
-      {children}
-    </td>
-  ),
-  code: ({ children, ...props }: React.ComponentProps<'code'>) => (
-    <code
-      {...props}
-      className="font-[var(--font-geist-mono)] text-xs bg-white/6 border border-white/8 rounded px-1.5 py-0.5 text-white/75"
-    >
-      {children}
-    </code>
-  ),
-  hr: (props: React.ComponentProps<'hr'>) => (
-    <hr {...props} className="my-8 border-white/8" />
-  ),
-} as const;
 
 // ---------------------------------------------------------------------------
 // Component
