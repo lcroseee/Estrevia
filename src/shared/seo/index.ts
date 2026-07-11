@@ -57,6 +57,9 @@ export {
 } from './internal-links';
 export type { RelatedPage, PlanetSlug, SignSlug } from './internal-links';
 
+export { essayLocaleUrls } from './essay-urls';
+export type { EssayLocaleUrls } from './essay-urls';
+
 export {
   SITE_NAME,
   SITE_URL,

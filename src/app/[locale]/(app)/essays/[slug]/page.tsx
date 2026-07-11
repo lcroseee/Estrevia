@@ -16,6 +16,7 @@ import {
   breadcrumbSchema,
   getAllEssaySlugs,
   parseEssaySlug,
+  essayLocaleUrls,
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { getEssayBySlug } from '@/modules/esoteric/lib/essays';
@@ -87,7 +88,11 @@ export default async function EssaySlugPage(props: {
   const parsed = parseEssaySlug(slug);
 
   // ── JSON-LD schemas ──────────────────────────────────────────────────────
-  const canonicalUrl = `${SITE_URL}/essays/${slug}`;
+  const { canonicalUrl, homeUrl, signUrl } = essayLocaleUrls(
+    slug,
+    locale as 'en' | 'es',
+    parsed?.sign ?? null,
+  );
 
   const articleLd = articleSchema({
     title: meta.title,
@@ -105,9 +110,9 @@ export default async function EssaySlugPage(props: {
     : null;
 
   const breadcrumbLd = breadcrumbSchema([
-    { name: 'Home', url: SITE_URL },
-    ...(parsed && signDisplay
-      ? [{ name: signDisplay, url: `${SITE_URL}/signs/${parsed.sign}` }]
+    { name: 'Home', url: homeUrl },
+    ...(parsed && signDisplay && signUrl
+      ? [{ name: signDisplay, url: signUrl }]
       : []),
     { name: meta.title, url: canonicalUrl },
   ]);
