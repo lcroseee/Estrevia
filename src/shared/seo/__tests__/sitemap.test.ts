@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import sitemap from '@/app/sitemap';
 // The compat page imports next-intl's `Link` (→ next/navigation), unresolvable
 // in the vitest node env; we only test its generateMetadata, so stub it.
