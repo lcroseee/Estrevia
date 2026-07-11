@@ -12,7 +12,7 @@ vi.mock('@/i18n/navigation', () => ({
 import { generateMetadata as compatPairMetadata } from '@/app/[locale]/(marketing)/compatibility/[pair]/page';
 import { ALL_PAIR_SLUGS } from '@/shared/seo/compatibility-pairs';
 import { readyEnrichedPairs } from '@/shared/seo/compatibility-content';
-import { SITE_URL } from '../constants';
+import { SITE_URL, isFounderIdentityPublished } from '../constants';
 
 describe('sitemap', () => {
   it('emits one entry per locale for every canonical path', () => {
@@ -99,5 +99,13 @@ describe('support + tarot spread in sitemap (seo-p2 batch)', () => {
     const en = entries.filter((e) => !/\/es(\/|$)/.test(e.url));
     const es = entries.filter((e) => /\/es(\/|$)/.test(e.url));
     expect(en.length).toBe(es.length);
+  });
+});
+
+describe('about page in sitemap (T13, gated on founder publish)', () => {
+  it('emits /about (EN+ES) only once the founder identity is published', () => {
+    const urls = sitemap().map((e) => e.url);
+    const aboutUrls = urls.filter((u) => /\/about$/.test(u));
+    expect(aboutUrls).toHaveLength(isFounderIdentityPublished() ? 2 : 0);
   });
 });

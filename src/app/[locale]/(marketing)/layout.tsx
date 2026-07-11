@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from '@/i18n/navigation';
 import { getTranslations } from 'next-intl/server';
-import { JsonLdScript, organizationSchema } from '@/shared/seo';
+import { JsonLdScript, organizationSchema, isFounderIdentityPublished } from '@/shared/seo';
 import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher';
 
 export default async function MarketingLayout({ children }: { children: ReactNode }) {
@@ -117,6 +117,13 @@ export default async function MarketingLayout({ children }: { children: ReactNod
               <Link href="/pricing" className={`text-xs text-white/65 hover:text-white/90 transition-colors py-2 sm:py-0 ${focusRing}`}>
                 {tNav('pricing')}
               </Link>
+              {/* /about is linked only once the founder identity is published
+                  (T13 gate) — the page is noindex + unlisted while dormant. */}
+              {isFounderIdentityPublished() && (
+                <Link href="/about" className={`text-xs text-white/65 hover:text-white/90 transition-colors py-2 sm:py-0 ${focusRing}`}>
+                  {tMarketing('footerAbout')}
+                </Link>
+              )}
               <Link href="/terms" className={`text-xs text-white/65 hover:text-white/90 transition-colors py-2 sm:py-0 ${focusRing}`}>
                 {tMarketing('footerTerms')}
               </Link>

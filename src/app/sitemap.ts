@@ -4,6 +4,7 @@ import { ALL_CITY_SLUGS } from '@/shared/seo/cities';
 import { SITE_URL } from '@/shared/seo/constants';
 import { lastModifiedFor } from '@/shared/seo/sitemap-mtime';
 import { readyEnrichedPairs } from '@/shared/seo/compatibility-content';
+import { isFounderIdentityPublished } from '@/shared/seo/constants';
 
 // ---------------------------------------------------------------------------
 // Image sitemap helpers
@@ -153,6 +154,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.7,
     }),
+    // /about is emitted only once the founder identity is published (T13 gate) —
+    // stays out of the sitemap while dormant (the page is noindex until then).
+    ...(isFounderIdentityPublished()
+      ? emitLocalized('/about', {
+          lastModified: lastModifiedFor('static', 'src/app/[locale]/(marketing)/about/page.tsx'),
+          changeFrequency: 'monthly',
+          priority: 0.5,
+        })
+      : []),
     // Legal pages — low priority, indexed for trust signals
     ...emitLocalized('/privacy', {
       lastModified: lastModifiedFor('static', 'src/app/[locale]/(marketing)/privacy/page.tsx'),
