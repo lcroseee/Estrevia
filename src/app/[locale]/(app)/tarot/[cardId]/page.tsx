@@ -11,6 +11,7 @@ import {
   getCardDescription,
   getCardKeywords,
 } from '@/modules/esoteric/components/tarotLocalize';
+import { buildCorrespondenceRows } from '@/modules/esoteric/lib/tarotCards';
 
 // NOTE: cards.json no longer contains an `image` field.
 // Tarot imagery by Frieda Harris is copyright until 2064 per CLAUDE.md.
@@ -27,10 +28,10 @@ interface CardData {
     reversed: { en: string[]; es?: string[] };
   };
   astrology: string;
-  hebrewLetter: string;
-  treeOfLifePath: number;
-  treeOfLifeConnects: number[];
-  liber777Column: string;
+  hebrewLetter?: string | null;
+  treeOfLifePath?: number | null;
+  treeOfLifeConnects?: number[] | null;
+  liber777Column?: string | null;
   description: { en: string; es?: string };
 }
 
@@ -87,7 +88,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: localizedDescription.slice(0, 155),
     path: `/tarot/${cardId}`,
     locale: locale as 'en' | 'es',
-    keywords: [localizedName, 'thoth tarot', card.suit, card.astrology, card.hebrewLetter],
+    keywords: [localizedName, 'thoth tarot', card.suit, card.astrology, ...(card.hebrewLetter ? [card.hebrewLetter] : [])],
   });
 }
 
@@ -233,20 +234,17 @@ export default async function CardDetailPage({ params }: Props) {
               {tPage('detail.correspondences')}
             </h3>
             <dl className="divide-y divide-white/6">
-              {[
-                { label: tPage('detail.hebrewLetter'), value: card.hebrewLetter },
-                { label: tPage('detail.treeOfLifePath'), value: String(card.treeOfLifePath) },
-                { label: tPage('detail.connects'), value: card.treeOfLifeConnects.join(' \u2194 ') },
-                { label: tPage('detail.astrological'), value: card.astrology },
-                { label: tPage('detail.liber777Column'), value: card.liber777Column },
-              ].map(({ label, value }) => (
-                <div key={label} className="grid grid-cols-[140px_1fr] px-5 py-2.5 hover:bg-white/3 transition-colors">
-                  <dt className="text-xs text-white/40 uppercase tracking-wider self-center">{label}</dt>
-                  <dd className="text-sm text-white/80" style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}>
-                    {value}
-                  </dd>
-                </div>
-              ))}
+              {buildCorrespondenceRows(card).map(({ key, value }) => {
+                const label = tPage(key);
+                return (
+                  <div key={key} className="grid grid-cols-[140px_1fr] px-5 py-2.5 hover:bg-white/3 transition-colors">
+                    <dt className="text-xs text-white/40 uppercase tracking-wider self-center">{label}</dt>
+                    <dd className="text-sm text-white/80" style={{ fontFamily: "var(--font-crimson-pro, 'Crimson Pro', serif)" }}>
+                      {value}
+                    </dd>
+                  </div>
+                );
+              })}
             </dl>
           </div>
 
