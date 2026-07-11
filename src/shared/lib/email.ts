@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import WelcomeEmail from '@/emails/WelcomeEmail';
 import PurchaseConfirmationEmail from '@/emails/PurchaseConfirmationEmail';
+import PaidOnboardingEmail from '@/emails/PaidOnboardingEmail';
 import SubscriptionCanceledEmail from '@/emails/SubscriptionCanceledEmail';
 import AccountDeletionEmail from '@/emails/AccountDeletionEmail';
 import ReEngagementEmail from '@/emails/ReEngagementEmail';
@@ -19,7 +20,7 @@ import MiniReadingEmail from '@/emails/MiniReadingEmail';
 import SynastryTeaserEmail from '@/emails/SynastryTeaserEmail';
 import CartAbandonEmail from '@/emails/CartAbandonEmail';
 import { PLANET_ES_NAMES } from './planet-i18n';
-import { tryInsertOneShot, recordSent } from './sent-emails';
+import { tryInsertOneShot, recordSent, wasSentWithin } from './sent-emails';
 import { tryInsertOneShotLead, recordSentLead } from './sent-lead-emails';
 import { hasCartAbandonSentRecently, recordCartAbandonSent } from './sent-cart-abandon-emails';
 import { signUnsubscribeToken, signLeadUnsubscribeToken } from './unsubscribe-token';
@@ -54,6 +55,10 @@ const SUBJECTS = {
   purchase_confirmation: {
     en: 'Welcome to Estrevia Pro',
     es: 'Bienvenido a Estrevia Pro',
+  },
+  paid_onboarding: {
+    en: 'Your first AI reading is waiting',
+    es: 'Tu primera lectura con IA te espera',
   },
   subscription_canceled: {
     en: 'Your Estrevia Pro subscription has been canceled',
@@ -220,6 +225,54 @@ export async function sendPurchaseConfirmationEmail(params: {
     { idempotencyKey: `${params.userId}:purchase:${params.subscriptionId}` },
   );
   await recordSent(params.userId, 'purchase_confirmation', result.data?.id ?? null);
+}
+
+// ---------------------------------------------------------------------------
+// sendPaidOnboardingEmail — one activation nudge ~24h after subscribing.
+//
+// Dedup layers: wasSentWithin 30d belt here + the paid-onboarding cron's
+// NOT EXISTS query guard + the Resend idempotencyKey. result.error IS checked
+// (the welcome-email lesson): a rejected send records nothing, so the user
+// stays eligible and the next cron run retries.
+// ---------------------------------------------------------------------------
+const PAID_ONBOARDING_DEDUP_MS = 30 * 24 * 60 * 60 * 1000;
+
+export async function sendPaidOnboardingEmail(params: {
+  userId: string;
+  email: string;
+  locale: 'en' | 'es';
+  subscriptionId: string;
+}): Promise<{ sent: boolean; reason?: string }> {
+  if (process.env.DRY_RUN === 'true') {
+    console.info('[email] paid_onboarding DRY_RUN — skipping send', { userId: params.userId });
+    return { sent: false, reason: 'dry_run' };
+  }
+
+  const already = await wasSentWithin(params.userId, 'paid_onboarding', PAID_ONBOARDING_DEDUP_MS);
+  if (already) return { sent: false, reason: 'already_sent' };
+
+  const html = await render(PaidOnboardingEmail({ locale: params.locale }));
+  const text = await render(PaidOnboardingEmail({ locale: params.locale }), { plainText: true });
+
+  const result = await getResend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: params.email,
+      subject: SUBJECTS.paid_onboarding[params.locale],
+      html,
+      text,
+      headers: {
+        'List-Unsubscribe': `<${SETTINGS_URL(params.locale)}>`,
+      },
+    },
+    { idempotencyKey: `${params.userId}:paid_onboarding:${params.subscriptionId}` },
+  );
+  if (result.error) {
+    // Do NOT recordSent — no row means the next cron run retries this user.
+    throw new Error(`Resend rejected paid_onboarding send: ${result.error.message}`);
+  }
+  await recordSent(params.userId, 'paid_onboarding', result.data?.id ?? null);
+  return { sent: true };
 }
 
 // ---------------------------------------------------------------------------

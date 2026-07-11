@@ -476,6 +476,10 @@ export const sentEmails = pgTable('sent_emails', {
       'account_deletion',
       'trial_ending',
       're_engagement_28d',
+      // TS-only enum (text column, no DB constraint) — adding a value needs no
+      // migration. NOT covered by sent_emails_oneshot_idx; dedup lives in
+      // wasSentWithin + the paid-onboarding cron's NOT EXISTS guard.
+      'paid_onboarding',
     ],
   }).notNull(),
   resendMessageId: text('resend_message_id'),
