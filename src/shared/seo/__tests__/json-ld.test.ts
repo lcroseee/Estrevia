@@ -11,7 +11,7 @@ import {
   personSchema,
   articleAuthorNode,
 } from '../json-ld';
-import { FOUNDER_NAME, isFounderIdentityPublished } from '../constants';
+import { FOUNDER_NAME, isFounderIdentityPublished, SAME_AS_URLS } from '../constants';
 
 // schema-dts types are complex union types — we cast through unknown for test assertions.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -425,5 +425,32 @@ describe('organizationSchema.founder is gated on T13 publish', () => {
   it('omits founder while dormant (no placeholder name leaks)', () => {
     const schema = organizationSchema() as unknown as AnySchema;
     expect('founder' in schema).toBe(isFounderIdentityPublished());
+  });
+});
+
+describe('organizationSchema sameAs — brand entity anchors (T19)', () => {
+  it('emits exactly the shared SAME_AS_URLS list', () => {
+    const schema = organizationSchema() as unknown as AnySchema;
+    expect(Array.isArray(schema.sameAs)).toBe(true);
+    expect(schema.sameAs).toEqual([...SAME_AS_URLS]);
+  });
+
+  it('includes the live X profile', () => {
+    const schema = organizationSchema() as unknown as AnySchema;
+    expect(schema.sameAs).toContain('https://x.com/estrevia_app');
+  });
+
+  it('every entry is an absolute, unique, non-placeholder https profile URL', () => {
+    const seen = new Set<string>();
+    for (const raw of SAME_AS_URLS) {
+      expect(raw).toBe(raw.trim());
+      expect(raw).not.toMatch(/example\.com|your-|placeholder|TODO|TBD|xxxx|[<>]/i);
+      const url = new URL(raw);
+      expect(url.protocol).toBe('https:');
+      expect(url.hostname).toContain('.');
+      expect(raw).not.toMatch(/^https:\/\/[^/]+\/?$/);
+      expect(seen.has(url.href)).toBe(false);
+      seen.add(url.href);
+    }
   });
 });

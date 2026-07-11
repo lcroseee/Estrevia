@@ -32,6 +32,22 @@ function resolveSiteUrl(): string {
 export const SITE_URL = resolveSiteUrl();
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/opengraph-image`;
 export const TWITTER_HANDLE = '@estrevia_app';
+
+/**
+ * Canonical off-site brand-entity profiles for Organization.sameAs.
+ *
+ * Finding #15 (SEO audit 2026-07-06): the "estrevia" brand SERP is being lost to
+ * the "Estreva" estradiol drug. Google uses sameAs to disambiguate the entity and
+ * build a Knowledge Panel. Seeded with the live X account.
+ *
+ * APPEND each profile's canonical URL here — and ONLY here — as it goes live
+ * (Crunchbase, Product Hunt, LinkedIn, GitHub, Bluesky, Instagram, Wikidata).
+ * Every entry MUST be an absolute https:// URL to a real, live profile with a
+ * path/handle; the json-ld unit test rejects placeholders, bare origins, and dupes.
+ */
+export const SAME_AS_URLS: readonly string[] = [
+  'https://x.com/estrevia_app',
+] as const;
 export const SITE_DESCRIPTION =
   'Sidereal astrology platform — natal charts, planetary hours, esoteric correspondences';
 

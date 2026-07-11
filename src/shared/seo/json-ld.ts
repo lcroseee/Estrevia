@@ -30,7 +30,7 @@ import type {
   Product,
   DefinedTerm,
 } from 'schema-dts';
-import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, FOUNDER_NAME, isFounderIdentityPublished } from './constants';
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, FOUNDER_NAME, isFounderIdentityPublished, SAME_AS_URLS } from './constants';
 
 // ---------------------------------------------------------------------------
 // Organization
@@ -56,7 +56,7 @@ export function organizationSchema(): WithContext<Organization> {
     ...(isFounderIdentityPublished()
       ? { founder: { '@type': 'Person' as const, name: FOUNDER_NAME, url: `${SITE_URL}/about` } }
       : {}),
-    sameAs: ['https://x.com/estrevia_app'],
+    sameAs: [...SAME_AS_URLS],
   };
 }
 
