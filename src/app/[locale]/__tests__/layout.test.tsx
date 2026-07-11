@@ -1,13 +1,12 @@
 // @vitest-environment jsdom
 
 /**
- * Smoke test for LocaleLayout — Meta Pixel injection.
+ * Smoke test for LocaleLayout — Meta Pixel gate wiring.
  *
- * The layout is an async Server Component, so we invoke it as a function
- * and pass the resulting JSX through `renderToString` to assert the inline
- * `next/script` body. The Pixel must only render when
- * NEXT_PUBLIC_META_PIXEL_ID is set (graceful degradation in dev/staging
- * without the env var).
+ * The layout is an async Server Component, so we invoke it as a function and
+ * pass the resulting JSX through `renderToString`. The Pixel is now loaded by
+ * MetaPixelGate (consent-gated, tested separately); here we only assert the
+ * gate is mounted when NEXT_PUBLIC_META_PIXEL_ID is set and omitted otherwise.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -25,27 +24,15 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-// next/script with strategy="afterInteractive" defers injection to the client
-// and emits no body during SSR. For this smoke test we only care that the
-// inline body the layout passes contains the Pixel init / PageView calls, so
-// we replace it with a plain <script> tag that renders synchronously.
-vi.mock('next/script', () => ({
-  default: ({
-    children,
-    id,
-  }: {
-    children?: React.ReactNode;
-    id?: string;
-  }) => (
-    <script id={id} data-testid="meta-pixel-script">
-      {children}
-    </script>
+vi.mock('@/shared/components/MetaPixelGate', () => ({
+  MetaPixelGate: ({ pixelId }: { pixelId: string }) => (
+    <div data-testid="pixel-gate" data-pixel={pixelId} />
   ),
 }));
 
 import LocaleLayout from '../layout';
 
-describe('LocaleLayout — Meta Pixel injection', () => {
+describe('LocaleLayout — Meta Pixel gate wiring', () => {
   const ORIGINAL_PIXEL = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
   beforeEach(() => {
@@ -60,26 +47,24 @@ describe('LocaleLayout — Meta Pixel injection', () => {
     }
   });
 
-  it('renders Pixel script when NEXT_PUBLIC_META_PIXEL_ID is set', async () => {
+  it('mounts MetaPixelGate when NEXT_PUBLIC_META_PIXEL_ID is set', async () => {
     process.env.NEXT_PUBLIC_META_PIXEL_ID = 'PIX_TEST';
     const element = await LocaleLayout({
       children: 'CHILDREN',
       params: Promise.resolve({ locale: 'en' }),
     });
     const html = renderToString(element as React.ReactElement);
-    expect(html).toContain("fbq('init', 'PIX_TEST')");
-    expect(html).toContain("fbq('track', 'PageView')");
-    // noscript fallback img with the same pixel id
-    expect(html).toContain('id=PIX_TEST&amp;ev=PageView&amp;noscript=1');
+    expect(html).toContain('data-testid="pixel-gate"');
+    expect(html).toContain('data-pixel="PIX_TEST"');
   });
 
-  it('does NOT render Pixel script when NEXT_PUBLIC_META_PIXEL_ID is unset', async () => {
+  it('does NOT mount the Pixel when NEXT_PUBLIC_META_PIXEL_ID is unset', async () => {
     const element = await LocaleLayout({
       children: 'CHILDREN',
       params: Promise.resolve({ locale: 'en' }),
     });
     const html = renderToString(element as React.ReactElement);
-    expect(html).not.toContain('fbq(');
+    expect(html).not.toContain('pixel-gate');
     expect(html).not.toContain('connect.facebook.net');
   });
 });
