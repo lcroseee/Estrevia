@@ -88,6 +88,11 @@ beforeEach(() => {
   sendCartAbandonMock.mockResolvedValue({ sent: true });
 });
 
+// Each test dynamic-imports the route (which pulls the heavy email module graph);
+// under full-suite worker contention that import can exceed the 5s default even
+// though it runs in <1s in isolation. Give it headroom so the full gate stays green.
+vi.setConfig({ testTimeout: 20000 });
+
 describe('/api/cron/cart-abandon-daily', () => {
   it('DRY_RUN=true skips Resend call and returns dryRun:true', async () => {
     vi.stubEnv('CART_ABANDON_DRY_RUN', 'true');
