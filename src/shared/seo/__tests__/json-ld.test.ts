@@ -8,7 +8,9 @@ import {
   breadcrumbSchema,
   websiteSchema,
   definedTermSchema,
+  personSchema,
 } from '../json-ld';
+import { FOUNDER_NAME, isFounderIdentityPublished } from '../constants';
 
 // schema-dts types are complex union types — we cast through unknown for test assertions.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -344,5 +346,51 @@ describe('definedTermSchema', () => {
       description: 'Sanskrit Jyotisha tradition using sidereal positions.',
     }) as unknown as AnySchema;
     expect('inDefinedTermSet' in schema).toBe(false);
+  });
+});
+
+describe('personSchema', () => {
+  it('returns a WithContext Person with @type + name', () => {
+    const schema = personSchema({ name: 'Test Founder' }) as unknown as AnySchema;
+    expect(schema['@context']).toBe('https://schema.org');
+    expect(schema['@type']).toBe('Person');
+    expect(schema.name).toBe('Test Founder');
+  });
+
+  it('includes optional url, jobTitle, sameAs, knowsAbout when provided', () => {
+    const schema = personSchema({
+      name: 'Test Founder',
+      url: 'https://estrevia.app/about',
+      jobTitle: 'Founder',
+      sameAs: ['https://x.com/estrevia_app'],
+      knowsAbout: ['Sidereal astrology', 'Lahiri ayanamsa'],
+    }) as unknown as AnySchema;
+    expect(schema.url).toBe('https://estrevia.app/about');
+    expect(schema.jobTitle).toBe('Founder');
+    expect(schema.sameAs).toContain('https://x.com/estrevia_app');
+    expect(schema.knowsAbout).toContain('Lahiri ayanamsa');
+  });
+
+  it('nests worksFor as an Organization when a name is given', () => {
+    const schema = personSchema({
+      name: 'Test Founder',
+      worksForName: 'Estrevia',
+      worksForUrl: 'https://estrevia.app',
+    }) as unknown as AnySchema;
+    expect(schema.worksFor['@type']).toBe('Organization');
+    expect(schema.worksFor.name).toBe('Estrevia');
+    expect(schema.worksFor.url).toBe('https://estrevia.app');
+  });
+
+  it('omits worksFor when no organization name given', () => {
+    const schema = personSchema({ name: 'Test Founder' }) as unknown as AnySchema;
+    expect('worksFor' in schema).toBe(false);
+  });
+});
+
+describe('T13 ships DORMANT (founder identity gate)', () => {
+  it('FOUNDER_NAME is the unset placeholder — nothing publishes the name yet', () => {
+    expect(FOUNDER_NAME).toBe('__FOUNDER_NAME__');
+    expect(isFounderIdentityPublished()).toBe(false);
   });
 });

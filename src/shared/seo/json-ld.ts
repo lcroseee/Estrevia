@@ -20,6 +20,7 @@ import React from 'react';
 import type {
   WithContext,
   Organization,
+  Person,
   SoftwareApplication,
   WebSite,
   Article,
@@ -52,6 +53,52 @@ export function organizationSchema(): WithContext<Organization> {
       height: '512',
     },
     sameAs: ['https://x.com/estrevia_app'],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Person (named founder / author — E-E-A-T entity)
+// ---------------------------------------------------------------------------
+
+export interface PersonSchemaOptions {
+  name: string;
+  url?: string;
+  jobTitle?: string;
+  description?: string;
+  sameAs?: string[];
+  knowsAbout?: string[];
+  worksForName?: string;
+  worksForUrl?: string;
+}
+
+/**
+ * Returns a Person schema for the site's named human author/founder.
+ * Injected on /about (the entity home) and referenced as Article.author.
+ * E-E-A-T signal replacing the anonymous-Organization author used pre-2026-07.
+ * Consumers gate on isFounderIdentityPublished() (constants.ts) so this stays
+ * dormant until the founder sets a real FOUNDER_NAME.
+ */
+export function personSchema(options: PersonSchemaOptions): WithContext<Person> {
+  const { name, url, jobTitle, description, sameAs, knowsAbout, worksForName, worksForUrl } =
+    options;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name,
+    ...(url ? { url } : {}),
+    ...(jobTitle ? { jobTitle } : {}),
+    ...(description ? { description } : {}),
+    ...(sameAs && sameAs.length > 0 ? { sameAs } : {}),
+    ...(knowsAbout && knowsAbout.length > 0 ? { knowsAbout } : {}),
+    ...(worksForName
+      ? {
+          worksFor: {
+            '@type': 'Organization',
+            name: worksForName,
+            ...(worksForUrl ? { url: worksForUrl } : {}),
+          },
+        }
+      : {}),
   };
 }
 

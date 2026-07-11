@@ -26,6 +26,7 @@ export type { CreateMetadataOptions } from './metadata';
 export {
   JsonLdScript,
   organizationSchema,
+  personSchema,
   softwareAppSchema,
   websiteSchema,
   articleSchema,
@@ -37,6 +38,7 @@ export {
 } from './json-ld';
 export type {
   ArticleSchemaOptions,
+  PersonSchemaOptions,
   FaqItem,
   HowToSchemaOptions,
   BreadcrumbItem,
@@ -63,6 +65,8 @@ export type { EssayLocaleUrls } from './essay-urls';
 
 export {
   SITE_NAME,
+  FOUNDER_NAME,
+  isFounderIdentityPublished,
   SITE_URL,
   DEFAULT_OG_IMAGE,
   TWITTER_HANDLE,
