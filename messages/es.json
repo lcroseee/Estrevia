@@ -827,7 +827,8 @@
     "faq3A": "Estrevia usa Swiss Ephemeris — el mismo motor que Solar Fire y Astro.com — con precisión de ±0,01° para los 12 cuerpos celestes. Más de 100 cartas de referencia se verifican en CI contra Astro.com antes de cada versión.",
     "faq4Q": "¿Qué es un Pasaporte Cósmico?",
     "faq4A": "Una tarjeta compartible con tus signos siderales de Sol, Luna y Ascendente, el elemento dominante y el porcentaje de rareza de la combinación. Compártela como imagen o enlace — funciona sin crear una cuenta.",
-    "finalCta": "Calcular mi carta sideral"
+    "finalCta": "Calcular mi carta sideral",
+    "exploreEssaysHeading": "Explora los ensayos siderales"
   },
   "birthDataForm": {
     "formAria": "Formulario de datos de nacimiento para calcular la carta natal",

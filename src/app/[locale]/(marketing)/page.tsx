@@ -3,11 +3,12 @@ import { Suspense } from 'react';
 import { auth } from '@clerk/nextjs/server';
 import { Link } from '@/i18n/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { createMetadata, JsonLdScript, softwareAppSchema, websiteSchema, howToSchema, faqSchema } from '@/shared/seo';
+import { createMetadata, JsonLdScript, softwareAppSchema, websiteSchema, howToSchema, faqSchema, getAllEssaySlugsByPlanet } from '@/shared/seo';
 import { HeroCalculator } from '@/modules/astro-engine/components/HeroCalculator';
 import { LandingAnimations } from './LandingAnimations';
 import { NewFeatureCards } from './NewFeatureCards';
 import { LandingViewTracker } from './LandingViewTracker';
+import { RelatedPlacements } from '@/shared/components/RelatedPlacements';
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export async function generateMetadata(): Promise<Metadata> {
@@ -366,6 +367,23 @@ export default async function LandingPage() {
               ))}
             </dl>
           </div>
+        </section>
+
+        {/* ── Explore the essays (entry links into the essay mesh — T9) ──────── */}
+        <section
+          className="relative px-4 sm:px-6 py-16"
+          data-section="essays"
+          data-animate="fade-up-0"
+        >
+          <div
+            className="absolute top-0 inset-x-0 h-px"
+            style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)' }}
+            aria-hidden="true"
+          />
+          <RelatedPlacements
+            slugs={getAllEssaySlugsByPlanet('sun')}
+            heading={t('exploreEssaysHeading')}
+          />
         </section>
 
         {/* ── Final CTA strip ───────────────────────────────────────────────── */}

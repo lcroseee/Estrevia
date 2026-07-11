@@ -827,7 +827,8 @@
     "faq3A": "Estrevia uses Swiss Ephemeris — the same engine used by Solar Fire and Astro.com — with ±0.01° accuracy for all 12 celestial bodies. Over 100 reference charts are verified in CI against Astro.com before every release.",
     "faq4Q": "What is a Cosmic Passport?",
     "faq4A": "A shareable card with your sidereal Sun, Moon, and Ascendant signs, dominant element, and combination rarity percentage. Share it as an image or link — works without creating an account.",
-    "finalCta": "Calculate My Sidereal Chart"
+    "finalCta": "Calculate My Sidereal Chart",
+    "exploreEssaysHeading": "Explore the sidereal essays"
   },
   "birthDataForm": {
     "formAria": "Birth data form for natal chart calculation",
