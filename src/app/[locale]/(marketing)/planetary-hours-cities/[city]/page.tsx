@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       : `Planetary hours in ${entry.name} — today`;
   const description =
     locale === 'es'
-      ? `Tabla de horas planetarias para ${entry.name} basada en el cálculo sideral con efemérides Suizas.`
-      : `Planetary hours table for ${entry.name} computed with the Swiss Ephemeris sidereal engine.`;
+      ? `Horas planetarias de hoy en ${entry.name}: tabla de amanecer a amanecer con el regente de cada hora (Sol, Luna, Marte…), calculada con efemérides Suizas (sideral, Lahiri).`
+      : `Today's planetary hours in ${entry.name}: a sunrise-to-sunrise table with each hour's ruling planet (Sun, Moon, Mars…), computed with the Swiss Ephemeris (sidereal, Lahiri).`;
   return createMetadata({
     title,
     description,
