@@ -3,7 +3,7 @@
  *
  * Public (no auth) — used by /checkout/complete client polling fallback when
  * the server-side ticket wait times out. Returns:
- *   { ready: true,  ticket: '...' } when the webhook has stored a signInTicket
+ *   { ready: true,  ticket: '...' } when the webhook has stored a sign-in ticket
  *   { ready: false }                when it has not arrived yet
  *
  * The ticket lives in Redis (keyed by session_id), written by the Stripe webhook

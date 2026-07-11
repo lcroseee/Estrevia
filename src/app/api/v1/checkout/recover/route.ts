@@ -14,7 +14,7 @@
  * Idempotent via:
  *   - Clerk find-or-create with race recovery
  *   - DB upsert (onConflictDoUpdate)
- *   - Fast-path step skipping if signInTicket already in session metadata
+ *   - Fast-path step skipping if a ticket is already stored in Redis (checkout-ticket)
  *   - `recovery:<session_id>` marker row in processed_stripe_events
  *
  * Public endpoint, rate-limited by IP. The Stripe session_id IS the
