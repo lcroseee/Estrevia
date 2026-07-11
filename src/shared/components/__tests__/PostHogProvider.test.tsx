@@ -85,6 +85,22 @@ describe('PostHogProvider — locale super-property', () => {
     await new Promise((r) => setTimeout(r, 10));
     expect(hoisted.mockRegister).not.toHaveBeenCalled();
   });
+
+  it('does NOT mislabel /essays/* as es (startsWith bug)', async () => {
+    hoisted.mockUsePathname.mockReturnValue('/essays/what-is-sidereal');
+    render(<PostHogProvider><div /></PostHogProvider>);
+    await waitFor(() => {
+      expect(hoisted.mockRegister).toHaveBeenCalledWith({ locale: 'en' });
+    });
+  });
+
+  it('labels the bare /es root as es', async () => {
+    hoisted.mockUsePathname.mockReturnValue('/es');
+    render(<PostHogProvider><div /></PostHogProvider>);
+    await waitFor(() => {
+      expect(hoisted.mockRegister).toHaveBeenCalledWith({ locale: 'es' });
+    });
+  });
 });
 
 describe('PostHogProvider — first-pageview locale via loaded callback', () => {
@@ -116,6 +132,25 @@ describe('PostHogProvider — first-pageview locale via loaded callback', () => 
   it('loaded callback uses locale="en" on EN/non-ES routes', async () => {
     process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test_key';
     hoisted.mockUsePathname.mockReturnValue('/sign-in');
+    window.localStorage.setItem('estrevia_cookie_consent', 'accepted');
+    delete (window as unknown as Record<string, unknown>).posthog;
+
+    render(<PostHogProvider><div /></PostHogProvider>);
+
+    await waitFor(() => {
+      expect(hoisted.mockInit).toHaveBeenCalledTimes(1);
+    });
+
+    const [, options] = hoisted.mockInit.mock.calls[0];
+    const fakePh = { register: hoisted.mockRegister };
+    options.loaded(fakePh);
+
+    expect(hoisted.mockRegister).toHaveBeenCalledWith({ locale: 'en' });
+  });
+
+  it('loaded callback does NOT mislabel /essays/* as es (startsWith bug)', async () => {
+    process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test_key';
+    hoisted.mockUsePathname.mockReturnValue('/essays/what-is-sidereal');
     window.localStorage.setItem('estrevia_cookie_consent', 'accepted');
     delete (window as unknown as Record<string, unknown>).posthog;
 

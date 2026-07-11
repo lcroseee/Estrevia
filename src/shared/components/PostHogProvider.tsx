@@ -86,7 +86,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     // Compute locale BEFORE init — pathname is in scope of this provider
     // render. Required so the first $pageview (fired inside init when
     // capture_pageview: true) carries the locale super-property.
-    const initialLocale = pathname?.startsWith('/es') ? 'es' : 'en';
+    const initialLocale = pathname === '/es' || pathname?.startsWith('/es/') ? 'es' : 'en';
 
     posthog.init(apiKey, {
       // Same-origin reverse proxy bypasses ad blockers that block us.i.posthog.com
@@ -161,7 +161,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
       posthog?: { register?: (props: Record<string, unknown>) => void };
     }).posthog;
     if (!posthog?.register) return;
-    const locale = pathname?.startsWith('/es') ? 'es' : 'en';
+    const locale = pathname === '/es' || pathname?.startsWith('/es/') ? 'es' : 'en';
     posthog.register({ locale });
   }, [pathname, isInitialized]);
 
