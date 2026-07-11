@@ -1,0 +1,35 @@
+{
+  "updatedAt": "__PLACEHOLDER__",
+  "en": {
+    "h1": "__PLACEHOLDER__",
+    "metaTitle": "__PLACEHOLDER__",
+    "metaDescription": "__PLACEHOLDER__",
+    "intro": "__PLACEHOLDER__",
+    "sections": [
+      { "heading": "__PLACEHOLDER__", "body": "__PLACEHOLDER__" },
+      { "heading": "__PLACEHOLDER__", "body": "__PLACEHOLDER__" },
+      { "heading": "__PLACEHOLDER__", "body": "__PLACEHOLDER__" }
+    ],
+    "faq": [
+      { "question": "__PLACEHOLDER__", "answer": "__PLACEHOLDER__" },
+      { "question": "__PLACEHOLDER__", "answer": "__PLACEHOLDER__" },
+      { "question": "__PLACEHOLDER__", "answer": "__PLACEHOLDER__" }
+    ]
+  },
+  "es": {
+    "h1": "__PLACEHOLDER__",
+    "metaTitle": "__PLACEHOLDER__",
+    "metaDescription": "__PLACEHOLDER__",
+    "intro": "__PLACEHOLDER__",
+    "sections": [
+      { "heading": "__PLACEHOLDER__", "body": "__PLACEHOLDER__" },
+      { "heading": "__PLACEHOLDER__", "body": "__PLACEHOLDER__" },
+      { "heading": "__PLACEHOLDER__", "body": "__PLACEHOLDER__" }
+    ],
+    "faq": [
+      { "question": "__PLACEHOLDER__", "answer": "__PLACEHOLDER__" },
+      { "question": "__PLACEHOLDER__", "answer": "__PLACEHOLDER__" },
+      { "question": "__PLACEHOLDER__", "answer": "__PLACEHOLDER__" }
+    ]
+  }
+}
