@@ -13,17 +13,18 @@ import { useState, useEffect } from 'react';
 import { COOKIE_CONSENT_KEY, getCookieConsent } from './PostHogProvider';
 import type { CookieConsentValue } from './PostHogProvider';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+import { shouldShowConsentBanner } from '@/shared/lib/consent';
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = getCookieConsent();
-    if (consent === null) {
-      // No decision yet — show banner after a short delay so it doesn't
-      // flash during initial paint.
-      const timer = setTimeout(() => setVisible(true), 800);
-      return () => clearTimeout(timer);
+    // Reveal immediately once we know no decision exists — no artificial delay.
+    // The old 800ms timer (+500ms slide below) made this banner paint late,
+    // which is why Lighthouse clocked it as the /es/ LCP element (7.6s).
+    // Starting hidden in SSR still prevents a flash for returning consenters.
+    if (shouldShowConsentBanner(getCookieConsent())) {
+      setVisible(true);
     }
   }, []);
 
@@ -69,7 +70,7 @@ export function CookieConsent() {
         'sm:px-6 sm:pt-4 sm:pb-4',
         'bg-[#0F0F18]/97 border-t border-white/10',
         'shadow-[0_-4px_40px_rgba(0,0,0,0.7)]',
-        'animate-in slide-in-from-bottom-4 duration-500',
+        'animate-in fade-in duration-200',
         '[backdrop-filter:blur(12px)]',
       ].join(' ')}
       style={{ WebkitBackdropFilter: 'blur(12px)' }}
