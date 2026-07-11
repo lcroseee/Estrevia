@@ -20,6 +20,7 @@ import {
 } from '@/shared/seo';
 import { SITE_URL } from '@/shared/seo/constants';
 import { getEssayBySlug } from '@/modules/esoteric/lib/essays';
+import { extractFaqItems } from '@/modules/esoteric/lib/faq';
 import { EssayPage } from '@/modules/esoteric/components/EssayPage';
 import { EssayPageClient } from '@/modules/esoteric/components/EssayPageClient';
 
@@ -130,38 +131,4 @@ export default async function EssaySlugPage(props: {
       </EssayPageClient>
     </>
   );
-}
-
-// ---------------------------------------------------------------------------
-// FAQ extraction helper
-// ---------------------------------------------------------------------------
-
-/**
- * Extracts FAQ Q&A pairs from the markdown body.
- *
- * Looks for the pattern used in all 120 essays:
- *   **Question text?**
- *   Answer text on the next non-empty line(s).
- *
- * Only pairs found after "## FAQ" heading are extracted.
- */
-function extractFaqItems(markdown: string): Array<{ question: string; answer: string }> {
-  const faqStart = markdown.search(/^##\s+FAQ/im);
-  if (faqStart === -1) return [];
-
-  const faqSection = markdown.slice(faqStart);
-
-  const items: Array<{ question: string; answer: string }> = [];
-  const questionRegex = /\*\*([^*]+\?)\*\*\s*\n([\s\S]*?)(?=\n\*\*[^*]+\?\*\*|\n##\s|$)/g;
-
-  let match: RegExpExecArray | null;
-  while ((match = questionRegex.exec(faqSection)) !== null) {
-    const question = match[1]?.trim();
-    const answer = match[2]?.trim().replace(/\n+/g, ' ');
-    if (question && answer) {
-      items.push({ question, answer });
-    }
-  }
-
-  return items.slice(0, 8);
 }
