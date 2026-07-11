@@ -96,7 +96,9 @@ export function BirthDataForm({ onChartCalculated }: BirthDataFormProps) {
       try {
         const body = {
           date: values.date,
-          time: values.knowsBirthTime ? values.time : '12:00',
+          // Honest chart when birth time is unknown — see HeroCalculator's
+          // payload comment; `time: null` skips Ascendant/houses server-side.
+          time: values.knowsBirthTime ? values.time : null,
           latitude: values.latitude,
           longitude: values.longitude,
           timezone: values.timezone,
