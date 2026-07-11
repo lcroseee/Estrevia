@@ -32,6 +32,7 @@ import { SITE_URL } from '@/shared/seo/constants';
 import { getSunInSignRange, type SiderealSign } from '@/modules/astro-engine';
 import { Disclaimer } from '@/shared/components/Disclaimer';
 import { SunSignWidget } from './SunSignWidget';
+import { formatSiderealDateRange } from './siderealRange';
 import { YearTableAccordion } from './YearTableAccordion';
 
 // Force SSR: currentYear must reflect the actual calendar year, not build time.
@@ -61,10 +62,13 @@ export async function generateMetadata({
   const locale = await getLocale();
   const t = await getTranslations({ locale, namespace: `siderealDates.${signParam}` });
   const currentYear = new Date().getUTCFullYear();
+  const { start, end } = getSunInSignRange(signParam as SiderealSign, currentYear);
+  const signDisplay = signParam.charAt(0).toUpperCase() + signParam.slice(1);
+  const range = formatSiderealDateRange(start, end, signDisplay, (localeParam ?? locale) as 'en' | 'es');
 
   return createMetadata({
     title: t('title', { year: currentYear }),
-    description: t('description'),
+    description: `${t('description')} ${range}`,
     path: `/sidereal-${signParam}-dates`,
     locale: (localeParam ?? locale) as 'en' | 'es',
     type: 'article',
