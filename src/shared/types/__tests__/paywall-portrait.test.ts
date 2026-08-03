@@ -79,3 +79,61 @@ describe('portrait analytics + paywall', () => {
     expect((es as unknown as MessagesShape).paywall.contextualTitles.avatarPortrait).toBeTruthy();
   });
 });
+
+// Every non-generic PaywallTrigger must have BOTH a contextual title and a
+// CTA subline in both locales — PaywallCta.tsx renders both unconditionally
+// (unlike PaywallModal, which guards its headline with `t.has()`), so a
+// missing key renders the raw i18n key as visible copy. See DEFECT 1,
+// review round 1 of Task 13: 'avatar-portrait' shipped with a title but no
+// subline, and 'essay' turned out to have the same pre-existing gap.
+type NonGenericTrigger = Exclude<PaywallTrigger, 'generic'>;
+
+const NON_GENERIC_TRIGGERS: NonGenericTrigger[] = [
+  'essay',
+  'celtic-cross',
+  'three-card',
+  'synastry-ai',
+  'natal-chart',
+  'avatar-portrait',
+];
+
+// Exhaustiveness guard: if PaywallTrigger gains a member that isn't listed
+// in NON_GENERIC_TRIGGERS above (and isn't 'generic'), this fails to
+// type-check — caught by `npm run typecheck` — rather than silently
+// skipping the new trigger's copy in the loop below.
+type MissingFromList = Exclude<PaywallTrigger, 'generic' | (typeof NON_GENERIC_TRIGGERS)[number]>;
+type AssertNoTriggerIsMissing = MissingFromList extends never
+  ? true
+  : 'Add the new PaywallTrigger to NON_GENERIC_TRIGGERS in paywall-portrait.test.ts';
+const _assertNoTriggerIsMissing: AssertNoTriggerIsMissing = true;
+void _assertNoTriggerIsMissing;
+
+// Mirrors PaywallCta.tsx's (unexported) triggerToKey verbatim so this test
+// exercises the same kebab-to-camel transform the component uses.
+function triggerToKey(trigger: PaywallTrigger): string {
+  return trigger
+    .split('-')
+    .map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
+}
+
+interface PaywallMessagesShape {
+  contextualTitles: Record<string, string>;
+  cta: { subline: Record<string, string> };
+}
+
+describe('paywall trigger copy invariant (every trigger has title + subline)', () => {
+  const enPaywall = (en as unknown as { paywall: PaywallMessagesShape }).paywall;
+  const esPaywall = (es as unknown as { paywall: PaywallMessagesShape }).paywall;
+
+  it.each(NON_GENERIC_TRIGGERS)(
+    'has a non-empty contextualTitle and cta.subline for trigger "%s" in both locales',
+    (trigger) => {
+      const key = triggerToKey(trigger);
+      expect(enPaywall.contextualTitles[key]).toBeTruthy();
+      expect(esPaywall.contextualTitles[key]).toBeTruthy();
+      expect(enPaywall.cta.subline[key]).toBeTruthy();
+      expect(esPaywall.cta.subline[key]).toBeTruthy();
+    },
+  );
+});

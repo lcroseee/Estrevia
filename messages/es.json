@@ -1111,7 +1111,9 @@
         "celticCross": "Obtén la interpretación completa que conecta las 10 cartas en una narrativa.",
         "threeCard": "Obtén la lectura que conecta pasado, presente y futuro.",
         "synastryAi": "Mira cómo interactúan realmente sus dos cartas — lectura completa con IA, incluida en Pro.",
-        "natalChart": "Síntesis hecha con IA de todos tus planetas, casas y aspectos — escrita para tu carta, no un horóscopo genérico."
+        "essay": "Obtén el texto completo de este ensayo y de más de 120 ensayos en la biblioteca.",
+        "natalChart": "Síntesis hecha con IA de todos tus planetas, casas y aspectos — escrita para tu carta, no un horóscopo genérico.",
+        "avatarPortrait": "Sube una foto y mírate representado en los colores de tu propia carta."
       },
       "ctaLabel": "Comienza tu prueba gratis de 3 días"
     }

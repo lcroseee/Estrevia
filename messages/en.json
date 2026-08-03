@@ -1107,7 +1107,9 @@
         "celticCross": "Get the full interpretation tying all 10 cards into one narrative.",
         "threeCard": "Get the LLM reading that connects past, present, and future.",
         "synastryAi": "See how your two charts actually interact — full AI reading with Pro.",
-        "natalChart": "An AI-crafted synthesis of all your planets, houses, and aspects — written for your chart, not a generic horoscope."
+        "essay": "Get the full text of this essay, plus every other essay in the library.",
+        "natalChart": "An AI-crafted synthesis of all your planets, houses, and aspects — written for your chart, not a generic horoscope.",
+        "avatarPortrait": "Upload a photo and see yourself rendered in the colours of your own chart."
       },
       "ctaLabel": "Start 3-Day Free Trial"
     }
