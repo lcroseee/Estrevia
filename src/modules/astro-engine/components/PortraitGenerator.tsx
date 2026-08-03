@@ -258,9 +258,12 @@ export function PortraitGenerator({ chartId, sunSign, moonSign, isPro }: Portrai
 
       if (res.kind === 'ok' && res.data.success) {
         setIsShared(nextShared);
-        if (nextShared) {
-          trackEvent(AnalyticsEvent.AVATAR_PORTRAIT_SHARED, { avatar_id: result.id });
-        }
+        // No client-side AVATAR_PORTRAIT_SHARED here: the PATCH route
+        // (src/app/api/v1/avatar/[id]/share/route.ts) already emits it
+        // server-side on the transition to shared. The server emission is
+        // authoritative — it only fires once the write actually succeeded
+        // and can't be dropped by an ad-blocker — so a client-side call
+        // here would double-count the metric this feature exists to drive.
         return;
       }
 

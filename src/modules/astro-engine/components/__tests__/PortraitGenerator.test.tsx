@@ -32,6 +32,15 @@ vi.mock('@/shared/lib/image-prep', async (orig) => {
   return { ...actual, prepareSelfie: prep.prepareSelfie };
 });
 
+const analyticsMocks = vi.hoisted(() => ({ trackEvent: vi.fn() }));
+vi.mock('@/shared/lib/analytics', () => ({
+  trackEvent: analyticsMocks.trackEvent,
+  AnalyticsEvent: {
+    AVATAR_PORTRAIT_UPLOADED: 'avatar_portrait_uploaded',
+    AVATAR_PORTRAIT_SHARED: 'avatar_portrait_shared',
+  },
+}));
+
 import { PortraitGenerator } from '../PortraitGenerator';
 
 function renderIt(props: Record<string, unknown> = {}) {
@@ -275,6 +284,27 @@ describe('PortraitGenerator — share toggle', () => {
     expect(screen.getByTestId('portrait-share-link').getAttribute('href')).toContain(
       '/s/avatar/av_1',
     );
+  });
+
+  // Regression guard: the PATCH route (src/app/api/v1/avatar/[id]/share/route.ts)
+  // already emits avatar_portrait_shared server-side once the write succeeds.
+  // A client-side emission here would double-count the event — the metric
+  // this feature exists to drive — since PostHog has no $insert_id to dedupe.
+  it('does not emit avatar_portrait_shared on the client when the share PATCH succeeds', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(generateResponse())
+      .mockResolvedValueOnce(
+        jsonResponse({ success: true, data: { isShared: true }, error: null }, 200),
+      );
+    await generate();
+
+    fireEvent.click(screen.getByTestId('portrait-share'));
+    await waitFor(() => expect(screen.getByTestId('portrait-share-link')).not.toBeNull());
+
+    const sharedCalls = analyticsMocks.trackEvent.mock.calls.filter(
+      ([event]) => event === 'avatar_portrait_shared',
+    );
+    expect(sharedCalls).toHaveLength(0);
   });
 
   it('offers unshare once shared, and clicking it sends { isShared: false }', async () => {
