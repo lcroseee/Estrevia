@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/shared/lib/db';
 import { avatars } from '@/shared/lib/schema';
@@ -9,7 +9,7 @@ import { Link } from '@/i18n/navigation';
 import { AvatarCta } from './AvatarCta';
 
 interface Props {
-  params: Promise<{ locale: 'en' | 'es'; id: string }>;
+  params: Promise<{ id: string }>;
 }
 
 interface AvatarRow {
@@ -51,38 +51,43 @@ async function fetchAvatar(id: string): Promise<AvatarRow | null> {
 // which already serves a shared portrait to anonymous callers.
 // ---------------------------------------------------------------------------
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, id } = await params;
+  const { id } = await params;
   const avatar = await fetchAvatar(id);
-  const t = await getTranslations({ locale, namespace: 'avatar.portrait' });
+  const t = await getTranslations({ locale: 'en', namespace: 'avatar.portrait' });
 
   return createMetadata({
     title: t('title'),
     description: t('intro'),
     path: `/s/avatar/${id}`,
-    locale,
+    locale: 'en',
     noIndex: true,
     ogImage: avatar?.isShared ? `/api/v1/avatar/${id}/image` : undefined,
   });
 }
 
 // ---------------------------------------------------------------------------
-// Page — Server Component. Public: gated purely on isShared, not on
-// ownership, so the owner's own unshared portrait 404s here too (matching
-// the brief's spec — the owner-facing generator UI is a different page).
-// This page lives under [locale] (unlike /s/[id] and /s/synastry/[id],
-// which are deliberately EN-only) so the share flow can speak Spanish to
-// ES visitors too.
+// Page — Server Component, EN-only (matches /s/[id] and /s/synastry/[id]:
+// share pages live OUTSIDE [locale] — see src/app/s/layout.tsx). Public:
+// gated purely on isShared, not on ownership, so the owner's own unshared
+// portrait 404s here too (matching the brief's spec — the owner-facing
+// generator UI is a different page).
+//
+// This page previously lived under [locale] so the share flow could speak
+// Spanish to ES visitors, but src/middleware.ts skips next-intl rewriting
+// for any pathname starting with '/s/' (see middleware.ts's '/s/' comment) —
+// so the default-locale (EN, no-prefix) URL `/s/avatar/:id` was never
+// rewritten to the `[locale]` segment the old file location required, and
+// 404'd. Matching the established EN-only pattern is what actually resolves.
 // ---------------------------------------------------------------------------
 export default async function AvatarSharePage({ params }: Props) {
-  const { locale, id } = await params;
-  setRequestLocale(locale);
+  const { id } = await params;
 
   const avatar = await fetchAvatar(id);
   if (!avatar || !avatar.isShared) {
     notFound();
   }
 
-  const t = await getTranslations({ locale, namespace: 'avatar.portrait' });
+  const t = await getTranslations({ locale: 'en', namespace: 'avatar.portrait' });
 
   return (
     <div

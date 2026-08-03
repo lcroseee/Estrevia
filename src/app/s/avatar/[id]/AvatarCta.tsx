@@ -16,9 +16,11 @@ interface AvatarCtaProps {
  * synastry share page already established that this event tracks "share
  * page drove someone into the funnel" generically, not literally passports.
  *
- * Uses next-intl's <Link> (not next/navigation's router) because this page
- * lives under [locale] and must keep the visitor's locale on navigation —
- * unlike the EN-only passport/synastry share pages this one is modelled on.
+ * Uses next-intl's <Link> for useTranslations()/navigation parity with the
+ * rest of this EN-only /s/ subtree (src/app/s/layout.tsx wraps every /s/**
+ * page, including this one, in an English-locked NextIntlClientProvider —
+ * see that file's doc comment for why /s/ is EN-only and lives outside
+ * [locale] like PassportCta/SynastryCta's pages).
  */
 export function AvatarCta({ avatarId }: AvatarCtaProps) {
   const t = useTranslations('avatar');

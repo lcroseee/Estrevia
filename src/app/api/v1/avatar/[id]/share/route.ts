@@ -2,7 +2,7 @@
  * PATCH /api/v1/avatar/[id]/share
  *
  * Owner-only toggle for whether a Cosmic Portrait is publicly reachable via
- * its share page (`/[locale]/s/avatar/[id]`) and the anonymous branch of
+ * its share page (`/s/avatar/[id]`) and the anonymous branch of
  * `GET /api/v1/avatar/[id]/image`.
  *
  * Non-owners (including anonymous callers) get 404, never 403 — matching
