@@ -15,6 +15,7 @@
 - **Commands:** run one test file `npx vitest run <path>` · all tests `npm test` · types `npm run typecheck` · lint `npm run lint`. Zero failing tests and zero type errors is the gate for every task.
 - **Test layout:** colocated `__tests__/` next to the module under test. vitest config is `vitest.config.ts`; `environment: 'node'` is the default — a test needing DOM must declare `// @vitest-environment jsdom` on line 1.
 - **Route-test mock shape:** `vi.hoisted()` for mock fns → `vi.mock()` for each module → static `import { POST } from '../route'` **after** the mocks. This ordering is load-bearing.
+- **Component-test style — no new test dependencies.** `@testing-library/user-event` and `@testing-library/jest-dom` are **not installed and must not be added**. Use `render` / `screen` / `fireEvent` / `waitFor` from `@testing-library/react` with a `// @vitest-environment jsdom` pragma, mock `next-intl` so `useTranslations` echoes keys, and assert with `toBeNull()` / `not.toBeNull()` / `toBeTruthy()` / `.getAttribute()`. Reference: `src/app/[locale]/(marketing)/pricing/__tests__/PricingToggle.test.tsx`. Because translations echo keys, component tests assert on keys (`avatar.portrait.privacyNote`), never on English copy.
 - **PII:** the selfie is PII. Never log it, never write it to disk, never place it in a URL, query param, or error message. All test fixtures are synthetic images — never a real face.
 - **Portrait applies to the `cosmic` style only.** `AvatarStyle` is `'cosmic' | 'tarot' | 'geometric' | 'nebula'` (`src/modules/astro-engine/avatar-prompt.ts:21`); any other style is rejected with `STYLE_NOT_PORTRAIT_CAPABLE`.
 - **Module boundaries:** `src/modules/astro-engine/` must never import from `src/modules/advertising/`. Shared code goes in `src/shared/`.
@@ -2602,141 +2603,182 @@ Match its idioms: `'use client'`, `useTranslations`, the `postJson` helper, disc
 
 - [ ] **Step 2: Write the failing test**
 
+**Convention note — read before writing this test.** This repo has **no** `@testing-library/user-event` and **no** `@testing-library/jest-dom`. Do not add them. The established style (17 files, e.g. `src/app/[locale]/(marketing)/pricing/__tests__/PricingToggle.test.tsx`) is: a `// @vitest-environment jsdom` pragma, `render`/`screen`/`fireEvent`/`waitFor` from `@testing-library/react`, a `next-intl` mock that echoes translation **keys**, and assertions via `toBeNull()` / `not.toBeNull()` / `toBeTruthy()` / `.getAttribute()`. Tests therefore assert on keys such as `portrait.privacyNote`, never on English copy.
+
 ```tsx
 // @vitest-environment jsdom
 // src/modules/astro-engine/components/__tests__/PortraitGenerator.test.tsx
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { NextIntlClientProvider } from 'next-intl';
-import en from '../../../../../messages/en.json';
-import { PortraitGenerator } from '../PortraitGenerator';
 
+vi.mock('next-intl', () => ({
+  useTranslations: (ns: string) => (key: string, vars?: Record<string, unknown>) =>
+    vars ? `${ns}.${key}:${JSON.stringify(vars)}` : `${ns}.${key}`,
+  useLocale: () => 'en',
+}));
+
+vi.mock('@/shared/components/PaywallCta', () => ({
+  PaywallCta: ({ trigger }: { trigger: string }) => <div data-testid="paywall">{trigger}</div>,
+}));
+
+const prep = vi.hoisted(() => ({
+  prepareSelfie: vi.fn(async () => new Blob(['jpeg-bytes'], { type: 'image/jpeg' })),
+}));
 vi.mock('@/shared/lib/image-prep', async (orig) => {
   const actual = await orig<typeof import('@/shared/lib/image-prep')>();
-  return { ...actual, prepareSelfie: vi.fn(async (f: File) => new Blob([await f.text()], { type: 'image/jpeg' })) };
+  return { ...actual, prepareSelfie: prep.prepareSelfie };
 });
 
-function renderIt(props: Partial<React.ComponentProps<typeof PortraitGenerator>> = {}) {
+import { PortraitGenerator } from '../PortraitGenerator';
+
+function renderIt(props: Record<string, unknown> = {}) {
   return render(
-    <NextIntlClientProvider locale="en" messages={en as never}>
-      <PortraitGenerator chartId="chart_1" sunSign="Scorpio" moonSign="Taurus" isPro {...props} />
-    </NextIntlClientProvider>,
+    <PortraitGenerator chartId="chart_1" sunSign="Scorpio" moonSign="Taurus" isPro {...props} />,
   );
 }
 
-beforeEach(() => { vi.clearAllMocks(); });
+function pickFile(type = 'image/jpeg', name = 'selfie.jpg') {
+  const input = screen.getByTestId('portrait-file') as HTMLInputElement;
+  const file = new File(['x'], name, { type });
+  Object.defineProperty(input, 'files', { value: [file], configurable: true });
+  fireEvent.change(input);
+}
 
-describe('PortraitGenerator', () => {
-  it('shows the paywall instead of the uploader for a free user', () => {
+function jsonResponse(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
+beforeEach(() => {
+  vi.restoreAllMocks();
+  prep.prepareSelfie.mockResolvedValue(new Blob(['jpeg-bytes'], { type: 'image/jpeg' }));
+});
+
+describe('PortraitGenerator — gating', () => {
+  it('shows the paywall and no file input for a free user', () => {
     renderIt({ isPro: false });
-    expect(screen.queryByLabelText(/choose a photo/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId('paywall').textContent).toBe('avatar-portrait');
+    expect(screen.queryByTestId('portrait-file')).toBeNull();
   });
 
   it('states the privacy promise before any upload', () => {
     renderIt();
-    expect(screen.getByText(/never stored/i)).toBeInTheDocument();
+    expect(screen.getByText('avatar.portrait.privacyNote')).not.toBeNull();
   });
 
-  it('keeps Generate disabled until a photo and consent are both present', async () => {
-    const user = userEvent.setup();
+  it('keeps Generate disabled until BOTH a photo and consent are present', async () => {
     renderIt();
-    const button = screen.getByRole('button', { name: /create my portrait/i });
-    expect(button).toBeDisabled();
+    const button = screen.getByTestId('portrait-generate') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
 
-    const input = screen.getByLabelText(/choose a photo/i) as HTMLInputElement;
-    await user.upload(input, new File(['x'], 'selfie.jpg', { type: 'image/jpeg' }));
-    expect(button).toBeDisabled(); // consent still unchecked
+    pickFile();
+    await waitFor(() => expect(screen.getByTestId('portrait-preview')).not.toBeNull());
+    expect((screen.getByTestId('portrait-generate') as HTMLButtonElement).disabled).toBe(true);
 
-    await user.click(screen.getByRole('checkbox'));
-    await waitFor(() => expect(button).toBeEnabled());
-  });
-
-  it('rejects an unsupported file type without contacting the server', async () => {
-    const user = userEvent.setup();
-    const fetchSpy = vi.spyOn(globalThis, 'fetch');
-    renderIt();
-    const input = screen.getByLabelText(/choose a photo/i) as HTMLInputElement;
-    await user.upload(input, new File(['x'], 'doc.pdf', { type: 'application/pdf' }));
-    expect(await screen.findByText(/not a photo we can read/i)).toBeInTheDocument();
-    expect(fetchSpy).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('portrait-consent'));
+    await waitFor(() =>
+      expect((screen.getByTestId('portrait-generate') as HTMLButtonElement).disabled).toBe(false),
+    );
   });
 
   it('offers all four presentation options', () => {
     renderIt();
-    for (const label of [/let the chart decide/i, /feminine/i, /masculine/i, /androgynous/i]) {
-      expect(screen.getByRole('radio', { name: label })).toBeInTheDocument();
+    for (const p of ['auto', 'feminine', 'masculine', 'androgynous']) {
+      expect(screen.getByTestId(`presentation-${p}`)).not.toBeNull();
     }
+  });
+});
+
+describe('PortraitGenerator — client-side validation', () => {
+  it('rejects an unsupported file type without contacting the server', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    renderIt();
+    pickFile('application/pdf', 'doc.pdf');
+    await waitFor(() =>
+      expect(screen.getByText('avatar.portrait.errors.invalidImage')).not.toBeNull(),
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('PortraitGenerator — generation', () => {
+  async function submit() {
+    renderIt();
+    pickFile();
+    await waitFor(() => expect(screen.getByTestId('portrait-preview')).not.toBeNull());
+    fireEvent.click(screen.getByTestId('portrait-consent'));
+    fireEvent.click(screen.getByTestId('portrait-generate'));
+  }
+
+  it('announces progress to assistive technology while generating', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
+    await submit();
+    await waitFor(() => expect(screen.getByRole('status')).not.toBeNull());
   });
 
   it('renders the rejection reason when the server refuses the photo', async () => {
-    const user = userEvent.setup();
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ success: false, data: { reasons: ['likely_minor'] }, error: 'UNSAFE_IMAGE' }), { status: 422 }),
+      jsonResponse({ success: false, data: { reasons: ['likely_minor'] }, error: 'UNSAFE_IMAGE' }, 422),
     );
-    renderIt();
-    await user.upload(
-      screen.getByLabelText(/choose a photo/i) as HTMLInputElement,
-      new File(['x'], 'selfie.jpg', { type: 'image/jpeg' }),
+    await submit();
+    await waitFor(() =>
+      expect(screen.getByText('avatar.portrait.reasons.likely_minor')).not.toBeNull(),
     );
-    await user.click(screen.getByRole('checkbox'));
-    await user.click(screen.getByRole('button', { name: /create my portrait/i }));
-    expect(await screen.findByText(/only create portraits from photos of adults/i)).toBeInTheDocument();
   });
 
-  it('shows the why-panel with the resolved scale on success', async () => {
-    const user = userEvent.setup();
+  it('shows the portrait and the why-panel on success', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({
-        success: true,
-        data: { id: 'av_1', url: '/api/v1/avatar/av_1/image', scale: 'queen', palette: { lead: 'Sky blue', accent: 'Emerald flecked gold' } },
-        error: null,
-      }), { status: 200 }),
+      jsonResponse(
+        {
+          success: true,
+          data: {
+            id: 'av_1',
+            url: '/api/v1/avatar/av_1/image',
+            scale: 'queen',
+            palette: { lead: 'Sky blue', accent: 'Emerald flecked gold' },
+          },
+          error: null,
+        },
+        200,
+      ),
     );
-    renderIt();
-    await user.upload(
-      screen.getByLabelText(/choose a photo/i) as HTMLInputElement,
-      new File(['x'], 'selfie.jpg', { type: 'image/jpeg' }),
-    );
-    await user.click(screen.getByRole('checkbox'));
-    await user.click(screen.getByRole('button', { name: /create my portrait/i }));
+    await submit();
 
-    const img = await screen.findByRole('img', { name: /cosmic portrait/i });
-    expect(img).toHaveAttribute('src', '/api/v1/avatar/av_1/image');
-    expect(screen.getByText(/queen/i)).toBeInTheDocument();
-    expect(screen.getByText(/sky blue/i)).toBeInTheDocument();
-  });
-
-  it('announces progress to assistive technology while generating', async () => {
-    const user = userEvent.setup();
-    vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise(() => {}));
-    renderIt();
-    await user.upload(
-      screen.getByLabelText(/choose a photo/i) as HTMLInputElement,
-      new File(['x'], 'selfie.jpg', { type: 'image/jpeg' }),
-    );
-    await user.click(screen.getByRole('checkbox'));
-    await user.click(screen.getByRole('button', { name: /create my portrait/i }));
-    expect(await screen.findByRole('status')).toBeInTheDocument();
+    const img = await waitFor(() => screen.getByTestId('portrait-image'));
+    expect(img.getAttribute('src')).toBe('/api/v1/avatar/av_1/image');
+    // The why-panel interpolates scale and palette through the key-echo mock.
+    expect(screen.getByText(/avatar\.portrait\.whyScale:.*queen/)).not.toBeNull();
+    expect(screen.getByText(/avatar\.portrait\.whyPalette:.*Sky blue/)).not.toBeNull();
   });
 
   it('keeps the chosen file after a failure so retry needs no re-upload', async () => {
-    const user = userEvent.setup();
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ success: false, data: null, error: 'GEMINI_5XX' }), { status: 502 }),
+      jsonResponse({ success: false, data: null, error: 'GEMINI_5XX' }, 502),
     );
-    renderIt();
-    await user.upload(
-      screen.getByLabelText(/choose a photo/i) as HTMLInputElement,
-      new File(['x'], 'selfie.jpg', { type: 'image/jpeg' }),
+    await submit();
+    await waitFor(() =>
+      expect(screen.getByText('avatar.portrait.errors.generation')).not.toBeNull(),
     );
-    await user.click(screen.getByRole('checkbox'));
-    await user.click(screen.getByRole('button', { name: /create my portrait/i }));
-    await screen.findByText(/couldn't create your portrait/i);
-    expect(screen.getByRole('button', { name: /create my portrait/i })).toBeEnabled();
+    // Preview still mounted and the button is usable again — the File never left state.
+    expect(screen.getByTestId('portrait-preview')).not.toBeNull();
+    expect((screen.getByTestId('portrait-generate') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('sends multipart, never JSON base64', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ success: true, data: { id: 'av_1', url: '/u', scale: 'king', palette: { lead: 'a', accent: 'b' } }, error: null }, 200),
+    );
+    await submit();
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
+    const init = fetchSpy.mock.calls[0][1] as RequestInit;
+    expect(init.body).toBeInstanceOf(FormData);
   });
 });
 ```
+
+The component must expose these stable `data-testid` hooks, because the key-echo i18n mock makes accessible-name queries unreliable: `portrait-file`, `portrait-preview`, `portrait-consent`, `portrait-generate`, `portrait-image`, and `presentation-{auto,feminine,masculine,androgynous}`. Real `aria-label` / `role` attributes are still required for accessibility — the test ids exist alongside them, not instead.
 
 - [ ] **Step 3: Run test to verify it fails**
 
