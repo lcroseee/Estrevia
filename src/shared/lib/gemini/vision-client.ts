@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { GeminiInlineImage } from './image-client';
 
 /**
  * Result of a single Gemini Vision analysis call.
@@ -15,9 +16,14 @@ export interface VisionAnalysisResult {
 /**
  * Minimal interface every safety check that needs vision analysis depends on.
  * Allows test injection of a fake client without hitting the real Gemini API.
+ *
+ * `image` accepts either a URL (fetched server-side, existing behaviour) or
+ * an already-in-memory inline image (base64 + mimeType). The inline form
+ * exists for callers holding PII-sensitive bytes (e.g. an uploaded selfie)
+ * that must never be round-tripped through a URL just to obtain one.
  */
 export interface VisionClient {
-  analyzeImage(imageUrl: string, prompt: string): Promise<VisionAnalysisResult>;
+  analyzeImage(image: string | GeminiInlineImage, prompt: string): Promise<VisionAnalysisResult>;
 }
 
 export interface GeminiVisionClientOptions {
@@ -51,16 +57,28 @@ export class GeminiVisionClient implements VisionClient {
     this.model = opts.model ?? 'gemini-2.5-flash';
   }
 
-  async analyzeImage(imageUrl: string, prompt: string): Promise<VisionAnalysisResult> {
+  async analyzeImage(
+    image: string | GeminiInlineImage,
+    prompt: string,
+  ): Promise<VisionAnalysisResult> {
     const model = this.genAI.getGenerativeModel({ model: this.model });
 
-    const imageRes = await fetch(imageUrl);
-    if (!imageRes.ok) {
-      throw new Error(`Image fetch failed: ${imageRes.status} ${imageRes.statusText}`);
+    let base64: string;
+    let mimeType: string;
+    if (typeof image === 'string') {
+      const imageRes = await fetch(image);
+      if (!imageRes.ok) {
+        throw new Error(`Image fetch failed: ${imageRes.status} ${imageRes.statusText}`);
+      }
+      const buffer = await imageRes.arrayBuffer();
+      base64 = Buffer.from(buffer).toString('base64');
+      mimeType = imageRes.headers.get('content-type') ?? 'image/jpeg';
+    } else {
+      // Inline bytes the caller already holds — never fetched, never written
+      // anywhere. This is the path selfie-derived calls must use.
+      base64 = image.data;
+      mimeType = image.mimeType;
     }
-    const buffer = await imageRes.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
-    const mimeType = imageRes.headers.get('content-type') ?? 'image/jpeg';
 
     const result = await model.generateContent([
       { inlineData: { data: base64, mimeType } },
