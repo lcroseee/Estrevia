@@ -296,3 +296,58 @@ describe('POST /api/v1/avatar/portrait — spend commitment (I1)', () => {
     expect(mocks.consumeDailyBudget).not.toHaveBeenCalled();
   });
 });
+
+// I2 — a broken Portrait endpoint must be visible in PostHog: every 502
+// branch and the outer catch fire AVATAR_GENERATION_FAILED with an
+// error_code, mirroring src/app/api/v1/avatar/generate/route.ts (which uses
+// `tier`; this route has no free/premium split, so it uses `mode: 'portrait'`
+// instead).
+//
+// NOTE: this suite's shared `requireAuth` mock resolves `{ id: 'user_1' }`
+// while the real AuthUser shape (src/modules/auth/lib/helpers.ts) is
+// `{ userId, email }`, so `userId` is `undefined` inside the route for
+// every test in this file — a pre-existing mismatch unrelated to I1/I2/I3.
+// `expect.anything()` does not match `undefined`, so these assertions look
+// up the AVATAR_GENERATION_FAILED call by event name instead of asserting
+// positionally on the (here, undefined) first argument.
+function failureEventProps() {
+  const call = mocks.trackServerEvent.mock.calls.find(
+    ([, event]) => event === 'avatar_generation_failed',
+  );
+  return call?.[2] as Record<string, unknown> | undefined;
+}
+
+describe('POST /api/v1/avatar/portrait — failure analytics (I2)', () => {
+  it('emits AVATAR_GENERATION_FAILED with error_code ANALYSIS_FAILED when pass 1 throws', async () => {
+    mocks.analyzeImage.mockRejectedValue(new Error('vision down'));
+    await POST(makeRequest());
+    expect(failureEventProps()).toMatchObject({ error_code: 'ANALYSIS_FAILED', mode: 'portrait' });
+  });
+
+  it('emits AVATAR_GENERATION_FAILED with error_code ANALYSIS_FAILED when pass 1 returns a shape that fails schema validation', async () => {
+    mocks.analyzeImage.mockResolvedValue({ json: { nonsense: true }, cost_usd: 0.0002 });
+    await POST(makeRequest());
+    expect(failureEventProps()).toMatchObject({ error_code: 'ANALYSIS_FAILED', mode: 'portrait' });
+  });
+
+  it('emits AVATAR_GENERATION_FAILED with error_code GENERATION_FAILED when pass 2 throws', async () => {
+    mocks.generateFromImage.mockRejectedValue(new Error('gemini down'));
+    await POST(makeRequest());
+    expect(failureEventProps()).toMatchObject({ error_code: 'GENERATION_FAILED', mode: 'portrait' });
+  });
+
+  it('emits AVATAR_GENERATION_FAILED with error_code INTERNAL_ERROR from the outer catch', async () => {
+    mocks.blobPut.mockRejectedValue(new Error('blob outage'));
+    await POST(makeRequest());
+    expect(failureEventProps()).toMatchObject({ error_code: 'INTERNAL_ERROR', mode: 'portrait' });
+  });
+
+  it('never fires AVATAR_GENERATION_FAILED on the happy path', async () => {
+    await POST(makeRequest());
+    expect(mocks.trackServerEvent).not.toHaveBeenCalledWith(
+      expect.anything(),
+      'avatar_generation_failed',
+      expect.anything(),
+    );
+  });
+});

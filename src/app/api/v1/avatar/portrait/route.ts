@@ -74,6 +74,23 @@ function fail(error: string, status: number, data: unknown = null) {
 }
 
 /**
+ * Emits AVATAR_GENERATION_FAILED from the outer catch and every 502 branch,
+ * so a broken Portrait endpoint is visible in PostHog (an
+ * `avatar_portrait_uploaded` with no matching `avatar_portrait_generated`
+ * would otherwise be invisible). Mirrors the property shape used by the
+ * sibling route (src/app/api/v1/avatar/generate/route.ts), except `tier`
+ * becomes `mode: 'portrait'` — this route has no free/premium split, it is
+ * Pro-only. Never include PII or the selfie in these properties.
+ */
+function trackGenerationFailure(userId: string, errorCode: string, t0: number): void {
+  trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATION_FAILED, {
+    error_code: errorCode,
+    mode: 'portrait',
+    latency_ms: Date.now() - t0,
+  });
+}
+
+/**
  * JPEG FF D8 FF · PNG 89 50 4E 47 · WebP "RIFF"…"WEBP".
  *
  * JPEG/PNG are checked against their own (3-4 byte) signature prefix without
@@ -213,11 +230,13 @@ export async function POST(request: Request) {
       );
     } catch {
       await refundUsage();
+      trackGenerationFailure(userId, 'ANALYSIS_FAILED', t0);
       return fail('ANALYSIS_FAILED', 502);
     }
     const analysisParsed = selfieAnalysisSchema.safeParse(visionResult.json);
     if (!analysisParsed.success) {
       await refundUsage();
+      trackGenerationFailure(userId, 'ANALYSIS_FAILED', t0);
       return fail('ANALYSIS_FAILED', 502);
     }
     const analysis = analysisParsed.data;
@@ -255,6 +274,7 @@ export async function POST(request: Request) {
       });
     } catch {
       await refundUsage();
+      trackGenerationFailure(userId, 'GENERATION_FAILED', t0);
       return fail('GENERATION_FAILED', 502);
     }
 
@@ -348,6 +368,7 @@ export async function POST(request: Request) {
     } catch {
       console.error('[avatar/portrait] error:', err);
     }
+    trackGenerationFailure(userId, 'INTERNAL_ERROR', t0);
     // Never place the selfie, its bytes, or its filename into a log or a
     // Sentry tag — it is PII.
     return fail('INTERNAL_ERROR', 500);
