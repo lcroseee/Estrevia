@@ -374,3 +374,23 @@ describe('POST /api/v1/avatar/portrait — failure analytics (I2)', () => {
     );
   });
 });
+
+// The outer-catch analytics call must be throw-safe, mirroring the
+// best-effort guard already on the happy-path AVATAR_PORTRAIT_GENERATED
+// call: if trackServerEvent() itself throws while handling a genuine
+// failure, that must never escape and replace the JSON error envelope with
+// an uncaught-exception HTML 500.
+describe('POST /api/v1/avatar/portrait — outer catch analytics resilience', () => {
+  it('still returns a JSON 500 with error INTERNAL_ERROR when the analytics helper throws during the outer catch', async () => {
+    mocks.blobPut.mockRejectedValue(new Error('blob outage'));
+    mocks.trackServerEvent.mockImplementation(() => {
+      throw new Error('posthog down');
+    });
+
+    const res = await POST(makeRequest());
+
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body).toMatchObject({ success: false, error: 'INTERNAL_ERROR' });
+  });
+});

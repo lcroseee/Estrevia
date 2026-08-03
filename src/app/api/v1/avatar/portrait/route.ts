@@ -375,7 +375,15 @@ export async function POST(request: Request) {
     } catch {
       console.error('[avatar/portrait] error:', err);
     }
-    trackGenerationFailure(userId, 'INTERNAL_ERROR', t0);
+    // Best-effort, same as the happy-path analytics call above — this is
+    // already the outer catch handling a genuine failure; if the analytics
+    // helper itself throws, that must never escape and turn this into an
+    // uncaught-exception 500 (HTML) instead of the JSON error envelope below.
+    try {
+      trackGenerationFailure(userId, 'INTERNAL_ERROR', t0);
+    } catch {
+      // Best-effort — must not prevent the JSON error response below.
+    }
     // Never place the selfie, its bytes, or its filename into a log or a
     // Sentry tag — it is PII.
     return fail('INTERNAL_ERROR', 500);
