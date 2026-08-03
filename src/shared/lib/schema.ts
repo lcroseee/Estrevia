@@ -736,3 +736,5 @@ export const avatars = pgTable('avatars', {
 }, (table) => [
   index('avatars_user_created_idx').on(table.userId, table.createdAt),
 ]);
+
+export type Avatar = typeof avatars.$inferSelect;

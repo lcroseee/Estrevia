@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { avatars } from '../schema';
+import { avatars, type Avatar } from '../schema';
 
 describe('avatars table', () => {
   const config = getTableConfig(avatars);
@@ -46,5 +46,24 @@ describe('avatars table', () => {
 
   it('allows a null presentation so abstract rows fit the same table', () => {
     expect(columns['presentation'].notNull).toBe(false);
+  });
+
+  it('exports an Avatar row type ($inferSelect) for downstream readers', () => {
+    // Type-level check (enforced by `npm run typecheck`, not by vitest's
+    // esbuild transpile): if `Avatar` isn't exported from schema.ts this
+    // line fails to compile. Tasks 9-11 import it to read avatar rows.
+    const row: Avatar = {
+      id: 'avatar_1',
+      userId: 'user_1',
+      mode: 'portrait',
+      style: 'cosmic',
+      presentation: null,
+      scale: null,
+      blobPathname: 'avatars/user_1/avatar_1.png',
+      palette: { lead: '#000000', accent: '#ffffff' },
+      isShared: false,
+      createdAt: new Date(),
+    };
+    expect(row.blobPathname).toBe('avatars/user_1/avatar_1.png');
   });
 });
