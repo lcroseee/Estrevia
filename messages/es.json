@@ -1102,7 +1102,8 @@
       "threeCard": "Descubre la historia completa de las 3 cartas",
       "synastryAi": "Obtén el análisis de compatibilidad con IA",
       "essay": "Desbloquea el ensayo completo",
-      "natalChart": "Obtén la lectura completa de tu carta natal"
+      "natalChart": "Obtén la lectura completa de tu carta natal",
+      "avatarPortrait": "Verte en tus propios colores"
     },
     "cta": {
       "eyebrow": "Incluido en Pro",
@@ -1361,7 +1362,54 @@
     "proHint": "Mejora a Pro para regeneraciones ilimitadas y 4 estilos.",
     "download": "Descargar",
     "altText": "Avatar IA estilo {style} que refleja Sol en {sunSign} y Luna en {moonSign}",
-    "upgradeLink": "Mejora a Pro →"
+    "upgradeLink": "Mejora a Pro →",
+    "portrait": {
+      "tab": "Retrato",
+      "abstractTab": "Abstracto",
+      "title": "Retrato cósmico",
+      "intro": "Sube una foto y te representamos en los colores de tu propia carta.",
+      "upload": "Elige una foto",
+      "change": "Elige otra foto",
+      "generate": "Crear mi retrato",
+      "generating": "Leyendo tu foto…",
+      "composing": "Componiendo tu paleta…",
+      "rendering": "Pintando tu retrato…",
+      "privacyNote": "Tu foto no se guarda nunca. Se procesa una vez y se descarta.",
+      "consent": "Tengo derecho a usar esta foto y es la foto de una persona adulta.",
+      "presentation": "¿Cómo quieres que te representemos?",
+      "presentations": {
+        "auto": "Que decida la carta",
+        "feminine": "Femenina",
+        "masculine": "Masculina",
+        "androgynous": "Andrógina"
+      },
+      "whyTitle": "Por qué este retrato",
+      "whyScale": "Escala de color: {scale}",
+      "whyPalette": "Principal {lead}, acento {accent}",
+      "whySource": "Tomado de tu Sol en {sunSign} y tu Luna en {moonSign}.",
+      "share": "Compartir",
+      "shared": "Ahora cualquiera con el enlace puede ver este retrato.",
+      "unshare": "Hacer privado",
+      "download": "Descargar",
+      "quota": "{used} de {limit} retratos usados este mes",
+      "errors": {
+        "proRequired": "El Retrato cósmico es parte de Pro.",
+        "disabled": "Los retratos no están disponibles por el momento.",
+        "busy": "Los retratos están saturados ahora mismo. Inténtalo más tarde.",
+        "quota": "Ya usaste los {limit} retratos de este mes.",
+        "invalidImage": "Ese archivo no es una foto que podamos leer. Prueba con un JPEG o PNG.",
+        "generation": "No se pudo crear tu retrato. Inténtalo de nuevo."
+      },
+      "reasons": {
+        "no_face": "No encontramos un rostro en esa foto.",
+        "multiple_faces": "Esa foto tiene más de una persona.",
+        "likely_minor": "Solo creamos retratos a partir de fotos de personas adultas.",
+        "nsfw": "Esa foto no es adecuada para un retrato.",
+        "not_a_photo": "Eso parece un dibujo y no una foto.",
+        "low_quality": "Esa foto está muy borrosa u oscura para trabajarla."
+      },
+      "altText": "Retrato cósmico en la escala {scale}, de un Sol en {sunSign} y una Luna en {moonSign}"
+    }
   },
   "notifications": {
     "title": "Preferencias de notificaciones",

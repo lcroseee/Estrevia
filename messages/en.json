@@ -1098,7 +1098,8 @@
       "threeCard": "See the full 3-card story",
       "synastryAi": "Get the AI relationship analysis",
       "essay": "Unlock the full essay",
-      "natalChart": "Get your full natal chart reading"
+      "natalChart": "Get your full natal chart reading",
+      "avatarPortrait": "See yourself in your own colours"
     },
     "cta": {
       "eyebrow": "Included in Pro",
@@ -1357,7 +1358,54 @@
     "proHint": "Upgrade to Pro for unlimited regenerations and 4 styles.",
     "download": "Download",
     "altText": "AI-generated {style} avatar reflecting {sunSign} Sun and {moonSign} Moon",
-    "upgradeLink": "Upgrade to Pro →"
+    "upgradeLink": "Upgrade to Pro →",
+    "portrait": {
+      "tab": "Portrait",
+      "abstractTab": "Abstract",
+      "title": "Cosmic Portrait",
+      "intro": "Upload a photo and we will render you in the colours of your own chart.",
+      "upload": "Choose a photo",
+      "change": "Choose a different photo",
+      "generate": "Create my portrait",
+      "generating": "Reading your photo…",
+      "composing": "Composing your palette…",
+      "rendering": "Painting your portrait…",
+      "privacyNote": "Your photo is never stored. It is processed once and discarded.",
+      "consent": "I have the right to use this photo, and it is a photo of an adult.",
+      "presentation": "How should we render you?",
+      "presentations": {
+        "auto": "Let the chart decide",
+        "feminine": "Feminine",
+        "masculine": "Masculine",
+        "androgynous": "Androgynous"
+      },
+      "whyTitle": "Why this portrait",
+      "whyScale": "Colour scale: {scale}",
+      "whyPalette": "Lead {lead}, accent {accent}",
+      "whySource": "Drawn from your {sunSign} Sun and {moonSign} Moon.",
+      "share": "Share",
+      "shared": "Anyone with the link can now see this portrait.",
+      "unshare": "Make private",
+      "download": "Download",
+      "quota": "{used} of {limit} portraits used this month",
+      "errors": {
+        "proRequired": "Cosmic Portrait is part of Pro.",
+        "disabled": "Portraits are temporarily unavailable.",
+        "busy": "Portraits are busy right now. Please try again later.",
+        "quota": "You have used all {limit} portraits this month.",
+        "invalidImage": "That file is not a photo we can read. Try a JPEG or PNG.",
+        "generation": "Couldn't create your portrait. Please try again."
+      },
+      "reasons": {
+        "no_face": "We couldn't find a face in that photo.",
+        "multiple_faces": "That photo has more than one person in it.",
+        "likely_minor": "We only create portraits from photos of adults.",
+        "nsfw": "That photo isn't suitable for a portrait.",
+        "not_a_photo": "That looks like a drawing rather than a photo.",
+        "low_quality": "That photo is too blurry or too dark to work from."
+      },
+      "altText": "Cosmic portrait in the {scale} scale, from a {sunSign} Sun and {moonSign} Moon"
+    }
   },
   "notifications": {
     "title": "Notification Preferences",
