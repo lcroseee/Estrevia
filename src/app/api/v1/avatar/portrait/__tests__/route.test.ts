@@ -217,6 +217,19 @@ describe('POST /api/v1/avatar/portrait — happy path', () => {
     expect(mocks.insertValues).toHaveBeenCalledTimes(1);
   });
 
+  it('returns the authorised image URL, never the raw private blob URL', async () => {
+    const res = await POST(makeRequest());
+    const body = await res.json();
+    // The route must hand the browser the app-relative authorised route
+    // (GET /api/v1/avatar/[id]/image), never `blob.url` — a private blob's
+    // host (`*.private.blob.vercel-storage.com`) is neither browser-fetchable
+    // nor allowed by CSP img-src.
+    expect(body.data.url).toBe(`/api/v1/avatar/${body.data.id}/image`);
+    expect(body.data.url.startsWith('/api/v1/avatar/')).toBe(true);
+    // The raw blob host must never leak into the response body at all.
+    expect(JSON.stringify(body)).not.toContain('https://x/y.jpg');
+  });
+
   it('persists no face-derived data', async () => {
     await POST(makeRequest());
     const row = mocks.insertValues.mock.calls[0][0];

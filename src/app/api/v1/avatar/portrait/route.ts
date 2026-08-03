@@ -300,12 +300,19 @@ export async function POST(request: Request) {
 
     // -----------------------------------------------------------------
     // 16. Response — never echoes the selfie or any face-derived trait text.
+    //     `blob.url` is NEVER returned: it is the private-blob host
+    //     (`*.private.blob.vercel-storage.com`), which a browser <img> cannot
+    //     authenticate to and which CSP img-src does not allow. The client
+    //     must always be handed the authorised app-relative read route —
+    //     GET /api/v1/avatar/[id]/image — which streams the bytes through
+    //     server-side `@vercel/blob` `get()` after checking ownership/share
+    //     state. `blob.pathname` (server-only) is what gets persisted below.
     // -----------------------------------------------------------------
     return NextResponse.json({
       success: true,
       data: {
         id: avatarId,
-        url: blob.url,
+        url: `/api/v1/avatar/${avatarId}/image`,
         palette: built.palette,
         scale: built.scale,
         traitsSummary: buildTraitsSummary(analysis, passport.sunSign, passport.rulingPlanet),
