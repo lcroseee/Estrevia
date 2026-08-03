@@ -88,25 +88,30 @@ describe('portrait analytics + paywall', () => {
 // subline, and 'essay' turned out to have the same pre-existing gap.
 type NonGenericTrigger = Exclude<PaywallTrigger, 'generic'>;
 
-const NON_GENERIC_TRIGGERS: NonGenericTrigger[] = [
-  'essay',
-  'celtic-cross',
-  'three-card',
-  'synastry-ai',
-  'natal-chart',
-  'avatar-portrait',
-];
+// Exhaustiveness guard: this object literal's type is `Record<NonGenericTrigger, true>`.
+// TypeScript requires every key of that Record type to be present in the
+// literal — a missing key is a compile error ("Property '...' is missing")
+// and an unrecognised key is a compile error too (excess property check).
+// So if PaywallTrigger gains a member that isn't added as a key here (and
+// isn't 'generic'), `npm run typecheck` fails on THIS line, not silently.
+//
+// This only works because the object is a literal assigned directly to a
+// `Record<...>`-typed const — unlike the previous array-based version,
+// which annotated `NON_GENERIC_TRIGGERS: NonGenericTrigger[]` and derived
+// the "keys" back via `(typeof NON_GENERIC_TRIGGERS)[number]`. That round
+// trip re-widens straight back to `NonGenericTrigger` regardless of what
+// the array actually contained, making the old guard a tautology that
+// could never fail. See I5 in fix-wave-D-report.md.
+const NON_GENERIC_TRIGGERS_MAP: Record<NonGenericTrigger, true> = {
+  essay: true,
+  'celtic-cross': true,
+  'three-card': true,
+  'synastry-ai': true,
+  'natal-chart': true,
+  'avatar-portrait': true,
+};
 
-// Exhaustiveness guard: if PaywallTrigger gains a member that isn't listed
-// in NON_GENERIC_TRIGGERS above (and isn't 'generic'), this fails to
-// type-check — caught by `npm run typecheck` — rather than silently
-// skipping the new trigger's copy in the loop below.
-type MissingFromList = Exclude<PaywallTrigger, 'generic' | (typeof NON_GENERIC_TRIGGERS)[number]>;
-type AssertNoTriggerIsMissing = MissingFromList extends never
-  ? true
-  : 'Add the new PaywallTrigger to NON_GENERIC_TRIGGERS in paywall-portrait.test.ts';
-const _assertNoTriggerIsMissing: AssertNoTriggerIsMissing = true;
-void _assertNoTriggerIsMissing;
+const NON_GENERIC_TRIGGERS = Object.keys(NON_GENERIC_TRIGGERS_MAP) as NonGenericTrigger[];
 
 // Mirrors PaywallCta.tsx's (unexported) triggerToKey verbatim so this test
 // exercises the same kebab-to-camel transform the component uses.
