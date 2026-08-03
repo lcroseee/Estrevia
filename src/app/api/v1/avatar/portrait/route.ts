@@ -74,13 +74,19 @@ function fail(error: string, status: number, data: unknown = null) {
 }
 
 /**
- * Emits AVATAR_GENERATION_FAILED from the outer catch and every 502 branch,
- * so a broken Portrait endpoint is visible in PostHog (an
- * `avatar_portrait_uploaded` with no matching `avatar_portrait_generated`
- * would otherwise be invisible). Mirrors the property shape used by the
- * sibling route (src/app/api/v1/avatar/generate/route.ts), except `tier`
- * becomes `mode: 'portrait'` — this route has no free/premium split, it is
- * Pro-only. Never include PII or the selfie in these properties.
+ * Emits AVATAR_GENERATION_FAILED from the outer catch and every 502 branch
+ * (ANALYSIS_FAILED ×2, GENERATION_FAILED, CHART_UNREADABLE), so a broken
+ * Portrait endpoint is visible in PostHog (an `avatar_portrait_uploaded`
+ * with no matching `avatar_portrait_generated` would otherwise be
+ * invisible). The pre-spend 4xx/503 guard branches (PRO_REQUIRED,
+ * FEATURE_DISABLED, RATE_LIMITED, BUDGET_EXCEEDED, QUOTA_EXCEEDED,
+ * INVALID_REQUEST, INVALID_IMAGE, STYLE_NOT_PORTRAIT_CAPABLE,
+ * CHART_NOT_FOUND) deliberately stay silent here — they are rejections, not
+ * failures, no money was spent, and UNSAFE_IMAGE already has its own
+ * dedicated AVATAR_PORTRAIT_REJECTED event. Mirrors the property shape used
+ * by the sibling route (src/app/api/v1/avatar/generate/route.ts), except
+ * `tier` becomes `mode: 'portrait'` — this route has no free/premium split,
+ * it is Pro-only. Never include PII or the selfie in these properties.
  */
 function trackGenerationFailure(userId: string, errorCode: string, t0: number): void {
   trackServerEvent(userId, AnalyticsEvent.AVATAR_GENERATION_FAILED, {
@@ -214,6 +220,7 @@ export async function POST(request: Request) {
     } catch {
       // generatePassport throws when the chart has no Sun position.
       await refundUsage();
+      trackGenerationFailure(userId, 'CHART_UNREADABLE', t0);
       return fail('CHART_UNREADABLE', 502);
     }
 

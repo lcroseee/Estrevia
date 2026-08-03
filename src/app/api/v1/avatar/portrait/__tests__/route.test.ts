@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   checkDailyBudget: vi.fn(),
   consumeDailyBudget: vi.fn(),
   trackServerEvent: vi.fn(),
+  generatePassport: vi.fn(),
 }));
 
 mocks.insertValues.mockResolvedValue(undefined);
@@ -47,14 +48,7 @@ vi.mock('drizzle-orm', () => ({ eq: vi.fn((c, v) => ({ c, v })), and: vi.fn((...
 vi.mock('@vercel/blob', () => ({ put: mocks.blobPut }));
 // The route derives signs from the stored ChartResult rather than from columns.
 vi.mock('@/modules/astro-engine/passport', () => ({
-  generatePassport: vi.fn(() => ({
-    sunSign: 'Scorpio',
-    moonSign: 'Taurus',
-    ascendantSign: 'Leo',
-    element: 'Water',
-    rulingPlanet: 'Mars',
-    rarityPercent: 4.2,
-  })),
+  generatePassport: mocks.generatePassport,
 }));
 vi.mock('@/shared/lib/analytics', () => ({
   trackServerEvent: mocks.trackServerEvent,
@@ -121,6 +115,14 @@ beforeEach(() => {
   mocks.selectLimit.mockResolvedValue([
     { id: 'chart_1', sunSign: 'Scorpio', moonSign: 'Taurus', ascendantSign: 'Leo', rulingPlanet: 'Mars' },
   ]);
+  mocks.generatePassport.mockReturnValue({
+    sunSign: 'Scorpio',
+    moonSign: 'Taurus',
+    ascendantSign: 'Leo',
+    element: 'Water',
+    rulingPlanet: 'Mars',
+    rarityPercent: 4.2,
+  });
 });
 
 describe('POST /api/v1/avatar/portrait — guards, in order', () => {
@@ -175,6 +177,19 @@ describe('POST /api/v1/avatar/portrait — guards, in order', () => {
     expect(res.status).toBe(400);
     expect((await res.json()).error).toBe('INVALID_IMAGE');
     expect(mocks.decrementUsage).toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/v1/avatar/portrait — chart lookup', () => {
+  it('refunds and 502s CHART_UNREADABLE when the stored chart has no Sun position', async () => {
+    mocks.generatePassport.mockImplementation(() => {
+      throw new Error('no Sun position');
+    });
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(502);
+    expect((await res.json()).error).toBe('CHART_UNREADABLE');
+    expect(mocks.decrementUsage).toHaveBeenCalled();
+    expect(mocks.analyzeImage).not.toHaveBeenCalled();
   });
 });
 
@@ -334,6 +349,14 @@ describe('POST /api/v1/avatar/portrait — failure analytics (I2)', () => {
     mocks.generateFromImage.mockRejectedValue(new Error('gemini down'));
     await POST(makeRequest());
     expect(failureEventProps()).toMatchObject({ error_code: 'GENERATION_FAILED', mode: 'portrait' });
+  });
+
+  it('emits AVATAR_GENERATION_FAILED with error_code CHART_UNREADABLE when the chart has no Sun position', async () => {
+    mocks.generatePassport.mockImplementation(() => {
+      throw new Error('no Sun position');
+    });
+    await POST(makeRequest());
+    expect(failureEventProps()).toMatchObject({ error_code: 'CHART_UNREADABLE', mode: 'portrait' });
   });
 
   it('emits AVATAR_GENERATION_FAILED with error_code INTERNAL_ERROR from the outer catch', async () => {
