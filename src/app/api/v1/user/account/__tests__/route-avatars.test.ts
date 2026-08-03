@@ -13,11 +13,24 @@ const mocks = vi.hoisted(() => ({
   stripeRetrieve: vi.fn(),
 }));
 
+// One double serves both call sites in the route: the user-row read chains
+// `.limit(1)` off `.where(...)`, while the avatar-pathname read awaits
+// `.where(...)` directly. This object is both thenable AND carries `.limit`.
+function whereResult<T>(rows: T[]) {
+  return {
+    limit: () => Promise.resolve(rows),
+    then: (
+      res: (value: T[]) => void,
+      rej: (reason?: unknown) => void,
+    ) => Promise.resolve(rows).then(res, rej),
+  };
+}
+
 // Each delete() returns a tagged marker so the batch array can be inspected.
 mocks.deleteFn.mockImplementation((table: { __name?: string }) => ({
   where: () => ({ __table: table?.__name ?? 'unknown' }),
 }));
-mocks.selectWhere.mockImplementation(() => Promise.resolve([
+mocks.selectWhere.mockImplementation(() => whereResult([
   { blobPathname: 'avatars/user_1/a.jpg' },
   { blobPathname: 'avatars/user_1/b.jpg' },
 ]));
@@ -71,10 +84,10 @@ beforeEach(() => {
   mocks.deleteFn.mockImplementation((table: { __name?: string }) => ({
     where: () => ({ __table: table?.__name ?? 'unknown' }),
   }));
-  mocks.selectWhere.mockResolvedValue([
+  mocks.selectWhere.mockImplementation(() => whereResult([
     { blobPathname: 'avatars/user_1/a.jpg' },
     { blobPathname: 'avatars/user_1/b.jpg' },
-  ]);
+  ]));
 });
 
 describe('DELETE /api/v1/user/account — portraits', () => {
@@ -100,7 +113,7 @@ describe('DELETE /api/v1/user/account — portraits', () => {
   });
 
   it('skips the blob call entirely when the user has no portraits', async () => {
-    mocks.selectWhere.mockResolvedValue([]);
+    mocks.selectWhere.mockImplementation(() => whereResult([]));
     await DELETE(makeRequest() as never);
     expect(mocks.del).not.toHaveBeenCalled();
   });

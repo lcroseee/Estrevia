@@ -99,16 +99,14 @@ export async function DELETE(
   let stripeCustomerId: string | null = null;
 
   try {
-    // No .limit(1): users.id is the primary key, so at most one row can ever
-    // match — dropping it keeps this awaitable directly off .where(), which is
-    // what the account-deletion mocks (route-avatars.test.ts) expect.
     const [row] = await db
       .select({
         stripeSubscriptionId: users.stripeSubscriptionId,
         stripeCustomerId: users.stripeCustomerId,
       })
       .from(users)
-      .where(eq(users.id, userId));
+      .where(eq(users.id, userId))
+      .limit(1);
 
     if (row) {
       stripeSubscriptionId = row.stripeSubscriptionId ?? null;
