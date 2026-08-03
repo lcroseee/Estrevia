@@ -51,6 +51,27 @@ describe('GeminiImageClient.generateFromImage', () => {
     expect(body.contents[0].parts[1].text).toBe('cosmic portrait');
   });
 
+  it('sends the API key via the x-goog-api-key header, not the URL query string', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      okResponse([{ inlineData: { mimeType: 'image/jpeg', data: PNG_B64 } }]),
+    );
+    const client = new GeminiImageClient({
+      apiKey: 'super-secret-key',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+
+    await client.generateFromImage({
+      prompt: 'cosmic portrait',
+      image: { data: PNG_B64, mimeType: 'image/png' },
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).not.toContain('super-secret-key');
+    expect((init as RequestInit).headers).toMatchObject({
+      'x-goog-api-key': 'super-secret-key',
+    });
+  });
+
   it('never puts the API key in the thrown message', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ status: 403, json: async () => ({}) } as unknown as Response);
     const client = new GeminiImageClient({ apiKey: 'super-secret-key', fetch: fetchMock as unknown as typeof fetch });

@@ -51,13 +51,14 @@ export class GeminiImageClient {
 
   async generateFromImage(opts: GeminiImageInput): Promise<GeminiImageOutput> {
     const model = opts.model ?? DEFAULT_MODEL;
-    const url =
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}` +
-      `:generateContent?key=${this.deps.apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const requestInit: RequestInit = {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        'x-goog-api-key': this.deps.apiKey,
+      },
       body: JSON.stringify({
         contents: [
           {
