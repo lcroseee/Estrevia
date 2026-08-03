@@ -123,7 +123,9 @@ export async function POST(request: Request) {
   const usage = await checkAndIncrementUsage(userId, QUOTA_FEATURE, 'month', QUOTA_LIMIT);
   if (!usage.allowed) return fail('QUOTA_EXCEEDED', 402, { used: usage.count, limit: usage.limit });
 
-  // Everything past this point must refund before returning a failure.
+  // Everything past this point must refund before returning a failure —
+  // UNTIL `committed` flips true (see below), at which point refunding
+  // must stop even if something downstream fails.
   const refundUsage = async () => {
     try {
       await decrementUsage(userId, QUOTA_FEATURE, 'month');
@@ -132,11 +134,13 @@ export async function POST(request: Request) {
     }
   };
 
-  // Set true immediately after the `avatars` insert succeeds. Once the
-  // portrait is generated, written to Blob, and recorded in the DB, the
-  // generation is done — the outer catch must not refund a quota unit for
-  // a portrait that actually exists.
-  let persisted = false;
+  // Set true the moment pass 2 (image generation) returns a buffer — per
+  // spec §4.7, the gemini-3.1-flash-image call is billed then, not when
+  // Blob/DB persistence succeeds afterward. Once true, the outer catch must
+  // never refund the monthly quota again: a Blob or Neon outage after a
+  // paid generation must not let the 30/month quota and the 200/day global
+  // cap both keep reading zero spend while the user re-drives this route.
+  let committed = false;
 
   try {
     // -----------------------------------------------------------------
@@ -255,6 +259,24 @@ export async function POST(request: Request) {
     }
 
     // -----------------------------------------------------------------
+    // 12b. Commitment point (spec §4.7) — the gemini-3.1-flash-image call
+    //      above is billed the instant it returns a buffer, regardless of
+    //      what happens to those bytes next. Consume the daily budget HERE,
+    //      not after persistence, and stop refunding the monthly quota from
+    //      this point on (`committed = true`): a Blob write or DB insert
+    //      failure below must still surface as an error to the user, but
+    //      must NEVER hand the quota back for a generation that was already
+    //      paid for.
+    // -----------------------------------------------------------------
+    committed = true;
+    try {
+      await consumeDailyBudget(getBudgetRedis());
+    } catch {
+      // Best-effort — the model call above is already billed either way; a
+      // Redis hiccup here must not block the Blob/DB write that follows.
+    }
+
+    // -----------------------------------------------------------------
     // 13. Store the GENERATED portrait (never the selfie) — private Blob.
     // -----------------------------------------------------------------
     const blob = await put(`avatars/${userId}/${nanoid()}.jpg`, generated.buffer, {
@@ -278,16 +300,13 @@ export async function POST(request: Request) {
       blobPathname: blob.pathname,
       palette: built.palette,
     });
-    persisted = true;
 
     // -----------------------------------------------------------------
-    // 15. Consume the daily budget and record success. Best-effort: the
-    //     portrait is already generated and persisted, so a failure here
-    //     must never turn a completed generation into a 500 (or, via the
-    //     outer catch, an unwarranted refund).
+    // 15. Record success analytics. Best-effort: the portrait already
+    //     exists (Blob + DB) and the spend was already committed above, so
+    //     a failure here must never turn a completed generation into a 500.
     // -----------------------------------------------------------------
     try {
-      await consumeDailyBudget(getBudgetRedis());
       trackServerEvent(userId, AnalyticsEvent.AVATAR_PORTRAIT_GENERATED, {
         scale: built.scale,
         sun_sign: passport.sunSign,
@@ -320,7 +339,7 @@ export async function POST(request: Request) {
       error: null,
     });
   } catch (err) {
-    if (!persisted) {
+    if (!committed) {
       await refundUsage();
     }
     try {

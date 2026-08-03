@@ -265,3 +265,34 @@ describe('POST /api/v1/avatar/portrait — happy path', () => {
     expect(mocks.decrementUsage).toHaveBeenCalled();
   });
 });
+
+// I1 — the money is spent the instant pass 2 (image generation) returns a
+// buffer, per spec §4.7. A Blob or Neon outage AFTER that point must not
+// refund the monthly quota, and must not skip the daily budget either —
+// otherwise both cost brakes read zero while paid generations keep
+// happening.
+describe('POST /api/v1/avatar/portrait — spend commitment (I1)', () => {
+  it('does not refund the monthly quota, and still consumes the daily budget, when the Blob put() fails after a successful generation', async () => {
+    mocks.blobPut.mockRejectedValue(new Error('blob outage'));
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(500);
+    expect(mocks.decrementUsage).not.toHaveBeenCalled();
+    expect(mocks.consumeDailyBudget).toHaveBeenCalled();
+  });
+
+  it('does not refund the monthly quota, and still consumes the daily budget, when the avatars insert fails after a successful generation', async () => {
+    mocks.insertValues.mockRejectedValue(new Error('db outage'));
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(500);
+    expect(mocks.decrementUsage).not.toHaveBeenCalled();
+    expect(mocks.consumeDailyBudget).toHaveBeenCalled();
+  });
+
+  it('still refunds the quota and does NOT consume the daily budget for failures before pass 2 returns', async () => {
+    mocks.analyzeImage.mockRejectedValue(new Error('vision down'));
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(502);
+    expect(mocks.decrementUsage).toHaveBeenCalled();
+    expect(mocks.consumeDailyBudget).not.toHaveBeenCalled();
+  });
+});
