@@ -1400,7 +1400,8 @@
         "busy": "Los retratos están saturados ahora mismo. Inténtalo más tarde.",
         "quota": "Ya usaste los {limit} retratos de este mes.",
         "invalidImage": "Ese archivo no es una foto que podamos leer. Prueba con un JPEG o PNG.",
-        "generation": "No se pudo crear tu retrato. Inténtalo de nuevo."
+        "generation": "No se pudo crear tu retrato. Inténtalo de nuevo.",
+        "share": "No se pudo actualizar el uso compartido. Inténtalo de nuevo."
       },
       "reasons": {
         "no_face": "No encontramos un rostro en esa foto.",

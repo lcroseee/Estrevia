@@ -196,3 +196,117 @@ describe('PortraitGenerator — generation', () => {
     expect(init.body).toBeInstanceOf(FormData);
   });
 });
+
+describe('PortraitGenerator — share toggle', () => {
+  function generateResponse() {
+    return jsonResponse(
+      {
+        success: true,
+        data: {
+          id: 'av_1',
+          url: '/api/v1/avatar/av_1/image',
+          scale: 'queen',
+          palette: { lead: 'Sky blue', accent: 'Emerald flecked gold' },
+        },
+        error: null,
+      },
+      200,
+    );
+  }
+
+  async function generate() {
+    renderIt();
+    pickFile();
+    await waitFor(() => expect(screen.getByTestId('portrait-preview')).not.toBeNull());
+    fireEvent.click(screen.getByTestId('portrait-consent'));
+    fireEvent.click(screen.getByTestId('portrait-generate'));
+    await waitFor(() => expect(screen.getByTestId('portrait-image')).not.toBeNull());
+  }
+
+  it('is absent before a successful generation and present after', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(generateResponse());
+    renderIt();
+    expect(screen.queryByTestId('portrait-share')).toBeNull();
+
+    pickFile();
+    await waitFor(() => expect(screen.getByTestId('portrait-preview')).not.toBeNull());
+    fireEvent.click(screen.getByTestId('portrait-consent'));
+    expect(screen.queryByTestId('portrait-share')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('portrait-generate'));
+    await waitFor(() => expect(screen.getByTestId('portrait-image')).not.toBeNull());
+    expect(screen.getByTestId('portrait-share')).not.toBeNull();
+  });
+
+  it('PATCHes /api/v1/avatar/[id]/share with { isShared: true } when clicked', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(generateResponse())
+      .mockResolvedValueOnce(
+        jsonResponse({ success: true, data: { isShared: true }, error: null }, 200),
+      );
+    await generate();
+
+    fireEvent.click(screen.getByTestId('portrait-share'));
+
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(2));
+    const [url, init] = fetchSpy.mock.calls[1] as [string, RequestInit];
+    expect(url).toBe('/api/v1/avatar/av_1/share');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body as string)).toEqual({ isShared: true });
+
+    // The share page lives at src/app/s/avatar/[id]/page.tsx — the link must
+    // resolve to that path, not a stale/moved location.
+    await waitFor(() => expect(screen.getByTestId('portrait-share-link')).not.toBeNull());
+    expect(screen.getByTestId('portrait-share-link').getAttribute('href')).toContain(
+      '/s/avatar/av_1',
+    );
+  });
+
+  it('offers unshare once shared, and clicking it sends { isShared: false }', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(generateResponse())
+      .mockResolvedValueOnce(
+        jsonResponse({ success: true, data: { isShared: true }, error: null }, 200),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({ success: true, data: { isShared: false }, error: null }, 200),
+      );
+    await generate();
+
+    fireEvent.click(screen.getByTestId('portrait-share'));
+    await waitFor(() => expect(screen.getByTestId('portrait-unshare')).not.toBeNull());
+
+    fireEvent.click(screen.getByTestId('portrait-unshare'));
+
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(3));
+    const [url, init] = fetchSpy.mock.calls[2] as [string, RequestInit];
+    expect(url).toBe('/api/v1/avatar/av_1/share');
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body as string)).toEqual({ isShared: false });
+
+    // Back to the offer-to-share state.
+    await waitFor(() => expect(screen.getByTestId('portrait-share')).not.toBeNull());
+    expect(screen.queryByTestId('portrait-unshare')).toBeNull();
+  });
+
+  it('surfaces an error on a failed share PATCH and keeps the portrait visible', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(generateResponse())
+      .mockResolvedValueOnce(
+        jsonResponse({ success: false, data: null, error: 'SERVER_ERROR' }, 500),
+      );
+    await generate();
+
+    fireEvent.click(screen.getByTestId('portrait-share'));
+
+    await waitFor(() =>
+      expect(screen.getByText('avatar.portrait.errors.share')).not.toBeNull(),
+    );
+    expect(screen.getByTestId('portrait-image')).not.toBeNull();
+    // Still offering to share — the failed PATCH did not flip local state.
+    expect(screen.getByTestId('portrait-share')).not.toBeNull();
+    expect(screen.queryByTestId('portrait-unshare')).toBeNull();
+  });
+});

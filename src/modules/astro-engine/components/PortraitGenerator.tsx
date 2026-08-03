@@ -34,6 +34,12 @@ interface PortraitApiResponse {
   error: string | null;
 }
 
+interface ShareApiResponse {
+  success: boolean;
+  data: { isShared: boolean } | null;
+  error: string | null;
+}
+
 interface PortraitGeneratorProps {
   chartId: string;
   sunSign: string;
@@ -101,6 +107,13 @@ export function PortraitGenerator({ chartId, sunSign, moonSign, isPro }: Portrai
   const [result, setResult] = useState<PortraitResultData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Owner-facing share toggle for the just-generated portrait. Reset
+  // alongside `result` on every new generation so a stale "shared" state
+  // from a previous portrait can never carry over onto a new one.
+  const [isShared, setIsShared] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareErrorMessage, setShareErrorMessage] = useState<string | null>(null);
+
   // The preview is a local blob: URL — never uploaded, just released on
   // replacement/unmount.
   useEffect(() => {
@@ -154,6 +167,8 @@ export function PortraitGenerator({ chartId, sunSign, moonSign, isPro }: Portrai
 
     setErrorMessage(null);
     setStatus('analysing');
+    setIsShared(false);
+    setShareErrorMessage(null);
 
     const formData = new FormData();
     formData.append('file', preparedBlob, 'selfie.jpg');
@@ -216,6 +231,45 @@ export function PortraitGenerator({ chartId, sunSign, moonSign, isPro }: Portrai
         return;
     }
   }, [preparedBlob, consent, presentation, chartId, t]);
+
+  // Owner-only share toggle. PATCHes /api/v1/avatar/[id]/share — see that
+  // route for the ownership/404 semantics. A failed PATCH never flips
+  // `isShared`: the UI must keep offering whatever action actually matches
+  // server state, not what the user merely attempted.
+  const handleShareToggle = useCallback(
+    async (nextShared: boolean) => {
+      if (!result) return;
+
+      setShareBusy(true);
+      setShareErrorMessage(null);
+
+      const res = await apiFetch<ShareApiResponse>(`/api/v1/avatar/${result.id}/share`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isShared: nextShared }),
+      });
+
+      setShareBusy(false);
+
+      if (res.kind === 'ok' && res.data.success) {
+        setIsShared(nextShared);
+        if (nextShared) {
+          trackEvent(AnalyticsEvent.AVATAR_PORTRAIT_SHARED, { avatar_id: result.id });
+        }
+        return;
+      }
+
+      setShareErrorMessage(t('portrait.errors.share'));
+    },
+    [result, t],
+  );
+
+  // The share page lives at src/app/s/avatar/[id]/page.tsx (outside
+  // [locale] — see that file's doc comment), so the resolvable URL is
+  // exactly this path with no locale prefix.
+  const shareUrl = result
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/s/avatar/${result.id}`
+    : '';
 
   // -------------------------------------------------------------------
   // Free user: paywall only. No file input, no privacy note, no selfie
@@ -371,6 +425,63 @@ export function PortraitGenerator({ chartId, sunSign, moonSign, isPro }: Portrai
             <p>{t('portrait.whyPalette', { lead: result.palette.lead, accent: result.palette.accent })}</p>
             <p>{t('portrait.whySource', { sunSign, moonSign })}</p>
           </div>
+
+          {/* Share toggle — the whole region is a single live region so the
+              transition in EITHER direction (offer-to-share <-> shared +
+              unshare) is announced to assistive tech (WCAG 4.1.3 Status
+              Messages). Every button's aria-label is the exact same
+              translation key as its visible text, so neither can drift out
+              of sync (WCAG 2.5.3 Label in Name — same fix already applied
+              to the file input above). */}
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex flex-col items-center gap-2 w-full max-w-xs text-xs text-white/60"
+          >
+            {!isShared ? (
+              <button
+                type="button"
+                data-testid="portrait-share"
+                onClick={() => handleShareToggle(true)}
+                disabled={shareBusy}
+                aria-label={t('portrait.share')}
+                className="px-4 py-2 rounded-lg text-xs font-medium text-white/70 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ border: '1px solid rgba(255,255,255,0.15)' }}
+              >
+                {t('portrait.share')}
+              </button>
+            ) : (
+              <>
+                <p>{t('portrait.shared')}</p>
+                <a
+                  data-testid="portrait-share-link"
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-white/50 underline break-all"
+                >
+                  {shareUrl}
+                </a>
+                <button
+                  type="button"
+                  data-testid="portrait-unshare"
+                  onClick={() => handleShareToggle(false)}
+                  disabled={shareBusy}
+                  aria-label={t('portrait.unshare')}
+                  className="px-4 py-2 rounded-lg text-xs font-medium text-white/70 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ border: '1px solid rgba(255,255,255,0.15)' }}
+                >
+                  {t('portrait.unshare')}
+                </button>
+              </>
+            )}
+          </div>
+
+          {shareErrorMessage && (
+            <p role="alert" className="text-xs text-center" style={{ color: '#E74C3C' }}>
+              {shareErrorMessage}
+            </p>
+          )}
         </div>
       )}
     </div>
