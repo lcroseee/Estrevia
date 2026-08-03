@@ -92,6 +92,23 @@ describe('PortraitGenerator — gating', () => {
       expect(screen.getByTestId(`presentation-${p}`)).not.toBeNull();
     }
   });
+
+  it('keeps the file input aria-label in sync with the visible label text in both states', async () => {
+    renderIt();
+    const input = screen.getByTestId('portrait-file');
+    // Before a file is picked, the visible <label> reads "Choose a photo".
+    expect(screen.getByText('avatar.portrait.upload')).not.toBeNull();
+    expect(input.getAttribute('aria-label')).toBe('avatar.portrait.upload');
+
+    pickFile();
+    await waitFor(() => expect(screen.getByTestId('portrait-preview')).not.toBeNull());
+
+    // After a file is picked, the visible <label> switches to "Choose a
+    // different photo" — the accessible name must switch with it (WCAG
+    // 2.5.3 Label in Name).
+    expect(screen.getByText('avatar.portrait.change')).not.toBeNull();
+    expect(input.getAttribute('aria-label')).toBe('avatar.portrait.change');
+  });
 });
 
 describe('PortraitGenerator — client-side validation', () => {

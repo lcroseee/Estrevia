@@ -256,7 +256,7 @@ export function PortraitGenerator({ chartId, sunSign, moonSign, isPro }: Portrai
           data-testid="portrait-file"
           type="file"
           accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-          aria-label={t('portrait.upload')}
+          aria-label={file ? t('portrait.change') : t('portrait.upload')}
           onChange={handleFileChange}
           className="text-xs text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-1.5 file:text-xs file:text-white/70"
         />
