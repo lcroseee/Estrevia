@@ -218,6 +218,11 @@ export function PortraitGenerator({ chartId, sunSign, moonSign, isPro }: Portrai
           setErrorMessage(t('portrait.errors.quota', { limit: payload?.data?.limit ?? 30 }));
         } else if (code === 'INVALID_IMAGE') {
           setErrorMessage(t('portrait.errors.invalidImage'));
+        } else if (code === 'ANALYSIS_FAILED') {
+          // Pass 1 (vision analysis) failed or returned a shape the schema
+          // rejects — a deterministic failure, not a transient one, so this
+          // must not read as "please try again".
+          setErrorMessage(t('portrait.errors.analysisFailed'));
         } else {
           setErrorMessage(t('portrait.errors.generation'));
         }

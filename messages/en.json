@@ -1396,6 +1396,7 @@
         "busy": "Portraits are busy right now. Please try again later.",
         "quota": "You have used all {limit} portraits this month.",
         "invalidImage": "That file is not a photo we can read. Try a JPEG or PNG.",
+        "analysisFailed": "We couldn't read that photo. Try a different one.",
         "generation": "Couldn't create your portrait. Please try again.",
         "share": "Couldn't update sharing. Please try again."
       },

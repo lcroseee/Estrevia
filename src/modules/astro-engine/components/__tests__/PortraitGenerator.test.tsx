@@ -186,6 +186,20 @@ describe('PortraitGenerator — generation', () => {
     expect((screen.getByTestId('portrait-generate') as HTMLButtonElement).disabled).toBe(false);
   });
 
+  // I3 — ANALYSIS_FAILED is a deterministic pass-1 failure (schema drift),
+  // not a transient one; the generic "please try again" copy must not be
+  // shown for it.
+  it('shows dedicated copy for ANALYSIS_FAILED rather than the generic retry message', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ success: false, data: null, error: 'ANALYSIS_FAILED' }, 502),
+    );
+    await submit();
+    await waitFor(() =>
+      expect(screen.getByText('avatar.portrait.errors.analysisFailed')).not.toBeNull(),
+    );
+    expect(screen.queryByText('avatar.portrait.errors.generation')).toBeNull();
+  });
+
   it('sends multipart, never JSON base64', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       jsonResponse({ success: true, data: { id: 'av_1', url: '/u', scale: 'king', palette: { lead: 'a', accent: 'b' } }, error: null }, 200),
