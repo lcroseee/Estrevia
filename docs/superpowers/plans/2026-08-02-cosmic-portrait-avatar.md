@@ -1654,9 +1654,9 @@ const mocks = vi.hoisted(() => ({
 
 mocks.insertValues.mockResolvedValue(undefined);
 mocks.insert.mockImplementation(() => ({ values: mocks.insertValues }));
-mocks.selectLimit.mockResolvedValue([
-  { id: 'chart_1', sunSign: 'Scorpio', moonSign: 'Taurus', ascendantSign: 'Leo', rulingPlanet: 'Mars' },
-]);
+// natal_charts stores NO sign columns — only `chartData: jsonb<ChartResult>`
+// (src/shared/lib/schema.ts:44). Signs are derived via generatePassport().
+mocks.selectLimit.mockResolvedValue([{ id: 'chart_1', userId: 'user_1', chartData: { planets: [] } }]);
 mocks.selectWhere.mockImplementation(() => ({ limit: mocks.selectLimit }));
 mocks.selectFrom.mockImplementation(() => ({ where: mocks.selectWhere }));
 mocks.select.mockImplementation(() => ({ from: mocks.selectFrom }));
@@ -1670,9 +1670,23 @@ vi.mock('@/shared/lib/usage', () => ({
   decrementUsage: mocks.decrementUsage,
 }));
 vi.mock('@/shared/lib/db', () => ({ getDb: mocks.getDb }));
-vi.mock('@/shared/lib/schema', () => ({ avatars: {}, natalCharts: { id: 'id', userId: 'user_id' } }));
+vi.mock('@/shared/lib/schema', () => ({
+  avatars: {},
+  natalCharts: { id: 'id', userId: 'user_id', chartData: 'chart_data' },
+}));
 vi.mock('drizzle-orm', () => ({ eq: vi.fn((c, v) => ({ c, v })), and: vi.fn((...a) => ({ a })) }));
 vi.mock('@vercel/blob', () => ({ put: mocks.blobPut }));
+// The route derives signs from the stored ChartResult rather than from columns.
+vi.mock('@/modules/astro-engine/passport', () => ({
+  generatePassport: vi.fn(() => ({
+    sunSign: 'Scorpio',
+    moonSign: 'Taurus',
+    ascendantSign: 'Leo',
+    element: 'Water',
+    rulingPlanet: 'Mars',
+    rarityPercent: 4.2,
+  })),
+}));
 vi.mock('@/shared/lib/analytics', () => ({
   trackServerEvent: mocks.trackServerEvent,
   AnalyticsEvent: {
@@ -1882,6 +1896,7 @@ import { checkAndIncrementUsage, decrementUsage } from '@/shared/lib/usage';
 import { getDb } from '@/shared/lib/db';
 import { avatars, natalCharts } from '@/shared/lib/schema';
 import { GeminiImageClient, GeminiVisionClient } from '@/shared/lib/gemini';
+import { generatePassport } from '@/modules/astro-engine/passport';
 import { buildPortraitPrompt } from '@/modules/astro-engine/portrait-prompt';
 import {
   portraitRequestSchema,
@@ -1961,7 +1976,7 @@ Fill the `try` block following the guard order the tests pin down:
 6. `checkAndIncrementUsage(userId, 'avatar_portrait', 'month', 30)` → 402 `QUOTA_EXCEEDED`. Everything after this point must call `refundUsage()` on failure.
 7. `request.formData()`; `portraitRequestSchema.safeParse({presentation, style, chartId})` → 400 `STYLE_NOT_PORTRAIT_CAPABLE` if the style literal is the failing field, otherwise 400 `INVALID_REQUEST`
 8. Read the file into a `Buffer`; verify magic bytes (JPEG `FF D8 FF`, PNG `89 50 4E 47`, WebP `RIFF….WEBP`) and `byteLength <= MAX_UPLOAD_BYTES` → 400 `INVALID_IMAGE`
-9. Load the chart row for `chartId` scoped to `userId` → 404 `CHART_NOT_FOUND`
+9. Load the chart row for `chartId` scoped to `userId` → 404 `CHART_NOT_FOUND`. Select `chartData` — `natal_charts` has **no sign columns** (`src/shared/lib/schema.ts:36-47`); derive `{sunSign, moonSign, ascendantSign, rulingPlanet}` by calling `generatePassport(row.chartData)` from `@/modules/astro-engine/passport`. `generatePassport` **throws** when the chart has no Sun position (`passport.ts:30`), so wrap it and return 502 `CHART_UNREADABLE` rather than letting it become a 500.
 10. Pass 1 via the vision client, `parseModelJson` + `selfieAnalysisSchema.safeParse` → 502 `ANALYSIS_FAILED`; `!safe` → 422 `UNSAFE_IMAGE` with `data.reasons`
 11. `buildPortraitPrompt(...)`
 12. Pass 2 via `GeminiImageClient.generateFromImage`
