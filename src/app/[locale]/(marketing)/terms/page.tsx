@@ -89,6 +89,27 @@ export default async function TermsPage() {
           </ul>
         </Section>
 
+        {/* 5A. User-Generated Content (Photos) — Cosmic Portrait uploads */}
+        <Section title={t('s5aTitle')}>
+          <p>{t('s5aIntro')}</p>
+          <ul className="list-disc list-outside ml-5 space-y-1.5">
+            <li>{t('s5aL1')}</li>
+            <li>{t('s5aL2')}</li>
+            <li>{t('s5aL3')}</li>
+            <li>{t('s5aL4')}</li>
+            <li>{t('s5aL5')}</li>
+          </ul>
+          <p>
+            {t('s5aTakedownPrefix')}
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="text-[#C8A84B] hover:text-[#E0C06A] underline underline-offset-2 transition-colors"
+            >
+              {CONTACT_EMAIL}
+            </a>
+          </p>
+        </Section>
+
         {/* 6. Open Source License */}
         <Section title={t('s6Title')}>
           <p>
