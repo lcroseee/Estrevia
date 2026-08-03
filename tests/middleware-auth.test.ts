@@ -217,7 +217,49 @@ describe('middleware behavior — unauthenticated API request', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Part 3: lastSeenAt update (T4 — email-retention)
+// Part 3: avatar route auth narrowing (C2 — Cosmic Portrait share fix)
+// ---------------------------------------------------------------------------
+// GET /api/v1/avatar/:id/image is designed for anonymous reads of SHARED
+// portraits (its own auth() call inside the handler decides owner-vs-shared).
+// A blanket '/api/v1/avatar(.*)' entry in isProtectedRoute 401s that request
+// before the handler ever runs. The write endpoints (generate, portrait,
+// the :id/share toggle) must stay protected.
+//
+// Reuses the top-level `@clerk/nextjs/server` mock above, whose default
+// `auth()` returns `{ userId: null }` — i.e. every request here is anonymous.
+describe('middleware — avatar route auth narrowing (C2)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  function makeReq(url: string, method = 'GET'): Request {
+    const req = new Request(url, { method });
+    Object.defineProperty(req, 'nextUrl', { value: new URL(url), writable: false });
+    return req;
+  }
+
+  it('lets an anonymous GET to /api/v1/avatar/:id/image pass through (no 401)', async () => {
+    const { default: middleware } = await import('@/middleware');
+    const req = makeReq('http://localhost:3000/api/v1/avatar/av_1/image');
+    const response = await (middleware as (req: unknown) => Promise<Response | undefined>)(req);
+    expect(response).toBeUndefined();
+  });
+
+  it.each([
+    ['/api/v1/avatar/generate', 'POST'],
+    ['/api/v1/avatar/portrait', 'POST'],
+    ['/api/v1/avatar/av_1/share', 'PATCH'],
+  ])('still 401s an anonymous %s %s request (write endpoint stays protected)', async (path, method) => {
+    const { default: middleware } = await import('@/middleware');
+    const req = makeReq(`http://localhost:3000${path}`, method);
+    const response = await (middleware as (req: unknown) => Promise<Response>)(req);
+    expect(response.status).toBe(401);
+    expect((await response.json()).error).toBe('UNAUTHORIZED');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Part 4: lastSeenAt update (T4 — email-retention)
 // ---------------------------------------------------------------------------
 // These tests verify that the throttled lastSeenAt update fires for authed
 // requests and never blocks the response on DB errors.
