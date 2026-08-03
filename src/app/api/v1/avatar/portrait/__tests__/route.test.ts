@@ -235,4 +235,20 @@ describe('POST /api/v1/avatar/portrait — happy path', () => {
     const res = await POST(makeRequest());
     expect(await res.text()).not.toContain('imageBase64');
   });
+
+  it('still returns 200 and does not refund when consumeDailyBudget rejects after a successful insert', async () => {
+    mocks.consumeDailyBudget.mockRejectedValue(new Error('redis down'));
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(200);
+    expect(mocks.insertValues).toHaveBeenCalledTimes(1);
+    expect(mocks.decrementUsage).not.toHaveBeenCalled();
+  });
+
+  it('still refunds the quota when generation fails before the portrait is persisted', async () => {
+    mocks.generateFromImage.mockRejectedValue(new Error('GEMINI_NO_IMAGE'));
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(502);
+    expect(mocks.insertValues).not.toHaveBeenCalled();
+    expect(mocks.decrementUsage).toHaveBeenCalled();
+  });
 });

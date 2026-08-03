@@ -132,6 +132,12 @@ export async function POST(request: Request) {
     }
   };
 
+  // Set true immediately after the `avatars` insert succeeds. Once the
+  // portrait is generated, written to Blob, and recorded in the DB, the
+  // generation is done — the outer catch must not refund a quota unit for
+  // a portrait that actually exists.
+  let persisted = false;
+
   try {
     // -----------------------------------------------------------------
     // 7. Parse + validate the multipart request fields.
@@ -272,17 +278,25 @@ export async function POST(request: Request) {
       blobPathname: blob.pathname,
       palette: built.palette,
     });
+    persisted = true;
 
     // -----------------------------------------------------------------
-    // 15. Consume the daily budget and record success.
+    // 15. Consume the daily budget and record success. Best-effort: the
+    //     portrait is already generated and persisted, so a failure here
+    //     must never turn a completed generation into a 500 (or, via the
+    //     outer catch, an unwarranted refund).
     // -----------------------------------------------------------------
-    await consumeDailyBudget(getBudgetRedis());
-    trackServerEvent(userId, AnalyticsEvent.AVATAR_PORTRAIT_GENERATED, {
-      scale: built.scale,
-      sun_sign: passport.sunSign,
-      moon_sign: passport.moonSign,
-      latency_ms: Date.now() - t0,
-    });
+    try {
+      await consumeDailyBudget(getBudgetRedis());
+      trackServerEvent(userId, AnalyticsEvent.AVATAR_PORTRAIT_GENERATED, {
+        scale: built.scale,
+        sun_sign: passport.sunSign,
+        moon_sign: passport.moonSign,
+        latency_ms: Date.now() - t0,
+      });
+    } catch {
+      // Best-effort — the portrait already exists; don't fail the request.
+    }
 
     // -----------------------------------------------------------------
     // 16. Response — never echoes the selfie or any face-derived trait text.
@@ -299,7 +313,9 @@ export async function POST(request: Request) {
       error: null,
     });
   } catch (err) {
-    await refundUsage();
+    if (!persisted) {
+      await refundUsage();
+    }
     try {
       const { captureException } = await import('@sentry/nextjs');
       captureException(err);
