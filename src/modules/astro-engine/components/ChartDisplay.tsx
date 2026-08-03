@@ -470,7 +470,7 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
             style={{ background: 'rgba(255,255,255,0.06)' }}
             aria-hidden="true"
           />
-          <AvatarSection passport={passport} />
+          <AvatarSection passport={passport} chartId={chartId ?? undefined} />
         </>
       )}
     </section>
