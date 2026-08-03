@@ -17,13 +17,19 @@ export const MAX_EDGE_PX = 1024;
 export const OUTPUT_TYPE = 'image/jpeg';
 export const OUTPUT_QUALITY = 0.9;
 
-/** SVG is excluded on purpose — it can carry script. */
+/**
+ * SVG is excluded on purpose — it can carry script.
+ *
+ * HEIC/HEIF are excluded on purpose too: `createImageBitmap` (used below)
+ * cannot decode HEIC/HEIF outside iOS Safari, so a desktop user picking an
+ * AirDropped HEIC would previously pass this check and only fail later,
+ * inside prepareSelfie, surfacing as the generic invalid-image error. See
+ * I4, fix-wave-D-report.md.
+ */
 export const ACCEPTED_INPUT_TYPES = [
   'image/jpeg',
   'image/png',
   'image/webp',
-  'image/heic',
-  'image/heif',
 ] as const;
 
 export function isAcceptedImageType(type: string): boolean {
