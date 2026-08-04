@@ -1,0 +1,33 @@
+◇ injected env (41) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+=== Daily ad-set spend (7d) — to detect pause timing ===
+
+-- ES — Launch — Astrología sidérea --
+   2026-05-16  spend=$   7.94  impr=  8278  clicks= 814  leads=0
+   2026-05-17  spend=$   2.06  impr=  2247  clicks= 247  leads=0
+
+-- ES — Launch — Lead — LATAM USD --
+   2026-05-17  spend=$  32.48  impr= 16177  clicks= 854  leads=30
+   2026-05-18  spend=$  38.53  impr= 18947  clicks=1073  leads=46
+   2026-05-19  spend=$  23.40  impr= 12917  clicks= 845  leads=20
+   2026-05-20  spend=$  19.49  impr= 11035  clicks= 630  leads=15
+   2026-05-21  spend=$   2.56  impr=  1052  clicks=  75  leads=1
+
+-- EN — Launch — Lead — Tier-1 (no EU) --
+   2026-05-17  spend=$  38.74  impr=  1561  clicks=  99  leads=21
+   2026-05-18  spend=$  38.59  impr=  1974  clicks= 147  leads=28
+   2026-05-19  spend=$  20.45  impr=  1351  clicks=  98  leads=13
+   2026-05-20  spend=$  20.18  impr=  1374  clicks=  87  leads=12
+   2026-05-21  spend=$  21.94  impr=  1390  clicks=  62  leads=9
+   2026-05-22  spend=$  17.53  impr=   899  clicks=  54  leads=10
+   2026-05-23  spend=$   5.97  impr=   368  clicks=  20  leads=2
+
+=== Ad-set effective_status + status (current) ===
+  EN — Launch — Lead — Tier-1 (no EU)  effective=ACTIVE               status=ACTIVE     updated=2026-05-04T17:26:37
+  ES — Launch — Lead — LATAM USD       effective=PAUSED               status=PAUSED     updated=2026-05-21T08:40:54
+  ES — Launch — Astrología sidérea     effective=CAMPAIGN_PAUSED      status=ACTIVE     updated=2026-05-11T07:53:32
+  EN — Launch — Sidereal interest      effective=PAUSED               status=PAUSED     updated=2026-05-04T16:46:03
+  широкая                              effective=PAUSED               status=PAUSED     updated=2026-04-26T10:43:03
+  LAL 25-55                            effective=PAUSED               status=PAUSED     updated=2026-04-26T10:43:11
+  Широкая 25-55                        effective=PAUSED               status=PAUSED     updated=2026-04-26T10:43:17
+  Широкая 25 - 55                      effective=PAUSED               status=PAUSED     updated=2026-04-26T10:44:03
+  [Halo 3 Collar] Marketplace listing  effective=PAUSED               status=PAUSED     updated=2026-04-26T10:44:07

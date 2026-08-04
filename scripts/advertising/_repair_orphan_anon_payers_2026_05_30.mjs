@@ -96,8 +96,16 @@ for (const r of rows) {
       subscription_status = EXCLUDED.subscription_status,
       updated_at = now()
   `;
+  // Demote the orphan placeholder row fully: free tier + clear BOTH stripe ids
+  // (so the customer id lives only on the real row → future subscription.updated
+  // DB lookups by stripe_customer_id resolve unambiguously) + canceled status.
   await sql`
-    UPDATE users SET subscription_tier = 'free', stripe_subscription_id = NULL, updated_at = now()
+    UPDATE users
+    SET subscription_tier = 'free',
+        subscription_status = 'canceled',
+        stripe_subscription_id = NULL,
+        stripe_customer_id = NULL,
+        updated_at = now()
     WHERE id = ${r.id}
   `;
   console.log(`  re-keyed premium ${r.id} -> ${realId}`);

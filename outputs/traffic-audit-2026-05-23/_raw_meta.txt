@@ -1,0 +1,232 @@
+◇ injected env (41) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+===============================================================
+  META TRAFFIC AUDIT  —  2026-05-23
+  Run at: 2026-05-23T13:30:25.145Z
+  Account: act_1435842067150024
+===============================================================
+
+=== A. ACCOUNT-LEVEL — 3 windows ===
+  Last 48h   spend=$48 impr=3709 clicks=211 reach=3135
+             CTR=5.688865% CPM=$12.941494 CPC=$0.227488 freq=1.183094
+             leads=22  CPL=$2.181818
+             actions: link_click=91, page_engagement=106, landing_page_view=61, omni_landing_page_view=61, post_engagement=106, post_interaction_gross=15, comment=1, onsite_web_view_content=34, post_interaction_net=15, onsite_web_app_view_content=34, onsite_web_lead=22, post=5, view_content=34, onsite_conversion.post_save=3, onsite_conversion.post_net_comment=1, onsite_conversion.post_net_save=3, onsite_conversion.post_net_like=6, lead=22, offsite_content_view_add_meta_leads=34, offsite_conversion.fb_pixel_lead=22, offsite_lead_add_20_s_calls=22, omni_view_content=34, offsite_conversion.fb_pixel_view_content=34, post_reaction=6, offsite_conversion.fb_pixel_custom=1
+
+  Last 7d    spend=$289.86 impr=79570 clicks=5105 reach=52010
+             CTR=6.415735% CPM=$3.64283 CPC=$0.05678 freq=1.529898
+             leads=207  CPL=$1.40029
+             actions: link_click=2627, page_engagement=3097, landing_page_view=1586, omni_landing_page_view=1586, onsite_conversion.post_unlike=23, post_engagement=3081, like=16, post_interaction_gross=454, comment=6, onsite_web_view_content=203, post_interaction_net=477, onsite_web_app_view_content=203, onsite_web_lead=207, post=33, view_content=203, onsite_conversion.post_save=52, onsite_conversion.post_net_comment=6, onsite_conversion.post_net_save=52, onsite_conversion.post_net_like=340, lead=207, offsite_content_view_add_meta_leads=203, offsite_conversion.fb_pixel_lead=207, offsite_lead_add_20_s_calls=207, omni_view_content=203, offsite_conversion.fb_pixel_view_content=203, post_reaction=363, offsite_conversion.fb_pixel_custom=2
+
+  Last 14d   spend=$333.95 impr=136895 clicks=9316 reach=96013
+             CTR=6.805216% CPM=$2.439461 CPC=$0.035847 freq=1.425797
+             leads=207  CPL=$1.613285
+             actions: link_click=6478, page_engagement=7291, landing_page_view=3925, omni_landing_page_view=3925, onsite_conversion.post_unlike=39, post_engagement=7273, like=18, post_interaction_gross=795, comment=9, onsite_web_view_content=203, post_interaction_net=834, onsite_web_app_view_content=203, onsite_web_lead=207, post=38, view_content=203, onsite_conversion.post_save=70, onsite_conversion.post_net_comment=9, onsite_conversion.post_net_save=70, onsite_conversion.post_net_like=639, lead=207, offsite_content_view_add_meta_leads=203, offsite_conversion.fb_pixel_lead=207, offsite_lead_add_20_s_calls=207, omni_view_content=203, offsite_conversion.fb_pixel_view_content=203, post_reaction=678, offsite_conversion.fb_pixel_custom=2
+
+=== B. AD-SET — 3 windows ===
+
+  -- Last 48h --
+    EN — Launch — Lead — Tier-1 (no  spend=$  45.44 impr=  2657 CTR=5.12% CPM=$17.10 freq=1.24 leads=21 CPL=$2.16
+    ES — Launch — Lead — LATAM USD   spend=$   2.56 impr=  1052 CTR=7.13% CPM=$2.43 freq=1.07 leads=1 CPL=$2.56
+
+  -- Last 7d --
+    EN — Launch — Lead — Tier-1 (no  spend=$ 163.40 impr=  8917 CTR=6.36% CPM=$18.32 freq=1.73 leads=95 CPL=$1.72
+    ES — Launch — Lead — LATAM USD   spend=$ 116.46 impr= 60128 CTR=5.78% CPM=$1.94 freq=1.61 leads=112 CPL=$1.04
+    ES — Launch — Astrología sidérea spend=$  10.00 impr= 10525 CTR=10.08% CPM=$0.95 freq=1.07 leads=0 CPL=-
+
+  -- Last 14d --
+    EN — Launch — Lead — Tier-1 (no  spend=$ 163.40 impr=  8917 CTR=6.36% CPM=$18.32 freq=1.73 leads=95 CPL=$1.72
+    ES — Launch — Lead — LATAM USD   spend=$ 116.46 impr= 60128 CTR=5.78% CPM=$1.94 freq=1.61 leads=112 CPL=$1.04
+    ES — Launch — Astrología sidérea spend=$  54.09 impr= 67850 CTR=7.77% CPM=$0.80 freq=1.27 leads=0 CPL=-
+
+=== C. AD-SET STATUS / RUN DAYS ===
+  EN — Launch — Lead — Tier-1 (no  ACTIVE             $25.00/d     opt=OFFSITE_CONVERSIONS dest=UNDEFINED age=18.6d
+  ES — Launch — Lead — LATAM USD   PAUSED             $25.00/d     opt=OFFSITE_CONVERSIONS dest=UNDEFINED age=18.6d
+  ES — Launch — Astrología sidérea CAMPAIGN_PAUSED    $6.00/d      opt=LANDING_PAGE_VIEWS dest=UNDEFINED age=20.9d
+  EN — Launch — Sidereal interest  PAUSED             $14.00/d     opt=LANDING_PAGE_VIEWS dest=UNDEFINED age=20.9d
+  широкая                          PAUSED             no daily     opt=LEAD_GENERATION dest=ON_AD age=40.5d
+  LAL 25-55                        PAUSED             $50.00/d     opt=CONVERSATIONS dest=MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP age=171.5d
+  Широкая 25-55                    PAUSED             $50.00/d     opt=CONVERSATIONS dest=MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP age=171.5d
+  Широкая 25 - 55                  PAUSED             $70.00/d     opt=CONVERSATIONS dest=MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP age=186.5d
+  [Halo 3 Collar] Marketplace list PAUSED             no daily     opt=ONSITE_CONVERSIONS dest=UNDEFINED age=278.7d
+
+=== D. AD-LEVEL — 7d ===
+    ad_lead_en_passport_2026-05-17       spend=$  91.99 impr=  5274 CTR=5.57% freq=1.44 LPV=119 leads=59 CPL=$1.56  adset="EN — Launch — Lead — Tie"
+    ad_lead_es_combinations_2026-05-17   spend=$  62.95 impr= 34081 CTR=5.74% freq=1.37 LPV=378 leads=47 CPL=$1.34  adset="ES — Launch — Lead — LAT"
+    ad_lead_en_combinations_2026-05-17   spend=$  49.28 impr=  2276 CTR=7.38% freq=1.35 LPV=56 leads=27 CPL=$1.83  adset="EN — Launch — Lead — Tie"
+    ad_lead_es_lahiri_2026-05-17         spend=$  28.82 impr= 14998 CTR=6.66% freq=1.31 LPV=244 leads=32 CPL=$0.90  adset="ES — Launch — Lead — LAT"
+    ad_lead_es_passport_2026-05-17       spend=$  16.82 impr=  7275 CTR=3.74% freq=1.22 LPV=100 leads=28 CPL=$0.60  adset="ES — Launch — Lead — LAT"
+    ad_lead_en_lahiri_2026-05-17         spend=$  12.97 impr=   916 CTR=6.22% freq=1.20 LPV=17 leads=6 CPL=$2.16  adset="EN — Launch — Lead — Tie"
+    ad_v6Xb-rdtuo3jta50dPq1Q-fixpage     spend=$   8.97 impr=  9500 CTR=10.05% freq=1.05 LPV=510 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_en_lead_v1                        spend=$   5.66 impr=   264 CTR=13.64% freq=1.28 LPV=10 leads=3 CPL=$1.89  adset="EN — Launch — Lead — Tie"
+    ad_lead_es_swiss_2026-05-17          spend=$   5.30 impr=  2215 CTR=6.05% freq=1.33 LPV=57 leads=3 CPL=$1.77  adset="ES — Launch — Lead — LAT"
+    ad_lead_en_swiss_2026-05-17          spend=$   3.50 impr=   187 CTR=6.42% freq=1.29 LPV=6 leads=0 CPL=$-  adset="EN — Launch — Lead — Tie"
+    ad_es_lead_v1                        spend=$   2.57 impr=  1559 CTR=7.44% freq=1.12 LPV=22 leads=2 CPL=$1.28  adset="ES — Launch — Lead — LAT"
+    ad_eCcDEUFNQkRDLetAAXT2K             spend=$   0.37 impr=   446 CTR=11.43% freq=1.01 LPV=28 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_vB-9msBkCrt3zMim4Fyny             spend=$   0.28 impr=   134 CTR=8.21% freq=1.23 LPV=6 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_gIxaJDLc5DjblVOLN_MEh             spend=$   0.12 impr=   140 CTR=14.29% freq=1.02 LPV=15 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_Z22_HQT3wYtOUYJ-tgFzn             spend=$   0.12 impr=   115 CTR=8.70% freq=1.04 LPV=7 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_2mr8c3gGCDZ5ClBGaXw0f             spend=$   0.05 impr=    95 CTR=4.21% freq=1.02 LPV=4 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_XtZwKtY3KdSRw1g5sszBb             spend=$   0.03 impr=    27 CTR=14.81% freq=1.04 LPV=3 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_sO1_DWaqethKHCSsOl2Z2             spend=$   0.03 impr=    31 CTR=6.45% freq=1.00 LPV=2 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_Q-2cEz1yoMnlskZjomz8I             spend=$   0.02 impr=    15 CTR=13.33% freq=1.00 LPV=1 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_jIH2zZN3jqkr7pUDkTqWR             spend=$   0.01 impr=    11 CTR=9.09% freq=1.00 LPV=1 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_OJDe0Ohnrrk1WEr6-v9WE             spend=$   0.00 impr=     1 CTR=0.00% freq=1.00 LPV=0 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+    ad_8c8wxe1_UzYjnTFvVymdB             spend=$   0.00 impr=    10 CTR=10.00% freq=1.00 LPV=0 leads=0 CPL=$-  adset="ES — Launch — Astrología"
+
+=== D. AD-LEVEL — 14d ===
+    ad_lead_en_passport_2026-05-17       spend=$  91.99 impr=  5274 CTR=5.57% freq=1.44 LPV=119 leads=59 CPL=$1.56
+    ad_lead_es_combinations_2026-05-17   spend=$  62.95 impr= 34081 CTR=5.74% freq=1.37 LPV=378 leads=47 CPL=$1.34
+    ad_lead_en_combinations_2026-05-17   spend=$  49.28 impr=  2276 CTR=7.38% freq=1.35 LPV=56 leads=27 CPL=$1.83
+    ad_v6Xb-rdtuo3jta50dPq1Q-fixpage     spend=$  40.71 impr= 50941 CTR=8.17% freq=1.21 LPV=2231 leads=0 CPL=$-
+    ad_lead_es_lahiri_2026-05-17         spend=$  28.82 impr= 14998 CTR=6.66% freq=1.31 LPV=244 leads=32 CPL=$0.90
+    ad_lead_es_passport_2026-05-17       spend=$  16.82 impr=  7275 CTR=3.74% freq=1.22 LPV=100 leads=28 CPL=$0.60
+    ad_lead_en_lahiri_2026-05-17         spend=$  12.97 impr=   916 CTR=6.22% freq=1.20 LPV=17 leads=6 CPL=$2.16
+    ad_en_lead_v1                        spend=$   5.66 impr=   264 CTR=13.64% freq=1.28 LPV=10 leads=3 CPL=$1.89
+    ad_lead_es_swiss_2026-05-17          spend=$   5.30 impr=  2215 CTR=6.05% freq=1.33 LPV=57 leads=3 CPL=$1.77
+    ad_eCcDEUFNQkRDLetAAXT2K             spend=$   4.72 impr=  5975 CTR=7.77% freq=1.06 LPV=246 leads=0 CPL=$-
+    ad_lead_en_swiss_2026-05-17          spend=$   3.50 impr=   187 CTR=6.42% freq=1.29 LPV=6 leads=0 CPL=$-
+    ad_es_lead_v1                        spend=$   2.57 impr=  1559 CTR=7.44% freq=1.12 LPV=22 leads=2 CPL=$1.28
+    ad_XtZwKtY3KdSRw1g5sszBb             spend=$   1.97 impr=  2539 CTR=3.90% freq=1.10 LPV=69 leads=0 CPL=$-
+    ad_gIxaJDLc5DjblVOLN_MEh             spend=$   1.87 impr=  2462 CTR=7.43% freq=1.10 LPV=133 leads=0 CPL=$-
+    ad_OJDe0Ohnrrk1WEr6-v9WE             spend=$   1.15 impr=  1365 CTR=4.76% freq=1.11 LPV=40 leads=0 CPL=$-
+    ad_vB-9msBkCrt3zMim4Fyny             spend=$   0.92 impr=   874 CTR=6.06% freq=1.21 LPV=37 leads=0 CPL=$-
+    ad_jIH2zZN3jqkr7pUDkTqWR             spend=$   0.91 impr=  1141 CTR=6.84% freq=1.12 LPV=49 leads=0 CPL=$-
+    ad_Z22_HQT3wYtOUYJ-tgFzn             spend=$   0.74 impr=   801 CTR=5.49% freq=1.21 LPV=28 leads=0 CPL=$-
+    ad_sO1_DWaqethKHCSsOl2Z2             spend=$   0.59 impr=   881 CTR=7.38% freq=1.06 LPV=49 leads=0 CPL=$-
+    ad_2mr8c3gGCDZ5ClBGaXw0f             spend=$   0.31 impr=   547 CTR=7.31% freq=1.01 LPV=26 leads=0 CPL=$-
+    ad_8c8wxe1_UzYjnTFvVymdB             spend=$   0.14 impr=   166 CTR=3.61% freq=1.04 LPV=3 leads=0 CPL=$-
+    ad_b7TZDUGZXaVX1STyXNbjj             spend=$   0.03 impr=    54 CTR=3.70% freq=1.13 LPV=0 leads=0 CPL=$-
+    ad_Q-2cEz1yoMnlskZjomz8I             spend=$   0.03 impr=   104 CTR=8.65% freq=1.05 LPV=5 leads=0 CPL=$-
+
+=== E. AD CREATIVE -> URL (decode utm_content) ===
+    ad_lead_en_passport_2026-05-17               ACTIVE                utm_content=10yyJJib6xRab1oOCGh0r
+    ad_lead_es_combinations_2026-05-17           ADSET_PAUSED          utm_content=sO1_DWaqethKHCSsOl2Z2
+    ad_lead_en_combinations_2026-05-17           ACTIVE                utm_content=hCJDyrhbX4eo4paA7yXtk
+    ad_v6Xb-rdtuo3jta50dPq1Q-fixpage             CAMPAIGN_PAUSED       utm_content=v6Xb-rdtuo3jta50dPq1Q
+    ad_lead_es_lahiri_2026-05-17                 ADSET_PAUSED          utm_content=gIxaJDLc5DjblVOLN_MEh
+    ad_lead_es_passport_2026-05-17               ADSET_PAUSED          utm_content=OJDe0Ohnrrk1WEr6-v9WE
+    ad_lead_en_lahiri_2026-05-17                 ACTIVE                utm_content=YOfR7iH3dWukHy_QRiUA8
+    ad_en_lead_v1                                ACTIVE                utm_content=Nv19TDPvjPZNX4_zpQvmu
+    ad_lead_es_swiss_2026-05-17                  ADSET_PAUSED          utm_content=jIH2zZN3jqkr7pUDkTqWR
+    ad_eCcDEUFNQkRDLetAAXT2K                     CAMPAIGN_PAUSED       utm_content=eCcDEUFNQkRDLetAAXT2K
+    ad_lead_en_swiss_2026-05-17                  ACTIVE                utm_content=1hjqz970n7gROjXMSWoIf
+    ad_es_lead_v1                                ADSET_PAUSED          utm_content=v6Xb-rdtuo3jta50dPq1Q
+    ad_XtZwKtY3KdSRw1g5sszBb                     CAMPAIGN_PAUSED       utm_content=XtZwKtY3KdSRw1g5sszBb
+    ad_gIxaJDLc5DjblVOLN_MEh                     CAMPAIGN_PAUSED       utm_content=gIxaJDLc5DjblVOLN_MEh
+    ad_OJDe0Ohnrrk1WEr6-v9WE                     CAMPAIGN_PAUSED       utm_content=OJDe0Ohnrrk1WEr6-v9WE
+    ad_vB-9msBkCrt3zMim4Fyny                     CAMPAIGN_PAUSED       utm_content=vB-9msBkCrt3zMim4Fyny
+    ad_jIH2zZN3jqkr7pUDkTqWR                     CAMPAIGN_PAUSED       utm_content=jIH2zZN3jqkr7pUDkTqWR
+    ad_Z22_HQT3wYtOUYJ-tgFzn                     CAMPAIGN_PAUSED       utm_content=Z22_HQT3wYtOUYJ-tgFzn
+    ad_sO1_DWaqethKHCSsOl2Z2                     CAMPAIGN_PAUSED       utm_content=sO1_DWaqethKHCSsOl2Z2
+    ad_2mr8c3gGCDZ5ClBGaXw0f                     CAMPAIGN_PAUSED       utm_content=2mr8c3gGCDZ5ClBGaXw0f
+    ad_8c8wxe1_UzYjnTFvVymdB                     CAMPAIGN_PAUSED       utm_content=8c8wxe1_UzYjnTFvVymdB
+    ad_b7TZDUGZXaVX1STyXNbjj                     CAMPAIGN_PAUSED       utm_content=b7TZDUGZXaVX1STyXNbjj
+    ad_Q-2cEz1yoMnlskZjomz8I                     CAMPAIGN_PAUSED       utm_content=Q-2cEz1yoMnlskZjomz8I
+
+=== F. PLACEMENT — last 7d ===
+    facebook/feed                            spend=$ 190.22 impr= 49095 CTR=6.84% leads=127 CPL=$1.50
+    facebook/facebook_reels                  spend=$  58.02 impr= 19177 CTR=6.97% leads=40 CPL=$1.45
+    instagram/feed                           spend=$  15.92 impr=  2552 CTR=1.88% leads=15 CPL=$1.06
+    instagram/instagram_reels                spend=$  12.75 impr=  3819 CTR=5.21% leads=11 CPL=$1.16
+    instagram/instagram_stories              spend=$   7.51 impr=  1986 CTR=2.87% leads=8 CPL=$0.94
+    audience_network/an_classic              spend=$   3.07 impr=   588 CTR=14.63% leads=0 CPL=$-
+    facebook/instream_video                  spend=$   1.16 impr=   220 CTR=3.64% leads=4 CPL=$0.29
+    facebook/marketplace                     spend=$   0.87 impr=   464 CTR=0.86% leads=2 CPL=$0.43
+    facebook/right_hand_column               spend=$   0.14 impr=  1183 CTR=0.34% leads=0 CPL=$-
+    facebook/search                          spend=$   0.11 impr=   458 CTR=0.87% leads=0 CPL=$-
+    unknown/unknown                          spend=$   0.07 impr=     9 CTR=11.11% leads=0 CPL=$-
+    facebook/facebook_reels_overlay          spend=$   0.02 impr=    11 CTR=0.00% leads=0 CPL=$-
+    facebook/facebook_notification           spend=$   0.00 impr=     2 CTR=0.00% leads=0 CPL=$-
+    instagram/instagram_search               spend=$   0.00 impr=     4 CTR=0.00% leads=0 CPL=$-
+    whatsapp/status                          spend=$   0.00 impr=     2 CTR=0.00% leads=0 CPL=$-
+
+=== G. GEOGRAPHY — last 7d ===
+    US  spend=$ 131.66 impr=  6266 CTR=6.32% CPM=$21.01 leads=76 CPL=$1.73
+    MX  spend=$  48.60 impr= 23556 CTR=7.53% CPM=$2.06 leads=41 CPL=$1.19
+    CO  spend=$  35.98 impr= 22469 CTR=5.89% CPM=$1.60 leads=33 CPL=$1.09
+    CA  spend=$  14.01 impr=  1054 CTR=5.41% CPM=$13.29 leads=10 CPL=$1.40
+    PE  spend=$   9.72 impr=  6939 CTR=6.96% CPM=$1.40 leads=4 CPL=$2.43
+    NZ  spend=$   9.11 impr=   934 CTR=6.32% CPM=$9.75 leads=3 CPL=$3.04
+    AU  spend=$   8.62 impr=   662 CTR=8.31% CPM=$13.02 leads=6 CPL=$1.44
+    CL  spend=$   7.96 impr=  4202 CTR=6.38% CPM=$1.89 leads=5 CPL=$1.59
+    EC  spend=$   6.23 impr=  3629 CTR=4.52% CPM=$1.72 leads=7 CPL=$0.89
+    DO  spend=$   5.75 impr=  3604 CTR=5.69% CPM=$1.60 leads=7 CPL=$0.82
+    UY  spend=$   5.07 impr=  2759 CTR=3.73% CPM=$1.84 leads=10 CPL=$0.51
+    SV  spend=$   3.04 impr=  1556 CTR=6.17% CPM=$1.95 leads=0 CPL=$-
+    CR  spend=$   2.99 impr=  1373 CTR=6.41% CPM=$2.18 leads=4 CPL=$0.75
+    PA  spend=$   1.12 impr=   567 CTR=6.00% CPM=$1.98 leads=1 CPL=$1.12
+
+=== H. AGE + GENDER — last 7d ===
+    age=25-34 gender=female  spend=$  79.06 impr= 13768 CTR=5.18% leads=45 CPL=$1.76
+    age=35-44 gender=female  spend=$  70.84 impr=  8879 CTR=6.07% leads=50 CPL=$1.42
+    age=25-34 gender=male  spend=$  69.55 impr= 26204 CTR=6.25% leads=68 CPL=$1.02
+    age=35-44 gender=male  spend=$  39.83 impr= 12616 CTR=6.48% leads=27 CPL=$1.48
+    age=18-24 gender=male  spend=$   8.99 impr=  4510 CTR=5.17% leads=7 CPL=$1.28
+    age=18-24 gender=female  spend=$   7.15 impr=  2669 CTR=3.67% leads=3 CPL=$2.38
+    age=65+ gender=male  spend=$   4.21 impr=  4015 CTR=10.56% leads=0 CPL=$-
+    age=25-34 gender=unknown  spend=$   2.73 impr=   722 CTR=7.06% leads=4 CPL=$0.68
+    age=55-64 gender=male  spend=$   2.04 impr=  2728 CTR=9.42% leads=0 CPL=$-
+    age=35-44 gender=unknown  spend=$   1.85 impr=   334 CTR=7.49% leads=2 CPL=$0.93
+    age=65+ gender=female  spend=$   1.29 impr=   996 CTR=10.44% leads=0 CPL=$-
+    age=45-54 gender=male  spend=$   0.84 impr=   957 CTR=10.76% leads=0 CPL=$-
+    age=55-64 gender=female  spend=$   0.60 impr=   682 CTR=7.92% leads=0 CPL=$-
+    age=18-24 gender=unknown  spend=$   0.55 impr=   163 CTR=4.29% leads=1 CPL=$0.55
+    age=45-54 gender=female  spend=$   0.26 impr=   275 CTR=12.73% leads=0 CPL=$-
+    age=65+ gender=unknown  spend=$   0.04 impr=    24 CTR=12.50% leads=0 CPL=$-
+    age=55-64 gender=unknown  spend=$   0.03 impr=    20 CTR=10.00% leads=0 CPL=$-
+    age=45-54 gender=unknown  spend=$   0.00 impr=     8 CTR=0.00% leads=0 CPL=$-
+
+=== I. HOURLY (advertiser TZ) — last 7d ===
+    00:00:00 - 00:59:59  #################### $  29.67 leads=20 L/$=0.67
+    01:00:00 - 01:59:59  #############        $  12.75 leads=8 L/$=0.63
+    02:00:00 - 02:59:59  ##########           $  10.05 leads=6 L/$=0.60
+    03:00:00 - 03:59:59  #####                $   4.66 leads=3 L/$=0.64
+    04:00:00 - 04:59:59  #####                $   4.96 leads=2 L/$=0.40
+    05:00:00 - 05:59:59  ###                  $   2.68 leads=1 L/$=0.37
+    06:00:00 - 06:59:59  ##                   $   2.33 leads=1 L/$=0.43
+    07:00:00 - 07:59:59  ###                  $   3.34 leads=2 L/$=0.60
+    08:00:00 - 08:59:59  #####                $   4.99 leads=0 L/$=0.00
+    09:00:00 - 09:59:59  #####                $   5.11 leads=3 L/$=0.59
+    10:00:00 - 10:59:59  ##########           $  10.13 leads=7 L/$=0.69
+    11:00:00 - 11:59:59  ###########          $  10.68 leads=7 L/$=0.66
+    12:00:00 - 12:59:59  #################### $  19.77 leads=14 L/$=0.71
+    13:00:00 - 13:59:59  ###################  $  19.21 leads=14 L/$=0.73
+    14:00:00 - 14:59:59  ###########          $  11.10 leads=9 L/$=0.81
+    15:00:00 - 15:59:59  ##############       $  14.00 leads=18 L/$=1.29
+    16:00:00 - 16:59:59  #################    $  16.58 leads=9 L/$=0.54
+    17:00:00 - 17:59:59  ###########          $  10.63 leads=14 L/$=1.32
+    18:00:00 - 18:59:59  ##############       $  13.50 leads=8 L/$=0.59
+    19:00:00 - 19:59:59  #################### $  21.45 leads=17 L/$=0.79
+    20:00:00 - 20:59:59  #################### $  24.70 leads=15 L/$=0.61
+    21:00:00 - 21:59:59  ################     $  15.56 leads=14 L/$=0.90
+    22:00:00 - 22:59:59  ###########          $  10.67 leads=9 L/$=0.84
+    23:00:00 - 23:59:59  ###########          $  11.34 leads=6 L/$=0.53
+
+=== J. DEVICE — last 7d ===
+    mobile_app      spend=$ 282.82 impr= 76426 CTR=6.59% leads=205 CPL=$1.38
+    desktop         spend=$   3.89 impr=  2401 CTR=1.21% leads=2 CPL=$1.95
+    mobile_web      spend=$   3.08 impr=   734 CTR=5.31% leads=0 CPL=$-
+    unknown         spend=$   0.07 impr=     9 CTR=11.11% leads=0 CPL=$-
+
+=== K. AD-SET FREQUENCY — last 14d (saturation) ===
+    EN — Launch — Lead — Tier-1 (no  freq=1.73  reach=5141  impr=8917  spend=$163.4  > approaching
+    ES — Launch — Lead — LATAM USD   freq=1.61  reach=37452  impr=60128  spend=$116.46  > approaching
+    ES — Launch — Astrología sidérea freq=1.27  reach=53257  impr=67850  spend=$54.09
+
+=== L. DAILY SPEND + LEADS — 14d ===
+    2026-05-09  spend=$  10.09 impr= 13027 CTR=5.12% leads=  0 CPL=$-
+    2026-05-10  spend=$   8.11 impr= 11875 CTR=5.34% leads=  0 CPL=$-
+    2026-05-11  spend=$   7.68 impr=  9924 CTR=6.42% leads=  0 CPL=$-
+    2026-05-12  spend=$   6.35 impr=  8685 CTR=9.74% leads=  0 CPL=$-
+    2026-05-13  spend=$   3.50 impr=  4120 CTR=11.26% leads=  0 CPL=$-
+    2026-05-14  spend=$   5.68 impr=  6887 CTR=9.82% leads=  0 CPL=$-
+    2026-05-15  spend=$   2.68 impr=  2807 CTR=10.22% leads=  0 CPL=$-
+    2026-05-16  spend=$   7.94 impr=  8278 CTR=9.83% leads=  0 CPL=$-
+    2026-05-17  spend=$  73.28 impr= 19985 CTR=6.00% leads= 51 CPL=$1.44
+    2026-05-18  spend=$  77.12 impr= 20921 CTR=5.83% leads= 74 CPL=$1.04
+    2026-05-19  spend=$  43.85 impr= 14268 CTR=6.61% leads= 33 CPL=$1.33
+    2026-05-20  spend=$  39.67 impr= 12409 CTR=5.78% leads= 27 CPL=$1.47
+    2026-05-21  spend=$  24.50 impr=  2442 CTR=5.61% leads= 10 CPL=$2.45
+    2026-05-22  spend=$  17.53 impr=   899 CTR=6.01% leads= 10 CPL=$1.75
+    2026-05-23  spend=$   5.97 impr=   368 CTR=5.43% leads=  2 CPL=$2.98
+
+=== AUDIT COMPLETE ===

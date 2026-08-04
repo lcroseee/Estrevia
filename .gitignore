@@ -70,4 +70,13 @@ next-env.d.ts
 .cowork-meta/
 
 # Secrets — Meta Marketing API + advertising status bearer
-.env.meta
+# Glob, not the bare name: `.env.meta.bak` was NOT covered by `.env.meta` and sat
+# untracked-but-committable with 6 live tokens in it (META_ACCESS_TOKEN,
+# META_CAPI_TOKEN, ADVERTISING_STATUS_BEARER). One `git add -A` would have pushed
+# them to a public remote, where a secret is compromised even if the commit is
+# rewritten afterwards.
+.env.meta*
+
+# Editor/tooling backups of any env file — same trap as above.
+.env*.bak
+*.env.bak

@@ -1,0 +1,62 @@
+◇ injected env (41) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+=== A. Stripe sessions by utm_content (7d) ===
+  Total sessions (7d): 35
+
+  utm_content                     total  complete  open  expired  locales
+  (none)                            14         2     0       12  auto=9,es=5  [14% complete]
+  10yyJJib6xRab1oOCGh0r              7         4     0        3  auto=7  [57% complete]
+  sO1_DWaqethKHCSsOl2Z2              7         0     0        7  es=4,auto=3  [0% complete]
+  hCJDyrhbX4eo4paA7yXtk              3         2     0        1  auto=3  [67% complete]
+  gIxaJDLc5DjblVOLN_MEh              3         0     0        3  auto=3  [0% complete]
+  OJDe0Ohnrrk1WEr6-v9WE              1         0     0        1  auto=1  [0% complete]
+
+=== B. Stripe sessions by utm_content (14d) — for trend ===
+  Total sessions (14d): 35
+
+  utm_content                     total  complete  open  expired  pct
+  (none)                            14         2     0       12  14%
+  10yyJJib6xRab1oOCGh0r              7         4     0        3  57%
+  sO1_DWaqethKHCSsOl2Z2              7         0     0        7  0%
+  hCJDyrhbX4eo4paA7yXtk              3         2     0        1  67%
+  gIxaJDLc5DjblVOLN_MEh              3         0     0        3  0%
+  OJDe0Ohnrrk1WEr6-v9WE              1         0     0        1  0%
+
+=== C. Sessions by Stripe locale + status (7d) ===
+  auto|expired         18
+  es|expired           9
+  auto|complete        8
+
+=== D. UTM source distribution (7d) ===
+  meta                 total=21 complete=6
+  lead-nurture         total=7 complete=1
+  (none)               total=6 complete=1
+  lead-nurture-recovery total=1 complete=0
+
+=== E. DB lead UTM source funnel (14d) ===
+  meta                 estrevia_lead_es             leads= 119 conv=1 (0.8%)
+  meta                 estrevia_lead_en             leads=  84 conv=8 (9.5%)
+  meta                 estrevia_launch_es           leads=  17 conv=0 (0.0%)
+  (none)               (none)                       leads=  11 conv=1 (9.1%)
+  chatgpt.com          (none)                       leads=   5 conv=0 (0.0%)
+  meta                 estrevia_launch_en           leads=   3 conv=2 (66.7%)
+
+=== F. DB lead utm_content (14d) — granular ===
+  sO1_DWaqethKHCSsOl2Z2          leads=  58 conv=1 (1.7%)
+  10yyJJib6xRab1oOCGh0r          leads=  52 conv=5 (9.6%)
+  gIxaJDLc5DjblVOLN_MEh          leads=  31 conv=0 (0.0%)
+  OJDe0Ohnrrk1WEr6-v9WE          leads=  27 conv=0 (0.0%)
+  hCJDyrhbX4eo4paA7yXtk          leads=  26 conv=3 (11.5%)
+  (none)                         leads=  16 conv=1 (6.3%)
+  v6Xb-rdtuo3jta50dPq1Q          leads=  16 conv=0 (0.0%)
+  YOfR7iH3dWukHy_QRiUA8          leads=   6 conv=0 (0.0%)
+  Nv19TDPvjPZNX4_zpQvmu          leads=   3 conv=2 (66.7%)
+  jIH2zZN3jqkr7pUDkTqWR          leads=   3 conv=0 (0.0%)
+  vB-9msBkCrt3zMim4Fyny          leads=   1 conv=0 (0.0%)
+
+=== G. DB lead utm_content (last 48h) — recent ===
+  10yyJJib6xRab1oOCGh0r          leads=  15
+  (none)                         leads=   2
+  Nv19TDPvjPZNX4_zpQvmu          leads=   2
+  YOfR7iH3dWukHy_QRiUA8          leads=   2
+
+=== Done ===
