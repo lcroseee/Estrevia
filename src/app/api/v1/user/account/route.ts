@@ -15,14 +15,17 @@
  *        - Failure → 500, abort (subscription already canceled at this point;
  *          Sentry CRITICAL — founder must clean manually)
  *   5. DB batch delete (Neon server-side transaction)
- *        - synastry_results → natal_charts → usage_counters → users
+ *        - synastry_results → natal_charts → usage_counters → avatars → users
  *        - Failure after step 3/4 → Sentry CRITICAL (billing gone, data remains)
- *   6. Clerk user delete  — outside DB transaction; failure is non-blocking
- *   7. 200 response
+ *   6. Delete avatar blobs from Blob storage — outside the batch, non-blocking;
+ *      pathnames are read BEFORE the batch runs (the rows are gone after)
+ *   7. Clerk user delete  — outside DB transaction; failure is non-blocking
+ *   8. 200 response
  *
  * If step 3 or 4 fails:  return 500, DB + Clerk untouched.
  * If step 5 fails:       return 500, Sentry CRITICAL (billing canceled, data remains).
  * If step 6 fails:       log + Sentry warning, still return 200 (DB already purged).
+ * If step 7 fails:       log + Sentry warning, still return 200 (DB already purged).
  *
  * Atomicity: neon-http's Drizzle driver does not support interactive transactions
  * (see `node_modules/drizzle-orm/neon-http/session.js`: "No transactions support
@@ -36,11 +39,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { clerkClient } from '@clerk/nextjs/server';
+import { del } from '@vercel/blob';
 import { z } from 'zod';
 import { requireAuth } from '@/modules/auth/lib/helpers';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import {
+  avatars,
   natalCharts,
   synastryResults,
   usageCounters,
@@ -55,9 +60,11 @@ interface AccountDeleteResponse {
   message: string;
 }
 
-export async function DELETE(): Promise<
-  NextResponse<ApiResponse<AccountDeleteResponse>>
-> {
+export async function DELETE(
+  // Unused: kept so callers/tests can invoke this the same way as every other
+  // route handler (`DELETE(request)`) without a TS arity error.
+  _request?: Request,
+): Promise<NextResponse<ApiResponse<AccountDeleteResponse>>> {
   // ---------------------------------------------------------------------------
   // 1. Auth — JWT verification, no DB round-trip
   // ---------------------------------------------------------------------------
@@ -256,11 +263,20 @@ export async function DELETE(): Promise<
   // ---------------------------------------------------------------------------
   const deletedAt = new Date().toISOString();
 
+  // Collect blob pathnames before the rows are gone — after the batch there is
+  // nothing left to read them from, and an orphaned blob would outlive the
+  // account, which is exactly the Art. 17 gap this closes.
+  const avatarBlobs = await db
+    .select({ blobPathname: avatars.blobPathname })
+    .from(avatars)
+    .where(eq(avatars.userId, userId));
+
   try {
     await db.batch([
       db.delete(synastryResults).where(eq(synastryResults.userId, userId)),
       db.delete(natalCharts).where(eq(natalCharts.userId, userId)),
       db.delete(usageCounters).where(eq(usageCounters.userId, userId)),
+      db.delete(avatars).where(eq(avatars.userId, userId)),
       db.delete(users).where(eq(users.id, userId)),
     ]);
   } catch (err) {
@@ -290,6 +306,33 @@ export async function DELETE(): Promise<
       { success: false, data: null, error: 'INTERNAL_ERROR' },
       { status: 500 },
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 6b. Delete portrait blobs (third-party side effect).
+  //
+  //    Blob cleanup is a third-party side effect, deliberately outside the batch.
+  //    DB erasure is the primary contract; if the blob store is unavailable the
+  //    user's request has still been honoured in the system of record, and a
+  //    failure here must not turn a successful deletion into a 500.
+  // ---------------------------------------------------------------------------
+  if (avatarBlobs.length > 0) {
+    try {
+      await del(
+        avatarBlobs.map((r) => r.blobPathname),
+        { token: process.env.BLOB_READ_WRITE_TOKEN },
+      );
+    } catch (err) {
+      try {
+        const { captureException } = await import('@sentry/nextjs');
+        captureException(err, {
+          tags: { route: 'user/account', op: 'blob-delete', userId },
+        });
+      } catch {
+        const name = err instanceof Error ? err.name : typeof err;
+        console.error('[account/delete] avatar blob delete failed after DB purge:', name);
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------

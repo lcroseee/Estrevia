@@ -134,6 +134,13 @@
       "when": 1780185031049,
       "tag": "0018_discount_blast_emails",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1785762284365,
+      "tag": "0019_avatars",
+      "breakpoints": true
     }
   ]
 }

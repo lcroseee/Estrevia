@@ -255,6 +255,10 @@ export const AnalyticsEvent = {
   AVATAR_GENERATION_FAILED: 'avatar_generation_failed',
   AVATAR_QUOTA_EXHAUSTED: 'avatar_quota_exhausted',
   AVATAR_STYLE_LOCKED_CLICKED: 'avatar_style_locked_clicked',
+  AVATAR_PORTRAIT_UPLOADED: 'avatar_portrait_uploaded',
+  AVATAR_PORTRAIT_GENERATED: 'avatar_portrait_generated',
+  AVATAR_PORTRAIT_REJECTED: 'avatar_portrait_rejected',
+  AVATAR_PORTRAIT_SHARED: 'avatar_portrait_shared',
   // A/B test — paywall_teaser email variant sent
   PAYWALL_TEASER_EMAIL_SENT: 'paywall_teaser_email_sent',
 } as const;

@@ -59,7 +59,13 @@ const isProtectedRoute = createRouteMatcher([
   // (share-link UX, returns no PII). The broad '(.*)' was blocking anonymous reads.
   '/api/v1/synastry/calculate(.*)',
   '/api/v1/synastry/:id([a-zA-Z0-9_-]+)/analyze(.*)',
-  '/api/v1/avatar(.*)',
+  // Avatar write endpoints only — GET /:id/image is intentionally public
+  // (anonymous reads of SHARED Cosmic Portraits; the route's own auth() call
+  // decides owner-vs-shared access). The broad '(.*)' was blocking those
+  // anonymous reads with a blanket 401 before the handler ever ran.
+  '/api/v1/avatar/generate(.*)',
+  '/api/v1/avatar/portrait(.*)',
+  '/api/v1/avatar/:id([a-zA-Z0-9_-]+)/share(.*)',
   '/api/v1/push(.*)',
   '/api/v1/tarot(.*)',
   '/api/v1/support(.*)',

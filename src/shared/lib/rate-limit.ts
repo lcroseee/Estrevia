@@ -86,6 +86,11 @@ const limiters: Record<string, Ratelimit> = {
     limiter: Ratelimit.slidingWindow(3, '1m'),
     prefix: 'rl:avatar/generate',
   }),
+  'avatar/portrait': new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, '1m'),
+    prefix: 'rl:avatar/portrait',
+  }),
   'synastry/calculate': new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(5, '1m'),

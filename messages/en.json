@@ -1098,7 +1098,8 @@
       "threeCard": "See the full 3-card story",
       "synastryAi": "Get the AI relationship analysis",
       "essay": "Unlock the full essay",
-      "natalChart": "Get your full natal chart reading"
+      "natalChart": "Get your full natal chart reading",
+      "avatarPortrait": "See yourself in your own colours"
     },
     "cta": {
       "eyebrow": "Included in Pro",
@@ -1106,7 +1107,9 @@
         "celticCross": "Get the full interpretation tying all 10 cards into one narrative.",
         "threeCard": "Get the LLM reading that connects past, present, and future.",
         "synastryAi": "See how your two charts actually interact — full AI reading with Pro.",
-        "natalChart": "An AI-crafted synthesis of all your planets, houses, and aspects — written for your chart, not a generic horoscope."
+        "essay": "Get the full text of this essay, plus every other essay in the library.",
+        "natalChart": "An AI-crafted synthesis of all your planets, houses, and aspects — written for your chart, not a generic horoscope.",
+        "avatarPortrait": "Upload a photo and see yourself rendered in the colours of your own chart."
       },
       "ctaLabel": "Start 3-Day Free Trial"
     }
@@ -1357,7 +1360,56 @@
     "proHint": "Upgrade to Pro for unlimited regenerations and 4 styles.",
     "download": "Download",
     "altText": "AI-generated {style} avatar reflecting {sunSign} Sun and {moonSign} Moon",
-    "upgradeLink": "Upgrade to Pro →"
+    "upgradeLink": "Upgrade to Pro →",
+    "portrait": {
+      "tab": "Portrait",
+      "abstractTab": "Abstract",
+      "title": "Cosmic Portrait",
+      "intro": "Upload a photo and we will render you in the colours of your own chart.",
+      "upload": "Choose a photo",
+      "change": "Choose a different photo",
+      "generate": "Create my portrait",
+      "generating": "Reading your photo…",
+      "composing": "Composing your palette…",
+      "rendering": "Painting your portrait…",
+      "privacyNote": "Your photo is never stored. It is processed once and discarded.",
+      "consent": "I have the right to use this photo, and it is a photo of an adult.",
+      "presentation": "How should we render you?",
+      "presentations": {
+        "auto": "Let the chart decide",
+        "feminine": "Feminine",
+        "masculine": "Masculine",
+        "androgynous": "Androgynous"
+      },
+      "whyTitle": "Why this portrait",
+      "whyScale": "Colour scale: {scale}",
+      "whyPalette": "Lead {lead}, accent {accent}",
+      "whySource": "Drawn from your {sunSign} Sun and {moonSign} Moon.",
+      "share": "Share",
+      "shared": "Anyone with the link can now see this portrait.",
+      "unshare": "Make private",
+      "download": "Download",
+      "quota": "{used} of {limit} portraits used this month",
+      "errors": {
+        "proRequired": "Cosmic Portrait is part of Pro.",
+        "disabled": "Portraits are temporarily unavailable.",
+        "busy": "Portraits are busy right now. Please try again later.",
+        "quota": "You have used all {limit} portraits this month.",
+        "invalidImage": "That file is not a photo we can read. Try a JPEG or PNG.",
+        "analysisFailed": "We couldn't read that photo. Try a different one.",
+        "generation": "Couldn't create your portrait. Please try again.",
+        "share": "Couldn't update sharing. Please try again."
+      },
+      "reasons": {
+        "no_face": "We couldn't find a face in that photo.",
+        "multiple_faces": "That photo has more than one person in it.",
+        "likely_minor": "We only create portraits from photos of adults.",
+        "nsfw": "That photo isn't suitable for a portrait.",
+        "not_a_photo": "That looks like a drawing rather than a photo.",
+        "low_quality": "That photo is too blurry or too dark to work from."
+      },
+      "altText": "Cosmic portrait in the {scale} scale, from a {sunSign} Sun and {moonSign} Moon"
+    }
   },
   "notifications": {
     "title": "Notification Preferences",
@@ -1408,6 +1460,14 @@
     "s5L4": "Use automated scripts to scrape content or overwhelm our infrastructure",
     "s5L5": "Resell or sublicense access to the Service without our written consent",
     "s5L6": "Submit false or misleading birth data to circumvent rate limits",
+    "s5aTitle": "5A. User-Generated Content (Photos)",
+    "s5aIntro": "The Cosmic Portrait feature lets you upload a photo to generate a personalized avatar. By uploading a photo, you agree to the following:",
+    "s5aL1": "You own the rights to the photo, or have the right to use it for this purpose.",
+    "s5aL2": "The photo depicts you, and you confirm you are an adult — do not upload photos of minors or anyone under 18.",
+    "s5aL3": "You will not upload photos of other people without their explicit consent.",
+    "s5aL4": "You will not upload unlawful, infringing, or otherwise prohibited content.",
+    "s5aL5": "Estrevia may refuse to process, or may remove, any uploaded photo or generated portrait that violates these Terms.",
+    "s5aTakedownPrefix": "To report content or request a takedown, contact ",
     "s6Title": "6. Open Source License",
     "s6P1Before": "The Estrevia codebase (excluding content in the ",
     "s6P1Code": "content/",
@@ -1456,6 +1516,11 @@
     "categoryPassportItem1": "Sun sign, Moon sign, Ascendant sign",
     "categoryPassportItem2": "Element, ruling planet, rarity percentage",
     "categoryPassportNote": "Share data contains derived astrological results only — never raw birth data.",
+    "categoryPortraitLabel": "Cosmic Portrait Photo",
+    "categoryPortraitBadge": "Not retained",
+    "categoryPortraitItem1": "The selfie you upload to generate a Cosmic Portrait avatar",
+    "categoryPortraitItem2": "Sent once to Google's Gemini image model for processing",
+    "categoryPortraitNote": "The uploaded photo is processed in a single request and is not retained by us afterward. The generated portrait image is kept until you delete it or delete your account.",
     "categoryUsageLabel": "Usage Data (Analytics)",
     "categoryUsageBadge": "Anonymised",
     "categoryUsageItem1": "Pages visited, features used",
@@ -1500,6 +1565,8 @@
     "tpSentryData": "Error stack traces, anonymised user context",
     "tpMetaPurpose": "Ad measurement (Meta Pixel + Conversions API)",
     "tpMetaData": "Page-view and conversion events; the browser pixel loads only after you accept cookies — never birth data",
+    "tpGooglePurpose": "AI image generation for avatars and portraits",
+    "tpGoogleData": "Chart-derived text prompts; for Cosmic Portrait, the uploaded photo — processed once and not retained by us",
     "tpDataSharedPrefix": "Data shared: ",
     "s5Title": "5. Data Retention",
     "tableHeaderData": "Data",
@@ -1512,6 +1579,10 @@
     "row4Retention": "Until account deletion",
     "row5Data": "Analytics events",
     "row5Retention": "12 months (PostHog default)",
+    "row6Data": "Cosmic Portrait photo upload",
+    "row6Retention": "Not retained — processed once, then discarded",
+    "row7Data": "Generated Cosmic Portrait image",
+    "row7Retention": "Until you delete it or delete your account",
     "s6Title": "6. Your Rights (GDPR)",
     "s6Intro": "If you are in the European Economic Area or the United Kingdom, you have the following rights regarding your personal data:",
     "rightAccess": "Access",

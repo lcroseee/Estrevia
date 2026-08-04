@@ -708,3 +708,33 @@ export type AdvertisingAdSetPhaseTransition = typeof advertisingAdSetPhaseTransi
 export type AdvertisingThreshold = typeof advertisingThresholds.$inferSelect;
 export type EmailLead = typeof emailLeads.$inferSelect;
 export type SentCartAbandonEmailRow = typeof sentCartAbandonEmails.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// avatars
+//
+// Generated avatar images. `mode` exists from the start so abstract-mode
+// avatars can be persisted later without a second migration; only 'portrait'
+// is written today.
+//
+// Deliberately carries NO face-derived data. The appearance traits extracted
+// during generation live only inside the request. Chart-derived data (palette,
+// scale) is stored; face-derived data is not. See the design spec, D8.
+// ---------------------------------------------------------------------------
+export const avatars = pgTable('avatars', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  mode: text('mode').notNull(), // 'portrait' | 'abstract'
+  style: text('style').notNull(), // AvatarStyle — 'cosmic' for portrait
+  presentation: text('presentation'), // null for abstract
+  scale: text('scale'), // 'king' | 'queen' | 'prince' | 'princess'
+  blobPathname: text('blob_pathname').notNull(),
+  palette: jsonb('palette').notNull().$type<{ lead: string; accent: string }>(),
+  isShared: boolean('is_shared').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('avatars_user_created_idx').on(table.userId, table.createdAt),
+]);
+
+export type Avatar = typeof avatars.$inferSelect;

@@ -89,6 +89,16 @@ export default async function PrivacyPage() {
             />
 
             <DataCategory
+              label={t('categoryPortraitLabel')}
+              badge={t('categoryPortraitBadge')}
+              items={[
+                t('categoryPortraitItem1'),
+                t('categoryPortraitItem2'),
+              ]}
+              note={t('categoryPortraitNote')}
+            />
+
+            <DataCategory
               label={t('categoryUsageLabel')}
               badge={t('categoryUsageBadge')}
               items={[
@@ -202,6 +212,13 @@ export default async function PrivacyPage() {
               data={t('tpMetaData')}
               dataPrefix={t('tpDataSharedPrefix')}
             />
+            <ThirdParty
+              name="Google (Gemini)"
+              purpose={t('tpGooglePurpose')}
+              link="https://policies.google.com/privacy"
+              data={t('tpGoogleData')}
+              dataPrefix={t('tpDataSharedPrefix')}
+            />
           </div>
         </Section>
 
@@ -234,6 +251,14 @@ export default async function PrivacyPage() {
               <tr>
                 <td className="py-2.5 pr-4 text-white/70">{t('row5Data')}</td>
                 <td className="py-2.5 text-white/70">{t('row5Retention')}</td>
+              </tr>
+              <tr>
+                <td className="py-2.5 pr-4 text-white/70">{t('row6Data')}</td>
+                <td className="py-2.5 text-white/70">{t('row6Retention')}</td>
+              </tr>
+              <tr>
+                <td className="py-2.5 pr-4 text-white/70">{t('row7Data')}</td>
+                <td className="py-2.5 text-white/70">{t('row7Retention')}</td>
               </tr>
             </tbody>
           </table>

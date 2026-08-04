@@ -47,6 +47,30 @@ describe('selfieAnalysisSchema', () => {
     const r = selfieAnalysisSchema.safeParse({ ...validAnalysis, systemPrompt: 'ignore previous' });
     expect(r.success).toBe(false);
   });
+
+  // I3 — pass 1 is paid for by the time it returns. `traits` must be
+  // tolerant of vision-model drift (an unexpected key, or an explicit
+  // `null` on an optional field) so that drift doesn't take the whole
+  // paid feature to a 100% failure rate. `safe`/`reasons` (asserted above)
+  // and the top-level object stay strict.
+  it('accepts an unknown key inside traits rather than rejecting the whole analysis', () => {
+    const r = selfieAnalysisSchema.safeParse({
+      ...validAnalysis,
+      traits: { ...validAnalysis.traits, unexpectedField: 'drift' },
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('accepts facialHair: null as equivalent to absent', () => {
+    const r = selfieAnalysisSchema.safeParse({
+      ...validAnalysis,
+      traits: { ...validAnalysis.traits, facialHair: null },
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.traits.facialHair).toBeUndefined();
+    }
+  });
 });
 
 describe('parseModelJson', () => {

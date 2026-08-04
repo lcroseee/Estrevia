@@ -1102,7 +1102,8 @@
       "threeCard": "Descubre la historia completa de las 3 cartas",
       "synastryAi": "Obtén el análisis de compatibilidad con IA",
       "essay": "Desbloquea el ensayo completo",
-      "natalChart": "Obtén la lectura completa de tu carta natal"
+      "natalChart": "Obtén la lectura completa de tu carta natal",
+      "avatarPortrait": "Verte en tus propios colores"
     },
     "cta": {
       "eyebrow": "Incluido en Pro",
@@ -1110,7 +1111,9 @@
         "celticCross": "Obtén la interpretación completa que conecta las 10 cartas en una narrativa.",
         "threeCard": "Obtén la lectura que conecta pasado, presente y futuro.",
         "synastryAi": "Mira cómo interactúan realmente sus dos cartas — lectura completa con IA, incluida en Pro.",
-        "natalChart": "Síntesis hecha con IA de todos tus planetas, casas y aspectos — escrita para tu carta, no un horóscopo genérico."
+        "essay": "Obtén el texto completo de este ensayo y de más de 120 ensayos en la biblioteca.",
+        "natalChart": "Síntesis hecha con IA de todos tus planetas, casas y aspectos — escrita para tu carta, no un horóscopo genérico.",
+        "avatarPortrait": "Sube una foto y mírate representado en los colores de tu propia carta."
       },
       "ctaLabel": "Comienza tu prueba gratis de 3 días"
     }
@@ -1361,7 +1364,56 @@
     "proHint": "Mejora a Pro para regeneraciones ilimitadas y 4 estilos.",
     "download": "Descargar",
     "altText": "Avatar IA estilo {style} que refleja Sol en {sunSign} y Luna en {moonSign}",
-    "upgradeLink": "Mejora a Pro →"
+    "upgradeLink": "Mejora a Pro →",
+    "portrait": {
+      "tab": "Retrato",
+      "abstractTab": "Abstracto",
+      "title": "Retrato cósmico",
+      "intro": "Sube una foto y te representamos en los colores de tu propia carta.",
+      "upload": "Elige una foto",
+      "change": "Elige otra foto",
+      "generate": "Crear mi retrato",
+      "generating": "Leyendo tu foto…",
+      "composing": "Componiendo tu paleta…",
+      "rendering": "Pintando tu retrato…",
+      "privacyNote": "Tu foto no se guarda nunca. Se procesa una vez y se descarta.",
+      "consent": "Tengo derecho a usar esta foto y es la foto de una persona adulta.",
+      "presentation": "¿Cómo quieres que te representemos?",
+      "presentations": {
+        "auto": "Que decida la carta",
+        "feminine": "Femenina",
+        "masculine": "Masculina",
+        "androgynous": "Andrógina"
+      },
+      "whyTitle": "Por qué este retrato",
+      "whyScale": "Escala de color: {scale}",
+      "whyPalette": "Principal {lead}, acento {accent}",
+      "whySource": "Tomado de tu Sol en {sunSign} y tu Luna en {moonSign}.",
+      "share": "Compartir",
+      "shared": "Ahora cualquiera con el enlace puede ver este retrato.",
+      "unshare": "Hacer privado",
+      "download": "Descargar",
+      "quota": "{used} de {limit} retratos usados este mes",
+      "errors": {
+        "proRequired": "El Retrato cósmico es parte de Pro.",
+        "disabled": "Los retratos no están disponibles por el momento.",
+        "busy": "Los retratos están saturados ahora mismo. Inténtalo más tarde.",
+        "quota": "Ya usaste los {limit} retratos de este mes.",
+        "invalidImage": "Ese archivo no es una foto que podamos leer. Prueba con un JPEG o PNG.",
+        "analysisFailed": "No pudimos leer esa foto. Prueba con otra.",
+        "generation": "No se pudo crear tu retrato. Inténtalo de nuevo.",
+        "share": "No se pudo actualizar el uso compartido. Inténtalo de nuevo."
+      },
+      "reasons": {
+        "no_face": "No encontramos un rostro en esa foto.",
+        "multiple_faces": "Esa foto tiene más de una persona.",
+        "likely_minor": "Solo creamos retratos a partir de fotos de personas adultas.",
+        "nsfw": "Esa foto no es adecuada para un retrato.",
+        "not_a_photo": "Eso parece un dibujo y no una foto.",
+        "low_quality": "Esa foto está muy borrosa u oscura para trabajarla."
+      },
+      "altText": "Retrato cósmico en la escala {scale}, de un Sol en {sunSign} y una Luna en {moonSign}"
+    }
   },
   "notifications": {
     "title": "Preferencias de notificaciones",
@@ -1412,6 +1464,14 @@
     "s5L4": "Usar scripts automatizados para extraer contenido o sobrecargar nuestra infraestructura",
     "s5L5": "Revender o sublicenciar el acceso al Servicio sin nuestro consentimiento por escrito",
     "s5L6": "Enviar datos de nacimiento falsos o engañosos para eludir los límites de tasa",
+    "s5aTitle": "5A. Contenido generado por el usuario (fotos)",
+    "s5aIntro": "La función Retrato Cósmico te permite subir una foto para generar un avatar personalizado. Al subir una foto, aceptas lo siguiente:",
+    "s5aL1": "Eres dueño de los derechos de la foto, o tienes el derecho de usarla para este fin.",
+    "s5aL2": "La foto te representa a ti, y confirmas que eres mayor de edad — no subas fotos de menores ni de personas menores de 18 años.",
+    "s5aL3": "No subirás fotos de otras personas sin su consentimiento explícito.",
+    "s5aL4": "No subirás contenido ilegal, que infrinja derechos de terceros, o de otro modo prohibido.",
+    "s5aL5": "Estrevia puede negarse a procesar, o puede eliminar, cualquier foto subida o retrato generado que viole estos Términos.",
+    "s5aTakedownPrefix": "Para reportar contenido o solicitar su eliminación, contáctanos en ",
     "s6Title": "6. Licencia de código abierto",
     "s6P1Before": "El código base de Estrevia (excluyendo el contenido en el directorio ",
     "s6P1Code": "content/",
@@ -1460,6 +1520,11 @@
     "categoryPassportItem1": "Signo solar, signo lunar, signo del Ascendente",
     "categoryPassportItem2": "Elemento, planeta regente, porcentaje de rareza",
     "categoryPassportNote": "Los datos compartidos contienen solo resultados astrológicos derivados — nunca datos de nacimiento sin procesar.",
+    "categoryPortraitLabel": "Foto del Retrato Cósmico",
+    "categoryPortraitBadge": "No se retiene",
+    "categoryPortraitItem1": "La selfie que subes para generar un avatar de Retrato Cósmico",
+    "categoryPortraitItem2": "Se envía una sola vez al modelo de imágenes Gemini de Google para su procesamiento",
+    "categoryPortraitNote": "La foto subida se procesa en una sola solicitud y no se almacena después. La imagen del retrato generado se conserva hasta que la elimines o elimines tu cuenta.",
     "categoryUsageLabel": "Datos de uso (análisis)",
     "categoryUsageBadge": "Anonimizado",
     "categoryUsageItem1": "Páginas visitadas, funciones usadas",
@@ -1504,6 +1569,8 @@
     "tpSentryData": "Rastros de error, contexto de usuario anonimizado",
     "tpMetaPurpose": "Medición de anuncios (Meta Pixel + API de Conversiones)",
     "tpMetaData": "Eventos de vista de página y conversión; el píxel del navegador se carga solo si aceptas las cookies — nunca datos de nacimiento",
+    "tpGooglePurpose": "Generación de imágenes con IA para avatares y retratos",
+    "tpGoogleData": "Instrucciones de texto derivadas de la carta; para el Retrato Cósmico, la foto subida — se procesa una sola vez y no se almacena",
     "tpDataSharedPrefix": "Datos compartidos: ",
     "s5Title": "5. Retención de datos",
     "tableHeaderData": "Datos",
@@ -1516,6 +1583,10 @@
     "row4Retention": "Hasta la eliminación de la cuenta",
     "row5Data": "Eventos de análisis",
     "row5Retention": "12 meses (predeterminado de PostHog)",
+    "row6Data": "Foto subida para el Retrato Cósmico",
+    "row6Retention": "No se retiene — se procesa una vez y luego se descarta",
+    "row7Data": "Imagen del Retrato Cósmico generado",
+    "row7Retention": "Hasta que la elimines o elimines tu cuenta",
     "s6Title": "6. Tus derechos (RGPD)",
     "s6Intro": "Si te encuentras en el Espacio Económico Europeo o el Reino Unido, tienes los siguientes derechos respecto a tus datos personales:",
     "rightAccess": "Acceso",

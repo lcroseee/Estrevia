@@ -14,4 +14,5 @@ export type PaywallTrigger =
   | 'three-card'
   | 'synastry-ai'
   | 'natal-chart'
+  | 'avatar-portrait'
   | 'generic';

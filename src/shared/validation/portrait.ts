@@ -24,26 +24,41 @@ export type RejectionReason = z.infer<typeof rejectionReasonSchema>;
  *
  * Nothing in this object is ever persisted — see the spec, decision D8.
  */
+// Optional trait fields accept `null` as equivalent to absent — the vision
+// model intermittently emits an explicit `null` rather than omitting the
+// key — and normalise it away so downstream code only ever sees `undefined`.
+function nullableOptional<T extends z.ZodTypeAny>(schema: T) {
+  return schema.nullish().transform((v) => v ?? undefined).optional();
+}
+
 export const selfieAnalysisSchema = z.strictObject({
   safe: z.boolean(),
   reasons: z.array(rejectionReasonSchema),
-  traits: z.strictObject({
-    hair: z.strictObject({
-      texture: z.string().min(1).max(120),
-      length: z.string().min(1).max(120),
-      colour: z.string().min(1).max(120),
-      style: z.string().min(1).max(120),
-    }),
-    face: z.strictObject({
-      shape: z.string().min(1).max(120),
-      jaw: z.string().min(1).max(120),
-      brows: z.string().min(1).max(120),
-    }),
-    skinTone: z.string().min(1).max(120),
-    facialHair: z.string().max(120).optional(),
-    glasses: z.boolean().optional(),
-    distinguishing: z.array(z.string().max(120)).max(6).optional(),
-  }),
+  // `traits` is intentionally NOT a strictObject: pass 1 has already been
+  // paid for by the time this parses, so one unexpected key from
+  // `gemini-2.5-flash` (prompt drift, a model upgrade adding a field, …)
+  // must not take the whole paid feature to a 100% failure rate. `safe` and
+  // `reasons` above stay strict — they drive the safety gate and must not
+  // silently accept junk.
+  traits: z
+    .object({
+      hair: z.strictObject({
+        texture: z.string().min(1).max(120),
+        length: z.string().min(1).max(120),
+        colour: z.string().min(1).max(120),
+        style: z.string().min(1).max(120),
+      }),
+      face: z.strictObject({
+        shape: z.string().min(1).max(120),
+        jaw: z.string().min(1).max(120),
+        brows: z.string().min(1).max(120),
+      }),
+      skinTone: z.string().min(1).max(120),
+      facialHair: nullableOptional(z.string().max(120)),
+      glasses: nullableOptional(z.boolean()),
+      distinguishing: nullableOptional(z.array(z.string().max(120)).max(6)),
+    })
+    .passthrough(),
   prose: z.string().min(1).max(600),
 });
 export type SelfieAnalysis = z.infer<typeof selfieAnalysisSchema>;
