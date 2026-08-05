@@ -31,6 +31,25 @@ import { ShareButton } from './ShareButton';
 import { AvatarSection } from './AvatarSection';
 import { ChartReadingSection } from './ChartReadingSection';
 import { generatePassport } from '@/modules/astro-engine/passport';
+import { projectChart } from '@/modules/astro-engine/zodiac-frame';
+import { ZodiacFrameToggle, type FrameState } from './ZodiacFrameToggle';
+import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
+
+// The zodiac frame lives in the URL so shared links carry the sender's view,
+// and in localStorage so a tropical-preferring user does not re-toggle on
+// every chart. The URL wins on load.
+const FRAME_PARAM = 'z';
+const FRAME_STORAGE_KEY = 'estrevia.zodiacFrame';
+const PARAM_TO_FRAME: Record<string, FrameState | undefined> = {
+  sid: 'sidereal',
+  trop: 'tropical',
+  both: 'both',
+};
+const FRAME_TO_PARAM: Record<FrameState, string> = {
+  sidereal: 'sid',
+  tropical: 'trop',
+  both: 'both',
+};
 
 type Tab = 'wheel' | 'table';
 
@@ -176,6 +195,7 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
     lon: searchParams.get('lon'),
     place: searchParams.get('place'),
     tz: searchParams.get('tz'),
+    z: searchParams.get('z'),
   });
 
   const hasInitialParams = !!(
@@ -194,6 +214,57 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
   const [isAutoCalculating, setIsAutoCalculating] = useState(hasInitialParams);
   const [autoCalculateError, setAutoCalculateError] = useState<string | null>(null);
 
+  // ?z is the source of truth so a shared link carries the sender's view;
+  // localStorage is only the default for a chart opened without it.
+  const [frame, setFrame] = useState<FrameState>(() => {
+    const fromUrl = PARAM_TO_FRAME[mountParamsRef.current.z ?? ''];
+    if (fromUrl) return fromUrl;
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(FRAME_STORAGE_KEY);
+      if (stored === 'tropical' || stored === 'both' || stored === 'sidereal') {
+        return stored;
+      }
+    }
+    return 'sidereal';
+  });
+
+  const handleFrameChange = useCallback(
+    (next: FrameState) => {
+      setFrame((prev) => {
+        trackEvent(AnalyticsEvent.ZODIAC_FRAME_CHANGED, {
+          from: prev,
+          to: next,
+          surface: 'chart',
+        });
+        return next;
+      });
+      if (typeof window === 'undefined') return;
+      window.localStorage.setItem(FRAME_STORAGE_KEY, next);
+      const params = new URLSearchParams(window.location.search);
+      params.set(FRAME_PARAM, FRAME_TO_PARAM[next]);
+      router.replace(`/chart?${params.toString()}`, { scroll: false });
+    },
+    [router],
+  );
+
+  // What the wheel and the table render. `both` draws two rings over one set
+  // of planets, so the underlying projection stays sidereal.
+  const view = useMemo(
+    () =>
+      chart ? projectChart(chart, frame === 'tropical' ? 'tropical' : 'sidereal') : null,
+    [chart, frame],
+  );
+
+  // Second projection only in `both`, so the table can show a tropical column.
+  const tropicalView = useMemo(
+    () => (chart && frame === 'both' ? projectChart(chart, 'tropical') : null),
+    [chart, frame],
+  );
+
+  // Deliberately `chart`, not `view`: the Cosmic Passport stays sidereal
+  // regardless of what the toggle is showing. Both sit on the same object, so
+  // projecting in place would silently retune the viral surface every time a
+  // user pressed the toggle. See SP-A.
   const passport = useMemo(
     () => (chart ? generatePassport(chart) : null),
     [chart],
@@ -363,6 +434,10 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
         </button>
       </div>
 
+      {/* Zodiac frame — sits above the tabs because it governs both the wheel
+          and the table, not one panel. */}
+      <ZodiacFrameToggle value={frame} onChange={handleFrameChange} />
+
       {/* Tabs */}
       <div
         role="tablist"
@@ -422,9 +497,10 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
         </div>
 
         <ChartWheel
-          chart={chart}
+          chart={view ?? chart}
           showAspects={showAspects}
           showHouses={showHouses}
+          frame={frame}
         />
       </div>
 
@@ -435,7 +511,11 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
         aria-labelledby="chart-tab-table"
         hidden={activeTab !== 'table'}
       >
-        <PositionTable chart={chart} />
+        <PositionTable
+          chart={view ?? chart}
+          frame={frame}
+          tropicalChart={tropicalView}
+        />
       </div>
 
       {/* AI Reading section — first slot after the chart */}
