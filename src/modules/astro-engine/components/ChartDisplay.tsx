@@ -182,6 +182,7 @@ interface ChartDisplayProps {
 
 export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps = {}) {
   const t = useTranslations('chartDisplay');
+  const tFrame = useTranslations('chart.zodiacFrame');
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -423,7 +424,10 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
         <div>
           <h1 className="text-lg font-semibold text-white/90">{t('headerTitle')}</h1>
           <p className="text-xs text-white/60 font-mono mt-0.5">
-            {chart.system === 'sidereal' ? 'Sidereal' : 'Tropical'}
+            {/* Follow the toggle, not the raw chart: `both` renders two rings,
+                and a header reading "Sidereal" beside them is the same
+                label-contradicts-content problem SP-0 existed to remove. */}
+            {tFrame(frame)}
             {/* houseSystem persists as 'Placidus' in ChartResult even when no
                 houses were computed (schema transform) — only show it when
                 houses actually exist. */}

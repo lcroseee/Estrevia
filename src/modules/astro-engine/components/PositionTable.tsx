@@ -286,7 +286,10 @@ export function PositionTable({
             : t('footerSidereal', { ayanamsa: chart.ayanamsa.toFixed(4) })}
         {/* Suppress the house-system mention on no-houses charts — houseSystem
             persists as 'Placidus' in ChartResult even without computed houses. */}
-        {chart.houses ? ` · ${chart.houseSystem} houses` : ''}
+        {/* Was ` · ${chart.houseSystem} houses` — the word "houses" stayed
+            English on /es. The house-system NAME (Placidus) is a proper noun
+            and is deliberately not translated. */}
+        {chart.houses ? ` · ${t('houseSuffix', { system: chart.houseSystem })}` : ''}
       </p>
     </div>
   );

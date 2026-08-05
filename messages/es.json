@@ -946,7 +946,10 @@
       "colHouse": "Casa",
       "footerSidereal": "Sideral (ayanamsa Lahiri: {ayanamsa}°)",
       "footerTropical": "Tropical",
-      "footerBoth": "Sideral (ayanamsa Lahiri: {ayanamsa}°) y tropical, lado a lado"
+      "footerBoth": "Sideral (ayanamsa Lahiri: {ayanamsa}°) y tropical, lado a lado",
+      "houseSuffix": "casas {system}",
+      "ringSidereal": "Zodiaco sideral",
+      "ringTropical": "Zodiaco tropical"
     }
   },
   "passport": {

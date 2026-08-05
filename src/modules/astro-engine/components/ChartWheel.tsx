@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useMemo, useState, useCallback, useId } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ChartResult, PlanetPosition } from '@/shared/types';
 import { Planet } from '@/shared/types';
 import { PlanetGlyph, PLANET_COLORS } from './PlanetGlyph';
@@ -106,6 +107,7 @@ export const ChartWheel = memo(function ChartWheel({
   size: sizeProp,
   frame = 'sidereal',
 }: ChartWheelProps) {
+  const t = useTranslations('chart.zodiacFrame');
   const [selectedPlanet, setSelectedPlanet] = useState<Planet | null>(null);
   const titleId = useId();
   const descId = useId();
@@ -134,6 +136,15 @@ export const ChartWheel = memo(function ChartWheel({
   const glyphSize = Math.max(10, size * 0.026);
 
   const chartRotation = useMemo(() => getChartRotation(chart), [chart]);
+
+  // A cusp carries both frames' longitudes unconditionally. Everything else on
+  // the wheel is plotted in the frame named by chart.system, so cusps must be
+  // read the same way or they drift by the ayanamsa.
+  const cuspLongitude = useCallback(
+    (cusp: { siderealDegree: number; tropicalDegree: number }) =>
+      chart.system === 'tropical' ? cusp.tropicalDegree : cusp.siderealDegree,
+    [chart.system],
+  );
 
   // Placed planets (conjunction-resolved)
   const placedPlanets = useMemo(
@@ -220,7 +231,7 @@ export const ChartWheel = memo(function ChartWheel({
             outerR={isBoth ? bandSplitR : zodiacOuterR}
             rotation={chartRotation}
             glyphSize={glyphSize * (isBoth ? 0.95 : 1.2)}
-            label="Sidereal zodiac"
+            label={t('ringSidereal')}
           />
         )}
         {frame !== 'sidereal' && (
@@ -234,7 +245,7 @@ export const ChartWheel = memo(function ChartWheel({
             // the only line in the component that knows the frames differ.
             rotation={chartRotation - chart.ayanamsa}
             glyphSize={glyphSize * (isBoth ? 0.95 : 1.2)}
-            label="Tropical zodiac"
+            label={t('ringTropical')}
             opacity={isBoth ? 0.45 : 0.6}
           />
         )}
@@ -250,10 +261,13 @@ export const ChartWheel = memo(function ChartWheel({
         {showHouses && chart.houses && (
           <g aria-label="House cusps">
             {chart.houses.map((cusp) => {
-              // Sidereal, matching the rotation (derived from the sidereal ASC)
-              // and the planet glyphs. Using the tropical value drew the
-              // 1st-house line ~24° away from the ASC marker.
-              const angle = eclipticToWheelAngle(cusp.siderealDegree, chartRotation);
+              // Read the cusp in the SAME frame as the rotation and the planet
+              // glyphs. chartRotation derives from chart.ascendant, which
+              // projectChart moves; the cusp's two raw longitudes do not move,
+              // so picking the wrong one swings this line ~23.7° away from the
+              // ASC marker. That is the SP-0 defect, and it reappears in
+              // tropical mode if this pairs frames carelessly.
+              const angle = eclipticToWheelAngle(cuspLongitude(cusp), chartRotation);
               const outer = polarToCart(cx, cy, zodiacInnerR, angle);
               const inner = polarToCart(cx, cy, houseInnerR * 0.6, angle);
               const labelPt = polarToCart(cx, cy, houseInnerR * 0.73, angle);
