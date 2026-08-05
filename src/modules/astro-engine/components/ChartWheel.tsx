@@ -2,57 +2,14 @@
 
 import { memo, useMemo, useState, useCallback, useId } from 'react';
 import type { ChartResult, PlanetPosition } from '@/shared/types';
-import { Planet, Sign } from '@/shared/types';
+import { Planet } from '@/shared/types';
 import { PlanetGlyph, PLANET_COLORS } from './PlanetGlyph';
 import { AspectLines } from './AspectLines';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const ZODIAC_SIGNS: Sign[] = [
-  Sign.Aries, Sign.Taurus, Sign.Gemini, Sign.Cancer,
-  Sign.Leo, Sign.Virgo, Sign.Libra, Sign.Scorpio,
-  Sign.Sagittarius, Sign.Capricorn, Sign.Aquarius, Sign.Pisces,
-];
-
-const SIGN_GLYPHS: Record<Sign, string> = {
-  [Sign.Aries]: '♈', [Sign.Taurus]: '♉', [Sign.Gemini]: '♊',
-  [Sign.Cancer]: '♋', [Sign.Leo]: '♌', [Sign.Virgo]: '♍',
-  [Sign.Libra]: '♎', [Sign.Scorpio]: '♏', [Sign.Sagittarius]: '♐',
-  [Sign.Capricorn]: '♑', [Sign.Aquarius]: '♒', [Sign.Pisces]: '♓',
-};
-
-// Element colors for zodiac ring sectors
-const SIGN_COLORS: Record<Sign, string> = {
-  [Sign.Aries]: '#8B2500',      // Fire
-  [Sign.Taurus]: '#1A4A1A',     // Earth
-  [Sign.Gemini]: '#1A2A5E',     // Air
-  [Sign.Cancer]: '#0D3B3B',     // Water
-  [Sign.Leo]: '#7A2000',        // Fire
-  [Sign.Virgo]: '#163416',      // Earth
-  [Sign.Libra]: '#162050',      // Air
-  [Sign.Scorpio]: '#0A3030',    // Water
-  [Sign.Sagittarius]: '#6B1E00', // Fire
-  [Sign.Capricorn]: '#122A12',  // Earth
-  [Sign.Aquarius]: '#101840',   // Air
-  [Sign.Pisces]: '#082828',     // Water
-};
-
-const SIGN_TEXT_COLORS: Record<Sign, string> = {
-  [Sign.Aries]: '#FF6B3D', [Sign.Taurus]: '#5DBB5D', [Sign.Gemini]: '#6B9AFF',
-  [Sign.Cancer]: '#5ECECE', [Sign.Leo]: '#FF8C42', [Sign.Virgo]: '#4CAF50',
-  [Sign.Libra]: '#7BA7FF', [Sign.Scorpio]: '#4ECECE', [Sign.Sagittarius]: '#FF7A30',
-  [Sign.Capricorn]: '#66BB6A', [Sign.Aquarius]: '#82AAFF', [Sign.Pisces]: '#80DEEA',
-};
+import { ZodiacRing } from './ZodiacRing';
+import type { FrameState } from './ZodiacFrameToggle';
+import { polarToCart } from './chart-wheel-zodiac';
 
 // ─── Geometry helpers ─────────────────────────────────────────────────────────
-
-function polarToCart(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return {
-    x: cx + r * Math.cos(rad),
-    y: cy + r * Math.sin(rad),
-  };
-}
 
 function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
   const start = polarToCart(cx, cy, r, startAngle);
@@ -136,6 +93,8 @@ interface ChartWheelProps {
   showAspects?: boolean;
   showHouses?: boolean;
   size?: number;
+  /** Zodiac display state. `both` splits the band into two concentric rings. */
+  frame?: FrameState;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -145,6 +104,7 @@ export const ChartWheel = memo(function ChartWheel({
   showAspects = true,
   showHouses = true,
   size: sizeProp,
+  frame = 'sidereal',
 }: ChartWheelProps) {
   const [selectedPlanet, setSelectedPlanet] = useState<Planet | null>(null);
   const titleId = useId();
@@ -159,6 +119,14 @@ export const ChartWheel = memo(function ChartWheel({
   const outerR = size * 0.46;        // outer edge of zodiac ring
   const zodiacOuterR = outerR;
   const zodiacInnerR = outerR * 0.82; // inner edge of zodiac ring
+
+  // In `both` the zodiac band splits in two. houseRingR, planetRingR and
+  // aspectCircleR below are deliberately untouched, so the chart body does not
+  // reflow between states and the transition reads as a rotation of the sign
+  // ring rather than a resize of the whole wheel.
+  const isBoth = frame === 'both';
+  const bandSplitR = outerR * 0.91;
+
   const houseRingR = zodiacInnerR;
   const houseInnerR = zodiacInnerR * 0.85;
   const planetRingR = zodiacInnerR * 0.73; // where planet glyphs sit
@@ -216,7 +184,12 @@ export const ChartWheel = memo(function ChartWheel({
       >
         <title id={titleId}>Natal Chart Wheel</title>
         <desc id={descId}>
-          Sidereal natal chart showing {chart.planets.length} planets across 12 zodiac signs.
+          {frame === 'both'
+            ? 'Sidereal and tropical zodiacs shown together. '
+            : frame === 'tropical'
+              ? 'Tropical zodiac. '
+              : 'Sidereal zodiac. '}
+          Natal chart showing {chart.planets.length} planets across 12 zodiac signs.
           {chart.houses ? ' House cusps included.' : ' No houses (birth time unknown).'}
         </desc>
 
@@ -238,61 +211,40 @@ export const ChartWheel = memo(function ChartWheel({
         {/* Background */}
         <circle cx={cx} cy={cy} r={outerR + 2} fill="url(#chartBg)" />
 
-        {/* ── Zodiac ring ── */}
-        <g aria-label="Zodiac signs">
-          {ZODIAC_SIGNS.map((sign, i) => {
-            const startAngle = i * 30 + chartRotation;
-            const endAngle = startAngle + 30;
-            const midAngle = startAngle + 15;
-
-            const outerPath = describeArc(cx, cy, zodiacOuterR, startAngle, endAngle);
-            const innerPath = describeArc(cx, cy, zodiacInnerR, endAngle, startAngle);
-
-            const outerStart = polarToCart(cx, cy, zodiacOuterR, startAngle);
-            const innerStart = polarToCart(cx, cy, zodiacInnerR, startAngle);
-            const outerEnd = polarToCart(cx, cy, zodiacOuterR, endAngle);
-            const innerEnd = polarToCart(cx, cy, zodiacInnerR, endAngle);
-
-            const sectorPath = [
-              `M ${outerStart.x} ${outerStart.y}`,
-              `A ${zodiacOuterR} ${zodiacOuterR} 0 0 1 ${outerEnd.x} ${outerEnd.y}`,
-              `L ${innerEnd.x} ${innerEnd.y}`,
-              `A ${zodiacInnerR} ${zodiacInnerR} 0 0 0 ${innerStart.x} ${innerStart.y}`,
-              'Z',
-            ].join(' ');
-
-            const glyphPt = polarToCart(cx, cy, (zodiacOuterR + zodiacInnerR) / 2, midAngle);
-
-            return (
-              <g key={sign} role="img" aria-label={sign}>
-                <path
-                  d={sectorPath}
-                  fill={SIGN_COLORS[sign]}
-                  fillOpacity={0.6}
-                  stroke="#ffffff"
-                  strokeWidth={0.3}
-                  strokeOpacity={0.15}
-                />
-                <text
-                  x={glyphPt.x}
-                  y={glyphPt.y}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fontSize={glyphSize * 1.2}
-                  fill={SIGN_TEXT_COLORS[sign]}
-                  fillOpacity={0.85}
-                  style={{ pointerEvents: 'none' }}
-                >
-                  {SIGN_GLYPHS[sign]}
-                </text>
-              </g>
-            );
-          })}
-        </g>
+        {/* ── Zodiac ring(s) ── */}
+        {frame !== 'tropical' && (
+          <ZodiacRing
+            cx={cx}
+            cy={cy}
+            innerR={zodiacInnerR}
+            outerR={isBoth ? bandSplitR : zodiacOuterR}
+            rotation={chartRotation}
+            glyphSize={glyphSize * (isBoth ? 0.95 : 1.2)}
+            label="Sidereal zodiac"
+          />
+        )}
+        {frame !== 'sidereal' && (
+          <ZodiacRing
+            cx={cx}
+            cy={cy}
+            innerR={isBoth ? bandSplitR : zodiacInnerR}
+            outerR={zodiacOuterR}
+            // The wheel plots planets by sidereal longitude, so a tropical
+            // sign boundary sits one ayanamsa earlier in wheel space. This is
+            // the only line in the component that knows the frames differ.
+            rotation={chartRotation - chart.ayanamsa}
+            glyphSize={glyphSize * (isBoth ? 0.95 : 1.2)}
+            label="Tropical zodiac"
+            opacity={isBoth ? 0.45 : 0.6}
+          />
+        )}
 
         {/* Outer ring border */}
         <circle cx={cx} cy={cy} r={zodiacOuterR} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={0.8} />
         <circle cx={cx} cy={cy} r={zodiacInnerR} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={0.8} />
+        {isBoth && (
+          <circle cx={cx} cy={cy} r={bandSplitR} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={0.8} />
+        )}
 
         {/* ── House cusps ── */}
         {showHouses && chart.houses && (
