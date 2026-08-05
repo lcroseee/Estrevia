@@ -925,7 +925,29 @@
     "degree": "Degree",
     "house": "House",
     "noTimeWarning": "Without birth time, houses and Ascendant cannot be calculated",
-    "breadcrumbCurrent": "Natal Chart Calculator"
+    "breadcrumbCurrent": "Natal Chart Calculator",
+    "zodiacFrame": {
+      "label": "Zodiac",
+      "sidereal": "Sidereal",
+      "tropical": "Tropical",
+      "both": "Both",
+      "cycleHint": "Zodiac: {current}. Activate for {next}",
+      "announce": "Zodiac frame: {current}",
+      "siderealCaption": "What you are beneath that",
+      "tropicalCaption": "Who you're becoming here",
+      "bothCaption": "Both layers at once",
+      "tableSidereal": "Sidereal",
+      "tableTropical": "Tropical",
+      "positionsHeading": "Planetary Positions",
+      "tableCaption": "Natal chart planetary positions. Click column headers to sort.",
+      "colPlanet": "Planet",
+      "colSign": "Sign",
+      "colDegree": "Degree",
+      "colHouse": "House",
+      "footerSidereal": "Sidereal (Lahiri ayanamsa: {ayanamsa}°)",
+      "footerTropical": "Tropical",
+      "footerBoth": "Sidereal (Lahiri ayanamsa: {ayanamsa}°) and tropical, side by side"
+    }
   },
   "passport": {
     "title": "Cosmic Passport",

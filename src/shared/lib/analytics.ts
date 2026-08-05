@@ -212,7 +212,11 @@ export const AnalyticsEvent = {
   // Chart
   CHART_CALCULATED: 'chart_calculated',
   CHART_SAVED: 'chart_saved',
-  CHART_TOGGLE_SIDEREAL: 'chart_toggle_sidereal',
+  // Replaces CHART_TOGGLE_SIDEREAL, which was registered here but had no
+  // caller anywhere in src/ — it never fired once. Registering a name is not
+  // the same as shipping an event; SP-A's verification step checks this one
+  // actually reaches PostHog.
+  ZODIAC_FRAME_CHANGED: 'zodiac_frame_changed',
   // Passport / viral
   PASSPORT_CREATED: 'passport_created',
   PASSPORT_VIEWED: 'passport_viewed',

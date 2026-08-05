@@ -925,7 +925,29 @@
     "degree": "Grado",
     "house": "Casa",
     "noTimeWarning": "Sin hora de nacimiento, las casas y el Ascendente no pueden calcularse",
-    "breadcrumbCurrent": "Calculadora de carta natal"
+    "breadcrumbCurrent": "Calculadora de carta natal",
+    "zodiacFrame": {
+      "label": "Zodiaco",
+      "sidereal": "Sideral",
+      "tropical": "Tropical",
+      "both": "Ambos",
+      "cycleHint": "Zodiaco: {current}. Activa para {next}",
+      "announce": "Marco zodiacal: {current}",
+      "siderealCaption": "Lo que eres por debajo de eso",
+      "tropicalCaption": "En quién te estás convirtiendo aquí",
+      "bothCaption": "Las dos capas a la vez",
+      "tableSidereal": "Sideral",
+      "tableTropical": "Tropical",
+      "positionsHeading": "Posiciones planetarias",
+      "tableCaption": "Posiciones planetarias de la carta natal. Haz clic en los encabezados para ordenar.",
+      "colPlanet": "Planeta",
+      "colSign": "Signo",
+      "colDegree": "Grado",
+      "colHouse": "Casa",
+      "footerSidereal": "Sideral (ayanamsa Lahiri: {ayanamsa}°)",
+      "footerTropical": "Tropical",
+      "footerBoth": "Sideral (ayanamsa Lahiri: {ayanamsa}°) y tropical, lado a lado"
+    }
   },
   "passport": {
     "title": "Pasaporte Cósmico",
