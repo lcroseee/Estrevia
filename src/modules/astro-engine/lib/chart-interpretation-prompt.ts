@@ -83,7 +83,10 @@ export function buildChartInterpretationPrompt(
   const chiron = find(Planet.Chiron);
 
   const hasHouses = chart.houses !== null && chart.houses !== undefined;
-  const ascSign = hasHouses ? longitudeToSign(chart.houses![0].degree) : null;
+  // chart.ascendant is the already-correct sidereal angle and was sitting
+  // unused beside this line. Deriving the sign from the tropical cusp made
+  // the paid reading name a different rising sign from the one on the wheel.
+  const ascSign = chart.ascendant?.sign ?? null;
 
   const topAspects: Aspect[] = chart.aspects
     .filter((a) => MAJOR_TYPES.has(a.type))
@@ -101,7 +104,10 @@ export function buildChartInterpretationPrompt(
   const aspectLine = (a: Aspect): string =>
     `- ${planetLabel(a.planet1)} ${a.type.toLowerCase()} ${planetLabel(a.planet2)} (orb ${Math.abs(a.orb).toFixed(1)}°)`;
 
-  const ascendantLine = hasHouses
+  // Guard on ascSign itself, not on hasHouses: the two can only disagree if a
+  // chart has cusps but no angle, and in that case naming a null Ascendant is
+  // worse than saying it is unknown.
+  const ascendantLine = ascSign
     ? `Ascendant: ${ascSign}`
     : 'Ascendant: unknown — birth time not provided';
 
@@ -109,7 +115,10 @@ export function buildChartInterpretationPrompt(
     ? `\n\nLife domains (12 houses):\n${chart
         .houses!.map(
           (cusp, i) =>
-            `- House ${i + 1}: cusp at ${longitudeToSign(cusp.degree)} ${(cusp.degree % 30).toFixed(1)}°`,
+            // siderealDegree % 30, not signDegree: signDegree is the integer
+            // part only, so using it here would drop the precision the old
+            // line carried and print every cusp as a whole degree.
+            `- House ${i + 1}: cusp at ${cusp.sign} ${(cusp.siderealDegree % 30).toFixed(1)}°`,
         )
         .join('\n')}`
     : '';

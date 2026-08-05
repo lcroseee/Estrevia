@@ -17,8 +17,9 @@ export function getPlanetHouse(planetDegree: number, cusps: HouseCusp[]): number
     const cusp = cusps[i]!;
     const nextCusp = cusps[(i + 1) % 12]!;
 
-    const start = cusp.degree;
-    const end = nextCusp.degree;
+    // Sidereal on both sides: the caller passes a sidereal planet longitude.
+    const start = cusp.siderealDegree;
+    const end = nextCusp.siderealDegree;
 
     if (start <= end) {
       // Normal case: no wrap-around

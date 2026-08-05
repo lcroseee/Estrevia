@@ -1,11 +1,27 @@
-import { HouseCusp, HouseSystem } from '@/shared/types/astrology';
+import { HouseSystem } from '@/shared/types/astrology';
 import { calcHouses } from './ephemeris';
 import { HOUSE_SYSTEMS } from './constants';
-import { absoluteToSignPosition } from './signs';
+
+/**
+ * A house cusp exactly as Swiss Ephemeris reports it.
+ *
+ * `sweph.houses()` is called without SEFLG_SIDEREAL, so cusps are always
+ * tropical. This type says so in its field name. Converting to sidereal and
+ * deriving signs is chart.ts's job — it owns the ayanamsa and already does
+ * the same for planets and angles. Houses were the sole exception to that
+ * pattern, which is why they ended up in a different frame from everything
+ * they were compared against.
+ */
+export interface TropicalCusp {
+  house: number;
+  tropicalDegree: number;
+}
 
 export interface HouseCalculationResult {
-  cusps: HouseCusp[];
+  cusps: TropicalCusp[];
+  /** Tropical Ascendant longitude. */
   ascendant: number;
+  /** Tropical Midheaven longitude. */
   midheaven: number;
 }
 
@@ -43,15 +59,10 @@ export function calculateHouses(
 
   // houseData.cusps is 0-indexed array of 12 house cusp longitudes
   // houseData.ascmc[0] = Ascendant, houseData.ascmc[1] = Midheaven
-  const cusps: HouseCusp[] = houseData.cusps.map((degree, index) => {
-    const pos = absoluteToSignPosition(degree);
-    return {
-      house: index + 1,
-      degree,
-      sign: pos.sign,
-      signDegree: pos.signDegree,
-    };
-  });
+  const cusps: TropicalCusp[] = houseData.cusps.map((degree, index) => ({
+    house: index + 1,
+    tropicalDegree: degree,
+  }));
 
   return {
     cusps,

@@ -36,9 +36,16 @@ const planet = (
   house,
 });
 
-const cusp = (house: number, degree: number, sign: Sign, signDegree: number): HouseCusp => ({
+const cusp = (
+  house: number,
+  siderealDegree: number,
+  sign: Sign,
+  signDegree: number,
+): HouseCusp => ({
   house,
-  degree,
+  siderealDegree,
+  // Fixture only — the real ayanamsa is applied in chart.ts, not here.
+  tropicalDegree: siderealDegree,
   sign,
   signDegree,
 });

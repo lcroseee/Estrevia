@@ -50,7 +50,15 @@ describe('PositionTable — no-houses chart honesty', () => {
     render(
       <PositionTable
         chart={chartFixture({
-          houses: [{ house: 1, degree: 100, sign: Sign.Leo, signDegree: 10 }],
+          houses: [
+            {
+              house: 1,
+              siderealDegree: 100,
+              tropicalDegree: 100,
+              sign: Sign.Leo,
+              signDegree: 10,
+            },
+          ],
           ascendant: pos(Planet.Ascendant, { house: 1 }),
         })}
       />,

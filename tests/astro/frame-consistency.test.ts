@@ -63,9 +63,11 @@ describe('zodiac frame consistency', () => {
   });
 
   it('derives each cusp sign from its sidereal degree', () => {
+    // signDegree is the INTEGER degree within the sign (0-29); the fraction
+    // lives in minutes/seconds. See absoluteToSignPosition.
     const chart = calculateChart({ ...PROBE });
     for (const cusp of chart.houses!) {
-      expect(cusp.signDegree).toBeCloseTo(cusp.siderealDegree % 30, 6);
+      expect(cusp.signDegree).toBe(Math.floor(cusp.siderealDegree % 30));
     }
   });
 

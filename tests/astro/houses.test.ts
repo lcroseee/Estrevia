@@ -39,20 +39,16 @@ describe('House calculation — normal latitude', () => {
     const result = calculateHouses(jd, 48.85, 2.35, HouseSystem.Placidus);
     expect(result).not.toBeNull();
     for (const cusp of result!.cusps) {
-      expect(cusp.degree).toBeGreaterThanOrEqual(0);
-      expect(cusp.degree).toBeLessThan(360);
+      expect(cusp.tropicalDegree).toBeGreaterThanOrEqual(0);
+      expect(cusp.tropicalDegree).toBeLessThan(360);
     }
   });
 
-  it('each house cusp has a valid sign', () => {
-    const jd = jdFromUtc('2000-01-01', '12:00');
-    const result = calculateHouses(jd, 40.71, -74.01, HouseSystem.Placidus);
-    expect(result).not.toBeNull();
-    const validSigns = Object.values(Sign);
-    for (const cusp of result!.cusps) {
-      expect(validSigns).toContain(cusp.sign);
-    }
-  });
+  // The cusp-sign validity test moved to tests/astro/frame-consistency.test.ts.
+  // calculateHouses now returns pure sweph geometry (TropicalCusp) and derives
+  // no signs at all — a sign here would have been a tropical artefact sitting
+  // beside a sidereal chart. chart.ts owns the frame, so that is where the
+  // assertion belongs.
 
   it('house numbers are 1 through 12', () => {
     const jd = jdFromUtc('2000-01-01', '12:00');
@@ -155,7 +151,7 @@ describe('House cusp ordering', () => {
     const result = calculateHouses(jd, 51.5, -0.1, HouseSystem.Placidus);
     expect(result).not.toBeNull();
 
-    const degrees = result!.cusps.map(c => c.degree);
+    const degrees = result!.cusps.map(c => c.tropicalDegree);
 
     // Count how many cusps "wrap" (next cusp < current cusp)
     let wraps = 0;
@@ -173,8 +169,8 @@ describe('House cusp ordering', () => {
     const result = calculateHouses(jd, 51.5, -0.1, HouseSystem.Placidus);
     expect(result).not.toBeNull();
 
-    const h1 = result!.cusps.find(c => c.house === 1)!.degree;
-    const h7 = result!.cusps.find(c => c.house === 7)!.degree;
+    const h1 = result!.cusps.find(c => c.house === 1)!.tropicalDegree;
+    const h7 = result!.cusps.find(c => c.house === 7)!.tropicalDegree;
 
     // Angular separation between H1 and H7 should be ~180°
     const diff = Math.abs(h7 - h1);
@@ -188,8 +184,8 @@ describe('House cusp ordering', () => {
     const result = calculateHouses(jd, 51.5, -0.1, HouseSystem.Placidus);
     expect(result).not.toBeNull();
 
-    const h4 = result!.cusps.find(c => c.house === 4)!.degree;
-    const h10 = result!.cusps.find(c => c.house === 10)!.degree;
+    const h4 = result!.cusps.find(c => c.house === 4)!.tropicalDegree;
+    const h10 = result!.cusps.find(c => c.house === 10)!.tropicalDegree;
 
     const diff = Math.abs(h10 - h4);
     const arc = diff > 180 ? 360 - diff : diff;
@@ -205,8 +201,8 @@ describe('House calculation — southern hemisphere', () => {
     expect(result).not.toBeNull();
     expect(result!.cusps).toHaveLength(12);
     for (const cusp of result!.cusps) {
-      expect(cusp.degree).toBeGreaterThanOrEqual(0);
-      expect(cusp.degree).toBeLessThan(360);
+      expect(cusp.tropicalDegree).toBeGreaterThanOrEqual(0);
+      expect(cusp.tropicalDegree).toBeLessThan(360);
     }
   });
 

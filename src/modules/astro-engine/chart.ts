@@ -3,6 +3,7 @@ import './ephe-path';
 
 import {
   ChartResult,
+  HouseCusp,
   HouseSystem,
   Planet,
   PlanetPosition,
@@ -12,7 +13,7 @@ import { getUtcOffset } from './timezone';
 import { calcPlanet } from './ephemeris';
 import { getLahiriAyanamsa, tropicalToSidereal } from './sidereal';
 import { absoluteToSignPosition } from './signs';
-import { calculateHouses } from './houses';
+import { calculateHouses, type TropicalCusp } from './houses';
 import { calculateAspects } from './aspects';
 import { getPlanetHouse } from './planet-in-house';
 import { PLANET_TO_SWEPH_ID } from './constants';
@@ -96,6 +97,25 @@ function buildAnglePosition(
 }
 
 /**
+ * Project a tropical cusp into the sidereal frame and derive its sign.
+ *
+ * Mirrors what buildPlanetPosition/buildAnglePosition already do for bodies
+ * and angles. Houses were the sole exception to that pattern, which is why
+ * they ended up in a different frame from everything they were compared to.
+ */
+function buildHouseCusp(cusp: TropicalCusp, ayanamsa: number): HouseCusp {
+  const siderealDegree = tropicalToSidereal(cusp.tropicalDegree, ayanamsa);
+  const pos = absoluteToSignPosition(siderealDegree);
+  return {
+    house: cusp.house,
+    siderealDegree,
+    tropicalDegree: cusp.tropicalDegree,
+    sign: pos.sign,
+    signDegree: pos.signDegree,
+  };
+}
+
+/**
  * Main natal chart calculation function.
  *
  * Step 1: Parse date/time. If no time → noon local time.
@@ -173,6 +193,7 @@ export function calculateChart(input: ChartInput): ChartResult {
 
   // Step 6: Calculate houses (only when birth time is known)
   let housesResult: ReturnType<typeof calculateHouses> = null;
+  let siderealCusps: HouseCusp[] | null = null;
   let ascendant: PlanetPosition | null = null;
   let midheaven: PlanetPosition | null = null;
   let effectiveHouseSystem = houseSystem;
@@ -188,9 +209,15 @@ export function calculateChart(input: ChartInput): ChartResult {
     }
 
     if (housesResult !== null) {
-      // Assign planets to houses
+      // Project cusps into the sidereal frame FIRST. Planet longitudes are
+      // sidereal, so pairing them with raw tropical cusps offsets every house
+      // assignment by the ayanamsa (~23.7° in 1990 — most planets land one
+      // house off).
+      siderealCusps = housesResult.cusps.map((c) => buildHouseCusp(c, ayanamsa));
+
+      // Assign planets to houses — both sides now in the same frame
       for (const position of planetPositions) {
-        position.house = getPlanetHouse(position.absoluteDegree, housesResult.cusps);
+        position.house = getPlanetHouse(position.absoluteDegree, siderealCusps);
       }
 
       // Build Ascendant and Midheaven as PlanetPosition-like objects.
@@ -216,7 +243,7 @@ export function calculateChart(input: ChartInput): ChartResult {
 
   return {
     planets: planetPositions,
-    houses: housesResult ? housesResult.cusps : null,
+    houses: siderealCusps,
     aspects,
     ascendant,
     midheaven,

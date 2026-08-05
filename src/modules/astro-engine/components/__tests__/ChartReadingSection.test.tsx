@@ -36,8 +36,15 @@ function planetPos(
   };
 }
 
-function houseCusp(num: number, degree: number, sign: Sign): HouseCusp {
-  return { house: num, degree, sign, signDegree: degree % 30 };
+function houseCusp(num: number, siderealDegree: number, sign: Sign): HouseCusp {
+  return {
+    house: num,
+    siderealDegree,
+    // Fixture only — the real ayanamsa is applied in chart.ts, not here.
+    tropicalDegree: siderealDegree,
+    sign,
+    signDegree: Math.floor(siderealDegree % 30),
+  };
 }
 
 const ASC: PlanetPosition = planetPos(Planet.Ascendant, Sign.Aries, 0, 0, 1);

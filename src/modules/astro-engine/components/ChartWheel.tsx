@@ -298,7 +298,10 @@ export const ChartWheel = memo(function ChartWheel({
         {showHouses && chart.houses && (
           <g aria-label="House cusps">
             {chart.houses.map((cusp) => {
-              const angle = eclipticToWheelAngle(cusp.degree, chartRotation);
+              // Sidereal, matching the rotation (derived from the sidereal ASC)
+              // and the planet glyphs. Using the tropical value drew the
+              // 1st-house line ~24° away from the ASC marker.
+              const angle = eclipticToWheelAngle(cusp.siderealDegree, chartRotation);
               const outer = polarToCart(cx, cy, zodiacInnerR, angle);
               const inner = polarToCart(cx, cy, houseInnerR * 0.6, angle);
               const labelPt = polarToCart(cx, cy, houseInnerR * 0.73, angle);
