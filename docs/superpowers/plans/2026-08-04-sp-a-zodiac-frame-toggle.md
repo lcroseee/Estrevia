@@ -99,15 +99,15 @@ describe('projectChart', () => {
   it('recomputes minutes rather than carrying them over', () => {
     // The exact defect SP-0 deleted from PositionTable: a tropical degree
     // shown beside sidereal minutes and a sidereal sign.
+    //
+    // NOTE: signDegree is the INTEGER degree within the sign (0-29); the
+    // fraction lives in minutes/seconds. See absoluteToSignPosition. Comparing
+    // signDegree against a fractional `% 30` is wrong and will fail.
     const trop = projectChart(chart, 'tropical');
-    for (let i = 0; i < chart.planets.length; i++) {
-      const expectedMinutes = Math.floor(
-        ((trop.planets[i]!.absoluteDegree % 30) - trop.planets[i]!.signDegree) * 60 + 1e-9,
-      );
-      expect(trop.planets[i]!.minutes).toBeGreaterThanOrEqual(0);
-      expect(trop.planets[i]!.minutes).toBeLessThan(60);
-      expect(Number.isInteger(trop.planets[i]!.minutes)).toBe(true);
-      void expectedMinutes;
+    for (const p of trop.planets) {
+      const within = p.absoluteDegree % 30;
+      expect(p.signDegree).toBe(Math.floor(within));
+      expect(p.minutes).toBe(Math.floor((within - Math.floor(within)) * 60));
     }
   });
 
@@ -146,9 +146,9 @@ describe('projectChart', () => {
     const trop = projectChart(chart, 'tropical');
     for (let i = 0; i < chart.houses!.length; i++) {
       expect(trop.houses![i]!.sign).toBeDefined();
-      expect(trop.houses![i]!.signDegree).toBeCloseTo(
-        chart.houses![i]!.tropicalDegree % 30,
-        6,
+      // signDegree is the integer degree in sign, not a fraction.
+      expect(trop.houses![i]!.signDegree).toBe(
+        Math.floor(chart.houses![i]!.tropicalDegree % 30),
       );
       // Raw longitudes are frame-independent reference data — unchanged.
       expect(trop.houses![i]!.tropicalDegree).toBe(chart.houses![i]!.tropicalDegree);
