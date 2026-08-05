@@ -195,8 +195,11 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
     lon: searchParams.get('lon'),
     place: searchParams.get('place'),
     tz: searchParams.get('tz'),
-    z: searchParams.get('z'),
   });
+
+  // Read during render (not from the ref) so the lazy useState initializer
+  // below stays free of ref access.
+  const initialFrameParam = searchParams.get(FRAME_PARAM);
 
   const hasInitialParams = !!(
     mountParamsRef.current.bd &&
@@ -217,7 +220,10 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
   // ?z is the source of truth so a shared link carries the sender's view;
   // localStorage is only the default for a chart opened without it.
   const [frame, setFrame] = useState<FrameState>(() => {
-    const fromUrl = PARAM_TO_FRAME[mountParamsRef.current.z ?? ''];
+    // searchParams, not mountParamsRef: a lazy useState initializer runs during
+    // render, and reading a ref there is a React rule violation (and unsound
+    // under concurrent rendering). searchParams is a hook value and is safe.
+    const fromUrl = PARAM_TO_FRAME[initialFrameParam ?? ''];
     if (fromUrl) return fromUrl;
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem(FRAME_STORAGE_KEY);
