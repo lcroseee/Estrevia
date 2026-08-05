@@ -45,8 +45,10 @@ vi.mock('@/shared/lib/db', () => ({
       }),
     }),
     insert: () => ({
-      values: () => ({
-        onConflictDoNothing: () => mockInsertChartReading(),
+      // Forward the row so tests can assert WHAT was written, not merely that
+      // something was. Without this the cache-key columns are unobservable.
+      values: (row: unknown) => ({
+        onConflictDoNothing: () => mockInsertChartReading(row),
       }),
     }),
   }),
@@ -70,6 +72,50 @@ function makeRequest(body: unknown): Request {
     body: JSON.stringify(body),
   });
 }
+
+/** Shared chart fixture — hoisted so the variant tests reuse it. */
+// NOTE: ayanamsa is a NUMBER and houses are HouseCusp OBJECTS in the real
+// ChartResult. This fixture used to say `ayanamsa: 'lahiri'` and
+// `houses: [0, 30, ...]`, which no assertion ever touched — so the mock
+// silently disagreed with the type it stood in for, and the first prompt to
+// actually read those fields threw.
+const FIXTURE_CHART_DATA = {
+          system: 'sidereal', houseSystem: 'Placidus', ayanamsa: 24.1,
+          planets: [
+            { planet: 'Sun', sign: 'Aries', longitude: 12, signDegree: 12, house: 1, retrograde: false },
+            { planet: 'Moon', sign: 'Cancer', longitude: 95, signDegree: 5, house: 4, retrograde: false },
+            { planet: 'Mercury', sign: 'Pisces', longitude: 340, signDegree: 10, house: 12, retrograde: true },
+            { planet: 'Venus', sign: 'Taurus', longitude: 45, signDegree: 15, house: 2, retrograde: false },
+            { planet: 'Mars', sign: 'Leo', longitude: 130, signDegree: 10, house: 5, retrograde: false },
+            { planet: 'Jupiter', sign: 'Sagittarius', longitude: 250, signDegree: 10, house: 9, retrograde: false },
+            { planet: 'Saturn', sign: 'Capricorn', longitude: 290, signDegree: 20, house: 10, retrograde: false },
+            { planet: 'Uranus', sign: 'Aquarius', longitude: 310, signDegree: 10, house: 11, retrograde: false },
+            { planet: 'Neptune', sign: 'Pisces', longitude: 345, signDegree: 15, house: 12, retrograde: false },
+            { planet: 'Pluto', sign: 'Scorpio', longitude: 220, signDegree: 10, house: 8, retrograde: false },
+            { planet: 'North Node', sign: 'Cancer', longitude: 100, signDegree: 10, house: 4, retrograde: true },
+            { planet: 'Chiron', sign: 'Virgo', longitude: 160, signDegree: 10, house: 6, retrograde: false },
+          ],
+          houses: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(
+            (deg, i) => ({
+              house: i + 1,
+              siderealDegree: deg,
+              tropicalDegree: (deg + 24.1) % 360,
+              sign: ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'][Math.floor(deg / 30)],
+              signDegree: deg % 30,
+            }),
+          ),
+          ascendant: {
+            planet: 'Ascendant', absoluteDegree: 0, tropicalDegree: 24.1,
+            sign: 'Aries', signDegree: 0, minutes: 0, seconds: 0,
+            isRetrograde: false, speed: 0, house: 1,
+          },
+          midheaven: {
+            planet: 'Midheaven', absoluteDegree: 270, tropicalDegree: 294.1,
+            sign: 'Capricorn', signDegree: 0, minutes: 0, seconds: 0,
+            isRetrograde: false, speed: 0, house: 10,
+          },
+          aspects: [{ planet1: 'Sun', planet2: 'Moon', type: 'square', orb: 0.5, applying: true }],
+        };
 
 describe('POST /api/v1/chart/interpret', () => {
   it('returns 401 when unauthenticated', async () => {
@@ -135,25 +181,7 @@ describe('POST /api/v1/chart/interpret', () => {
     mockSelectNatalChart.mockResolvedValueOnce([
       {
         id: 'abc',
-        chartData: {
-          system: 'sidereal', houseSystem: 'Placidus', ayanamsa: 'lahiri',
-          planets: [
-            { planet: 'Sun', sign: 'Aries', longitude: 12, signDegree: 12, house: 1, retrograde: false },
-            { planet: 'Moon', sign: 'Cancer', longitude: 95, signDegree: 5, house: 4, retrograde: false },
-            { planet: 'Mercury', sign: 'Pisces', longitude: 340, signDegree: 10, house: 12, retrograde: true },
-            { planet: 'Venus', sign: 'Taurus', longitude: 45, signDegree: 15, house: 2, retrograde: false },
-            { planet: 'Mars', sign: 'Leo', longitude: 130, signDegree: 10, house: 5, retrograde: false },
-            { planet: 'Jupiter', sign: 'Sagittarius', longitude: 250, signDegree: 10, house: 9, retrograde: false },
-            { planet: 'Saturn', sign: 'Capricorn', longitude: 290, signDegree: 20, house: 10, retrograde: false },
-            { planet: 'Uranus', sign: 'Aquarius', longitude: 310, signDegree: 10, house: 11, retrograde: false },
-            { planet: 'Neptune', sign: 'Pisces', longitude: 345, signDegree: 15, house: 12, retrograde: false },
-            { planet: 'Pluto', sign: 'Scorpio', longitude: 220, signDegree: 10, house: 8, retrograde: false },
-            { planet: 'North Node', sign: 'Cancer', longitude: 100, signDegree: 10, house: 4, retrograde: true },
-            { planet: 'Chiron', sign: 'Virgo', longitude: 160, signDegree: 10, house: 6, retrograde: false },
-          ],
-          houses: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330],
-          aspects: [{ planet1: 'Sun', planet2: 'Moon', type: 'square', orb: 0.5, applying: true }],
-        },
+        chartData: FIXTURE_CHART_DATA,
       },
     ]);
 
@@ -181,6 +209,50 @@ describe('POST /api/v1/chart/interpret', () => {
     expect(sent.thinking).toEqual({ type: 'disabled' });
     expect(sent.max_tokens).toBe(3400);
 
+    fetchSpy.mockRestore();
+  });
+
+  it('defaults to the natal variant when the body omits it', async () => {
+    mockRequirePremium.mockResolvedValueOnce({ userId: 'u1' });
+    mockSelectChartReading.mockResolvedValueOnce([{ body: 'cached natal' }]);
+
+    const { POST } = await import('../route');
+    const res = await POST(makeRequest({ chartId: 'abc', locale: 'en' }));
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.reading).toBe('cached natal');
+  });
+
+  it('rejects an unknown variant', async () => {
+    mockRequirePremium.mockResolvedValueOnce({ userId: 'u1' });
+    const { POST } = await import('../route');
+    const res = await POST(
+      makeRequest({ chartId: 'abc', locale: 'en', variant: 'horoscope' }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('caches the comparative variant under its own key', async () => {
+    mockRequirePremium.mockResolvedValueOnce({ userId: 'u1' });
+    mockSelectChartReading.mockResolvedValueOnce([]); // comparative not cached
+    mockSelectNatalChart.mockResolvedValueOnce([
+      { id: 'abc', chartData: FIXTURE_CHART_DATA },
+    ]);
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ content: [{ type: 'text', text: 'comparative body' }] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+
+    const { POST } = await import('../route');
+    const res = await POST(
+      makeRequest({ chartId: 'abc', locale: 'en', variant: 'comparative' }),
+    );
+    expect(res.status).toBe(200);
+    expect(mockInsertChartReading).toHaveBeenCalledWith(
+      expect.objectContaining({ variant: 'comparative' }),
+    );
     fetchSpy.mockRestore();
   });
 

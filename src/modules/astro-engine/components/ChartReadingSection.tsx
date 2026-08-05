@@ -13,6 +13,12 @@ import { Planet, type ChartResult } from '@/shared/types';
 interface ChartReadingSectionProps {
   chartId: string;
   chart: ChartResult;
+  /**
+   * Request the sidereal/tropical comparative section instead of the natal
+   * reading. Cached separately, so a user who never leaves sidereal never
+   * triggers — and never pays for — a comparative generation.
+   */
+  comparative?: boolean;
 }
 
 interface InterpretResponse {
@@ -21,7 +27,11 @@ interface InterpretResponse {
   error: string | null;
 }
 
-export function ChartReadingSection({ chartId, chart }: ChartReadingSectionProps) {
+export function ChartReadingSection({
+  chartId,
+  chart,
+  comparative = false,
+}: ChartReadingSectionProps) {
   const t = useTranslations('chartReading');
   const locale = useLocale() as 'en' | 'es';
   const pathname = usePathname();
@@ -47,7 +57,7 @@ export function ChartReadingSection({ chartId, chart }: ChartReadingSectionProps
 
     const result = await postJson<InterpretResponse>(
       '/api/v1/chart/interpret',
-      { chartId, locale },
+      { chartId, locale, variant: comparative ? 'comparative' : 'natal' },
     );
     setIsGenerating(false);
 
@@ -77,7 +87,7 @@ export function ChartReadingSection({ chartId, chart }: ChartReadingSectionProps
         setError(t('errorGeneric'));
         break;
     }
-  }, [isPro, chartId, locale, t]);
+  }, [isPro, chartId, locale, comparative, t]);
 
   if (subLoading) {
     return (

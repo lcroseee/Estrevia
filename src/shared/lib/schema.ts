@@ -80,18 +80,27 @@ export const chartReadings = pgTable(
       .references(() => natalCharts.id, { onDelete: 'cascade' }),
     locale: text('locale', { enum: ['en', 'es'] }).notNull(),
     body: text('body').notNull(),
+    /**
+     * Which section this row holds. 'natal' is the original single reading;
+     * 'comparative' is SP-C's sidereal/tropical two-layer section. Existing
+     * rows take the default, so migration 0020 needs no backfill.
+     */
+    variant: text('variant', { enum: ['natal', 'comparative'] })
+      .notNull()
+      .default('natal'),
     // The route always supplies `model` explicitly, so this default only
-    // covers hand-written inserts. The DB-level default still reads
-    // 'claude-sonnet-4-20250514' until migration 0020 alters it.
+    // covers hand-written inserts. Migration 0020 brings the DB-level default
+    // into line with this one.
     model: text('model').notNull().default(ANTHROPIC_MODEL),
     generatedAt: timestamp('generated_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (t) => ({
-    uniqChartLocale: uniqueIndex('chart_readings_chart_locale_uniq').on(
+    uniqChartLocaleVariant: uniqueIndex('chart_readings_chart_locale_variant_uniq').on(
       t.chartId,
       t.locale,
+      t.variant,
     ),
   }),
 );

@@ -13,8 +13,25 @@ describe('chartReadings schema', () => {
     const cols = getTableColumns(chartReadings);
     const names = Object.keys(cols).sort();
     expect(names).toEqual(
-      ['body', 'chartId', 'generatedAt', 'id', 'locale', 'model'].sort(),
+      ['body', 'chartId', 'generatedAt', 'id', 'locale', 'model', 'variant'].sort(),
     );
+  });
+
+  it('keys the cache by variant as well as chart and locale', () => {
+    // Without the variant in the unique index, SP-C's comparative section
+    // would collide with the natal reading for the same chart and locale.
+    const { indexes } = getTableConfig(chartReadings);
+    const unique = indexes.find((i) => i.config.unique);
+    expect(unique).toBeDefined();
+    expect(unique!.config.columns.map((c) => (c as { name: string }).name).sort()).toEqual(
+      ['chart_id', 'locale', 'variant'],
+    );
+  });
+
+  it('defaults variant to natal so pre-SP-C rows keep their meaning', () => {
+    const cols = getTableColumns(chartReadings);
+    expect(cols.variant.default).toBe('natal');
+    expect(cols.variant.notNull).toBe(true);
   });
 
   it('chartId references natal_charts.id', () => {

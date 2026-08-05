@@ -5,6 +5,7 @@ import {
   type ChartResult,
   type PlanetPosition,
 } from '@/shared/types';
+import { projectChart } from '../zodiac-frame';
 
 /**
  * Sidereal sign names in zodiacal order. Indexed by `floor(longitude / 30)`
@@ -61,9 +62,19 @@ const MAJOR_TYPES = new Set<AspectType>([
  * are dropped to keep the prompt focused and the response within the
  * `max_tokens` budget.
  */
+/**
+ * Which section of the reading to generate.
+ *
+ * 'natal' is the original single reading. 'comparative' is SP-C's two-layer
+ * sidereal/tropical section. They are cached separately — see the variant
+ * column on chart_readings.
+ */
+export type ReadingVariant = 'natal' | 'comparative';
+
 export function buildChartInterpretationPrompt(
   chart: ChartResult,
   locale: 'en' | 'es',
+  variant: ReadingVariant = 'natal',
 ): string {
   const planets = chart.planets;
   const find = (name: Planet): PlanetPosition | undefined =>
@@ -125,7 +136,11 @@ export function buildChartInterpretationPrompt(
 
   const localeInstruction =
     locale === 'es'
-      ? 'Write in español neutro LATAM, using the tú form (not vosotros, not usted).'
+      ? 'Write in español neutro LATAM, using the tú form (not vosotros, not usted). ' +
+        // Without this the model writes "Géminis" and "Escorpio", which
+        // contradicts the sign names rendered everywhere else in the ES UI.
+        // Planet names ARE translated; sign names are not. See CLAUDE.md.
+        'Keep every zodiac sign name in English exactly as given (Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn, Aquarius, Pisces) — do not translate them. Planet names should be in Spanish.'
       : 'Write in English.';
 
   // When houses are missing we ask the model to skip the Ascendant / houses
@@ -134,6 +149,47 @@ export function buildChartInterpretationPrompt(
   const ascendantConstraint = hasHouses
     ? ''
     : '\n- Do not reference houses or the Ascendant beyond noting the birth time is unknown.';
+
+  if (variant === 'comparative') {
+    const tropical = projectChart(chart, 'tropical');
+    const pair = (planet: Planet, label: string): string => {
+      const sid =
+        planet === Planet.Ascendant
+          ? chart.ascendant
+          : chart.planets.find((p) => p.planet === planet);
+      const tro =
+        planet === Planet.Ascendant
+          ? tropical.ascendant
+          : tropical.planets.find((p) => p.planet === planet);
+      if (!sid || !tro) return `${label}: unknown`;
+      return sid.sign === tro.sign
+        ? `${label}: ${sid.sign} in both systems`
+        : `${label}: sidereal ${sid.sign}, tropical ${tro.sign}`;
+    };
+
+    return `You are an expert astrologer writing for a reader who has just discovered that their chart reads differently in two zodiac systems.
+
+The two systems differ by a constant offset (the Lahiri ayanamsa, ${chart.ayanamsa.toFixed(2)}° at this moment). The aspects and the house numbers are identical in both — only the sign a body falls in can change.
+
+Frame this as two layers of one person, not as two competing claims:
+- The TROPICAL placement describes who they are becoming here: the shaping that incarnation, season and earthly life do to them.
+- The SIDEREAL placement describes what they are beneath that shaping: the fixed-star reckoning, what they were before and under the incarnational layer.
+
+Their placements:
+${pair(Planet.Sun, 'Sun')}
+${pair(Planet.Moon, 'Moon')}
+${pair(Planet.Ascendant, 'Ascendant')}
+
+Write three short sections, one per body, skipping any marked unknown. For each, read the two placements against each other: what the incarnational layer is shaping, and what sits underneath it. Where both systems agree on a body, say so plainly and treat the agreement as meaningful rather than as an absence.
+
+${localeInstruction}
+
+Constraints:
+- Never present one system as more correct than the other. They answer different questions.
+- Do not give medical, financial, legal or psychiatric advice, and do not imply any.
+- End with one sentence noting this is a tool for self-reflection and symbolic insight, and is not professional, medical, financial or legal advice.
+- No headings beyond the three body names. No bullet lists. Plain prose.`;
+  }
 
   return `You are an expert sidereal astrologer (Lahiri ayanamsa) interpreting a natal chart in the Hermetic-Kabbalistic-Thelemic tradition.
 

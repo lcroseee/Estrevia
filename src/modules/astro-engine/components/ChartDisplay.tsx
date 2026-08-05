@@ -550,6 +550,14 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
             aria-hidden="true"
           />
           <ChartReadingSection chartId={chartId} chart={chart} />
+
+          {/* Comparative section — Pro-gated by ChartReadingSection itself,
+              and only mounted once the user has engaged the toggle, so a
+              sidereal-only visitor never triggers a paid generation.
+              `chart` (raw sidereal) again: the prompt projects internally. */}
+          {frame !== 'sidereal' && (
+            <ChartReadingSection chartId={chartId} chart={chart} comparative />
+          )}
         </>
       )}
 

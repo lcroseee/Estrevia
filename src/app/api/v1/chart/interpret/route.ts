@@ -18,6 +18,11 @@ import type { ChartResult } from '@/shared/types';
 const interpretSchema = z.object({
   chartId: z.string().min(1).max(64),
   locale: z.enum(['en', 'es']).default('en'),
+  /**
+   * Which section to generate. Defaults to 'natal' so every caller written
+   * before SP-C keeps working unchanged.
+   */
+  variant: z.enum(['natal', 'comparative']).default('natal'),
 });
 
 /**
@@ -86,6 +91,9 @@ export async function POST(request: Request) {
       and(
         eq(chartReadings.chartId, body.chartId),
         eq(chartReadings.locale, body.locale),
+        // Part of the cache key since migration 0020 — a natal and a
+        // comparative reading of the same chart coexist.
+        eq(chartReadings.variant, body.variant),
       ),
     )
     .limit(1);
@@ -126,7 +134,7 @@ export async function POST(request: Request) {
   }
 
   const chartData = rows[0].chartData as ChartResult;
-  const prompt = buildChartInterpretationPrompt(chartData, body.locale);
+  const prompt = buildChartInterpretationPrompt(chartData, body.locale, body.variant);
 
   try {
     const response = await fetch(ANTHROPIC_MESSAGES_URL, {
@@ -167,6 +175,7 @@ export async function POST(request: Request) {
           id: nanoid(),
           chartId: body.chartId,
           locale: body.locale,
+          variant: body.variant,
           body: reading,
           model: ANTHROPIC_MODEL,
         })

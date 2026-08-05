@@ -11,6 +11,7 @@ import {
 } from '@/shared/types';
 import { buildChartInterpretationPrompt } from '../chart-interpretation-prompt';
 import { calculateChart } from '../../chart';
+import { projectChart } from '../../zodiac-frame';
 
 /**
  * Synthetic test fixture — no real PII. Values chosen so the Ascendant
@@ -168,6 +169,67 @@ describe('prompt zodiac frame (SP-0)', () => {
     for (const cusp of chart.houses!) {
       expect(prompt).toContain(`House ${cusp.house}: cusp at ${cusp.sign}`);
     }
+  });
+
+  it('defaults to the natal variant, so existing callers are unaffected', () => {
+    expect(buildChartInterpretationPrompt(chart, 'en')).toBe(
+      buildChartInterpretationPrompt(chart, 'en', 'natal'),
+    );
+  });
+
+  it('names both frames in the comparative variant', () => {
+    const trop = projectChart(chart, 'tropical');
+    const prompt = buildChartInterpretationPrompt(chart, 'en', 'comparative');
+    expect(prompt).toContain(chart.ascendant!.sign);
+    expect(prompt).toContain(trop.ascendant!.sign);
+    expect(prompt.toLowerCase()).toContain('sidereal');
+    expect(prompt.toLowerCase()).toContain('tropical');
+  });
+
+  it('carries the founder framing into the comparative variant', () => {
+    const prompt = buildChartInterpretationPrompt(chart, 'en', 'comparative').toLowerCase();
+    expect(prompt).toContain('becoming');
+    expect(prompt).toContain('beneath');
+  });
+
+  it('tells the model to treat an agreeing body as meaningful, not missing', () => {
+    // This chart's Sun is Gemini in both frames, so the branch is exercised.
+    const prompt = buildChartInterpretationPrompt(chart, 'en', 'comparative');
+    expect(prompt).toMatch(/Sun: \w+ in both systems|Sun: sidereal \w+, tropical \w+/);
+  });
+
+  it('keeps the no-advice constraint in both variants', () => {
+    for (const v of ['natal', 'comparative'] as const) {
+      const prompt = buildChartInterpretationPrompt(chart, 'en', v).toLowerCase();
+      // [\s\S] rather than the `s` flag: the tsconfig target predates it.
+      expect(prompt).toMatch(/not[\s\S]*(medical|financial|legal)/);
+    }
+  });
+
+  it('refuses to rank one system above the other', () => {
+    const prompt = buildChartInterpretationPrompt(chart, 'en', 'comparative');
+    expect(prompt).toContain('Never present one system as more correct');
+  });
+
+  it('honours the Spanish locale branch in the comparative variant', () => {
+    expect(buildChartInterpretationPrompt(chart, 'es', 'comparative')).toContain(
+      'español neutro LATAM',
+    );
+  });
+
+  it('is pure across both variants', () => {
+    expect(buildChartInterpretationPrompt(chart, 'en', 'comparative')).toBe(
+      buildChartInterpretationPrompt(chart, 'en', 'comparative'),
+    );
+  });
+
+  it('omits the Ascendant line when there is no birth time', () => {
+    const noTime = calculateChart({
+      date: '1990-06-15', time: null, latitude: 40.7128, longitude: -74.006,
+      timezone: 'America/New_York', houseSystem: HouseSystem.Placidus,
+    });
+    const prompt = buildChartInterpretationPrompt(noTime, 'en', 'comparative');
+    expect(prompt).toContain('Ascendant: unknown');
   });
 
   it('keeps sub-degree precision on the cusp longitudes', () => {

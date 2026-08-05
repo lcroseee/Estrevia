@@ -141,6 +141,13 @@
       "when": 1785762284365,
       "tag": "0019_avatars",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1785763284365,
+      "tag": "0020_reading_variant",
+      "breakpoints": true
     }
   ]
 }
