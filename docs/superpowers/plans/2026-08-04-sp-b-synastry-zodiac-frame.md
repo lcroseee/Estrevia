@@ -24,7 +24,9 @@
 
 | File | Responsibility |
 |---|---|
-| `src/app/api/v1/synastry/calculate/route.ts` | **The only server file that changes.** Adds tropical sign names to both summaries |
+| `src/shared/types/synastry.ts` | **New.** `ChartSummary`, reachable from both `app/` and `modules/` |
+| `src/app/api/v1/synastry/calculate/summary.ts` | **New.** Extracted builder, so the projection is testable without the route |
+| `src/app/api/v1/synastry/calculate/route.ts` | **The only server call site that changes.** Uses the builder |
 | `src/modules/astro-engine/components/SynastryClient.tsx` | `ChartSummary` type widened additively |
 | `src/modules/astro-engine/components/SynastryResult.tsx` | Toggle + frame-aware sign labels + the invariance note |
 | `messages/en.json`, `messages/es.json` | `synastry.zodiacFrame.*` keys |
@@ -120,17 +122,9 @@ Create `src/app/api/v1/synastry/calculate/summary.ts`:
 ```ts
 import { projectChart } from '@/modules/astro-engine/zodiac-frame';
 import { Planet, type ChartResult } from '@/shared/types/astrology';
+import type { ChartSummary } from '@/shared/types/synastry';
 
-export interface ChartSummary {
-  sunSign: string | null;
-  moonSign: string | null;
-  ascendant: string | null;
-  /** Tropical counterparts. Additive — older clients simply ignore them. */
-  tropicalSunSign: string | null;
-  tropicalMoonSign: string | null;
-  tropicalAscendant: string | null;
-  name: string | null;
-}
+export type { ChartSummary };
 
 const signOf = (chart: ChartResult, planet: Planet): string | null =>
   chart.planets.find((p) => p.planet === planet)?.sign ?? null;
@@ -184,15 +178,31 @@ with:
 
 and add `import { buildChartSummary } from './summary';`.
 
-- [ ] **Step 5: Widen the client type**
+- [ ] **Step 5: Put the type in `shared/`, where both sides may reach it**
 
-In `src/modules/astro-engine/components/SynastryClient.tsx`, replace the local `ChartSummary` interface with a re-export so there is one definition rather than two that can drift:
+`CLAUDE.md` states that `src/modules/` depends on `shared/` only — so `SynastryClient.tsx` **must not** import from `src/app/`. `src/shared/types/synastry.ts` does not exist yet. Create it:
 
 ```ts
-import type { ChartSummary } from '@/app/api/v1/synastry/calculate/summary';
+/**
+ * Per-person summary strip shown above the compatibility score.
+ *
+ * Lives in shared/ because both the API route that builds it and the
+ * astro-engine component that renders it need the shape, and modules/ may
+ * not import from app/.
+ */
+export interface ChartSummary {
+  sunSign: string | null;
+  moonSign: string | null;
+  ascendant: string | null;
+  /** Tropical counterparts. Additive — older payloads simply lack them. */
+  tropicalSunSign: string | null;
+  tropicalMoonSign: string | null;
+  tropicalAscendant: string | null;
+  name: string | null;
+}
 ```
 
-Delete the local `interface ChartSummary { ... }` block. If the import direction is disallowed by the module boundary rules (`src/modules/` must not depend on `src/app/`), instead move the interface to `src/shared/types/synastry.ts` and import it from both sides. **Check `CLAUDE.md`'s module rule and follow whichever direction it permits** — do not create a cross-module dependency to save one file.
+Then, in Task 1 Step 3, `summary.ts` imports this type instead of declaring its own, and in `SynastryClient.tsx` delete the local `interface ChartSummary { ... }` block and import it from `@/shared/types/synastry`. Re-export it from `src/shared/types/index.ts` if that barrel is how the rest of the codebase reaches these types — check the existing pattern in `src/shared/types/index.ts` and match it.
 
 - [ ] **Step 6: Run the tests and typecheck**
 
@@ -206,7 +216,9 @@ Expected: PASS, zero type errors.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/app/api/v1/synastry/calculate/summary.ts \
+git add src/shared/types/synastry.ts \
+        src/shared/types/index.ts \
+        src/app/api/v1/synastry/calculate/summary.ts \
         src/app/api/v1/synastry/calculate/route.ts \
         src/app/api/v1/synastry/calculate/__tests__/summary-frames.test.ts \
         src/modules/astro-engine/components/SynastryClient.tsx
