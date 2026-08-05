@@ -172,6 +172,15 @@ describe('POST /api/v1/chart/interpret', () => {
     expect(body.data.source).toBe('generated');
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(mockInsertChartReading).toHaveBeenCalledTimes(1);
+
+    // Guard the exact request shape that took this route down in production:
+    // a retired model ID, and an omitted `thinking` field that would let
+    // adaptive thinking eat the max_tokens budget and truncate the reading.
+    const sent = JSON.parse(String((fetchSpy.mock.calls[0]![1] as RequestInit).body));
+    expect(sent.model).toBe('claude-sonnet-5');
+    expect(sent.thinking).toEqual({ type: 'disabled' });
+    expect(sent.max_tokens).toBe(3400);
+
     fetchSpy.mockRestore();
   });
 

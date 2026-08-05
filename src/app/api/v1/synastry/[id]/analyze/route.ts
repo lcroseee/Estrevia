@@ -4,6 +4,11 @@ import { requirePremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { synastryResults } from '@/shared/lib/schema';
+import {
+  ANTHROPIC_MESSAGES_URL,
+  anthropicHeaders,
+  buildMessagesRequest,
+} from '@/shared/lib/anthropic';
 import type { ApiResponse } from '@/shared/types';
 
 interface AnalyzeResponse {
@@ -152,18 +157,11 @@ export async function POST(
 
   try {
     const prompt = buildPrompt(row);
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(ANTHROPIC_MESSAGES_URL, {
       method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 900,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+      headers: anthropicHeaders(apiKey),
+      // 1200, not the previous 900: headroom for Sonnet 5's denser tokenizer.
+      body: JSON.stringify(buildMessagesRequest({ prompt, maxTokens: 1200 })),
     });
 
     if (!response.ok) {

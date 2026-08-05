@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
 import { requirePremium } from '@/modules/auth/lib/premium';
 import { getRateLimiter } from '@/shared/lib/rate-limit';
+import {
+  ANTHROPIC_MESSAGES_URL,
+  anthropicHeaders,
+  buildMessagesRequest,
+} from '@/shared/lib/anthropic';
 
 const cardSchema = z.object({
   position: z.string().min(1).max(100),
@@ -105,18 +110,11 @@ export async function POST(request: Request) {
   try {
     const prompt = buildPrompt(body);
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(ANTHROPIC_MESSAGES_URL, {
       method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 600,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+      headers: anthropicHeaders(apiKey),
+      // 800, not the previous 600: headroom for Sonnet 5's denser tokenizer.
+      body: JSON.stringify(buildMessagesRequest({ prompt, maxTokens: 800 })),
     });
 
     if (!response.ok) {

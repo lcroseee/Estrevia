@@ -1,5 +1,6 @@
 import { pgTable, text, serial, real, jsonb, timestamp, boolean, date, unique, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { ANTHROPIC_MODEL } from '@/shared/lib/anthropic';
 import type { ChartResult } from '@/shared/types/astrology';
 
 // ---------------------------------------------------------------------------
@@ -79,7 +80,10 @@ export const chartReadings = pgTable(
       .references(() => natalCharts.id, { onDelete: 'cascade' }),
     locale: text('locale', { enum: ['en', 'es'] }).notNull(),
     body: text('body').notNull(),
-    model: text('model').notNull().default('claude-sonnet-4-20250514'),
+    // The route always supplies `model` explicitly, so this default only
+    // covers hand-written inserts. The DB-level default still reads
+    // 'claude-sonnet-4-20250514' until migration 0020 alters it.
+    model: text('model').notNull().default(ANTHROPIC_MODEL),
     generatedAt: timestamp('generated_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

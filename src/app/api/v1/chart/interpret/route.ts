@@ -7,6 +7,12 @@ import { getRateLimiter } from '@/shared/lib/rate-limit';
 import { getDb } from '@/shared/lib/db';
 import { chartReadings, natalCharts } from '@/shared/lib/schema';
 import { buildChartInterpretationPrompt } from '@/modules/astro-engine/lib/chart-interpretation-prompt';
+import {
+  ANTHROPIC_MESSAGES_URL,
+  ANTHROPIC_MODEL,
+  anthropicHeaders,
+  buildMessagesRequest,
+} from '@/shared/lib/anthropic';
 import type { ChartResult } from '@/shared/types';
 
 const interpretSchema = z.object({
@@ -123,18 +129,13 @@ export async function POST(request: Request) {
   const prompt = buildChartInterpretationPrompt(chartData, body.locale);
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch(ANTHROPIC_MESSAGES_URL, {
       method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2500,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+      headers: anthropicHeaders(apiKey),
+      // 3400, not the previous 2500: Sonnet 5's tokenizer emits roughly 30%
+      // more tokens for the same prose, so a limit sized against the old model
+      // would clip the longest readings.
+      body: JSON.stringify(buildMessagesRequest({ prompt, maxTokens: 3400 })),
     });
 
     if (!response.ok) {
@@ -167,7 +168,7 @@ export async function POST(request: Request) {
           chartId: body.chartId,
           locale: body.locale,
           body: reading,
-          model: 'claude-sonnet-4-20250514',
+          model: ANTHROPIC_MODEL,
         })
         .onConflictDoNothing();
     } catch (err) {
