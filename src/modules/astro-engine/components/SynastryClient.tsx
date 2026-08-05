@@ -12,19 +12,14 @@ import { postJson } from '@/shared/lib/apiFetch';
 import type { SynastryScores } from '@/modules/astro-engine/synastry-scoring';
 import type { SynastryAspect } from '@/modules/astro-engine/synastry';
 
-interface ChartSummary {
-  sunSign: string | null;
-  moonSign: string | null;
-  ascendant: string | null;
-  name: string | null;
-}
+import type { SynastryPersonSummary } from '@/shared/types/synastry';
 
 interface SynastryData {
   id: string;
   aspects: SynastryAspect[];
   scores: SynastryScores;
-  chart1Summary: ChartSummary;
-  chart2Summary: ChartSummary;
+  chart1Summary: SynastryPersonSummary;
+  chart2Summary: SynastryPersonSummary;
 }
 
 interface BirthDataValues {

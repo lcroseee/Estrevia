@@ -1223,7 +1223,12 @@
     "faq4Q": "¿Las superposiciones de casas importan tanto como los aspectos en sinastría?",
     "faq4A": "Las superposiciones de casas muestran dónde caen los planetas de una persona en las casas de la otra, revelando qué áreas de vida activa la relación. El Venus de tu pareja en tu casa 7 activa tu sentido de la asociación; en tu casa 2, toca tus recursos y valores. Las superposiciones añaden textura y contexto; los interaspectos siguen siendo el indicador principal de la calidad energética de la relación.",
     "faq5Q": "¿En qué se diferencia la sinastría sideral de la tropical?",
-    "faq5A": "El desplazamiento de ~23° del ayanamsa Lahiri puede cambiar las posiciones de signo y, en algunos casos, convertir un tipo de aspecto en otro. Un planeta a 28° de Scorpio tropical se convierte en aproximadamente 5° de Scorpio sideral — el signo se mantiene, pero por poco. En tropical 27° o antes, el desplazamiento cruza un límite de signo hacia Libra sideral, alterando toda la interpretación a nivel de signo en sinastría."
+    "faq5A": "El desplazamiento de ~23° del ayanamsa Lahiri puede cambiar las posiciones de signo y, en algunos casos, convertir un tipo de aspecto en otro. Un planeta a 28° de Scorpio tropical se convierte en aproximadamente 5° de Scorpio sideral — el signo se mantiene, pero por poco. En tropical 27° o antes, el desplazamiento cruza un límite de signo hacia Libra sideral, alterando toda la interpretación a nivel de signo en sinastría.",
+    "zodiacFrame": {
+      "invariantNote": "Los aspectos y el puntaje de compatibilidad son idénticos en ambos sistemas. Los dos zodiacos se desplazan la misma cantidad, así que los ángulos entre planetas nunca cambian: solo cambian las etiquetas de los signos.",
+      "siderealTag": "Sideral",
+      "tropicalTag": "Tropical"
+    }
   },
   "tarot": {
     "title": "Tarot Thoth",

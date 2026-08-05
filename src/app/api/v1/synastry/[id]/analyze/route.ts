@@ -41,6 +41,16 @@ interface SynastryAspect {
   weight?: number;
 }
 
+/**
+ * Deliberately frame-agnostic, and deliberately NOT changed by SP-B.
+ *
+ * This prompt is built from aspects — planet pairs, types and orbs — and
+ * angular separation is invariant under the ayanamsa offset, so the same
+ * aspects hold in both zodiacs. No sign name reaches the model from here. The
+ * "sidereal astrology (Lahiri ayanamsa)" framing below therefore stays
+ * accurate whatever the reader has the zodiac toggle set to, and the cached
+ * analysis does not need a frame in its key.
+ */
 function buildPrompt(row: SynastryRow): string {
   const cats = (row.categoryScores ?? {}) as CategoryScores;
   const aspects = (row.aspects ?? []) as SynastryAspect[];

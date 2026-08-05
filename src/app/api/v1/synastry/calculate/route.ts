@@ -10,6 +10,7 @@ import { isPremium } from '@/modules/auth/lib/premium';
 import { checkAndIncrementUsage } from '@/shared/lib/usage';
 import { getDb } from '@/shared/lib/db';
 import { natalCharts, synastryResults } from '@/shared/lib/schema';
+import { buildSynastryPersonSummary } from './summary';
 import { coordinatesSchema, isoDateSchema, timeSchema, timezoneSchema, houseSystemSchema } from '@/shared/validation';
 import type { ChartResult } from '@/shared/types';
 import { HouseSystem } from '@/shared/types';
@@ -180,18 +181,9 @@ export async function POST(request: Request) {
   }
 
   // 6. Build summary for each chart
-  const chart1Summary = {
-    sunSign: chart1.planets.find((p) => p.planet === 'Sun')?.sign ?? null,
-    moonSign: chart1.planets.find((p) => p.planet === 'Moon')?.sign ?? null,
-    ascendant: chart1.ascendant?.sign ?? null,
-    name: body.birthData1.name ?? null,
-  };
-  const chart2Summary = {
-    sunSign: chart2.planets.find((p) => p.planet === 'Sun')?.sign ?? null,
-    moonSign: chart2.planets.find((p) => p.planet === 'Moon')?.sign ?? null,
-    ascendant: chart2.ascendant?.sign ?? null,
-    name: body.birthData2.name ?? null,
-  };
+  // Both frames, from one calculation each — see summary.ts.
+  const chart1Summary = buildSynastryPersonSummary(chart1, body.birthData1.name ?? null);
+  const chart2Summary = buildSynastryPersonSummary(chart2, body.birthData2.name ?? null);
 
   return NextResponse.json(
     {

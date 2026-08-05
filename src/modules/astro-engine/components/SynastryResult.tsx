@@ -1,26 +1,47 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { SynastryScores, CategoryScore } from '@/modules/astro-engine/synastry-scoring';
 import type { SynastryAspect } from '@/modules/astro-engine/synastry';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { buildShareUrl } from '@/shared/lib/share';
+import type { SynastryPersonSummary } from '@/shared/types/synastry';
+import { ZodiacFrameToggle, type FrameState } from './ZodiacFrameToggle';
 
-interface ChartSummary {
-  sunSign: string | null;
-  moonSign: string | null;
-  ascendant: string | null;
-  name: string | null;
+// Same key ChartDisplay writes, so a frame chosen on /chart carries over here.
+const FRAME_STORAGE_KEY = 'estrevia.zodiacFrame';
+
+/**
+ * Sign labels for one person in the active frame.
+ *
+ * In `both` the pair is shown together — `Gemini / Cancer` — matching the
+ * delta-column presentation in SP-A's PositionTable rather than inventing a
+ * third treatment. Falls back to the sidereal label when a payload predates
+ * SP-B and carries no tropical fields.
+ */
+function frameLabels(s: SynastryPersonSummary, frame: FrameState) {
+  if (frame === 'tropical') {
+    return { sun: s.tropicalSunSign ?? s.sunSign, moon: s.tropicalMoonSign ?? s.moonSign };
+  }
+  if (frame === 'both') {
+    return {
+      sun: s.sunSign && s.tropicalSunSign ? `${s.sunSign} / ${s.tropicalSunSign}` : s.sunSign,
+      moon: s.moonSign && s.tropicalMoonSign ? `${s.moonSign} / ${s.tropicalMoonSign}` : s.moonSign,
+    };
+  }
+  return { sun: s.sunSign, moon: s.moonSign };
 }
+
+
 
 interface SynastryResultProps {
   id: string;
   scores: SynastryScores;
   aspects: SynastryAspect[];
-  chart1Summary: ChartSummary;
-  chart2Summary: ChartSummary;
+  chart1Summary: SynastryPersonSummary;
+  chart2Summary: SynastryPersonSummary;
   onReset: () => void;
 }
 
@@ -50,7 +71,9 @@ function ScoreCircle({ score }: { score: number }) {
   const dashOffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="relative w-36 h-36 mx-auto">
+    // data-testid so the frame tests can prove the score does not move when
+    // the zodiac toggle does — the invariant SP-B rests on.
+    <div className="relative w-36 h-36 mx-auto" data-testid="overall-score">
       <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
         {/* Background circle */}
         <circle
@@ -136,8 +159,40 @@ export function SynastryResult({
   onReset,
 }: SynastryResultProps) {
   const t = useTranslations('synastry');
+  const tFrame = useTranslations('synastry.zodiacFrame');
   const prefersReduced = useReducedMotion();
   const [showAspects, setShowAspects] = useState(false);
+
+  // Hydrate from the same ?z / localStorage convention SP-A established, so a
+  // frame chosen on /chart is already in effect when this page opens.
+  const [frame, setFrame] = useState<FrameState>(() => {
+    if (typeof window === 'undefined') return 'sidereal';
+    const fromUrl = { sid: 'sidereal', trop: 'tropical', both: 'both' }[
+      new URLSearchParams(window.location.search).get('z') ?? ''
+    ];
+    if (fromUrl) return fromUrl as FrameState;
+    const stored = window.localStorage.getItem(FRAME_STORAGE_KEY);
+    return stored === 'tropical' || stored === 'both' ? stored : 'sidereal';
+  });
+
+  const handleFrameChange = useCallback((next: FrameState) => {
+    setFrame((prev) => {
+      // surface distinguishes this from SP-A's 'chart', which is what makes
+      // the event answer whether anyone uses the toggle outside /chart.
+      trackEvent(AnalyticsEvent.ZODIAC_FRAME_CHANGED, {
+        from: prev,
+        to: next,
+        surface: 'synastry',
+      });
+      return next;
+    });
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(FRAME_STORAGE_KEY, next);
+    }
+  }, []);
+
+  const labels1 = useMemo(() => frameLabels(chart1Summary, frame), [chart1Summary, frame]);
+  const labels2 = useMemo(() => frameLabels(chart2Summary, frame), [chart2Summary, frame]);
 
   const sortedAspects = useMemo(
     () => [...aspects].sort((a, b) => a.orb - b.orb),
@@ -182,14 +237,18 @@ export function SynastryResult({
         {/* Sun/Moon summaries */}
         <div className="flex items-center justify-center gap-6 text-xs text-white/40">
           <span>
-            {chart1Summary.sunSign && `\u2609 ${chart1Summary.sunSign}`}
-            {chart1Summary.moonSign && ` \u00B7 \u263D ${chart1Summary.moonSign}`}
+            {labels1.sun && `\u2609 ${labels1.sun}`}
+            {labels1.moon && ` \u00B7 \u263D ${labels1.moon}`}
           </span>
           <span className="text-white/15">|</span>
           <span>
-            {chart2Summary.sunSign && `\u2609 ${chart2Summary.sunSign}`}
-            {chart2Summary.moonSign && ` \u00B7 \u263D ${chart2Summary.moonSign}`}
+            {labels2.sun && `\u2609 ${labels2.sun}`}
+            {labels2.moon && ` \u00B7 \u263D ${labels2.moon}`}
           </span>
+        </div>
+
+        <div className="flex justify-center pt-1">
+          <ZodiacFrameToggle value={frame} onChange={handleFrameChange} />
         </div>
       </div>
 
@@ -265,6 +324,15 @@ export function SynastryResult({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* A user who sees the sign labels change while the score holds still
+            reads that as a bug. This is the cheapest possible defence of a
+            correct-but-surprising result. */}
+        {frame === 'both' && (
+          <p className="mt-4 text-xs leading-relaxed text-white/45">
+            {tFrame('invariantNote')}
+          </p>
+        )}
       </div>
 
       {/* Actions */}

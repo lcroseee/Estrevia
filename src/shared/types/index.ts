@@ -34,4 +34,6 @@ export type {
   ChartListResponse,
 } from './api';
 
+export type { SynastryPersonSummary } from './synastry';
+
 export * from './advertising';

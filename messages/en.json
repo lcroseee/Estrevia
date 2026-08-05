@@ -1219,7 +1219,12 @@
     "faq4Q": "Do house overlays matter as much as aspects in synastry?",
     "faq4A": "House overlays show where one person's planets fall in the other's houses, revealing which life areas the relationship activates. Your partner's Venus in your 7th house activates your sense of partnership; in your 2nd house, it touches your resources and values. Overlays add texture and context; interaspects remain the primary indicator of the relationship's energetic quality.",
     "faq5Q": "How does sidereal synastry differ from tropical?",
-    "faq5A": "The ~23° Lahiri ayanamsa shift can change sign placements and, in some cases, convert one aspect type to another. A planet at 28° Scorpio tropical becomes roughly 5° Scorpio sidereal — the sign holds, but barely. At tropical 27° or earlier, the shift crosses a sign boundary into sidereal Libra, altering the entire sign-level interpretation in synastry."
+    "faq5A": "The ~23° Lahiri ayanamsa shift can change sign placements and, in some cases, convert one aspect type to another. A planet at 28° Scorpio tropical becomes roughly 5° Scorpio sidereal — the sign holds, but barely. At tropical 27° or earlier, the shift crosses a sign boundary into sidereal Libra, altering the entire sign-level interpretation in synastry.",
+    "zodiacFrame": {
+      "invariantNote": "The aspects and the compatibility score are identical in both systems. Both zodiacs shift by the same amount, so the angles between planets never change — only the sign labels do.",
+      "siderealTag": "Sidereal",
+      "tropicalTag": "Tropical"
+    }
   },
   "tarot": {
     "title": "Thoth Tarot",
