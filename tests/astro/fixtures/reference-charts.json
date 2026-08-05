@@ -52,6 +52,20 @@
       "chiron": {
         "tropicalDegree": 24.269228
       }
+    },
+    "expectedHouses": {
+      "sun": 4,
+      "moon": 9,
+      "mercury": 4,
+      "venus": 4,
+      "mars": 6,
+      "jupiter": 4,
+      "saturn": 7,
+      "uranus": 1,
+      "neptune": 10,
+      "pluto": 10,
+      "northNode": 9,
+      "chiron": 10
     }
   },
   {
@@ -107,6 +121,20 @@
       "chiron": {
         "tropicalDegree": 35.544201
       }
+    },
+    "expectedHouses": {
+      "sun": 10,
+      "moon": 6,
+      "mercury": 10,
+      "venus": 11,
+      "mars": 8,
+      "jupiter": 9,
+      "saturn": 10,
+      "uranus": 3,
+      "neptune": 11,
+      "pluto": 11,
+      "northNode": 8,
+      "chiron": 11
     }
   },
   {

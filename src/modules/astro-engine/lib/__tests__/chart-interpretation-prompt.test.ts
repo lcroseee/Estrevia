@@ -10,6 +10,7 @@ import {
   type PlanetPosition,
 } from '@/shared/types';
 import { buildChartInterpretationPrompt } from '../chart-interpretation-prompt';
+import { calculateChart } from '../../chart';
 
 /**
  * Synthetic test fixture — no real PII. Values chosen so the Ascendant
@@ -138,5 +139,43 @@ describe('buildChartInterpretationPrompt', () => {
     const a = buildChartInterpretationPrompt(SAMPLE_CHART, 'en');
     const b = buildChartInterpretationPrompt(SAMPLE_CHART, 'en');
     expect(a).toBe(b);
+  });
+});
+
+describe('prompt zodiac frame (SP-0)', () => {
+  // A real calculated chart, not a fixture: the defect was that the prompt and
+  // the wheel disagreed, and only a genuine calculateChart() result can prove
+  // they now agree. Synthetic birth data — no real person, no PII.
+  const chart = calculateChart({
+    date: '1990-06-15',
+    time: '14:30',
+    latitude: 40.7128,
+    longitude: -74.006,
+    timezone: 'America/New_York',
+    houseSystem: HouseSystem.Placidus,
+  });
+
+  it('names the same Ascendant the wheel draws', () => {
+    // Previously derived from chart.houses[0].degree, which was tropical, so
+    // the paid reading could announce a different rising sign from the chart
+    // rendered beside it on the same screen.
+    const prompt = buildChartInterpretationPrompt(chart, 'en');
+    expect(prompt).toContain(`Ascendant: ${chart.ascendant!.sign}`);
+  });
+
+  it('lists every cusp in its sidereal sign', () => {
+    const prompt = buildChartInterpretationPrompt(chart, 'en');
+    for (const cusp of chart.houses!) {
+      expect(prompt).toContain(`House ${cusp.house}: cusp at ${cusp.sign}`);
+    }
+  });
+
+  it('keeps sub-degree precision on the cusp longitudes', () => {
+    // Guards against "simplifying" the line to cusp.signDegree, which holds
+    // only the integer part and would print every cusp as a whole degree.
+    const prompt = buildChartInterpretationPrompt(chart, 'en');
+    const fractional = prompt.match(/cusp at \w+ \d+\.\d°/g) ?? [];
+    expect(fractional.length).toBe(12);
+    expect(fractional.some((line) => !line.endsWith('.0°'))).toBe(true);
   });
 });
