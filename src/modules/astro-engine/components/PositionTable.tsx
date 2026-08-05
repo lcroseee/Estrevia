@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ChartResult, PlanetPosition } from '@/shared/types';
 import { Planet } from '@/shared/types';
+import type { FrameState } from './ZodiacFrameToggle';
 
 // Zodiac sign Unicode glyphs
 const SIGN_GLYPHS: Record<string, string> = {
@@ -48,10 +50,34 @@ function formatDegree(pos: PlanetPosition): string {
 }
 
 interface PositionTableProps {
+  /** Already projected into the active frame by ChartDisplay. */
   chart: ChartResult;
+  frame?: FrameState;
+  /**
+   * Only needed in `both`. Supplied by ChartDisplay so the projection is
+   * computed once rather than on every render of this table.
+   */
+  tropicalChart?: ChartResult | null;
 }
 
-export function PositionTable({ chart }: PositionTableProps) {
+export function PositionTable({
+  chart,
+  frame = 'sidereal',
+  tropicalChart = null,
+}: PositionTableProps) {
+  const t = useTranslations('chart.zodiacFrame');
+  const showBoth = frame === 'both' && tropicalChart !== null;
+
+  // Keyed by planet so the second column survives sorting.
+  const tropicalSignByPlanet = useMemo(() => {
+    const map = new Map<Planet, string>();
+    if (!tropicalChart) return map;
+    for (const p of tropicalChart.planets) map.set(p.planet, p.sign);
+    if (tropicalChart.ascendant) map.set(Planet.Ascendant, tropicalChart.ascendant.sign);
+    if (tropicalChart.midheaven) map.set(Planet.Midheaven, tropicalChart.midheaven.sign);
+    return map;
+  }, [tropicalChart]);
+
   const [sortCol, setSortCol] = useState<SortColumn>('planet');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -120,7 +146,7 @@ export function PositionTable({ chart }: PositionTableProps) {
       */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-medium text-white/60 uppercase tracking-widest">
-          Planetary Positions
+          {t('positionsHeading')}
         </h2>
       </div>
 
@@ -132,8 +158,7 @@ export function PositionTable({ chart }: PositionTableProps) {
           aria-describedby="position-table-desc"
         >
           <caption id="position-table-desc" className="sr-only">
-            Natal chart planetary positions in the sidereal zodiac.
-            Click column headers to sort.
+            {t('tableCaption')}
           </caption>
           <thead>
             <tr className="border-b border-white/8 bg-white/3">
@@ -149,7 +174,7 @@ export function PositionTable({ chart }: PositionTableProps) {
                     : 'none'
                 }
               >
-                Planet <SortIndicator col="planet" />
+                {t('colPlanet')} <SortIndicator col="planet" />
               </th>
               <th
                 scope="col"
@@ -163,8 +188,16 @@ export function PositionTable({ chart }: PositionTableProps) {
                     : 'none'
                 }
               >
-                Sign <SortIndicator col="sign" />
+                {showBoth ? t('tableSidereal') : t('colSign')} <SortIndicator col="sign" />
               </th>
+              {showBoth && (
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-left text-xs font-medium text-white/50 uppercase tracking-wider whitespace-nowrap"
+                >
+                  {t('tableTropical')}
+                </th>
+              )}
               <th
                 scope="col"
                 className={thClass}
@@ -177,7 +210,7 @@ export function PositionTable({ chart }: PositionTableProps) {
                     : 'none'
                 }
               >
-                Degree <SortIndicator col="degree" />
+                {t('colDegree')} <SortIndicator col="degree" />
               </th>
               <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-white/50 uppercase tracking-wider whitespace-nowrap">
                 R
@@ -194,7 +227,7 @@ export function PositionTable({ chart }: PositionTableProps) {
                     : 'none'
                 }
               >
-                House <SortIndicator col="house" />
+                {t('colHouse')} <SortIndicator col="house" />
               </th>
             </tr>
           </thead>
@@ -215,6 +248,11 @@ export function PositionTable({ chart }: PositionTableProps) {
                   </span>
                   {pos.sign}
                 </td>
+                {showBoth && (
+                  <td className="px-3 py-2 text-white/70 whitespace-nowrap">
+                    {tropicalSignByPlanet.get(pos.planet) ?? '—'}
+                  </td>
+                )}
                 <td className="px-3 py-2 text-white/80 whitespace-nowrap font-mono tabular-nums" style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}>
                   {formatDegree(pos)}
                 </td>
@@ -241,7 +279,11 @@ export function PositionTable({ chart }: PositionTableProps) {
       </div>
 
       <p className="mt-2 text-xs text-white/30">
-        {`Sidereal (Lahiri ayanamsa: ${chart.ayanamsa.toFixed(4)}°)`}
+        {frame === 'both'
+          ? t('footerBoth', { ayanamsa: chart.ayanamsa.toFixed(4) })
+          : frame === 'tropical'
+            ? t('footerTropical')
+            : t('footerSidereal', { ayanamsa: chart.ayanamsa.toFixed(4) })}
         {/* Suppress the house-system mention on no-houses charts — houseSystem
             persists as 'Placidus' in ChartResult even without computed houses. */}
         {chart.houses ? ` · ${chart.houseSystem} houses` : ''}

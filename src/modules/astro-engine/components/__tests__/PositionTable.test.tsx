@@ -2,9 +2,19 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import { NextIntlClientProvider } from 'next-intl';
 import { PositionTable } from '../PositionTable';
 import { Planet, Sign } from '@/shared/types';
 import type { ChartResult, PlanetPosition } from '@/shared/types';
+import en from '../../../../../messages/en.json';
+
+/** PositionTable localises its own chrome, so it needs the intl provider. */
+const renderTable = (ui: React.ReactNode) =>
+  render(
+    <NextIntlClientProvider locale="en" messages={en}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
 
 function pos(planet: Planet, overrides: Partial<PlanetPosition> = {}): PlanetPosition {
   return {
@@ -40,14 +50,14 @@ function chartFixture(overrides: Partial<ChartResult> = {}): ChartResult {
 
 describe('PositionTable — no-houses chart honesty', () => {
   it('renders no Ascendant/Midheaven rows and no house-system footer when houses are null', () => {
-    render(<PositionTable chart={chartFixture()} />);
+    renderTable(<PositionTable chart={chartFixture()} />);
     expect(screen.queryByText('Ascendant')).toBeNull();
     expect(screen.queryByText('Midheaven')).toBeNull();
     expect(screen.queryByText(/Placidus houses/)).toBeNull();
   });
 
   it('keeps the Ascendant row + house-system footer for a full chart', () => {
-    render(
+    renderTable(
       <PositionTable
         chart={chartFixture({
           houses: [
