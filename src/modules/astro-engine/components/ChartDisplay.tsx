@@ -32,6 +32,8 @@ import { AvatarSection } from './AvatarSection';
 import { ChartReadingSection } from './ChartReadingSection';
 import { generatePassport } from '@/modules/astro-engine/passport';
 import { projectChart } from '@/modules/astro-engine/zodiac-frame';
+import { computeFrameDeltas } from '@/modules/astro-engine/frame-delta';
+import { FrameDeltaPanel } from './FrameDeltaPanel';
 import { ZodiacFrameToggle, type FrameState } from './ZodiacFrameToggle';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 
@@ -265,6 +267,13 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
   // Second projection only in `both`, so the table can show a tropical column.
   const tropicalView = useMemo(
     () => (chart && frame === 'both' ? projectChart(chart, 'tropical') : null),
+    [chart, frame],
+  );
+
+  // `chart`, not `view`: computeFrameDeltas projects internally and needs the
+  // sidereal original to compare against.
+  const frameDeltas = useMemo(
+    () => (chart && frame !== 'sidereal' ? computeFrameDeltas(chart) : []),
     [chart, frame],
   );
 
@@ -527,6 +536,10 @@ export function ChartDisplay({ initialChart, initialChartId }: ChartDisplayProps
           tropicalChart={tropicalView}
         />
       </div>
+
+      {/* The free, deterministic reflection layer. Shown whenever the toggle
+          has been engaged, so pressing it always produces an explanation. */}
+      {frame !== 'sidereal' && <FrameDeltaPanel deltas={frameDeltas} />}
 
       {/* AI Reading section — first slot after the chart */}
       {chartId && chart && (

@@ -950,6 +950,16 @@
       "houseSuffix": "{system} houses",
       "ringSidereal": "Sidereal zodiac",
       "ringTropical": "Tropical zodiac"
+    },
+    "frameDelta": {
+      "title": "Two readings of the same sky",
+      "intro": "Tropical is who you're becoming here. Sidereal is what you are beneath that.",
+      "line": "Your incarnational {body} is in {tropical}; your essential {body} is in {sidereal}.",
+      "bodySun": "Sun",
+      "bodyMoon": "Moon",
+      "bodyAscendant": "Ascendant",
+      "identical": "Both zodiacs place your Sun, Moon and Ascendant in the same signs — a chart that reads the same either way. That is uncommon, and it means your two layers are speaking with one voice.",
+      "partial": "Any body not listed here falls in the same sign in both zodiacs."
     }
   },
   "passport": {

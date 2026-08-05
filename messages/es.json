@@ -950,6 +950,16 @@
       "houseSuffix": "casas {system}",
       "ringSidereal": "Zodiaco sideral",
       "ringTropical": "Zodiaco tropical"
+    },
+    "frameDelta": {
+      "title": "Dos lecturas del mismo cielo",
+      "intro": "El tropical es en quién te estás convirtiendo aquí. El sideral es lo que eres por debajo de eso.",
+      "line": "Tu {body} encarnado está en {tropical}; tu {body} esencial está en {sidereal}.",
+      "bodySun": "Sol",
+      "bodyMoon": "Luna",
+      "bodyAscendant": "Ascendente",
+      "identical": "Ambos zodiacos ubican tu Sol, tu Luna y tu Ascendente en los mismos signos: una carta que se lee igual de cualquier manera. Es poco común, y significa que tus dos capas hablan con una sola voz.",
+      "partial": "Cualquier cuerpo que no aparezca aquí cae en el mismo signo en ambos zodiacos."
     }
   },
   "passport": {
