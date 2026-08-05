@@ -85,7 +85,18 @@ export interface PlanetPosition {
 
 export interface HouseCusp {
   house: number;
-  degree: number;
+  /**
+   * Cusp longitude in the SIDEREAL frame — the same frame as
+   * PlanetPosition.absoluteDegree, so the two can be compared directly.
+   *
+   * Renamed from `degree`, which held a TROPICAL value while every other
+   * field on the chart was sidereal. A neutral name holding a frame-specific
+   * value is what allowed planets to be assigned to the wrong houses.
+   */
+  siderealDegree: number;
+  /** Cusp longitude in the tropical frame, exactly as Swiss Ephemeris reports it. */
+  tropicalDegree: number;
+  /** Sidereal sign of the cusp — derived from siderealDegree. */
   sign: Sign;
   signDegree: number;
 }
