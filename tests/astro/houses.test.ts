@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { calculateChart } from '@/modules/astro-engine/chart';
 import { calculateHouses } from '@/modules/astro-engine/houses';
 import { dateToJulianDay } from '@/modules/astro-engine/julian-day';
-import { HouseSystem, Sign } from '@/shared/types/astrology';
+import { HouseSystem } from '@/shared/types/astrology';
 
 /** Julian Day for a given UTC date string */
 function jdFromUtc(dateStr: string, timeStr = '12:00'): number {

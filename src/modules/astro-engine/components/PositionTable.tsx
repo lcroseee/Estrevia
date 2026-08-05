@@ -42,9 +42,8 @@ const PLANET_ORDER: Record<Planet, number> = {
   [Planet.Midheaven]: 13,
 };
 
-function formatDegree(pos: PlanetPosition, isTropical: boolean): string {
-  const deg = isTropical ? pos.tropicalDegree : pos.absoluteDegree;
-  const wholeDeg = Math.floor(deg % 30);
+function formatDegree(pos: PlanetPosition): string {
+  const wholeDeg = Math.floor(pos.absoluteDegree % 30);
   return `${wholeDeg}°${pos.minutes.toString().padStart(2, '0')}'`;
 }
 
@@ -53,7 +52,6 @@ interface PositionTableProps {
 }
 
 export function PositionTable({ chart }: PositionTableProps) {
-  const [isTropical, setIsTropical] = useState(false);
   const [sortCol, setSortCol] = useState<SortColumn>('planet');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -88,16 +86,14 @@ export function PositionTable({ chart }: PositionTableProps) {
       } else if (sortCol === 'sign') {
         cmp = a.sign.localeCompare(b.sign);
       } else if (sortCol === 'degree') {
-        const ad = isTropical ? a.tropicalDegree : a.absoluteDegree;
-        const bd = isTropical ? b.tropicalDegree : b.absoluteDegree;
-        cmp = ad - bd;
+        cmp = a.absoluteDegree - b.absoluteDegree;
       } else if (sortCol === 'house') {
         cmp = (a.house ?? 99) - (b.house ?? 99);
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return copy;
-  }, [allPositions, sortCol, sortDir, isTropical]);
+  }, [allPositions, sortCol, sortDir]);
 
   const SortIndicator = ({ col }: { col: SortColumn }) => {
     if (sortCol !== col) {
@@ -115,23 +111,17 @@ export function PositionTable({ chart }: PositionTableProps) {
 
   return (
     <div className="w-full">
-      {/* System toggle */}
+      {/*
+        The tropical toggle that used to live here was deleted in SP-0: it
+        switched only the degree number while the sign and minutes stayed
+        sidereal, so "Tropical" showed a tropical degree beside a sidereal
+        sign — usually a different sign entirely. SP-A replaces it with a
+        correct three-state control.
+      */}
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-medium text-white/60 uppercase tracking-widest">
           Planetary Positions
         </h2>
-        <button
-          type="button"
-          onClick={() => setIsTropical((v) => !v)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs text-white/70 hover:bg-white/10 hover:text-white transition-all"
-          aria-pressed={isTropical}
-          aria-label={`Switch to ${isTropical ? 'sidereal' : 'tropical'} system`}
-        >
-          <span
-            className={`inline-block w-2 h-2 rounded-full ${isTropical ? 'bg-amber-400' : 'bg-sky-400'}`}
-          />
-          {isTropical ? 'Tropical' : 'Sidereal'}
-        </button>
       </div>
 
       {/* Table wrapper with scroll */}
@@ -142,7 +132,7 @@ export function PositionTable({ chart }: PositionTableProps) {
           aria-describedby="position-table-desc"
         >
           <caption id="position-table-desc" className="sr-only">
-            Natal chart planetary positions in {isTropical ? 'tropical' : 'sidereal'} zodiac.
+            Natal chart planetary positions in the sidereal zodiac.
             Click column headers to sort.
           </caption>
           <thead>
@@ -226,7 +216,7 @@ export function PositionTable({ chart }: PositionTableProps) {
                   {pos.sign}
                 </td>
                 <td className="px-3 py-2 text-white/80 whitespace-nowrap font-mono tabular-nums" style={{ fontFamily: 'var(--font-geist-mono, monospace)' }}>
-                  {formatDegree(pos, isTropical)}
+                  {formatDegree(pos)}
                 </td>
                 <td className="px-3 py-2 text-center">
                   {pos.isRetrograde ? (
@@ -251,7 +241,7 @@ export function PositionTable({ chart }: PositionTableProps) {
       </div>
 
       <p className="mt-2 text-xs text-white/30">
-        {isTropical ? 'Tropical zodiac' : `Sidereal (Lahiri ayanamsa: ${chart.ayanamsa.toFixed(4)}°)`}
+        {`Sidereal (Lahiri ayanamsa: ${chart.ayanamsa.toFixed(4)}°)`}
         {/* Suppress the house-system mention on no-houses charts — houseSystem
             persists as 'Placidus' in ChartResult even without computed houses. */}
         {chart.houses ? ` · ${chart.houseSystem} houses` : ''}
