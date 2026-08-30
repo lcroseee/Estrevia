@@ -1147,6 +1147,12 @@
         "avatarPortrait": "Upload a photo and see yourself rendered in the colours of your own chart."
       },
       "ctaLabel": "Start 3-Day Free Trial"
+    },
+    "exit": {
+      "title": "Your chart stays with you",
+      "body": "The natal chart, moon calendar, and Cosmic Passport stay free. Pro is here when you want the full reading.",
+      "keepFree": "Continue free",
+      "tryAnnual": "Start 3-day trial · ~$2.92/mo billed yearly"
     }
   },
   "emailGate": {

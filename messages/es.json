@@ -1151,6 +1151,12 @@
         "avatarPortrait": "Sube una foto y mírate representado en los colores de tu propia carta."
       },
       "ctaLabel": "Comienza tu prueba gratis de 3 días"
+    },
+    "exit": {
+      "title": "Tu carta se queda contigo",
+      "body": "La carta natal, el calendario lunar y el Cosmic Passport siguen gratis. Pro está aquí cuando quieras la lectura completa.",
+      "keepFree": "Seguir gratis",
+      "tryAnnual": "Empieza la prueba de 3 días · ~$2.92/mes, cobrado al año"
     }
   },
   "emailGate": {
