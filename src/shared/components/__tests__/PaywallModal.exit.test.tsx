@@ -143,6 +143,44 @@ describe('PaywallModal exit sheet', () => {
     vi.unstubAllGlobals();
   });
 
+  it('keeps the annual CTA mounted while checkout loads and surfaces errors on the exit sheet', async () => {
+    let resolveFetch: (value: unknown) => void = () => {};
+    const fetchMock = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    renderOpen();
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    fireEvent.click(screen.getByText('exit.tryAnnual'));
+    expect(screen.getByText('redirecting')).toBeTruthy();
+    expect(screen.getByText('exit.keepFree')).toBeTruthy();
+    await act(async () => {
+      resolveFetch({
+        ok: true,
+        json: async () => ({ success: false }),
+      });
+    });
+    expect(screen.getByRole('alert')).toBeTruthy();
+    expect(screen.getByText('exit.keepFree')).toBeTruthy();
+    expect(screen.getByText('exit.tryAnnual')).toBeTruthy();
+    vi.unstubAllGlobals();
+  });
+
+  it('does not move focus to close when toggling the annual plan', () => {
+    renderOpen();
+    const annualToggle = screen.getByRole('button', { name: /annual/i });
+    annualToggle.focus();
+    expect(document.activeElement).toBe(annualToggle);
+    fireEvent.click(annualToggle);
+    expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'close' }));
+  });
+
   it('cooldown skips the exit sheet on a later qualified close', () => {
     const { onClose, unmount } = renderOpen();
     act(() => {

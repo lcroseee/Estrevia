@@ -72,6 +72,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
   const locale = useLocale();
   const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_monthly');
   const [stage, setStage] = useState<PaywallStage>('offer');
+  const [exitOffersAnnual, setExitOffersAnnual] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -88,6 +89,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
     if (open) {
       openedAtRef.current = Date.now();
       setStage('offer');
+      setExitOffersAnnual(false);
       trackEvent(AnalyticsEvent.PAYWALL_OPENED, {
         trigger: triggerContext ?? 'generic',
         returnUrl: returnUrl ?? null,
@@ -101,6 +103,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       const trigger = triggerContext ?? 'generic';
       if (stage === 'offer' && shouldShowPaywallExitSheet(dwellMs, Date.now(), readExitStoredAt)) {
         persistExitShown();
+        setExitOffersAnnual(plan === 'pro_monthly');
         setStage('exit');
         trackEvent(AnalyticsEvent.PAYWALL_EXIT_SHOWN, { trigger, dwell_ms: dwellMs, plan });
         closeButtonRef.current?.focus();
@@ -145,10 +148,14 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       }
     }
     document.addEventListener('keydown', handleKeyDown);
-    // Move focus into the dialog on open
-    closeButtonRef.current?.focus();
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, handleAttemptClose]);
+
+  // Focus close on open only — not when plan/stage recreates the trap listener
+  useEffect(() => {
+    if (!open) return;
+    closeButtonRef.current?.focus();
+  }, [open]);
 
   if (!open) return null;
 
@@ -240,7 +247,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
               {t('exit.title')}
             </h2>
             <p className="text-sm text-white/45 mb-8">{t('exit.body')}</p>
-            {plan === 'pro_monthly' && (
+            {exitOffersAnnual && (
               <button
                 type="button"
                 onClick={() => {
@@ -259,7 +266,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
                 {loading ? tPage('redirecting') : t('exit.tryAnnual')}
               </button>
             )}
-            {plan === 'pro_monthly' && (
+            {exitOffersAnnual && (
               <p className="text-xs text-white/25 mb-6">{t('noCharge', { date: trialEndDate })}</p>
             )}
             <button
@@ -269,6 +276,11 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
             >
               {t('exit.keepFree')}
             </button>
+            {error && (
+              <p className="text-xs text-red-400 text-center mt-2" role="alert">
+                {error}
+              </p>
+            )}
           </div>
         ) : (
         <div className="px-6 pt-8 pb-6">
