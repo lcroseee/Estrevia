@@ -32,4 +32,10 @@ describe('mapEstreviaToMeta', () => {
       expect(MAPPING_TABLE[e]).toBeDefined();
     }
   });
+
+  it('does not map paywall dismiss / exit events (PostHog-only, like email_gate_dismissed)', () => {
+    expect(MAPPING_TABLE).not.toHaveProperty('paywall_dismissed');
+    expect(MAPPING_TABLE).not.toHaveProperty('paywall_exit_shown');
+    expect(MAPPING_TABLE).not.toHaveProperty('paywall_exit_annual_clicked');
+  });
 });
