@@ -1,11 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations, useLocale } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { trackEvent, AnalyticsEvent } from '@/shared/lib/analytics';
 import { readUtmLastTouch } from '@/shared/lib/utm-cookie';
+import {
+  PAYWALL_EXIT_STORAGE_KEY,
+  shouldShowPaywallExitSheet,
+  type PaywallDismissMethod,
+  type PaywallStage,
+} from '@/shared/lib/paywall-exit';
 import type { PaywallTrigger } from '@/shared/types/paywall';
 import { CurrencyEquivNote } from './CurrencyEquivNote';
 
@@ -46,6 +52,18 @@ function formatTrialEndDate(locale: string): string {
   });
 }
 
+function readExitStoredAt(): string | null {
+  return localStorage.getItem(PAYWALL_EXIT_STORAGE_KEY);
+}
+
+function persistExitShown(): void {
+  try {
+    localStorage.setItem(PAYWALL_EXIT_STORAGE_KEY, String(Date.now()));
+  } catch {
+    /* private mode / quota — ignore */
+  }
+}
+
 export function PaywallModal({ open, onClose, returnUrl, triggerContext }: PaywallModalProps) {
   const t = useTranslations('paywall');
   const tp = useTranslations('pricing');
@@ -53,10 +71,12 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const [plan, setPlan] = useState<'pro_monthly' | 'pro_annual'>('pro_monthly');
+  const [stage, setStage] = useState<PaywallStage>('offer');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const openedAtRef = useRef(0);
 
   const headline =
     triggerContext && triggerContext !== 'generic' && t.has(`contextualTitles.${triggerToKey(triggerContext)}`)
@@ -65,17 +85,45 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
 
   // Track paywall open (conversion-funnel entry)
   useEffect(() => {
-    if (open) trackEvent(AnalyticsEvent.PAYWALL_OPENED, {
-      trigger: triggerContext ?? 'generic',
-      returnUrl: returnUrl ?? null,
-    });
+    if (open) {
+      openedAtRef.current = Date.now();
+      setStage('offer');
+      trackEvent(AnalyticsEvent.PAYWALL_OPENED, {
+        trigger: triggerContext ?? 'generic',
+        returnUrl: returnUrl ?? null,
+      });
+    }
   }, [open, returnUrl, triggerContext]);
+
+  const handleAttemptClose = useCallback(
+    (method: PaywallDismissMethod): void => {
+      const dwellMs = Date.now() - openedAtRef.current;
+      const trigger = triggerContext ?? 'generic';
+      if (stage === 'offer' && shouldShowPaywallExitSheet(dwellMs, Date.now(), readExitStoredAt)) {
+        persistExitShown();
+        setStage('exit');
+        trackEvent(AnalyticsEvent.PAYWALL_EXIT_SHOWN, { trigger, dwell_ms: dwellMs, plan });
+        closeButtonRef.current?.focus();
+        return;
+      }
+      trackEvent(AnalyticsEvent.PAYWALL_DISMISSED, {
+        trigger,
+        method,
+        stage,
+        dwell_ms: dwellMs,
+        plan,
+        qualified: stage === 'exit',
+      });
+      onClose();
+    },
+    [stage, plan, onClose, triggerContext],
+  );
 
   // Escape key closes the modal (WCAG 2.1.2)
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleAttemptClose('escape');
       // Focus trap: keep Tab / Shift+Tab inside the dialog
       if (e.key === 'Tab' && dialogRef.current) {
         const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
@@ -100,18 +148,19 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
     // Move focus into the dialog on open
     closeButtonRef.current?.focus();
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open, onClose]);
+  }, [open, handleAttemptClose]);
 
   if (!open) return null;
 
   const trialEndDate = formatTrialEndDate(locale);
 
-  async function handleCheckout() {
+  async function handleCheckout(planOverride?: 'pro_monthly' | 'pro_annual') {
     if (loading) return;
+    const selected = planOverride ?? plan;
     setLoading(true);
     setError(null);
     trackEvent(AnalyticsEvent.PAYWALL_TRIAL_CLICKED, {
-      plan,
+      plan: selected,
       trigger: triggerContext ?? 'generic',
       returnUrl: returnUrl ?? null,
     });
@@ -121,7 +170,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       const res = await fetch('/api/v1/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, returnUrl, locale, ...utmFields }),
+        body: JSON.stringify({ plan: selected, returnUrl, locale, ...utmFields }),
       });
 
       let data: { success: boolean; data?: { url: string }; error?: string };
@@ -138,7 +187,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       }
 
       trackEvent(AnalyticsEvent.CHECKOUT_STRIPE_REDIRECTED, {
-        plan,
+        plan: selected,
         trigger: triggerContext ?? 'generic',
       });
       window.location.href = data.data.url;
@@ -160,7 +209,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={() => handleAttemptClose('backdrop')}
         aria-hidden="true"
       />
 
@@ -169,19 +218,59 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={t('title')}
+        aria-label={stage === 'exit' ? t('exit.title') : t('title')}
         className="relative z-10 w-full md:max-w-md md:rounded-2xl rounded-t-2xl bg-[#0F0F17] border border-white/8 shadow-2xl shadow-black/60 max-h-[90vh] overflow-y-auto"
       >
         {/* Close button */}
         <button
           ref={closeButtonRef}
-          onClick={onClose}
+          onClick={() => handleAttemptClose('close_button')}
           className="absolute top-4 right-4 p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           aria-label={tCommon('close')}
         >
           <X size={18} />
         </button>
 
+        {stage === 'exit' ? (
+          <div className="px-6 pt-8 pb-6 text-center">
+            <h2
+              className="text-2xl font-light text-white mb-2"
+              style={{ fontFamily: 'var(--font-crimson-pro, Georgia, serif)' }}
+            >
+              {t('exit.title')}
+            </h2>
+            <p className="text-sm text-white/45 mb-8">{t('exit.body')}</p>
+            {plan === 'pro_monthly' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPlan('pro_annual');
+                  trackEvent(AnalyticsEvent.PAYWALL_EXIT_ANNUAL_CLICKED, {
+                    trigger: triggerContext ?? 'generic',
+                    dwell_ms: Date.now() - openedAtRef.current,
+                  });
+                  void handleCheckout('pro_annual');
+                }}
+                disabled={loading}
+                className="w-full py-3.5 px-6 rounded-xl text-sm font-semibold tracking-wide mb-3 disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ background: 'linear-gradient(135deg, #FFD700, #FFE033)', color: '#0A0A0F' }}
+                aria-busy={loading}
+              >
+                {loading ? tPage('redirecting') : t('exit.tryAnnual')}
+              </button>
+            )}
+            {plan === 'pro_monthly' && (
+              <p className="text-xs text-white/25 mb-6">{t('noCharge', { date: trialEndDate })}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => handleAttemptClose('keep_free')}
+              className="w-full py-3 px-6 rounded-xl text-sm text-white/70 hover:text-white hover:bg-white/5 border border-white/10"
+            >
+              {t('exit.keepFree')}
+            </button>
+          </div>
+        ) : (
         <div className="px-6 pt-8 pb-6">
           {/* Header */}
           <div className="text-center mb-6">
@@ -269,7 +358,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
 
           {/* CTA button */}
           <button
-            onClick={handleCheckout}
+            onClick={() => void handleCheckout()}
             disabled={loading}
             className="w-full py-3.5 px-6 rounded-xl text-sm font-semibold tracking-wide transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             style={{
@@ -298,6 +387,7 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
             {t('noCharge', { date: trialEndDate })}
           </p>
         </div>
+        )}
       </div>
     </div>,
     document.body,
