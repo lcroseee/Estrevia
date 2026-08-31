@@ -40,6 +40,29 @@ Create one **Funnel insight** per trigger above (6 total — include `generic` t
 **Aggregation:** Total persons (not events).
 **Date range:** Last 30 days, refresh weekly.
 
+## Dismiss recovery (Wave 1, 2026-08-30)
+
+New PostHog-only events (not in Meta CAPI):
+
+| Event | When |
+|---|---|
+| `paywall_dismissed` | User actually left the modal. Props: `trigger`, `method` (`close_button` \| `backdrop` \| `escape` \| `keep_free`), `stage` (`offer` \| `exit`), `dwell_ms`, `plan`, `qualified` |
+| `paywall_exit_shown` | Qualified close swapped the dialog to the keep-free / annual sheet |
+| `paywall_exit_annual_clicked` | Annual trial CTA on the exit sheet |
+
+### Funnel B — recovery (persons, 7-day window)
+
+1. `paywall_opened`
+2. `paywall_dismissed`
+3. `subscription_started` (no trigger filter)
+
+Breakdown: `qualified = true` vs `false`; `method`; `paywall_exit_shown` → `paywall_exit_annual_clicked` → `checkout_stripe_redirected`.
+
+### Annoyance kill-signals (weekly)
+
+- Same-session `paywall_exit_shown` count > 1 per person (cooldown bug)
+- Unsub within 48h of cart-abandon send (existing email metric)
+
 ## HogQL queries
 
 For a quick headcount sanity check (not a true ordered funnel — see warning in the query), paste into a PostHog SQL insight:
@@ -80,3 +103,4 @@ After building the dashboard, confirm:
 - A new paywall trigger is added in `src/`. Add a 7th funnel.
 - Event names in `AnalyticsEvent` change. Search-and-replace in the queries above.
 - Conversion windows need tightening (e.g. 1h instead of 24h) — Wave 2 decision.
+- New dismiss events shipped — add Funnel B; do not add these events to Meta CAPI.
