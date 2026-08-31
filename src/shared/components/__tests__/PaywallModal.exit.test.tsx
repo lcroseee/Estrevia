@@ -199,4 +199,74 @@ describe('PaywallModal exit sheet', () => {
     expect(screen.queryByText('exit.title')).toBeNull();
     void onClose;
   });
+
+  it('keep-mounted reopen after a qualified dismiss paints the offer, not the exit sheet', () => {
+    const onClose = vi.fn();
+    const openPaints: string[] = [];
+
+    function Harness({ open }: { open: boolean }) {
+      React.useLayoutEffect(() => {
+        if (!open) {
+          openPaints.push('closed');
+          return;
+        }
+        openPaints.push(
+          document.querySelector('[role="dialog"]')?.getAttribute('aria-label') ?? 'missing',
+        );
+      });
+      return <PaywallModal open={open} onClose={onClose} triggerContext="essay" />;
+    }
+
+    const { rerender } = render(<Harness open />);
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    expect(screen.getByText('exit.title')).toBeTruthy();
+    fireEvent.click(screen.getByText('exit.keepFree'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    rerender(<Harness open={false} />);
+    rerender(<Harness open />);
+
+    const closedAt = openPaints.lastIndexOf('closed');
+    expect(openPaints[closedAt + 1]).toBe('title');
+    expect(screen.queryByText('exit.title')).toBeNull();
+    expect(screen.getByText('title')).toBeTruthy();
+    expect(screen.getByText('trialCta')).toBeTruthy();
+  });
+
+  it('keep-mounted reopen after an exit checkout error does not show a stale alert', async () => {
+    let resolveFetch: (value: unknown) => void = () => {};
+    const fetchMock = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const onClose = vi.fn();
+    const { rerender } = render(
+      <PaywallModal open={true} onClose={onClose} triggerContext="essay" />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'close' }));
+    fireEvent.click(screen.getByText('exit.tryAnnual'));
+    await act(async () => {
+      resolveFetch({
+        ok: true,
+        json: async () => ({ success: false }),
+      });
+    });
+    expect(screen.getByRole('alert')).toBeTruthy();
+    fireEvent.click(screen.getByText('exit.keepFree'));
+    rerender(<PaywallModal open={false} onClose={onClose} triggerContext="essay" />);
+    rerender(<PaywallModal open={true} onClose={onClose} triggerContext="essay" />);
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByText('exit.title')).toBeNull();
+    expect(screen.getByText('trialCta')).toBeTruthy();
+    vi.unstubAllGlobals();
+  });
 });

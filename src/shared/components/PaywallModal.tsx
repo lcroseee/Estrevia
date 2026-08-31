@@ -78,11 +78,17 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const openedAtRef = useRef(0);
+  const wasOpenRef = useRef(false);
 
   const headline =
     triggerContext && triggerContext !== 'generic' && t.has(`contextualTitles.${triggerToKey(triggerContext)}`)
       ? t(`contextualTitles.${triggerToKey(triggerContext)}` as 'contextualTitles.essay')
       : t('title');
+
+  if (open && !wasOpenRef.current) {
+    openedAtRef.current = Date.now();
+  }
+  wasOpenRef.current = open;
 
   // Track paywall open (conversion-funnel entry)
   useEffect(() => {
@@ -94,6 +100,10 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
         trigger: triggerContext ?? 'generic',
         returnUrl: returnUrl ?? null,
       });
+    } else {
+      setStage('offer');
+      setExitOffersAnnual(false);
+      setError(null);
     }
   }, [open, returnUrl, triggerContext]);
 
@@ -117,6 +127,9 @@ export function PaywallModal({ open, onClose, returnUrl, triggerContext }: Paywa
         plan,
         qualified: stage === 'exit',
       });
+      setStage('offer');
+      setExitOffersAnnual(false);
+      setError(null);
       onClose();
     },
     [stage, plan, onClose, triggerContext],
